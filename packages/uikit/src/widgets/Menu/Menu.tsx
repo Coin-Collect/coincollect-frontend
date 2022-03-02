@@ -89,9 +89,9 @@ const Menu: React.FC<NavProps> = ({
   buyCakeLabel,
   children,
 }) => {
-  const { isMobile } = useMatchBreakpoints();
+  const { isMobile, isDesktop } = useMatchBreakpoints();
   const [showMenu, setShowMenu] = useState(true);
-  const [isPushed, setIsPushed] = useState(!isMobile);
+  const [isPushed, setIsPushed] = useState(isDesktop);
   const refPrevOffset = useRef(typeof window === "undefined" ? 0 : window.pageYOffset);
 
   const topBannerHeight = isMobile ? TOP_BANNER_HEIGHT_MOBILE : TOP_BANNER_HEIGHT;
@@ -140,7 +140,12 @@ const Menu: React.FC<NavProps> = ({
           {banner && <TopBannerContainer height={topBannerHeight}>{banner}</TopBannerContainer>}
           <StyledNav>
             <Flex>
-              <Logo isDark={isDark} href={homeLink?.href ?? "/"} />
+            <Logo 
+                isDark={isDark} 
+                href={homeLink?.href ?? "/"} 
+                isPushed={isPushed}
+                togglePush={() => setIsPushed((prevState: boolean) => !prevState)}
+              />
               {!isMobile && <MenuItems items={links} activeItem={activeItem} activeSubItem={activeSubItem} ml="24px" />}
             </Flex>
             <Flex alignItems="center" height="100%">
