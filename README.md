@@ -8,5 +8,3 @@ If you want to contribute, please refer to the [contributing guidelines](./CONTR
 
 - [Info](doc/Info.md)
 - [Cypress tests](doc/Cypress.md)
-
--first commit
