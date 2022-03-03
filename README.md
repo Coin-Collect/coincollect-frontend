@@ -2,7 +2,7 @@
 
 This project contains the main features of the coincollect application.
 
-If you want to contribute, please refer to the [contributing guidelines](./CONTRIBUTING.md) of this project.
+If you want to contribute, please refer to the [contributing guidelines](./CONTRIBUTING.md) of this project.1
 
 ## Documentation
 
