@@ -43,12 +43,12 @@ const drawerLinks: MenuEntry[] = [
         initialOpenState: false,
         items: [
             {
-                label: 'Exchange (soon)',
-                href: '/farms',
+                label: 'Swap (soon)',
+                href: '/swap',
             },
             {
                 label: 'Liquidity (soon)',
-                href: '/farms',
+                href: '/liquidity',
             },
         ],
     },
