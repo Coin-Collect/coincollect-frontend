@@ -20,16 +20,61 @@ const drawerLinks: MenuEntry[] = [
     },
     {
         label: 'Yield',
-        icon: 'TradeIcon',
+        icon: 'FarmIcon',
         href: '/farms',
-        initialOpenState: true,
+        initialOpenState: false,
         items: [
             {
-                label: 'Farms',
+                label: 'Farms (soon)',
                 href: '/farms',
             },
             {
-                label: 'Staking',
+                label: 'Stake (soon)',
+                href: '/pools',
+            },
+
+        ],
+    },
+
+    {
+        label: 'Trade',
+        icon: 'TradeIcon',
+        href: '/farms',
+        initialOpenState: false,
+        items: [
+            {
+                label: 'Exchange (soon)',
+                href: '/farms',
+            },
+            {
+                label: 'Liquidity (soon)',
+                href: '/farms',
+            },
+        ],
+    },
+
+
+
+    {
+        label: 'More',
+        icon: 'InfoIcon',
+        href: '/farms',
+        initialOpenState: false,
+        items: [
+            {
+                label: 'OpenSea',
+                href: '/farms',
+            },
+            {
+                label: 'NFTrade',
+                href: '/pools',
+            },
+            {
+                label: 'DappRadar',
+                href: '/pools',
+            },
+            {
+                label: 'Docs',
                 href: '/pools',
             },
 
