@@ -82,9 +82,9 @@ const LotteryCardContent = () => {
           <StyledBalance
             fontSize="40px"
             bold
-            prefix="$"
+            prefix="Floor is $"
             decimals={0}
-            value={getBalanceAmount(currentLotteryPrize).toNumber()}
+            value={10}
           />
         ) : (
           <>

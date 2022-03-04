@@ -48,7 +48,7 @@ const Stats = () => {
       <Flex flexWrap="wrap">
         <Text display="inline" textAlign="center" color="textSubtle" mb="20px">
           {entrusting}
-          <>{tvl ? <>{tvlString}</> : <Skeleton display="inline-block" height={16} width={70} mt="2px" />}</>
+          <>{tvl ? <>{}</> : <Skeleton display="inline-block" height={16} width={70} mt="2px" />}</>
           {inFunds}
         </Text>
       </Flex>
@@ -60,21 +60,21 @@ const Stats = () => {
       <Flex flexDirection={['column', null, null, 'row']}>
         <IconCard {...UsersCardData} mr={[null, null, null, '16px']} mb={['16px', null, null, '0']}>
           <StatCardContent
-            headingText={t('%users% users', { users })}
+            headingText={t('multiple coin airdrops', { users })}
             bodyText={t('in the last 30 days')}
             highlightColor={theme.colors.secondary}
           />
         </IconCard>
         <IconCard {...TradesCardData} mr={[null, null, null, '16px']} mb={['16px', null, null, '0']}>
           <StatCardContent
-            headingText={t('%trades% trades', { trades })}
+            headingText={t('future sale whitelist', { trades })}
             bodyText={t('made in the last 30 days')}
             highlightColor={theme.colors.primary}
           />
         </IconCard>
         <IconCard {...StakedCardData}>
           <StatCardContent
-            headingText={t('$%tvl% staked', { tvl: tvlString })}
+            headingText={t('high yield earn', { tvl: tvlString })}
             bodyText={t('Total Value Locked')}
             highlightColor={theme.colors.failure}
           />

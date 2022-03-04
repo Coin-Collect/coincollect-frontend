@@ -49,17 +49,12 @@ const PredictionCardContent = () => {
         <Text color="#280D5F" bold fontSize="16px">
           {t('Prediction')}
         </Text>
-        {bnbWonInUsd ? (
+        {
           <Heading color="#280D5F" my="8px" scale="xl" bold>
-            {pretext}
-            {localisedBnbUsdString}
+            {t('Mint your free NFT')}
           </Heading>
-        ) : (
-          <>
-            <Skeleton width={230} height={40} my="8px" />
-            <div ref={observerRef} />
-          </>
-        )}
+        
+          }
         <Text color="#280D5F" mb="24px" bold fontSize="16px">
           {wonSoFar}
         </Text>
