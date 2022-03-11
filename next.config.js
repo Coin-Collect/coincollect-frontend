@@ -28,7 +28,7 @@ const config = {
   },
   reactStrictMode: true,
   images: {
-    domains: ['static-nft.pancakeswap.com'],
+    domains: ['static-nft.pancakeswap.com', 'cdn.pixabay.com', 'coincollect.org', 'lh3.googleusercontent.com'],
   },
   async rewrites() {
     return [

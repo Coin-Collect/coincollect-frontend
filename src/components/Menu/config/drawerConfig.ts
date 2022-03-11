@@ -1,4 +1,5 @@
-import { MenuEntry } from "components/NewUi/widgets/Menu/types";
+import { MenuEntry } from "../../../../packages/uikit/src/widgets/Menu/types";
+
 
 const drawerLinks: MenuEntry[] = [
     {
@@ -8,13 +9,14 @@ const drawerLinks: MenuEntry[] = [
         initialOpenState: true,
         items: [
             {
-                label: 'Marketplace',
-                href: '/nfts',
-            },
-            {
                 label: 'Collections',
                 href: '/nfts/collections',
             },
+            {
+                label: 'Marketplace (soon)',
+                href: '/nfts',
+            },
+            
 
         ],
     },

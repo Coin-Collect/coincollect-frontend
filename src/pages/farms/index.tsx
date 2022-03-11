@@ -4,6 +4,7 @@ import FarmCard from 'views/Farms/components/FarmCard/FarmCard'
 import { getDisplayApr } from 'views/Farms/Farms'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import { useWeb3React } from '@web3-react/core'
+import { GetStaticProps } from 'next/types'
 
 const FarmsPage = () => {
   const { account } = useWeb3React()
@@ -27,5 +28,12 @@ const FarmsPage = () => {
 }
 
 FarmsPage.Layout = FarmsPageLayout
+
+//Page disabled
+export const getStaticProps: GetStaticProps = async () => {
+  return {
+    notFound: true,
+  }
+}
 
 export default FarmsPage

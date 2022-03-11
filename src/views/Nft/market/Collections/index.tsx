@@ -106,6 +106,7 @@ const Collectible = () => {
               pl={['4px', null, '0']}
               mb="8px"
             >
+              {/*
               <Flex width="max-content" style={{ gap: '4px' }} flexDirection="column">
                 <Text fontSize="12px" textTransform="uppercase" color="textSubtle" fontWeight={600}>
                   {t('Sort By')}
@@ -133,6 +134,7 @@ const Collectible = () => {
                   onOptionChange={handleSortOptionChange}
                 />
               </Flex>
+                */}
             </Flex>
             <Grid
               gridGap="16px"
@@ -147,17 +149,49 @@ const Collectible = () => {
                     bgSrc={collection.banner.small}
                     avatarSrc={collection.avatar}
                     collectionName={collection.name}
-                    url={`${nftsBaseUrl}/collections/${collection.address}`}
+                    url={`${nftsBaseUrl}/collections/mint/${collection.address}`}
                   >
                     <Flex alignItems="center">
                       <Text fontSize="12px" color="textSubtle">
-                        {t('Volume')}
+                        {t('MaxSupply')}
                       </Text>
-                      <BNBAmountLabel amount={collection.totalVolumeBNB ? parseFloat(collection.totalVolumeBNB) : 0} />
+                      <BNBAmountLabel amount={parseInt(collection.totalSupply)} />
                     </Flex>
                   </CollectionCard>
                 )
               })}
+              {/* ======Dummy Collections====== */}
+              <CollectionCard
+                    key="dummy"
+                    bgSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
+                    avatarSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
+                    collectionName="Coming Soon"
+                    url=""
+                  >
+                    <Flex alignItems="center">
+                      <Text fontSize="12px" color="textSubtle">
+                        MaxSupply
+                      </Text>
+                      <BNBAmountLabel amount={5000} />
+                    </Flex>
+                  </CollectionCard>
+
+                  <CollectionCard
+                    key="dummy"
+                    bgSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
+                    avatarSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
+                    collectionName="Coming Soon"
+                    url=""
+                  >
+                    <Flex alignItems="center">
+                      <Text fontSize="12px" color="textSubtle">
+                        MaxSupply
+                      </Text>
+                      <BNBAmountLabel amount={5000} />
+                    </Flex>
+                  </CollectionCard>
+                  {/* ======Dummy Collections====== */}
+
             </Grid>
             <PageButtons>
               <Arrow
