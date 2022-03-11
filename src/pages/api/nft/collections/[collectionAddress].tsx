@@ -1,7 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { Interface } from "@ethersproject/abi";
-import { AlchemyProvider, getDefaultProvider, Network } from "@ethersproject/providers";
-import { useWeb3React } from "@web3-react/core";
+import { getDefaultProvider, Network } from "@ethersproject/providers";
 import { Contract } from "ethers";
 const axios = require('axios');
 

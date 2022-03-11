@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import Collections from './CollectionPage'
 import PageLoader from 'components/Loader/PageLoader'
 import { getCollection } from 'state/nftMarket/helpers'
+import { API_NFT } from 'config/constants/endpoints'
 
 const CollectionPage = ({ fallback = {} }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const router = useRouter()
@@ -70,7 +71,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 export default CollectionPage
 
 export const getCollectionApi = async (collectionAddress: string): Promise<any> => {
-  const res = await fetch(`http://localhost:3000/api/nft/collections/0x0D464bDde2301C30871bB4C29bB7DD935f5a985C`)
+  const res = await fetch(`${API_NFT}/collections/0x0D464bDde2301C30871bB4C29bB7DD935f5a985C`)
   if (res.ok) {
     const json = await res.json()
     return json.data
