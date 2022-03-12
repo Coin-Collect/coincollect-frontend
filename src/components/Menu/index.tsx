@@ -30,7 +30,7 @@ const Menu = (props) => {
         return <NextLinkFromReactRouter to={linkProps.href} {...linkProps} prefetch={false} />
       }}
       userMenu={<UserMenu />}
-      globalMenu={<GlobalSettings />}
+      //globalMenu={<GlobalSettings />}
       banner={showPhishingWarningBanner && typeof window !== 'undefined' && <PhishingWarningBanner />}
       isDark={isDark}
       toggleTheme={toggleTheme}
@@ -44,7 +44,7 @@ const Menu = (props) => {
       footerLinks={footerLinks(t)}
       activeItem={activeMenuItem?.href}
       activeSubItem={activeSubMenuItem?.href}
-      buyCakeLabel={t('Buy CAKE')}
+      buyCakeLabel={t('Buy Our Token')}
       {...props}
     />
   )
