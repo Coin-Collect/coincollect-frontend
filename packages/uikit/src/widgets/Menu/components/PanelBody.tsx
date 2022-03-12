@@ -1,13 +1,13 @@
 import React from "react";
 import styled from "styled-components";
-import { SvgProps } from "../../../components/Svg";
-import * as IconModule from "../icons";
+import * as IconModule from "../../../components/Svg";
 import Accordion from "./Accordion";
 import { MenuEntry, LinkLabel } from "./MenuEntry";
 import MenuLink from "./MenuLink";
 import { PanelProps, PushedProps } from "../types";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { SvgProps } from "../../../components/Svg";
 
 interface Props extends PanelProps, PushedProps {
   isMobile: boolean;
