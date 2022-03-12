@@ -178,6 +178,16 @@ export const socials = [
     icon: "TwitterIcon",
     href: "https://twitter.com/CoinCollectOrg",
   },
+  {
+    label: "Discord",
+    icon: "DiscordIcon",
+    href: "https://discord.gg/trs9VqC9gq",
+  },
+  {
+    label: "Instagram",
+    icon: "InstagramIcon",
+    href: "https://www.instagram.com/coincollectorg/",
+  },
 ];
 
 export const MENU_HEIGHT = 56;

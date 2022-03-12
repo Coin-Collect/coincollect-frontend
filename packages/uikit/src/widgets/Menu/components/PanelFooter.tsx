@@ -21,7 +21,7 @@ const Container = styled.div`
 const SettingsEntry = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   height: ${MENU_ENTRY_HEIGHT}px;
   padding: 0 8px;
 `;
@@ -29,7 +29,7 @@ const SettingsEntry = styled.div`
 const SocialEntry = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   height: ${MENU_ENTRY_HEIGHT}px;
   padding: 0 16px;
 `;
@@ -57,12 +57,12 @@ const PanelFooter: React.FC<Props> = ({
   return (
     <Container>
       <SocialEntry>
-        <CakePrice cakePriceUsd={cakePriceUsd} />
+        {/*CakePrice cakePriceUsd={cakePriceUsd} />*/}
         <SocialLinks />
       </SocialEntry>
       <SettingsEntry>
         <ThemeSwitcher isDark={isDark} toggleTheme={toggleTheme} />
-        <LangSelector currentLang={currentLang} langs={langs} setLang={setLang} />
+        {/*<LangSelector currentLang={currentLang} langs={langs} setLang={setLang} />*/}
       </SettingsEntry>
     </Container>
   );
