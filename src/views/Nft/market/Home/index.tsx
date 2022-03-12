@@ -58,11 +58,13 @@ const Home = () => {
   const { theme } = useTheme()
   const { data: collections, status } = useGetCollections()
 
+  /*
   const hotCollections = orderBy(
     collections,
     (collection) => (collection.totalVolumeBNB ? parseFloat(collection.totalVolumeBNB) : 0),
     'desc',
   )
+  */
 
   const newestCollections = orderBy(
     collections,
@@ -107,13 +109,17 @@ const Home = () => {
             testId="nfts-newest-collections"
             collections={newestCollections}
           />
+
+          {/*
           <Collections
             key="hot-collections"
             title={t('Hot Collections')}
             testId="nfts-hot-collections"
             collections={hotCollections}
           />
+          */}
           <Newest />
+          
         </PageSection>
       )}
       <Gradient p="64px 0">
