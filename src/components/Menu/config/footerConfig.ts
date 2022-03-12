@@ -10,21 +10,18 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
         href: 'https://docs.pancakeswap.finance/contact-us',
       },
       {
-        label: t('Brand'),
-        href: 'https://docs.pancakeswap.finance/brand',
+        label: t('What is Collect?'),
+        href: 'https://docs.coincollect.org/usdcollect-token/what-is-usdcollect',
       },
       {
-        label: t('Blog'),
-        href: 'https://medium.com/pancakeswap',
+        label: t('Tokenomics'),
+        href: 'https://docs.coincollect.org/usdcollect-token/tokenomics',
       },
       {
         label: t('Community'),
-        href: 'https://docs.pancakeswap.finance/contact-us/telegram',
+        href: 'https://discord.com/invite/trs9VqC9gq',
       },
-      {
-        label: t('CAKE token'),
-        href: 'https://docs.pancakeswap.finance/tokenomics/cake',
-      },
+      /*
       {
         label: '—',
       },
@@ -33,6 +30,7 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
         href: 'https://pancakeswap.creator-spring.com/',
         isHighlighted: true,
       },
+      */
     ],
   },
   {
@@ -40,15 +38,15 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
     items: [
       {
         label: t('Customer Support'),
-        href: 'https://docs.pancakeswap.finance/contact-us/customer-support',
+        href: 'https://docs.coincollect.org/product/for-support',
       },
       {
         label: t('Troubleshooting'),
-        href: 'https://docs.pancakeswap.finance/help/troubleshooting',
+        href: 'https://docs.coincollect.org/',
       },
       {
         label: t('Guides'),
-        href: 'https://docs.pancakeswap.finance/get-started',
+        href: 'https://docs.coincollect.org/getting-started',
       },
     ],
   },
@@ -57,23 +55,25 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
     items: [
       {
         label: 'Github',
-        href: 'https://github.com/pancakeswap',
+        href: 'https://github.com/coin-collect',
       },
       {
         label: t('Documentation'),
-        href: 'https://docs.pancakeswap.finance',
+        href: 'https://docs.coincollect.org/',
       },
+      /*
       {
         label: t('Bug Bounty'),
         href: 'https://docs.pancakeswap.finance/code/bug-bounty',
       },
+      */
       {
         label: t('Audits'),
         href: 'https://docs.pancakeswap.finance/help/faq#is-pancakeswap-safe-has-pancakeswap-been-audited',
       },
       {
         label: t('Careers'),
-        href: 'https://docs.pancakeswap.finance/hiring/become-a-chef',
+        href: '/',
       },
     ],
   },
