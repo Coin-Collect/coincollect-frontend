@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import Header from "views/Nft/market/Collection/Header";
 import Items from "views/Nft/market/Collection/Items";
 import CollectionNfts from "views/Nft/market/Collection/Items/CollectionNfts";
-import { Box, Button, ChevronLeftIcon, Flex, Grid, LogoIcon } from '@pancakeswap/uikit'
+import { Box, Button, Card, CardBody, CardRibbon, ChevronLeftIcon, Flex, Grid, LogoIcon, Step } from '@pancakeswap/uikit'
 import Container from "components/Layout/Container";
 import { useAppDispatch } from "state";
 import { fetchNftsFromCollections } from "state/nftMarket/reducer";
@@ -69,6 +69,59 @@ export default function Collections() {
           </StatBox>
         </MarketPageTitle>
       </MarketPageHeader>
+
+
+      <div style={{ padding: "32px", width: "500px" }}>
+      <Row>
+        <Card ribbon={<CardRibbon variantColor="failure" text="Free Mint" />}>
+          <div style={{ height: "112px", backgroundColor: "#191326" }} />
+          <CardBody style={{ height: "150px" }}>Ribbons will truncate when text is too long</CardBody>
+          <Button width="100%" startIcon={<LogoIcon />}>Free Mint</Button>
+        </Card>
+      </Row>
+    </div>
+
+    <div style={{ padding: "32px"}}>
+      <Row>
+        <Step index={0} statusFirstPart="past">
+          <Card>
+            <CardBody>
+              <h2>Connect Wallet</h2>
+              <div>
+                  Connect your desired walled. We Prefer Metamask
+              </div>
+            </CardBody>
+          </Card>
+        </Step>
+      </Row>
+      <Row>
+        <Step index={1} statusFirstPart="past" statusSecondPart="future">
+          <Card>
+            <CardBody>
+              <h2>Change Network</h2>
+              <div>
+                You will be coonected to Polygon network.
+              </div>
+            </CardBody>
+          </Card>
+        </Step>
+      </Row>
+      <Row>
+        <Step index={2} statusFirstPart="past">
+          <Card>
+            <CardBody>
+              <h2>Hit Mint Buton</h2>
+              <div>
+                Hit free mint button, if you have matic for gas fee.
+              </div>
+            </CardBody>
+          </Card>
+        </Step>
+      </Row>
+    </div>
+
+
+
     </>
   )
 }
