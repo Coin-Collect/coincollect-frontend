@@ -1,4 +1,5 @@
-# 🥞 Coincollect Frontend
+# Coincollect Frontend forked from PancakeSwap
+
 
 This project contains the main features of the coincollect application.
 
