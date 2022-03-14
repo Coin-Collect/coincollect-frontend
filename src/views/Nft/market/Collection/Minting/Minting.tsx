@@ -114,16 +114,18 @@ export default function Minting() {
       </MarketPageHeader>
 
 
-      
 
-        
-        <MintingLayout id="current-minting" py={['24px', '24px', '40px']}>
 
-         <Container>
-         <MintingLayoutWrapper>
+
+      <MintingLayout id="current-minting" py={['24px', '24px', '40px']}>
+
+        <Container>
+
+          <MintingLayoutWrapper>
             <MintingCurrentCard ifo={activeIfo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
-         </MintingLayoutWrapper>
-        </Container> 
+          </MintingLayoutWrapper>
+          
+        </Container>
 
         <IfoStepBackground>
 
@@ -139,9 +141,9 @@ export default function Minting() {
 
         </Container>
 
-        </MintingLayout>
+      </MintingLayout>
 
-      
+
 
 
 
