@@ -3,10 +3,11 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from 'next'
 import { SWRConfig, unstable_serialize } from 'swr'
 import CollectionPageRouter from 'views/Nft/market/Collection/CollectionPageRouter'
 import { useRouter } from 'next/router'
-import Collections from './CollectionPage'
+
 import PageLoader from 'components/Loader/PageLoader'
 import { getCollection } from 'state/nftMarket/helpers'
 import { API_NFT } from 'config/constants/endpoints'
+import Minting from 'views/Nft/market/Collection/Minting/Minting'
 
 const CollectionPage = ({ fallback = {} }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const router = useRouter()
@@ -22,7 +23,7 @@ const CollectionPage = ({ fallback = {} }: InferGetStaticPropsType<typeof getSta
         fallback,
       }}
     >
-      <Collections/>
+      <Minting/>
     </SWRConfig>
   )
 }
