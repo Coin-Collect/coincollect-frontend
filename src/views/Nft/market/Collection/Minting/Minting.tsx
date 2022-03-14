@@ -45,14 +45,7 @@ const BackLink = styled(NextLinkFromReactRouter)`
   display: inline-flex;
   font-weight: 600;
 `
-/*
-const MintLayout = styled(Box)`
-  > div {
-    margin: 0 auto;
-    align-items: flex-start;
-  }
-`
-*/
+
 
 const IfoStepBackground = styled(Box)`
   background: ${({ theme }) => theme.colors.gradients.bubblegum};
@@ -124,7 +117,7 @@ export default function Minting() {
           <MintingLayoutWrapper>
             <MintingCurrentCard ifo={activeIfo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
           </MintingLayoutWrapper>
-          
+
         </Container>
 
         <IfoStepBackground>
