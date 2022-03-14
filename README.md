@@ -1,4 +1,4 @@
-# 🥞 Coincollect Frontend
+# Coincollect Frontend
 
 This project contains the main features of the coincollect application.
 
