@@ -45,8 +45,8 @@ export default async function handler(req, res) {
       "updatedAt": "2022-02-11T03:13:40.287Z",
       "avatar": "https://coincollect.org/assets/images/clone/logonew.png",
       "banner": {
-        "large": "https://static-nft.pancakeswap.com/mainnet/0x0D464bDde2301C30871bB4C29bB7DD935f5a985C/banner-lg.png",
-        "small": "https://static-nft.pancakeswap.com/mainnet/0x0D464bDde2301C30871bB4C29bB7DD935f5a985C/banner-sm.png"
+        "large": "https://coincollect.org/assets/images/clone/banner-lg.png",
+        "small": "https://coincollect.org/assets/images/clone/banner-lg.png"
       },
       attributes: []
     }
