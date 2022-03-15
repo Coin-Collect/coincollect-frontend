@@ -85,9 +85,9 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
       </span>{' '}
       <InlineLink
         external
-        href="https://medium.com/pancakeswap/initial-farm-offering-ifo-3-0-ifo-staking-pool-622d8bd356f1"
+        href="https://docs.coincollect.org"
       >
-        {t('Please refer to our blog post for more details.')}
+        {t('Please refer to our docs for more details.')}
       </InlineLink>
     </Box>,
     {},

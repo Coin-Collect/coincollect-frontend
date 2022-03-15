@@ -85,9 +85,7 @@ const MaxTokenEntry = ({ maxToken, ifo, poolId }: { maxToken: number; ifo: Ifo; 
         }
         value={
           <Text small textAlign="right" color={maxToken > 0 ? 'text' : 'failure'}>
-            {`${formatNumber(maxToken, 3, 3)} ${
-              !isCurrencyCake ? ifo.currency.symbol : ''
-            } ${` ~($${dollarValueOfToken.toFixed(0)})`}`}
+            {`2 NFT`}
           </Text>
         }
       />
@@ -185,10 +183,12 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
       return (
         <>
           {(poolId === PoolIds.poolBasic || ifo.isActive) && tokenEntry}
-          {poolId === PoolIds.poolUnlimited && <FooterEntry label={t('Additional fee:')} value={taxRate} />}
-          <FooterEntry label={t('Total committed:')} value={currencyPriceInUSD.gt(0) ? totalCommitted : null} />
-          <FooterEntry label={t('Funds to raise:')} value={ifo[poolId].raiseAmount} />
+          {poolId === PoolIds.poolUnlimited && <FooterEntry label={t('Additional fee:')} value={'Free'} />}
+          {poolId === PoolIds.poolBasic && <FooterEntry label={t('Additional Benefits:')} value={'3x'} />}
+          <FooterEntry label={t('Total committed:')} value={'5000'} />
+          <FooterEntry label={t('Funds to raise:')} value={'100 $COLLECT'} />
           {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
+          {/* A JSX comment 
           {ifo.version > 1 && (
             <FooterEntry
               label={t('Price per %symbol%:', { symbol: ifo.token.symbol })}
@@ -200,7 +200,9 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
               label={t('Price per %symbol% with fee:', { symbol: ifo.token.symbol })}
               value={pricePerTokenWithFee}
             />
-          )}
+          )} 
+         */}
+
         </>
       )
     }
