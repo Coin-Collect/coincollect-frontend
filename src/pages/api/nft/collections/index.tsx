@@ -13,10 +13,10 @@ export default function handler(req, res) {
       "verified": true,
       "createdAt": "2022-02-03T04:29:58.827Z",
       "updatedAt": "2022-02-03T04:29:58.827Z",
-      "avatar": "https://lh3.googleusercontent.com/4xdfGitTk_G563RhDz0KgjxxNag5nGtTCji1SSVSBK6uDlvmtBWiKi96N-Qo38BmSZGTIKc8uKRKNgfZMO-ntSw3mvC2Hw61ZyKX=s130",
+      "avatar": "https://coincollect.org/assets/images/clone/nft350.png",
       "banner": {
-        "large": "https://lh3.googleusercontent.com/0ALmWj0yKdDWD5_F7_89DYfSjmfiCAM0o5y8JAvbTx35wxLXSvpvioiksq2UTlKEvgI35B82NZIU8tInIBSkYFAxXWQ8fyVVkgiW=h600",
-        "small": "https://lh3.googleusercontent.com/0ALmWj0yKdDWD5_F7_89DYfSjmfiCAM0o5y8JAvbTx35wxLXSvpvioiksq2UTlKEvgI35B82NZIU8tInIBSkYFAxXWQ8fyVVkgiW=h600"
+        "large": "https://coincollect.org/assets/images/clone/banner-lg.png",
+        "small": "https://coincollect.org/assets/images/clone/banner-lg.png"
       }
     }
   ];
