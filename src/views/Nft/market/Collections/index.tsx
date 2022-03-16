@@ -165,14 +165,14 @@ const Collectible = () => {
                     key="dummy"
                     bgSrc="https://coincollect.org/assets/images/clone/mortalkombat.jpeg"
                     avatarSrc="https://coincollect.org/assets/images/clone/mklogo.jpeg"
-                    collectionName="Coming Soon"
+                    collectionName="Mortal Kombat (soon)"
                     url=""
                   >
                     <Flex alignItems="center">
                       <Text fontSize="12px" color="textSubtle">
                         MaxSupply
                       </Text>
-                      <BNBAmountLabel amount={5000} />
+                      <BNBAmountLabel amount={3000} />
                     </Flex>
                   </CollectionCard>
 
@@ -180,14 +180,14 @@ const Collectible = () => {
                     key="dummy"
                     bgSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
                     avatarSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
-                    collectionName="Coming Soon"
+                    collectionName="Avatar NFTs (soon)"
                     url=""
                   >
                     <Flex alignItems="center">
                       <Text fontSize="12px" color="textSubtle">
                         MaxSupply
                       </Text>
-                      <BNBAmountLabel amount={5000} />
+                      <BNBAmountLabel amount={10000} />
                     </Flex>
                   </CollectionCard>
                   {/* ======Dummy Collections====== */}
