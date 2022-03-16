@@ -7,11 +7,11 @@ export const footerLinks: FooterLinkType[] = [
     items: [
       {
         label: "Contact",
-        href: "https://docs.pancakeswap.finance/contact-us",
+        href: "https://docs.coincollect.org",
       },
       {
         label: "Blog",
-        href: "https://pancakeswap.medium.com/",
+        href: "https://docs.coincollect.org",
       },
       {
         label: "Community",
@@ -84,12 +84,7 @@ export const socials = [
   {
     label: "Telegram",
     icon: "Telegram",
-    items: [
-      {
-        label: "English",
-        href: "https://t.me/CoinCollectOrg",
-      },
-    ],
+    href: "https://t.me/CoinCollectOrg",
   },
   /*
   {
