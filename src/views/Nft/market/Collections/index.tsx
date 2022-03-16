@@ -163,8 +163,8 @@ const Collectible = () => {
               {/* ======Dummy Collections====== */}
               <CollectionCard
                     key="dummy"
-                    bgSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
-                    avatarSrc="https://cdn.pixabay.com/photo/2021/11/11/16/10/question-mark-6786623_960_720.jpg"
+                    bgSrc="https://coincollect.org/assets/images/clone/mortalkombat.jpeg"
+                    avatarSrc="https://coincollect.org/assets/images/clone/mklogo.jpeg"
                     collectionName="Coming Soon"
                     url=""
                   >
