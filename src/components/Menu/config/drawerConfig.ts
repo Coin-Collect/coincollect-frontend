@@ -1,7 +1,7 @@
-import { MenuEntry } from "../../../../packages/uikit/src/widgets/Menu/types";
+import { MenuItemsType } from "@pancakeswap/uikit";
 
 
-const drawerLinks: MenuEntry[] = [
+const drawerLinks: MenuItemsType[] = [
     {
         label: 'NFTs',
         icon: 'NftIcon',

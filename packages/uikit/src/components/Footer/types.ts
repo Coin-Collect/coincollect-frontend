@@ -6,6 +6,13 @@ export type FooterLinkType = {
   items: { label: string; href?: string; isHighlighted?: boolean }[];
 };
 
+export type SocialLinkType = {
+  label: string;
+  icon: string;
+  href: string;
+  items?: { label: string; href?: string }[];
+};
+
 export type FooterProps = {
   items: FooterLinkType[];
   buyCakeLabel: string;

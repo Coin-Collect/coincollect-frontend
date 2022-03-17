@@ -3,7 +3,7 @@ import { SvgProps } from "../../../components/Svg";
 import Text from "../../../components/Text/Text";
 import Dropdown from "../../../components/Dropdown/Dropdown";
 import Button from "../../../components/Button/Button";
-import * as IconModule from "../icons";
+import * as IconModule from "../../../components/Svg";
 import { Language } from "../types";
 import MenuButton from "./MenuButton";
 

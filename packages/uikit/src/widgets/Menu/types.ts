@@ -21,7 +21,7 @@ export interface NavProps {
   banner?: ReactElement;
   globalMenu?: ReactElement;
   links: Array<MenuItemsType>;
-  drawerLinks: Array<MenuEntry>; //*
+  drawerLinks: Array<MenuItemsType>; //*
   subLinks: Array<SubMenuItemsType>;
   footerLinks: Array<FooterLinkType>;
   activeItem: string;
@@ -42,15 +42,6 @@ export interface MenuSubEntry {
   calloutClass?: string;
 }
 //*
-export interface MenuEntry {
-  label: string;
-  icon: string;
-  items?: MenuSubEntry[];
-  href?: string;
-  calloutClass?: string;
-  initialOpenState?: boolean;
-}
-//*
 export interface PanelProps {
   isDark: boolean;
   toggleTheme: (isDark: boolean) => void;
@@ -58,7 +49,7 @@ export interface PanelProps {
   currentLang: string;
   langs: Language[];
   setLang: (lang: Language) => void;
-  links: Array<MenuEntry>;
+  links: Array<MenuItemsType>;
 }
 //*
 export interface PushedProps {

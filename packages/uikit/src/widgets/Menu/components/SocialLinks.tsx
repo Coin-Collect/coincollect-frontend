@@ -3,7 +3,6 @@ import * as IconModule from "../../../components/Svg";
 import Flex from "../../../components/Box/Flex";
 import Dropdown from "../../../components/Dropdown/Dropdown";
 import Link from "../../../components/Link/Link";
-//import * as IconModule from "../icons";
 import { socials } from "../config";
 import { SvgProps } from "../../../components/Svg";
 

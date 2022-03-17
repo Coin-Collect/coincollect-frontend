@@ -18,11 +18,14 @@ const injected = new InjectedConnector({ supportedChainIds: [chainId] })
 const walletconnect = new WalletConnectConnector({
   rpc: { [chainId]: rpcUrl },
   qrcode: true,
+  // @ts-ignore
   pollingInterval: POLLING_INTERVAL,
 })
 
 const bscConnector = new BscConnector({ supportedChainIds: [chainId] })
 
+//TODO: Fix type issue later
+// @ts-ignore
 export const connectorsByName: { [connectorName in ConnectorNames]: any } = {
   [ConnectorNames.Injected]: injected,
   [ConnectorNames.WalletConnect]: walletconnect,

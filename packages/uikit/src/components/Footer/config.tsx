@@ -1,5 +1,5 @@
 import { Language } from "../LangSelector/types";
-import { FooterLinkType } from "./types";
+import { FooterLinkType, SocialLinkType } from "./types";
 
 export const footerLinks: FooterLinkType[] = [
   {
@@ -75,7 +75,7 @@ export const footerLinks: FooterLinkType[] = [
   },
 ];
 
-export const socials = [
+export const socials: SocialLinkType[] = [
   {
     label: "Twitter",
     icon: "Twitter",

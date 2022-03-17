@@ -8,6 +8,8 @@ export type MenuItemsType = {
   items?: DropdownMenuItems[];
   showOnMobile?: boolean;
   showItemsOnMobile?: boolean;
+  calloutClass?: string; //TODO:Remove later
+  initialOpenState?: boolean; //TODO:Remove later
 };
 
 export interface MenuItemsProps extends BoxProps {
