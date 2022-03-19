@@ -6,7 +6,7 @@ import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
 import { Zero } from '@ethersproject/constants'
 import useSWR from 'swr'
 import { BIG_ZERO } from 'utils/bigNumber'
-import { simpleRpcProvider } from 'utils/providers'
+import { simplePolygonRpcProvider, simpleRpcProvider } from 'utils/providers'
 import { useCake, useTokenContract } from './useContract'
 import { useSWRContract } from './useSWRContract'
 
@@ -56,6 +56,15 @@ export const useGetBnbBalance = () => {
   const { account } = useWeb3React()
   const { status, data, mutate } = useSWR([account, 'bnbBalance'], async () => {
     return simpleRpcProvider.getBalance(account)
+  })
+
+  return { balance: data || Zero, fetchStatus: status, refresh: mutate }
+}
+
+export const useGetMaticBalance = () => {
+  const { account } = useWeb3React()
+  const { status, data, mutate } = useSWR([account, 'maticBalance'], async () => {
+    return simplePolygonRpcProvider.getBalance(account)
   })
 
   return { balance: data || Zero, fetchStatus: status, refresh: mutate }

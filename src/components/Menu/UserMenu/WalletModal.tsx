@@ -14,7 +14,7 @@ import {
 import { parseUnits } from '@ethersproject/units'
 import { useTranslation } from 'contexts/Localization'
 import styled from 'styled-components'
-import { useGetBnbBalance } from 'hooks/useTokenBalance'
+import { useGetBnbBalance, useGetMaticBalance } from 'hooks/useTokenBalance'
 import { FetchStatus } from 'config/constants/types'
 import WalletInfo from './WalletInfo'
 import WalletTransactions from './WalletTransactions'
@@ -30,7 +30,8 @@ interface WalletModalProps extends InjectedModalProps {
   initialView?: WalletView
 }
 
-export const LOW_BNB_BALANCE = parseUnits('2', 'gwei')
+//export const LOW_BNB_BALANCE = parseUnits('2', 'gwei')
+export const LOW_MATIC_BALANCE = parseUnits('2', 'gwei')
 
 const ModalHeader = styled(UIKitModalHeader)`
   background: ${({ theme }) => theme.colors.gradients.bubblegum};
@@ -45,8 +46,9 @@ const Tabs = styled.div`
 const WalletModal: React.FC<WalletModalProps> = ({ initialView = WalletView.WALLET_INFO, onDismiss }) => {
   const [view, setView] = useState(initialView)
   const { t } = useTranslation()
-  const { balance, fetchStatus } = useGetBnbBalance()
-  const hasLowBnbBalance = fetchStatus === FetchStatus.Fetched && balance.lte(LOW_BNB_BALANCE)
+  const { balance, fetchStatus } = useGetMaticBalance()
+  //const hasLowBnbBalance = fetchStatus === FetchStatus.Fetched && balance.lte(LOW_BNB_BALANCE)
+  const hasLowMaticBalance = fetchStatus === FetchStatus.Fetched && balance.lte(LOW_MATIC_BALANCE)
 
   const handleClick = (newIndex: number) => {
     setView(newIndex)
@@ -73,7 +75,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ initialView = WalletView.WALL
       </ModalHeader>
       {view !== WalletView.WRONG_NETWORK && <TabsComponent />}
       <ModalBody p="24px" maxWidth="400px" width="100%">
-        {view === WalletView.WALLET_INFO && <WalletInfo hasLowBnbBalance={hasLowBnbBalance} onDismiss={onDismiss} />}
+        {view === WalletView.WALLET_INFO && <WalletInfo hasLowMaticBalance={hasLowMaticBalance} onDismiss={onDismiss} />}
         {view === WalletView.TRANSACTIONS && <WalletTransactions />}
         {view === WalletView.WRONG_NETWORK && <WalletWrongNetwork onDismiss={onDismiss} />}
       </ModalBody>

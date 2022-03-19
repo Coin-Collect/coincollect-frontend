@@ -9,7 +9,7 @@ import IPancakeRouter02ABI from 'config/abi/IPancakeRouter02.json'
 import { IPancakeRouter02 } from 'config/abi/types/IPancakeRouter02'
 import { ChainId, JSBI, Percent, Token, CurrencyAmount, Currency, ETHER } from '@pancakeswap/sdk'
 import { ROUTER_ADDRESS } from '../config/constants'
-import { BASE_BSC_SCAN_URLS } from '../config'
+import { BASE_BSC_SCAN_URLS, BASE_POLYGON_SCAN_URLS } from '../config'
 import { TokenAddressMap } from '../state/lists/hooks'
 import { simpleRpcProvider } from './providers'
 
@@ -42,6 +42,30 @@ export function getBscScanLink(
     }
     default: {
       return `${BASE_BSC_SCAN_URLS[chainId]}/address/${data}`
+    }
+  }
+}
+
+export function getPolygonScanLink(
+  data: string | number,
+  type: 'transaction' | 'token' | 'address' | 'block' | 'countdown',
+  chainId: string = process.env.NEXT_PUBLIC_CHAIN_ID,
+): string {
+  switch (type) {
+    case 'transaction': {
+      return `${BASE_POLYGON_SCAN_URLS[chainId]}/tx/${data}`
+    }
+    case 'token': {
+      return `${BASE_POLYGON_SCAN_URLS[chainId]}/token/${data}`
+    }
+    case 'block': {
+      return `${BASE_POLYGON_SCAN_URLS[chainId]}/block/${data}`
+    }
+    case 'countdown': {
+      return `${BASE_POLYGON_SCAN_URLS[chainId]}/block/countdown/${data}`
+    }
+    default: {
+      return `${BASE_POLYGON_SCAN_URLS[chainId]}/address/${data}`
     }
   }
 }
