@@ -655,7 +655,7 @@ it("renders ConnectModal correctly", () => {
             </p>
             <a
               class="c22"
-              href="https://docs.pancakeswap.finance/get-started/connection-guide"
+              href="https://docs.coincollect.org/getting-started/create-a-wallet"
               rel="noreferrer noopener"
               scale="md"
               target="_blank"

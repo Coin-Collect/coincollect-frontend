@@ -19,7 +19,7 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
       },
       {
         label: t('Community'),
-        href: 'https://discord.com/invite/trs9VqC9gq',
+        href: 'https://docs.coincollect.org/extras/offical-accounts',
       },
       /*
       {
@@ -38,7 +38,7 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
     items: [
       {
         label: t('Customer Support'),
-        href: 'https://docs.coincollect.org/product/for-support',
+        href: 'https://docs.coincollect.org/extras/offical-accounts',
       },
       {
         label: t('Troubleshooting'),
@@ -46,7 +46,7 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
       },
       {
         label: t('Guides'),
-        href: 'https://docs.coincollect.org/getting-started',
+        href: 'https://docs.coincollect.org',
       },
     ],
   },
@@ -69,11 +69,11 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
       */
       {
         label: t('Audits'),
-        href: 'https://docs.pancakeswap.finance/help/faq#is-pancakeswap-safe-has-pancakeswap-been-audited',
+        href: 'https://docs.coincollect.org',
       },
       {
         label: t('Careers'),
-        href: '/',
+        href: 'https://docs.coincollect.org/extras/offical-accounts',
       },
     ],
   },

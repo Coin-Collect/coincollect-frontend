@@ -5,7 +5,7 @@ export const DEFAULT_META: PageMeta = {
   title: 'CoinCollect',
   description:
     'CoinCollect is the MultiChain NFT DeFi Protocol, that helps NFT traders, high yield farmers, liquidity providers, developers and web 3.0 startups to participate in an open financial market with no barriers to entry',
-  image: 'https://pancakeswap.finance/images/hero.png',
+  image: 'https://coincollect.org/assets/images/clone/ogbanner.png',
 }
 
 export const getCustomMeta = (path: string, t: ContextApi['t']): PageMeta => {

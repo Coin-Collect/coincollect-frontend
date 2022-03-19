@@ -60,24 +60,24 @@ const drawerLinks: MenuItemsType[] = [
     {
         label: 'More',
         icon: 'InfoIcon',
-        href: '/farms',
+        href: '/more',
         initialOpenState: false,
         items: [
             {
                 label: 'OpenSea',
-                href: '/farms',
+                href: 'https://opensea.io/collection/coincollect-nfts',
             },
             {
                 label: 'NFTrade',
-                href: '/pools',
+                href: 'https://nftrade.com/assets/polygon/0x569b70fc565afba702d9e77e75fd3e3c78f57eed',
             },
             {
                 label: 'DappRadar',
-                href: '/pools',
+                href: 'https://dappradar.com/polygon/collectibles/coin-collect-nfts',
             },
             {
-                label: 'Docs',
-                href: '/pools',
+                label: 'Docs & Guides',
+                href: 'https://docs.coincollect.org/',
             },
 
         ],
