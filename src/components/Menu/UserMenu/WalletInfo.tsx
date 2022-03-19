@@ -51,7 +51,7 @@ const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowMaticBalance, onDismiss }
         )}
       </Flex>
       <Flex alignItems="center" justifyContent="space-between" mb="24px">
-        <Text color="textSubtle">{t('CAKE Balance')}</Text>
+        <Text color="textSubtle">{t('COLLECT Balance')}</Text>
         {cakeFetchStatus !== FetchStatus.Fetched ? (
           <Skeleton height="22px" width="60px" />
         ) : (
