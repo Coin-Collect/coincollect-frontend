@@ -1,6 +1,7 @@
 import { serializeTokens } from './tokens'
 import { SerializedFarmConfig } from './types'
 import { CHAIN_ID } from './networks'
+import { ChainId } from '@pancakeswap/sdk'
 
 const serializedTokens = serializeTokens()
 
@@ -5091,6 +5092,6 @@ const farms: SerializedFarmConfig[] = [
     token: serializedTokens.bake,
     quoteToken: serializedTokens.wbnb,
   },
-].filter((f) => !!f.lpAddresses[CHAIN_ID])
+].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
 
 export default farms

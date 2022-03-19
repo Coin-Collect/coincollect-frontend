@@ -1,3 +1,4 @@
+import { ChainId } from '@pancakeswap/sdk'
 import Trans from 'components/Trans'
 import { VaultKey } from 'state/types'
 import { CHAIN_ID } from './networks'
@@ -3570,6 +3571,6 @@ const pools: SerializedPoolConfig[] = [
     tokenPerBlock: '7.502',
     deployedBlockNumber: 15150333,
   },
-].filter((p) => !!p.contractAddress[CHAIN_ID])
+].filter((p) => !!p.contractAddress[ChainId.MAINNET])
 
 export default pools
