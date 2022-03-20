@@ -52,7 +52,8 @@ const IfoStepBackground = styled(Box)`
 `
 
 const activeIfo = ifosConfig.find((ifo) => ifo.isActive)
-//TODO: Move to view
+
+
 export default function Minting() {
 
   const router = useRouter()
@@ -120,18 +121,16 @@ export default function Minting() {
 
         </Container>
 
-        <IfoStepBackground>
 
+
+        <IfoStepBackground>
           <Container>
             <MintingSteps isLive={publicIfoData.status === 'live'} ifo={activeIfo} walletIfoData={walletIfoData} />
           </Container>
-
         </IfoStepBackground>
 
         <Container>
-
           <MintingQuestions />
-
         </Container>
 
       </MintingLayout>
