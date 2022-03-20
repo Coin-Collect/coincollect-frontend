@@ -93,10 +93,10 @@ const Footer = () => {
       </BgWrapper>
       <FloatingPancakesWrapper>
         <TopLeftImgWrapper>
-          <CompositeImage {...topLeftImage} maxHeight="256px" />
+          <CompositeImage {...topLeftImage} maxHeight="340px" />
         </TopLeftImgWrapper>
         <BottomRightImgWrapper>
-          <CompositeImage {...bottomRightImage} maxHeight="256px" />
+          <CompositeImage {...bottomRightImage} maxHeight="340px" />
         </BottomRightImgWrapper>
       </FloatingPancakesWrapper>
       <Wrapper>
