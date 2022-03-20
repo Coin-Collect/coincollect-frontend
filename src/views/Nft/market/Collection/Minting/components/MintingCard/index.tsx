@@ -201,7 +201,7 @@ export const MintingCurrentCard = ({
                 <IfoRibbon publicIfoData={publicIfoData} />
               </>
             )}
-            <IfoCard ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+            <MintingCard ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
             <StyledCardFooter>
               <ExpandableLabel expanded={isExpanded} onClick={() => setIsExpanded(!isExpanded)}>
                 {isExpanded ? t('Hide') : t('Details')}
@@ -214,7 +214,7 @@ export const MintingCurrentCard = ({
     )
   }
 
-  const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfoData }) => {
+  const MintingCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfoData }) => {
     const currentBlock = useCurrentBlock()
     const { fetchIfoData: fetchPublicIfoData, isInitialized: isPublicIfoDataInitialized, secondsUntilEnd } = publicIfoData
     const {
