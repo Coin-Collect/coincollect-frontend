@@ -14,7 +14,7 @@ const TransparentFrame = styled.div<{ isDark: boolean }>`
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
   box-sizing: border-box;
   backdrop-filter: blur(12px);
-  border-radius: 72px;
+  border-radius: 22px;
 
   ${({ theme }) => theme.mediaQueries.md} {
     padding: 40px;
@@ -121,11 +121,11 @@ const WinSection = () => {
                 <PredictionCardContent />
               </IconCard>
             </Flex>
-            <Flex flex="1" maxWidth={['275px', null, null, '100%']}>
+           {/* <Flex flex="1" maxWidth={['275px', null, null, '100%']}>
               <IconCard {...LotteryCardData}>
                 <LotteryCardContent />
               </IconCard>
-            </Flex>
+            </Flex> */}
           </Flex>
         </Flex>
       </TransparentFrame>
