@@ -3,10 +3,10 @@ import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 import { ContextApi } from 'contexts/Localization/types'
 import { Box, Card, CardBody, CardHeader, Flex, HelpIcon, Text, useTooltip } from '@pancakeswap/uikit'
-import { Ifo, PoolIds } from 'config/constants/types'
+import { Ifo, Minting, PoolIds } from 'config/constants/types'
 import { useProfile } from 'state/profile/hooks'
 import useCriterias from 'views/Ifos/hooks/v3/useCriterias'
-import { PublicIfoData, WalletIfoData } from 'views/Ifos/types'
+import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { EnableStatus } from '../types'
 import IfoCardTokens from './IfoCardTokens'
 import IfoCardActions from './IfoCardActions'
@@ -22,7 +22,7 @@ const StyledCard = styled(Card)`
 
 interface IfoCardProps {
   poolId: PoolIds
-  ifo: Ifo
+  ifo: Minting
   publicIfoData: PublicIfoData
   walletIfoData: WalletIfoData
   onApprove: () => Promise<any>
@@ -113,7 +113,7 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
   const { hasActiveProfile, isLoading: isProfileLoading } = useProfile()
   const { targetRef, tooltip, tooltipVisible } = useTooltip(config.tooltip, { placement: 'bottom' })
 
-  const isLoading = isProfileLoading || publicIfoData.status === 'idle'
+  const isLoading = isProfileLoading || ifo.status === 'idle'
 
   const { isEligible, criterias } = useCriterias(walletIfoData[poolId], {
     needQualifiedNFT,

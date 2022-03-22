@@ -1,7 +1,7 @@
 import type { Signer } from '@ethersproject/abstract-signer'
 import type { Provider } from '@ethersproject/providers'
 import { Contract } from '@ethersproject/contracts'
-import { simpleRpcProvider } from 'utils/providers'
+import { simplePolygonRpcProvider, simpleRpcProvider } from 'utils/providers'
 import poolsConfig from 'config/constants/pools'
 import { PoolCategory } from 'config/constants/types'
 import tokens from 'config/constants/tokens'
@@ -34,6 +34,7 @@ import {
   getPancakeSquadAddress,
   getTradingCompetitionAddressV2,
   getBunnySpecialXmasAddress,
+  getMulticallPolygonAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -194,6 +195,11 @@ export const getChainlinkOracleContract = (signer?: Signer | Provider) => {
 export const getMulticallContract = () => {
   return getContract(MultiCallAbi, getMulticallAddress(), simpleRpcProvider) as Multicall
 }
+
+export const getMulticallPolygonContract = () => {
+  return getContract(MultiCallAbi, getMulticallPolygonAddress(), simplePolygonRpcProvider) as Multicall
+}
+
 export const getBunnySpecialCakeVaultContract = (signer?: Signer | Provider) => {
   return getContract(bunnySpecialCakeVaultAbi, getBunnySpecialCakeVaultAddress(), signer) as BunnySpecialCakeVault
 }

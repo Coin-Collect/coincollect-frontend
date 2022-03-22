@@ -14,6 +14,9 @@ export const getMasterChefAddress = () => {
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }
+export const getMulticallPolygonAddress = () => {
+  return getAddress(addresses.multiCallPolygon)
+}
 export const getLotteryV2Address = () => {
   return getAddress(addresses.lotteryV2)
 }

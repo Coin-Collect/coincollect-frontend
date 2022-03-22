@@ -11,7 +11,7 @@ import {
 import { useWeb3React } from '@web3-react/core'
 import BigNumber from 'bignumber.js'
 import { ToastDescriptionWithTx } from 'components/Toast'
-import { Ifo, PoolIds } from 'config/constants/types'
+import { Ifo, Minting, PoolIds } from 'config/constants/types'
 import { useTranslation } from "contexts/Localization"
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useERC20 } from 'hooks/useContract'
@@ -25,12 +25,12 @@ import IfoAchievement from "views/Ifos/components/IfoFoldableCard/Achievement"
 import { IfoRibbon } from "views/Ifos/components/IfoFoldableCard/IfoRibbon"
 import EnableStatus from 'views/Ifos/components/IfoFoldableCard/types'
 import useIfoApprove from 'views/Ifos/hooks/useIfoApprove'
-import { PublicIfoData, WalletIfoData } from "views/Ifos/types"
+import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import MintingPoolCard from './Card'
 
 
 interface IfoFoldableCardProps {
-    ifo: Ifo
+    ifo: Minting
     publicIfoData: PublicIfoData
     walletIfoData: WalletIfoData
   }
@@ -166,7 +166,7 @@ export const MintingCurrentCard = ({
     publicIfoData,
     walletIfoData,
   }: {
-    ifo: Ifo
+    ifo: Minting
     publicIfoData: PublicIfoData
     walletIfoData: WalletIfoData
   }) => {
@@ -174,7 +174,7 @@ export const MintingCurrentCard = ({
     const { t } = useTranslation()
     const { isMobile } = useMatchBreakpoints()
   
-    const shouldShowBunny = publicIfoData.status === 'live' || publicIfoData.status === 'coming_soon'
+    const shouldShowBunny = ifo.status === 'live' || ifo.status === 'coming_soon'
   
     return (
       <>
@@ -189,11 +189,11 @@ export const MintingCurrentCard = ({
           >
             {/*<Header $isCurrent ifoId={ifo.id} />*/}
             <IfoRibbon publicIfoData={publicIfoData} />
-            {shouldShowBunny && <NoHatBunny isLive={publicIfoData.status === 'live'} />}
+            {shouldShowBunny && <NoHatBunny isLive={ifo.status === 'live'} />}
           </Box>
         )}
         <Box position="relative" width="100%" maxWidth={['400px', '400px', '400px', '100%']}>
-          {!isMobile && shouldShowBunny && <NoHatBunny isCurrent isLive={publicIfoData.status === 'live'} />}
+          {!isMobile && shouldShowBunny && <NoHatBunny isCurrent isLive={ifo.status === 'live'} />}
           <StyledCard $isCurrent>
             {!isMobile && (
               <>
@@ -229,7 +229,7 @@ export const MintingCurrentCard = ({
     const raisingTokenContract = useERC20(ifo.currency.address, false)
     // Continue to fetch 2 more minutes to get latest data
     const isRecentlyActive =
-      (publicIfoData.status !== 'finished' || (publicIfoData.status === 'finished' && secondsUntilEnd >= -120)) &&
+      (ifo.status !== 'finished' || (ifo.status === 'finished' && secondsUntilEnd >= -120)) &&
       ifo.isActive
     const onApprove = useIfoApprove(ifo, contract.address)
     const { toastSuccess } = useToast()

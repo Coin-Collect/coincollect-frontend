@@ -30,13 +30,12 @@ import { getCollectionApi } from "pages/nfts/collections/mint/[collectionAddress
 import useToast from "hooks/useToast";
 import { Contract } from "@ethersproject/contracts";
 import { MintingCurrentCard } from "views/Nft/market/Collection/Minting/components/MintingCard";
-import useGetPublicIfoV2Data from 'views/Ifos/hooks/v2/useGetPublicIfoData'
-import useGetWalletIfoV3Data from 'views/Ifos/hooks/v3/useGetWalletIfoData'
-import { ifosConfig } from 'config/constants'
+import useGetPublicIfoV2Data from 'views/Nft/market/Collection/Minting/hooks/v2/useGetPublicIfoData'
+import useGetWalletIfoV3Data from 'views/Nft/market/Collection/Minting/hooks/v3/useGetWalletIfoData'
+import { mintingConfig } from 'config/constants'
 import MintingSteps from "./components/MintingSteps";
 import MintingQuestions from "./components/MintingQuestions";
 import MintingLayout, { MintingLayoutWrapper } from "./components/MintingLayout";
-
 
 
 const BackLink = styled(NextLinkFromReactRouter)`
@@ -51,7 +50,7 @@ const IfoStepBackground = styled(Box)`
   background: ${({ theme }) => theme.colors.gradients.bubblegum};
 `
 
-const activeIfo = ifosConfig.find((ifo) => ifo.isActive)
+const activeIfo = mintingConfig.find((ifo) => ifo.isActive)
 
 
 export default function Minting() {
@@ -125,7 +124,7 @@ export default function Minting() {
 
         <IfoStepBackground>
           <Container>
-            <MintingSteps isLive={publicIfoData.status === 'live'} ifo={activeIfo} walletIfoData={walletIfoData} />
+            <MintingSteps isLive={activeIfo.status === 'live'} ifo={activeIfo} walletIfoData={walletIfoData} />
           </Container>
         </IfoStepBackground>
 

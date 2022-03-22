@@ -2,8 +2,8 @@ import { useTranslation } from 'contexts/Localization'
 import { Button } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
 import { NextLinkFromReactRouter } from 'components/NextLink'
-import { Ifo, PoolIds } from 'config/constants/types'
-import { WalletIfoData, PublicIfoData } from 'views/Ifos/types'
+import { Ifo, Minting, PoolIds } from 'config/constants/types'
+import { WalletIfoData, PublicIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { nftsBaseUrl } from 'views/Nft/market/constants'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import ContributeButton from './ContributeButton'
@@ -13,7 +13,7 @@ import { EnableStatus } from '../types'
 
 interface Props {
   poolId: PoolIds
-  ifo: Ifo
+  ifo: Minting
   publicIfoData: PublicIfoData
   walletIfoData: WalletIfoData
   hasProfile: boolean
@@ -44,42 +44,10 @@ const IfoCardActions: React.FC<Props> = ({
     return <ConnectWalletButton width="100%" />
   }
 
-  /* TODO: Enable this kind of tasks later
-  if (!hasProfile) {
-    return (
-      <Button as={NextLinkFromReactRouter} to={`${nftsBaseUrl}/profile/${account.toLowerCase()}`} width="100%">
-        {t('Activate your Profile')}
-      </Button>
-    )
-  }
-  */
 
-  /* No need claim function for now
-  const needClaim =
-    publicIfoData.status === 'finished' &&
-    !userPoolCharacteristics.hasClaimed &&
-    (userPoolCharacteristics.offeringAmountInToken.isGreaterThan(0) ||
-      userPoolCharacteristics.refundingAmountInLP.isGreaterThan(0))
+  return <ClaimButton poolId={poolId} ifoVersion={ifo.version} walletIfoData={walletIfoData} />
+  
 
-  if (needClaim) {
-    return <ClaimButton poolId={poolId} ifoVersion={ifo.version} walletIfoData={walletIfoData} />
-  }
-  */
-
-  if (
-    (enableStatus !== EnableStatus.ENABLED && publicIfoData.status === 'coming_soon') ||
-    (ifo.version === 3.1 && poolId === PoolIds.poolBasic && !isEligible)
-  ) {
-    return null
-  }
-
-  return (
-    <>
-      {(publicIfoData.status === 'live' || publicIfoData.status === 'coming_soon') && (
-        <ContributeButton poolId={poolId} ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
-      )}
-    </>
-  )
 }
 
 export default IfoCardActions

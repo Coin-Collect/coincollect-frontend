@@ -1,5 +1,5 @@
 import { Interface } from '@ethersproject/abi'
-import { getMulticallContract } from 'utils/contractHelpers'
+import { getMulticallContract, getMulticallPolygonContract } from 'utils/contractHelpers'
 
 export interface Call {
   address: string // Address of the contract
@@ -51,6 +51,22 @@ export const multicallv2 = async <T = any>(
     const [result, data] = call
     return result ? itf.decodeFunctionResult(calls[i].name, data) : null
   })
+
+  return res as any
+}
+
+// TODO: Update to v2 or v3
+export const multicallPolygonv1 = async <T = any>(abi: any[], calls: Call[]): Promise<T> => {
+  const multi = getMulticallPolygonContract()
+  const itf = new Interface(abi)
+
+  const calldata = calls.map((call) => ({
+    target: call.address.toLowerCase(),
+    callData: itf.encodeFunctionData(call.name, call.params),
+  }))
+  const { returnData } = await multi.aggregate(calldata)
+
+  const res = returnData.map((call, i) => itf.decodeFunctionResult(calls[i].name, call))
 
   return res as any
 }
