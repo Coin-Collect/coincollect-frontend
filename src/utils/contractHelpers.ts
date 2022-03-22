@@ -35,6 +35,7 @@ import {
   getTradingCompetitionAddressV2,
   getBunnySpecialXmasAddress,
   getMulticallPolygonAddress,
+  getCoinCollectNftAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -48,6 +49,7 @@ import lpTokenAbi from 'config/abi/lpToken.json'
 import cakeAbi from 'config/abi/cake.json'
 import ifoV1Abi from 'config/abi/ifoV1.json'
 import ifoV2Abi from 'config/abi/ifoV2.json'
+import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import pointCenterIfo from 'config/abi/pointCenterIfo.json'
 import lotteryV2Abi from 'config/abi/lotteryV2.json'
 import masterChef from 'config/abi/masterchef.json'
@@ -130,6 +132,9 @@ export const getIfoV1Contract = (address: string, signer?: Signer | Provider) =>
 }
 export const getIfoV2Contract = (address: string, signer?: Signer | Provider) => {
   return getContract(ifoV2Abi, address, signer) as IfoV2
+}
+export const getCoinCollectNFTContract = (signer?: Signer | Provider) => {
+  return getContract(coinCollectNftAbi, getCoinCollectNftAddress(), signer) as IfoV2
 }
 export const getSouschefContract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)

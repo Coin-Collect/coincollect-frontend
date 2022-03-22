@@ -47,6 +47,9 @@ export const getTradingCompetitionAddressV2 = () => {
 export const getEasterNftAddress = () => {
   return getAddress(addresses.easterNft)
 }
+export const getCoinCollectNftAddress = () => {
+  return getAddress(addresses.coinCollectNft)
+}
 
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {

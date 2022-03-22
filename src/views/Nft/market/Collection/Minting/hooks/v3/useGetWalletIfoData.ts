@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import BigNumber from 'bignumber.js'
 import { Ifo, PoolIds } from 'config/constants/types'
-import { useERC20, useIfoV2Contract } from 'hooks/useContract'
+import { useCoinCollectNFTContract, useERC20, useIfoV2Contract } from 'hooks/useContract'
 import { multicallv2 } from 'utils/multicall'
 import ifoV2Abi from 'config/abi/ifoV2.json'
 import ifoV3Abi from 'config/abi/ifoV3.json'
@@ -44,7 +44,7 @@ const useGetWalletIfoData = (ifo: Ifo): WalletIfoData => {
   const { address, currency, version } = ifo
 
   const { account } = useWeb3React()
-  const contract = useIfoV2Contract(address)
+  const contract = useCoinCollectNFTContract()
   const currencyContract = useERC20(currency.address, false)
   //const allowance = useIfoAllowance(currencyContract, address)
 

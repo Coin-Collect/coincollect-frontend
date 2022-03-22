@@ -5,6 +5,7 @@ import { useTranslation } from 'contexts/Localization'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 
 interface Props {
   poolId: PoolIds
@@ -17,6 +18,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => 
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
+  const { account } = useActiveWeb3React()
 
   const setPendingTx = (isPending: boolean) => walletIfoData.setPendingTx(isPending, poolId)
 
@@ -24,14 +26,14 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => 
 
     const receipt = await fetchWithCatchTxError(() => {
       setPendingTx(true)
-      return walletIfoData.contract.mint()
+      return walletIfoData.contract.mint(account, 1)
     })
     if (receipt?.status) {
       walletIfoData.setIsClaimed(poolId)
       toastSuccess(
         t('Success!'),
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('You have successfully claimed your rewards.')}
+          {t('You have successfully minted your NFT.')}
         </ToastDescriptionWithTx>,
       )
     }
