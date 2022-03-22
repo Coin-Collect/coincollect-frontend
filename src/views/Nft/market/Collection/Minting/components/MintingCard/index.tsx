@@ -26,7 +26,7 @@ import { IfoRibbon } from "views/Ifos/components/IfoFoldableCard/IfoRibbon"
 import EnableStatus from 'views/Ifos/components/IfoFoldableCard/types'
 import useIfoApprove from 'views/Ifos/hooks/useIfoApprove'
 import { PublicIfoData, WalletIfoData } from "views/Ifos/types"
-import IfoPoolCard from './Card'
+import MintingPoolCard from './Card'
 
 
 interface IfoFoldableCardProps {
@@ -296,7 +296,7 @@ export const MintingCurrentCard = ({
             singleCard={!publicIfoData.poolBasic || !walletIfoData.poolBasic}
           >
             {publicIfoData.poolBasic && walletIfoData.poolBasic && (
-              <IfoPoolCard
+              <MintingPoolCard
                 poolId={PoolIds.poolBasic}
                 ifo={ifo}
                 publicIfoData={publicIfoData}
@@ -305,7 +305,7 @@ export const MintingCurrentCard = ({
                 enableStatus={enableStatus}
               />
             )}
-            <IfoPoolCard
+            <MintingPoolCard
               poolId={PoolIds.poolUnlimited}
               ifo={ifo}
               publicIfoData={publicIfoData}

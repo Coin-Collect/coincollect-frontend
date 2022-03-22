@@ -170,6 +170,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
 
     let message
 
+    /* TODO: Profile creation requirement disabled, maybe activate later
     if (account && !hasProfile) {
       message = (
         <Message my="24px" p="8px" variant="warning">
@@ -186,6 +187,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
         </Message>
       )
     }
+    */
 
     const ifov31Msg =
       ifo.version === 3.1 && poolId === PoolIds.poolBasic && criterias?.length > 0 ? (
@@ -211,7 +213,8 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
           )}
         </Box>
       ) : null
-
+    
+    /* TODO: Minimum cake amount requirement disabled, maybe activate later
     if (
       (ifo.version === 3 || (ifo.version === 3.1 && poolId === PoolIds.poolUnlimited)) &&
       getBalanceNumber(credit) === 0
@@ -229,6 +232,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
         </Message>
       )
     }
+    */
 
     if (account && !hasProfile) {
       return (

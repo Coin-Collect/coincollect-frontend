@@ -44,6 +44,7 @@ const IfoCardActions: React.FC<Props> = ({
     return <ConnectWalletButton width="100%" />
   }
 
+  /* TODO: Enable this kind of tasks later
   if (!hasProfile) {
     return (
       <Button as={NextLinkFromReactRouter} to={`${nftsBaseUrl}/profile/${account.toLowerCase()}`} width="100%">
@@ -51,7 +52,9 @@ const IfoCardActions: React.FC<Props> = ({
       </Button>
     )
   }
+  */
 
+  /* No need claim function for now
   const needClaim =
     publicIfoData.status === 'finished' &&
     !userPoolCharacteristics.hasClaimed &&
@@ -61,6 +64,7 @@ const IfoCardActions: React.FC<Props> = ({
   if (needClaim) {
     return <ClaimButton poolId={poolId} ifoVersion={ifo.version} walletIfoData={walletIfoData} />
   }
+  */
 
   if (
     (enableStatus !== EnableStatus.ENABLED && publicIfoData.status === 'coming_soon') ||
