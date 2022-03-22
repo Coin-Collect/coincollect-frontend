@@ -1,7 +1,7 @@
 import type { Signer } from '@ethersproject/abstract-signer'
 import type { Provider } from '@ethersproject/providers'
 import { Contract } from '@ethersproject/contracts'
-import { simpleRpcProvider } from 'utils/providers'
+import { simplePolygonRpcProvider, simpleRpcProvider } from 'utils/providers'
 import poolsConfig from 'config/constants/pools'
 import { PoolCategory } from 'config/constants/types'
 import tokens from 'config/constants/tokens'
@@ -34,6 +34,8 @@ import {
   getPancakeSquadAddress,
   getTradingCompetitionAddressV2,
   getBunnySpecialXmasAddress,
+  getMulticallPolygonAddress,
+  getCoinCollectNftAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -47,6 +49,7 @@ import lpTokenAbi from 'config/abi/lpToken.json'
 import cakeAbi from 'config/abi/cake.json'
 import ifoV1Abi from 'config/abi/ifoV1.json'
 import ifoV2Abi from 'config/abi/ifoV2.json'
+import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import pointCenterIfo from 'config/abi/pointCenterIfo.json'
 import lotteryV2Abi from 'config/abi/lotteryV2.json'
 import masterChef from 'config/abi/masterchef.json'
@@ -130,6 +133,9 @@ export const getIfoV1Contract = (address: string, signer?: Signer | Provider) =>
 export const getIfoV2Contract = (address: string, signer?: Signer | Provider) => {
   return getContract(ifoV2Abi, address, signer) as IfoV2
 }
+export const getCoinCollectNFTContract = (signer?: Signer | Provider) => {
+  return getContract(coinCollectNftAbi, getCoinCollectNftAddress(), signer) as IfoV2
+}
 export const getSouschefContract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)
   const abi = config.poolCategory === PoolCategory.BINANCE ? sousChefBnb : sousChef
@@ -194,6 +200,11 @@ export const getChainlinkOracleContract = (signer?: Signer | Provider) => {
 export const getMulticallContract = () => {
   return getContract(MultiCallAbi, getMulticallAddress(), simpleRpcProvider) as Multicall
 }
+
+export const getMulticallPolygonContract = () => {
+  return getContract(MultiCallAbi, getMulticallPolygonAddress(), simplePolygonRpcProvider) as Multicall
+}
+
 export const getBunnySpecialCakeVaultContract = (signer?: Signer | Provider) => {
   return getContract(bunnySpecialCakeVaultAbi, getBunnySpecialCakeVaultAddress(), signer) as BunnySpecialCakeVault
 }

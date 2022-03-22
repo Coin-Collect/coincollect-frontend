@@ -32,6 +32,7 @@ import {
   getPancakeSquadContract,
   getErc721CollectionContract,
   getBunnySpecialXmasContract,
+  getCoinCollectNFTContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
@@ -72,6 +73,11 @@ export const useIfoV1Contract = (address: string) => {
 export const useIfoV2Contract = (address: string) => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getIfoV2Contract(address, library.getSigner()), [address, library])
+}
+
+export const useCoinCollectNFTContract = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectNFTContract(library.getSigner()), [library])
 }
 
 export const useERC20 = (address: string, withSignerIfPossible = true) => {

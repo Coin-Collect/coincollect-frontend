@@ -14,6 +14,9 @@ export const getMasterChefAddress = () => {
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }
+export const getMulticallPolygonAddress = () => {
+  return getAddress(addresses.multiCallPolygon)
+}
 export const getLotteryV2Address = () => {
   return getAddress(addresses.lotteryV2)
 }
@@ -43,6 +46,9 @@ export const getTradingCompetitionAddressV2 = () => {
 }
 export const getEasterNftAddress = () => {
   return getAddress(addresses.easterNft)
+}
+export const getCoinCollectNftAddress = () => {
+  return getAddress(addresses.coinCollectNft)
 }
 
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {

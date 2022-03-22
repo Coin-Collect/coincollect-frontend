@@ -22,7 +22,7 @@ import {
 import { NextLinkFromReactRouter as RouterLink } from 'components/NextLink'
 import { useWeb3React } from '@web3-react/core'
 import { Ifo } from 'config/constants/types'
-import { WalletIfoData } from 'views/Ifos/types'
+import { WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
 import useTokenBalance from 'hooks/useTokenBalance'
 import Container from 'components/Layout/Container'

@@ -11,7 +11,9 @@ export type TranslatableText =
     }
 export interface Address {
   97?: string
-  56: string
+  56?: string
+  137?: string
+  80001?: string
 }
 
 export interface SerializedToken {
@@ -60,6 +62,7 @@ export interface Ifo {
 export interface Minting {
   id: string
   isActive: boolean
+  status: string
   address: string
   name: string
   currency: Token

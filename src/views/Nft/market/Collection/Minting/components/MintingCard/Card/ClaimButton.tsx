@@ -1,10 +1,11 @@
 import { AutoRenewIcon, Button } from '@pancakeswap/uikit'
 import { PoolIds } from 'config/constants/types'
-import { WalletIfoData } from 'views/Ifos/types'
+import { WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 
 interface Props {
   poolId: PoolIds
@@ -17,26 +18,27 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => 
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
+  const { account } = useActiveWeb3React()
 
   const setPendingTx = (isPending: boolean) => walletIfoData.setPendingTx(isPending, poolId)
 
   const handleClaim = async () => {
+
     const receipt = await fetchWithCatchTxError(() => {
       setPendingTx(true)
-      return ifoVersion === 1
-        ? walletIfoData.contract.harvest()
-        : walletIfoData.contract.harvestPool(poolId === PoolIds.poolBasic ? 0 : 1)
+      return walletIfoData.contract.mint(account, 1)
     })
     if (receipt?.status) {
       walletIfoData.setIsClaimed(poolId)
       toastSuccess(
         t('Success!'),
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('You have successfully claimed your rewards.')}
+          {t('You have successfully minted your NFT.')}
         </ToastDescriptionWithTx>,
       )
     }
     setPendingTx(false)
+
   }
 
   return (
@@ -47,7 +49,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => 
       isLoading={userPoolCharacteristics.isPendingTx}
       endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
     >
-      {t('Claim')}
+      {t('Mint')}
     </Button>
   )
 }

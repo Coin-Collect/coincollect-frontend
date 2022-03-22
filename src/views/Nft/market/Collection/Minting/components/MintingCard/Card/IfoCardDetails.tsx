@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import tokens from 'config/constants/tokens'
 import { Text, Flex, Box, Skeleton, TooltipText, useTooltip } from '@pancakeswap/uikit'
-import { PublicIfoData, WalletIfoData } from 'views/Ifos/types'
+import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
 import { Ifo, PoolIds } from 'config/constants/types'
 import { getBalanceNumber, formatNumber } from 'utils/formatBalance'
@@ -145,68 +145,17 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
 
   /* Format end */
   const renderBasedOnIfoStatus = () => {
-    if (status === 'coming_soon') {
-      return (
-        <>
-          {tokenEntry}
-          <FooterEntry label={t('Funds to raise:')} value={ifo[poolId].raiseAmount} />
-          {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
-          <FooterEntry
-            label={t('Price per %symbol%:', { symbol: ifo.token.symbol })}
-            value={`$${ifo.tokenOfferingPrice}`}
-          />
-        </>
-      )
-    }
-    if (status === 'live') {
-      return (
-        <>
-          {tokenEntry}
-          {poolId === PoolIds.poolBasic && (
-            <FooterEntry
-              label={t('Price per %symbol%:', { symbol: ifo.token.symbol })}
-              value={`$${ifo.tokenOfferingPrice}`}
-            />
-          )}
-          {poolId === PoolIds.poolUnlimited && <FooterEntry label={t('Additional fee:')} value={taxRate} />}
-          {poolId === PoolIds.poolUnlimited && (
-            <FooterEntry
-              label={t('Price per %symbol% with fee:', { symbol: ifo.token.symbol })}
-              value={pricePerTokenWithFee}
-            />
-          )}
-          <FooterEntry label={t('Total committed:')} value={currencyPriceInUSD.gt(0) ? totalCommitted : null} />
-        </>
-      )
-    }
-    if (status === 'finished') {
-      return (
-        <>
-          {(poolId === PoolIds.poolBasic || ifo.isActive) && tokenEntry}
-          {poolId === PoolIds.poolUnlimited && <FooterEntry label={t('Additional fee:')} value={'Free'} />}
-          {poolId === PoolIds.poolBasic && <FooterEntry label={t('Additional Benefits:')} value={'3x'} />}
-          <FooterEntry label={t('Total committed:')} value={'5000'} />
-          <FooterEntry label={t('Funds to raise:')} value={'100 $COLLECT'} />
-          {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
-          {/* A JSX comment 
-          {ifo.version > 1 && (
-            <FooterEntry
-              label={t('Price per %symbol%:', { symbol: ifo.token.symbol })}
-              value={`$${ifo.tokenOfferingPrice ? ifo.tokenOfferingPrice : '?'}`}
-            />
-          )}
-          {ifo.version > 1 && poolId === PoolIds.poolUnlimited && (
-            <FooterEntry
-              label={t('Price per %symbol% with fee:', { symbol: ifo.token.symbol })}
-              value={pricePerTokenWithFee}
-            />
-          )} 
-         */}
+    
+    return (
+      <>
+        {(poolId === PoolIds.poolBasic || ifo.isActive) && tokenEntry}
+        <FooterEntry label={t('Total committed:')} value={'5000'} />
+        <FooterEntry label={t('Funds to raise:')} value={'100 $COLLECT'} />
+        {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
 
-        </>
-      )
-    }
-    return <SkeletonCardDetails />
+      </>
+    )
+   
   }
 
   return <Box paddingTop="24px">{renderBasedOnIfoStatus()}</Box>
