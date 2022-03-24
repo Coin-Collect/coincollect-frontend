@@ -1,7 +1,7 @@
 import { NextLinkFromReactRouter as ReactRouterLink } from 'components/NextLink'
 import { BscScanIcon, Flex, IconButton, Link, Button, useModal } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { getBscScanLink } from 'utils'
+import { getBscScanLink, getPolygonScanLink } from 'utils'
 import { formatNumber } from 'utils/formatBalance'
 import truncateHash from 'utils/truncateHash'
 import { Achievement, Profile } from 'state/types'
@@ -88,9 +88,9 @@ const ProfileHeader: React.FC<HeaderProps> = ({
               style={{
                 width: 'fit-content',
               }}
-              href={getBscScanLink(accountPath, 'address') || ''}
+              href={getPolygonScanLink(accountPath, 'address') || ''}
               // @ts-ignore
-              alt={t('View BscScan for user address')}
+              alt={t('View PolygonScan for user address')}
             >
               <BscScanIcon width="20px" color="primary" />
             </IconButton>
@@ -140,6 +140,8 @@ const ProfileHeader: React.FC<HeaderProps> = ({
 
   const renderDescription = () => {
     const getActivateButton = () => {
+      // TODO: getActivateButton disabled by return statement below, activate later.
+      return;
       if (!profile) {
         return (
           <ReactRouterLink to="/create-profile">
