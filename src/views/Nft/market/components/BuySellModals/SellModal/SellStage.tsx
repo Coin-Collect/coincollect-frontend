@@ -2,7 +2,7 @@ import { Flex, Grid, Text, Button, Link, BinanceIcon, LinkExternal, useModal } f
 import { useTranslation } from 'contexts/Localization'
 import { nftsBaseUrl, pancakeBunniesAddress } from 'views/Nft/market/constants'
 import { NftToken } from 'state/nftMarket/types'
-import { getBscScanLinkForNft } from 'utils'
+import { getBscScanLinkForNft, getPolygonScanLinkForNft } from 'utils'
 import EditProfileModal from 'views/Nft/market/Profile/components/EditProfileModal'
 import { useProfile } from 'state/profile/hooks'
 import { Divider, HorizontalDivider, RoundedImage } from '../shared/styles'
@@ -80,15 +80,16 @@ const SellStage: React.FC<SellStageProps> = ({
           <LinkExternal
             p="0px"
             height="16px"
-            href={getBscScanLinkForNft(nftToSell.collectionAddress, nftToSell.tokenId)}
+            href={getPolygonScanLinkForNft(nftToSell.collectionAddress, nftToSell.tokenId)}
           >
-            BscScan
+            PlygnScn
           </LinkExternal>
         </Flex>
       </Flex>
       <Divider />
       <Flex flexDirection="column" px="16px" pb="16px">
-        <Button mb="8px" onClick={continueToNextStage}>
+        {/*TODO: Activate button below*/}
+        <Button disabled={true} mb="8px" onClick={continueToNextStage}>
           {t('Sell')}
         </Button>
         <Button mb="8px" variant="secondary" onClick={continueToTransferStage}>

@@ -27,7 +27,7 @@ const TransferStage: React.FC<TransferStageProps> = ({
   const transferAddressEqualsConnectedAddress = transferAddress.toLowerCase() === account.toLowerCase()
   const getErrorText = () => {
     if (isInvalidTransferAddress) {
-      return t('That’s not a BNB Smart Chain wallet address.')
+      return t('That’s not a Matic wallet address.')
     }
     if (transferAddressEqualsConnectedAddress) {
       return t('This address is the one that is currently connected')
@@ -66,7 +66,7 @@ const TransferStage: React.FC<TransferStageProps> = ({
         <Input
           scale="sm"
           isWarning={isInvalidTransferAddress || transferAddressEqualsConnectedAddress}
-          placeholder={t('Paste BSC address')}
+          placeholder={t('Paste MATIC address')}
           value={transferAddress}
           onChange={(e) => setTransferAddress(e.target.value)}
         />
