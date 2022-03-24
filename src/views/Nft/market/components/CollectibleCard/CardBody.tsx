@@ -16,9 +16,10 @@ const CollectibleCardBody: React.FC<CollectibleCardProps> = ({ nft, nftLocation,
   const isPancakeBunny = nft.collectionAddress?.toLowerCase() === pancakeBunniesAddress.toLowerCase()
   const { isFetching, lowestPrice } = useGetLowestPriceFromNft(nft)
 
+  //TODO: added style={{backgroundPosition:"center"}} to NFTMedia temporarily
   return (
     <CardBody p="8px">
-      <NFTMedia as={PreviewImage} nft={nft} height={320} width={320} mb="8px" borderRadius="8px" />
+      <NFTMedia style={{backgroundPosition:"center"}} as={PreviewImage} nft={nft} height={320} width={320} mb="8px" borderRadius="8px" />
       <Flex alignItems="center" justifyContent="space-between">
         {nft.collectionName && (
           <Text fontSize="12px" color="textSubtle" mb="8px">

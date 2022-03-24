@@ -1,7 +1,7 @@
 import { gql, request } from 'graphql-request'
 import { stringify } from 'querystring'
 import { API_NFT, GRAPH_API_NFTMARKET } from 'config/constants/endpoints'
-import { multicallv2 } from 'utils/multicall'
+import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
 import erc721Abi from 'config/abi/erc721.json'
 import range from 'lodash/range'
 import uniq from 'lodash/uniq'
@@ -53,7 +53,9 @@ const fetchCollectionsTotalSupply = async (collections: ApiCollection[]): Promis
     name: 'totalSupply',
   }))
   if (totalSupplyCalls.length > 0) {
-    const totalSupplyRaw = await multicallv2(erc721Abi, totalSupplyCalls, { requireSuccess: false })
+    const totalSupplyRaw = await multicallPolygonv1(erc721Abi, totalSupplyCalls)
+    // TODO: Deploy multicallv2 and activate instead of v1
+    //const totalSupplyRaw = await multicallv2(erc721Abi, totalSupplyCalls, { requireSuccess: false })
     const totalSupply = totalSupplyRaw.flat()
     return totalSupply.map((totalCount) => (totalCount ? totalCount.toNumber() : 0))
   }
