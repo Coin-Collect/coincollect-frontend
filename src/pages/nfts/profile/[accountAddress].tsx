@@ -27,7 +27,9 @@ const NftProfilePage = () => {
   } = useCoinCollectNftsForAddress(accountAddress, profile, isProfileFetching)
   return (
     <>
+      {/* TODO: Activate Later
       <SubMenu />
+      */}
       {isConnectedProfile ? (
         <UserNfts
           nfts={nfts}

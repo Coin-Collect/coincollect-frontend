@@ -44,6 +44,7 @@ const TabMenu = () => {
       >
         NFTs
       </Tab>
+      {/* TODO: Activate later
       <Tab
         onClick={() => setIsAchievementsActive(true)}
         $active={achievementsActive}
@@ -52,6 +53,7 @@ const TabMenu = () => {
       >
         {t('Achievements')}
       </Tab>
+    */}
     </Flex>
   )
 }
