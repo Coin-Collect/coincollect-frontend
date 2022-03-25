@@ -225,7 +225,7 @@
   "Welcome!": "Welcome!",
   "Once you enter a position, you cannot cancel or adjust it.": "Once you enter a position, you cannot cancel or adjust it.",
   "Max. Committed": "Max. Committed",
-  "Total committed:": "Max Supply:",
+  "Total committed:": "Total committed:",
   "Additional fee:": "Additional fee:",
   "Earned since your last action": "Earned since your last action",
   "Commit ~%amount% %symbol% in total to earn!": "Commit ~%amount% %symbol% in total to earn!",
