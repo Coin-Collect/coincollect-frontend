@@ -174,7 +174,8 @@ export const MintingCurrentCard = ({
     const { t } = useTranslation()
     const { isMobile } = useMatchBreakpoints()
   
-    const shouldShowBunny = ifo.status === 'live' || ifo.status === 'coming_soon'
+    //const shouldShowBunny = ifo.status === 'live' || ifo.status === 'coming_soon'
+    const shouldShowBunny = false
   
     return (
       <>

@@ -2,13 +2,14 @@ import { Token, ChainId } from '@pancakeswap/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
+import { getCoinCollectNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
 const ifos: Minting[] = [
   {
     id: 'era',
-    address: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
+    address: getCoinCollectNftAddress(),
     isActive: true,
     status: 'coming_soon',
     name: 'CoinCollect NFTs',

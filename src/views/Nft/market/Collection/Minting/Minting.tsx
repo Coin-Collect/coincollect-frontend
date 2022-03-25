@@ -58,13 +58,12 @@ export default function Minting() {
   const router = useRouter()
   const collectionAddress = router.query.collectionAddress as string
   const collection = useGetCollection(collectionAddress)
-  const { totalSupply, numberTokensListed, banner, avatar } = collection
+  const { totalSupply, maxSupply, cost, isSaleActive, numberTokensListed, banner, avatar } = collection
   const { t } = useTranslation()
   const { account, library } = useWeb3React()
   const { toastError } = useToast()
   const publicIfoData = useGetPublicIfoV2Data(activeIfo)
   const walletIfoData = useGetWalletIfoV3Data(activeIfo)
-
 
   return (
     <>
@@ -83,8 +82,8 @@ export default function Minting() {
           description={collection.description ? <Text color="textSubtle">{t(collection.description)}</Text> : null}
         >
           <StatBox>
-            <StatBoxItem title={t('Minted')} stat={`${totalSupply}/5000`} />
-            <StatBoxItem title={t('Price')} stat={"0.0 ETH"} />
+            <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
+            <StatBoxItem title={t('Price')} stat={cost} />
             <StatBoxItem title={t('Status')} stat={"Active"} />
           </StatBox>
         </MarketPageTitle>
