@@ -13,17 +13,19 @@ const ifos: Minting[] = [
     isActive: true,
     status: 'coming_soon',
     name: 'CoinCollect NFTs',
+    /*
     poolBasic: {
       saleAmount: '500 NFT',
       raiseAmount: '$360,000',
       cakeToBurn: '$0',
-      distributionRatio: 0.2,
+      distributionRatio: 0,
     },
+    */
     poolUnlimited: {
-      saleAmount: '4500 NFT',
+      saleAmount: '5000 NFT',
       raiseAmount: '$1,440,000',
       cakeToBurn: '$0',
-      distributionRatio: 0.8,
+      distributionRatio: 1,
     },
     currency: tokens.cake,
     token: tokens.collect,

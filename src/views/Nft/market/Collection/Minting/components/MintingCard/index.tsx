@@ -21,8 +21,8 @@ import useToast from 'hooks/useToast'
 import { useEffect, useState } from "react"
 import { useCurrentBlock } from 'state/block/hooks'
 import styled from "styled-components"
-import IfoAchievement from "views/Ifos/components/IfoFoldableCard/Achievement"
-import { IfoRibbon } from "views/Ifos/components/IfoFoldableCard/IfoRibbon"
+import IfoAchievement from "views/Nft/market/Collection/Minting/components/MintingCard/Achievement"
+import { IfoRibbon } from "views/Nft/market/Collection/Minting/components/MintingCard/IfoRibbon"
 import EnableStatus from 'views/Ifos/components/IfoFoldableCard/types'
 import useIfoApprove from 'views/Ifos/hooks/useIfoApprove'
 import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
@@ -294,9 +294,9 @@ export const MintingCurrentCard = ({
         <StyledCardBody>
           <CardsWrapper
             shouldReverse={ifo.version === 3.1}
-            singleCard={!publicIfoData.poolBasic || !walletIfoData.poolBasic}
+            singleCard={!ifo.poolBasic}
           >
-            {publicIfoData.poolBasic && walletIfoData.poolBasic && (
+            {ifo.poolBasic && (
               <MintingPoolCard
                 poolId={PoolIds.poolBasic}
                 ifo={ifo}

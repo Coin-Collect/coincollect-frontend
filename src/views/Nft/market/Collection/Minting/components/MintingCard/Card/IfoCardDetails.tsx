@@ -95,7 +95,7 @@ const MaxTokenEntry = ({ maxToken, ifo, poolId }: { maxToken: number; ifo: Ifo; 
 
 const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo, publicIfoData, walletIfoData }) => {
   const { t } = useTranslation()
-  const { status, currencyPriceInUSD } = publicIfoData
+  const { status, currencyPriceInUSD, balance } = publicIfoData
   const poolCharacteristic = publicIfoData[poolId]
   const walletCharacteristic = walletIfoData[poolId]
 
@@ -150,8 +150,7 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
       <>
         {(poolId === PoolIds.poolBasic || ifo.isActive) && tokenEntry}
         <FooterEntry label={t('Total committed:')} value={'5000'} />
-        <FooterEntry label={t('Funds to raise:')} value={'100 $COLLECT'} />
-        {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
+        <FooterEntry label={t('Your balance:')} value={balance} />
 
       </>
     )

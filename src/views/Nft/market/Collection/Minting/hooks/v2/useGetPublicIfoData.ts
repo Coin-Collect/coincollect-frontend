@@ -12,6 +12,7 @@ import { BIG_ZERO } from 'utils/bigNumber'
 import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
 import { PublicIfoData } from '../../types'
 import { getStatus } from '../helpers'
+import { useWeb3React } from '@web3-react/core'
 
 // https://github.com/pancakeswap/pancake-contracts/blob/master/projects/ifo/contracts/IFOV2.sol#L431
 // 1,000,000,000 / 100
@@ -34,6 +35,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
   const cakePriceUsd = usePriceCakeBusd()
   const lpTokenPriceInUsd = useLpTokenPrice(ifo.currency.symbol)
   const currencyPriceInUSD = ifo.currency === tokens.cake ? cakePriceUsd : lpTokenPriceInUsd
+  const { account } = useWeb3React()
 
   const [state, setState] = useState({
     isInitialized: false,
@@ -75,6 +77,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
         totalSupply,
         isSaleActive,
         cost,
+        balance
       ] = await multicallPolygonv1(
         abi,
         [
@@ -90,12 +93,18 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
             address,
             name: 'cost',
           },
+          {
+            address,
+            name: 'balanceOf',
+            params: [account]
+          },
         ],
       )
 
       
       const totalSupplyFormatted =  totalSupply ? totalSupply[0].toNumber() : 0
       const costFormatted =  cost ? cost[0].toNumber() : 0
+      const balanceFormatted = balance ? balance[0].toNumber() : 0
       const status = 'live'
 
 
@@ -104,7 +113,8 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
         isInitialized: true,
         totalSupply: totalSupplyFormatted,
         isSaleActive,
-        cost: costFormatted
+        cost: costFormatted,
+        balance: balanceFormatted,
       }))
     },
     [releaseBlockNumber, address, version, abi],
