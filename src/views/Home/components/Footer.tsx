@@ -9,6 +9,7 @@ import CompositeImage from './CompositeImage'
 
 const BgWrapper = styled.div`
   overflow: hidden;
+  background: #3F51B5;
   position: absolute;
   width: 100%;
   height: 100%;
