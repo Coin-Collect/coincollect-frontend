@@ -79,7 +79,9 @@ const UserMenu = () => {
         >
           {t('Your NFTs')}
         </UserMenuItem>
+        {/*TODO: Activate later
         <ProfileUserMenuItem isLoading={isLoading} hasProfile={hasProfile} disabled={isWrongNetwork} />
+        */}
         <UserMenuDivider />
         <UserMenuItem as="button" onClick={logout}>
           <Flex alignItems="center" justifyContent="space-between" width="100%">
