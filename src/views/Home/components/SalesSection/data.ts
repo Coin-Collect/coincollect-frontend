@@ -6,7 +6,7 @@ export const swapSectionData = (t: TranslateFunction): SalesSectionProps => ({
   bodyText: t('Trade any token on BNB Smart Chain in seconds, just by connecting your wallet.'),
   reverse: false,
   primaryButton: {
-    to: '/swap',
+    to: '/nfts/collections',
     text: t('Trade Now'),
     external: false,
   },
@@ -30,7 +30,7 @@ export const earnSectionData = (t: TranslateFunction): SalesSectionProps => ({
   bodyText: t('PancakeSwap makes it easy to make your crypto work for you.'),
   reverse: true,
   primaryButton: {
-    to: '/farms',
+    to: '/nfts/collections',
     text: t('Explore'),
     external: false,
   },
