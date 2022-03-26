@@ -56,8 +56,8 @@ export const cakeSectionData = (t: TranslateFunction): SalesSectionProps => ({
   ),
   reverse: false,
   primaryButton: {
-    to: '/swap?outputCurrency=0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82',
-    text: t('Buy CAKE'),
+    to: '/swap',
+    text: t('Mint Free NFT'),
     external: false,
   },
   secondaryButton: {
@@ -69,10 +69,10 @@ export const cakeSectionData = (t: TranslateFunction): SalesSectionProps => ({
   images: {
     path: '/images/home/cake/',
     attributes: [
-      { src: 'bottom-right', alt: t('Small 3d pancake') },
-      { src: 'top-right', alt: t('Small 3d pancake') },
-      { src: 'coin', alt: t('CAKE token') },
-      { src: 'top-left', alt: t('Small 3d pancake') },
+      { src: 'bottom-right', alt: t('COLLECT angry birds') },
+      { src: 'top-right', alt: t('COLLECT Simpsons') },
+      { src: 'coin', alt: t('COLLECT Vader') },
+      { src: 'top-left', alt: t('COLLECT minions') },
     ],
   },
 })
