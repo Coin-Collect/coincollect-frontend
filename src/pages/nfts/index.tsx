@@ -1,14 +1,18 @@
 import { GetStaticProps } from 'next/types'
+import { nftsBaseUrl } from 'views/Nft/market/constants'
 import NftMarket from 'views/Nft/market/Home'
 
 const NftMarketPage = () => {
   return <NftMarket />
 }
 
-//Page disabled
+//Page redirected
 export const getStaticProps: GetStaticProps = async () => {
   return {
-    notFound: true,
+    redirect: {
+      destination: `${nftsBaseUrl}/collections`,
+      permanent: true
+    }
   }
 }
 

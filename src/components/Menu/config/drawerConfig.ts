@@ -14,7 +14,7 @@ const drawerLinks: MenuItemsType[] = [
             },
             {
                 label: 'Marketplace (soon)',
-                href: '/nfts/collections',
+                href: '/nfts',
             },
             
 
