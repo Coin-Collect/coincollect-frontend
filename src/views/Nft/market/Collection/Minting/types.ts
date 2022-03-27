@@ -34,7 +34,7 @@ export interface PublicIfoData {
   numberPoints: number
   thresholdPoints: EthersBigNumber
 
-  fetchIfoData: (currentBlock: number) => void
+  fetchIfoData: (currentBlock: number, account: string | undefined) => void
   [PoolIds.poolBasic]?: PoolCharacteristics
   [PoolIds.poolUnlimited]: PoolCharacteristics
 }

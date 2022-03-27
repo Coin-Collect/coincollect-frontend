@@ -239,9 +239,9 @@ export const MintingCurrentCard = ({
   
     useEffect(() => {
       if (isRecentlyActive || !isPublicIfoDataInitialized) {
-        fetchPublicIfoData(currentBlock)
+        fetchPublicIfoData(currentBlock, account)
       }
-    }, [isRecentlyActive, isPublicIfoDataInitialized, fetchPublicIfoData, currentBlock])
+    }, [isRecentlyActive, isPublicIfoDataInitialized, fetchPublicIfoData, currentBlock, account])
   
     useFastRefreshEffect(() => {
       if (isWindowVisible && (isRecentlyActive || !isWalletDataInitialized)) {

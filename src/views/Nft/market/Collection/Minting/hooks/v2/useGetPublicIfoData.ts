@@ -71,7 +71,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
   const abi = coinCollectAbi
 
   const fetchIfoData = useCallback(
-    async (currentBlock: number) => {
+    async (currentBlock: number, account: string | undefined) => {
   
       const [
         totalSupply,
