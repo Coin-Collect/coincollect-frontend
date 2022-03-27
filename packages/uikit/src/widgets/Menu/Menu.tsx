@@ -214,7 +214,8 @@ const Menu: React.FC<NavProps> = ({
             />
           </Inner>
         </BodyWrapper>
-        {isMobile && <BottomNav items={drawerLinks} activeItem={activeItem} activeSubItem={activeSubItem} />}
+        {/* TODO: Activate bottom nav menu later */}
+        {/*isMobile && <BottomNav items={drawerLinks} activeItem={activeItem} activeSubItem={activeSubItem} />*/}
       </Wrapper>
     </MenuContext.Provider>
   );
