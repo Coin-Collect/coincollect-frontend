@@ -111,7 +111,7 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
     <CardBody>
       {tooltipVisible && tooltip}
       <Heading as="h4" color="secondary" mb="16px">
-        {t('Stake CAKE in IFO pool')}
+        {t('Press Mint Button')}
       </Heading>
       <Box>
         <Text color="textSubtle" small>
@@ -168,7 +168,7 @@ const Step2 = ({ hasProfile, isLive, isCommitted }: { hasProfile: boolean; isLiv
   return (
     <CardBody>
       <Heading as="h4" color="secondary" mb="16px">
-        {t('Commit CAKE')}
+        {t('AirDrop $COLLECT')}
       </Heading>
       <Text color="textSubtle" small>
         {t('When the IFO sales are live, you can “commit” your CAKE to buy the tokens being sold.')} <br />
@@ -236,12 +236,12 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
         return (
           <CardBody>
             <Heading as="h4" color="secondary" mb="16px">
-              {t('Activate your Profile')}
+              {t('Add Some MATIC')}
             </Heading>
             <Text color="textSubtle" small mb="16px">
               {t('You’ll need an active PancakeSwap Profile to take part in an IFO!')}
             </Text>
-            {renderAccountStatus()}
+            {/*renderAccountStatus()*/}
           </CardBody>
         )
       case 1:
