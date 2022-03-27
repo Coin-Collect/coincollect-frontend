@@ -8,13 +8,12 @@ import { PanelProps, PushedProps } from "../types";
 interface Props extends PanelProps, PushedProps {
   showMenu: boolean;
   isMobile: boolean;
-  isBannerExists: boolean;
 }
 
-const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean; isBannerExists: boolean }>`
+const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean }>`
   position: fixed;
   padding-top: ${({ showMenu }) => (showMenu ? "80px" : 0)};
-  top: ${({ isBannerExists }) => (isBannerExists ? "80px" : 0)};
+  top: 0;
   left: 0;
   display: flex;
   flex-direction: column;
@@ -36,9 +35,9 @@ const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean; isBannerE
 `;
 
 const Panel: React.FC<Props> = (props) => {
-  const { isPushed, showMenu, isBannerExists } = props;
+  const { isPushed, showMenu } = props;
   return (
-    <StyledPanel isPushed={isPushed} showMenu={showMenu} isBannerExists={isBannerExists}>
+    <StyledPanel isPushed={isPushed} showMenu={showMenu}>
       <PanelBody {...props} />
       <PanelFooter {...props} />
     </StyledPanel>
