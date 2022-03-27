@@ -198,6 +198,8 @@ const Menu: React.FC<NavProps> = ({
             cakePriceUsd={cakePriceUsd}
             pushNav={setIsPushed}
             links={drawerLinks}
+            // @ts-ignore
+            isBannerExists={banner}
           /> 
           <Inner isPushed={isPushed} showMenu={showMenu}>
             {children}
