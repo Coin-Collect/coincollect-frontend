@@ -96,7 +96,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
           {
             address,
             name: 'balanceOf',
-            params: [account]
+            params: [account ? account : '0x514910771af9ca656af840dff83e8264ecf986ca']
           },
         ],
       )
