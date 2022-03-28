@@ -103,7 +103,7 @@ const OnSaleInfo = ({ token, saleAmount, distributionRatio }) => {
         {/*<Label>{t('On sale').toUpperCase()}</Label>*/}
         <Value>{saleAmount}</Value>
         <Text fontSize="14px" color="textSubtle">
-          {t('%ratio%% of total NFTs', { ratio: distributionRatio })}
+          {t('%ratio% NFT minted', { ratio: distributionRatio })}
         </Text>
       </Flex>
     </TokenSection>
@@ -140,6 +140,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
   )
 
   const publicPoolCharacteristics = publicIfoData[poolId]
+  const { totalSupply } = publicIfoData
   const userPoolCharacteristics = walletIfoData[poolId]
 
   const { currency, token } = ifo
@@ -169,7 +170,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
    
       return (
         <>
-          <OnSaleInfo token={token} distributionRatio={distributionRatio} saleAmount={ifo[poolId].saleAmount} />
+          <OnSaleInfo token={token} distributionRatio={totalSupply} saleAmount={ifo[poolId].saleAmount} />
          
         </>
       )
