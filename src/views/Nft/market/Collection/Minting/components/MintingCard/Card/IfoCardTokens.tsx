@@ -103,7 +103,7 @@ const OnSaleInfo = ({ token, saleAmount, distributionRatio }) => {
         {/*<Label>{t('On sale').toUpperCase()}</Label>*/}
         <Value>{saleAmount}</Value>
         <Text fontSize="14px" color="textSubtle">
-          {t('%ratio%% of total sale', { ratio: distributionRatio })}
+          {t('%ratio%% of total NFTs', { ratio: distributionRatio })}
         </Text>
       </Flex>
     </TokenSection>
