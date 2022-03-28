@@ -66,6 +66,7 @@ const SellStage: React.FC<SellStageProps> = ({
           </Text>
         </Flex>
         <Flex justifyContent="space-between" flex="3">
+        {/* TODO: Activate later
           <Button
             as={Link}
             p="0px"
@@ -76,6 +77,7 @@ const SellStage: React.FC<SellStageProps> = ({
           >
             {t('View Item')}
           </Button>
+        */}
           <HorizontalDivider />
           <LinkExternal
             p="0px"

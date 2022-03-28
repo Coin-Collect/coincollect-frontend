@@ -117,7 +117,9 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       </Menu>
       <EasterEgg iterations={2} />
       <ToastListener />
+      {/* TODO: Activate later
       <SubgraphHealthIndicator />
+      */}
     </ProductionErrorBoundary>
   )
 }
