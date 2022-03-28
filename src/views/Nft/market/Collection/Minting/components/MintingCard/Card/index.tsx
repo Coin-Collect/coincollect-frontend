@@ -80,7 +80,7 @@ const cardConfig = (
       }
     case PoolIds.poolUnlimited:
       return {
-        title: meta?.version === 3.1 ? t('Public Sale') : t('Unlimited Sale'),
+        title: meta?.version === 3.1 ? t('Free Mint') : t('Unlimited Sale'),
         variant: 'violet',
         tooltip: t('No limits on the amount you can commit. Additional fee applies when claiming.'),
       }
