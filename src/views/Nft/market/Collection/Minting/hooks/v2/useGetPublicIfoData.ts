@@ -66,6 +66,8 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
     startBlockNum: 0,
     endBlockNum: 0,
     numberPoints: 0,
+    balance: 0,
+    totalSupply: 0,
   })
 
   const abi = coinCollectAbi

@@ -2,7 +2,7 @@ import { useTranslation } from 'contexts/Localization'
 import styled from 'styled-components'
 import { Flex, Heading, PocketWatchIcon, Text, Skeleton } from '@pancakeswap/uikit'
 import getTimePeriods from 'utils/getTimePeriods'
-import { PublicIfoData } from 'views/Ifos/types'
+import { PublicIfoData } from '../../types'
 
 interface Props {
   publicIfoData: PublicIfoData

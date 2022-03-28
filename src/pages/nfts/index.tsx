@@ -7,7 +7,7 @@ const NftMarketPage = () => {
 }
 
 //Page redirected
-export const getStaticProps: GetStaticProps = async () => {
+export const getServerSideProps: GetStaticProps = async () => {
   return {
     redirect: {
       destination: `${nftsBaseUrl}/collections`,

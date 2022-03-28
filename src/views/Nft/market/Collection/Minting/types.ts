@@ -33,6 +33,8 @@ export interface PublicIfoData {
   currencyPriceInUSD: BigNumber
   numberPoints: number
   thresholdPoints: EthersBigNumber
+  balance: number
+  totalSupply: number
 
   fetchIfoData: (currentBlock: number, account: string | undefined) => void
   [PoolIds.poolBasic]?: PoolCharacteristics

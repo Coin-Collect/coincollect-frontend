@@ -14,7 +14,7 @@ import {
 } from '@pancakeswap/uikit'
 import tokens from 'config/constants/tokens'
 import { useTranslation } from 'contexts/Localization'
-import { PublicIfoData } from 'views/Ifos/types'
+import { PublicIfoData } from '../../types'
 import { Ifo } from 'config/constants/types'
 import { BIG_TEN } from 'utils/bigNumber'
 import { getBscScanLink, getPolygonScanLink } from 'utils'
