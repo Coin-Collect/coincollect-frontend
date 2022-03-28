@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowBackIcon, ArrowForwardIcon, Flex, Grid, Heading, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
+import { ArrowBackIcon, ArrowForwardIcon, Button, ChevronRightIcon, Flex, Grid, Heading, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { FetchStatus } from 'config/constants/types'
 import { useGetShuffledCollections } from 'state/nftMarket/hooks'
@@ -11,6 +11,8 @@ import { nftsBaseUrl } from 'views/Nft/market/constants'
 import PageLoader from 'components/Loader/PageLoader'
 import { CollectionCard } from '../components/CollectibleCard'
 import { BNBAmountLabel } from '../components/CollectibleCard/styles'
+import { NextLinkFromReactRouter } from 'components/NextLink'
+import { Collection } from 'state/nftMarket/types'
 
 export const ITEMS_PER_PAGE = 9
 
@@ -136,63 +138,23 @@ const Collectible = () => {
               </Flex>
                 */}
             </Flex>
-            <Grid
-              gridGap="16px"
-              gridTemplateColumns={['1fr', '1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)']}
-              mb="32px"
-              data-test="nft-collection-row"
-            >
-              {sortedCollections.slice(ITEMS_PER_PAGE * (page - 1), page * ITEMS_PER_PAGE).map((collection) => {
-                return (
-                  <CollectionCard
-                    key={collection.address}
-                    bgSrc={collection.banner.small}
-                    avatarSrc={collection.avatar}
-                    collectionName={collection.name}
-                    url={`${nftsBaseUrl}/collections/mint/${collection.address}`}
-                  >
-                    <Flex alignItems="center">
-                      <Text fontSize="12px" color="textSubtle">
-                        {t('MaxSupply')}
-                      </Text>
-                      <BNBAmountLabel amount={parseInt(collection.totalSupply)} />
-                    </Flex>
-                  </CollectionCard>
-                )
-              })}
-              {/* ======Dummy Collections====== */}
-              <CollectionCard
-                    key="dummy"
-                    bgSrc="https://coincollect.org/assets/images/clone/mortalkombat.jpeg"
-                    avatarSrc="https://coincollect.org/assets/images/clone/mklogo.jpeg"
-                    collectionName="Mortal Kombat (soon)"
-                    url=""
-                  >
-                    <Flex alignItems="center">
-                      <Text fontSize="12px" color="textSubtle">
-                        MaxSupply
-                      </Text>
-                      <BNBAmountLabel amount={3000} />
-                    </Flex>
-                  </CollectionCard>
 
-                  <CollectionCard
-                    key="dummy"
-                    bgSrc="https://coincollect.org/assets/images/clone/avatars.jpeg"
-                    avatarSrc="https://coincollect.org/assets/images/clone/avatarlogo.png"
-                    collectionName="Avatar NFTs (soon)"
-                    url=""
-                  >
-                    <Flex alignItems="center">
-                      <Text fontSize="12px" color="textSubtle">
-                        MaxSupply
-                      </Text>
-                      <BNBAmountLabel amount={10000} />
-                    </Flex>
-                  </CollectionCard>
-                  {/* ======Dummy Collections====== */}
+            <Collections
+              key="free-mint-collections"
+              title={t('Free Mint Collections')}
+              testId="nfts-free-mint-collections"
+              collections={sortedCollections}
+            />
 
-            </Grid>
+            <Collections
+              key="coming-soon-collections"
+              title={t('Coming Soon')}
+              testId="nfts-coming-soon-collections"
+              collections={null}
+            />
+
+
+            {/*
             <PageButtons>
               <Arrow
                 onClick={() => {
@@ -210,6 +172,7 @@ const Collectible = () => {
                 <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : 'primary'} />
               </Arrow>
             </PageButtons>
+              */}
           </>
         )}
       </Page>
@@ -218,3 +181,106 @@ const Collectible = () => {
 }
 
 export default Collectible
+
+// This function cloned from Market/Home/Collections.tsx
+//TODO: Using temporarily
+const Collections: React.FC<{ title: string; testId: string; collections: Collection[] }> = ({
+  title,
+  testId,
+  collections,
+}) => {
+  const { t } = useTranslation()
+
+  const CardRender = () => {
+
+    if (collections) {
+
+
+      return (<Grid gridGap="16px" gridTemplateColumns={['1fr', '1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)']} mb="64px">
+
+
+        {collections.slice(0, 6).map((collection) => {
+          return (
+            <CollectionCard
+              key={collection.address}
+              bgSrc={collection.banner.small}
+              avatarSrc={collection.avatar}
+              collectionName={collection.name}
+              url={`${nftsBaseUrl}/collections/mint/${collection.address}`}
+            >
+              <Flex alignItems="center">
+                <Text fontSize="12px" color="textSubtle">
+                  {t('Volume')}
+                </Text>
+                <BNBAmountLabel amount={collection.totalSupply ? parseFloat(collection.totalSupply) : 0} />
+              </Flex>
+            </CollectionCard>
+          )
+        })}
+
+
+      </Grid>)
+    } else {
+      return (<Grid gridGap="16px" gridTemplateColumns={['1fr', '1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)']} mb="64px">
+
+
+        {/* ======Dummy Collections====== */}
+        <CollectionCard
+          key="dummy"
+          bgSrc="https://coincollect.org/assets/images/clone/mortalkombat.jpeg"
+          avatarSrc="https://coincollect.org/assets/images/clone/mklogo.jpeg"
+          collectionName="Mortal Kombat (soon)"
+          url=""
+        >
+          <Flex alignItems="center">
+            <Text fontSize="12px" color="textSubtle">
+              MaxSupply
+            </Text>
+            <BNBAmountLabel amount={3000} />
+          </Flex>
+        </CollectionCard>
+
+        <CollectionCard
+          key="dummy"
+          bgSrc="https://coincollect.org/assets/images/clone/avatars.jpeg"
+          avatarSrc="https://coincollect.org/assets/images/clone/avatarlogo.png"
+          collectionName="Avatar NFTs (soon)"
+          url=""
+        >
+          <Flex alignItems="center">
+            <Text fontSize="12px" color="textSubtle">
+              MaxSupply
+            </Text>
+            <BNBAmountLabel amount={10000} />
+          </Flex>
+        </CollectionCard>
+        {/* ======Dummy Collections====== */}
+
+
+      </Grid>)
+    }
+  }
+
+  return (
+    <>
+      <Flex alignItems="center" justifyContent="space-between" mb="32px">
+        <Heading as="h3" scale="lg" data-test={testId}>
+          {title}
+        </Heading>
+        {/*
+        <Button
+          as={NextLinkFromReactRouter}
+          to={`${nftsBaseUrl}/collections/`}
+          variant="secondary"
+          scale="sm"
+          endIcon={<ChevronRightIcon color="primary" width="24px" />}
+        >
+          {t('View All')}
+        </Button>
+        */}
+
+      </Flex>
+      <CardRender />
+    </>
+  )
+}
