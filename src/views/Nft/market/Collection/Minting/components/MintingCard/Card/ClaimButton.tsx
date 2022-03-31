@@ -1,6 +1,6 @@
 import { AutoRenewIcon, Button } from '@pancakeswap/uikit'
 import { PoolIds } from 'config/constants/types'
-import { WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
+import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
@@ -10,11 +10,13 @@ import useActiveWeb3React from 'hooks/useActiveWeb3React'
 interface Props {
   poolId: PoolIds
   ifoVersion: number
+  publicIfoData: PublicIfoData
   walletIfoData: WalletIfoData
 }
 
-const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => {
+const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walletIfoData }) => {
   const userPoolCharacteristics = walletIfoData[poolId]
+  const { status } = publicIfoData
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
@@ -44,7 +46,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => 
   return (
     <Button
       onClick={handleClaim}
-      disabled={userPoolCharacteristics.isPendingTx}
+      disabled={userPoolCharacteristics.isPendingTx || status !== 'live'}
       width="100%"
       isLoading={userPoolCharacteristics.isPendingTx}
       endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
