@@ -42,6 +42,8 @@ export const IfoRibbon = ({ publicIfoData }: { publicIfoData: PublicIfoData }) =
   let Component
   if (status === 'finished') {
     Component = <IfoRibbonEnd />
+  } else if (status === 'paused') {
+    Component = <IfoRibbonPaused />
   } else if (status === 'live') {
     Component = <IfoRibbonLive publicIfoData={publicIfoData} />
   } else if (status === 'coming_soon') {
@@ -85,6 +87,20 @@ const IfoRibbonEnd = () => {
       <Box position="relative">
         <Heading as="h3" scale="lg" color="textSubtle">
           {t('Sale Finished!')}
+        </Heading>
+      </Box>
+    </>
+  )
+}
+
+const IfoRibbonPaused = () => {
+  const { t } = useTranslation()
+  return (
+    <>
+      <BigCurve $status="finished" />
+      <Box position="relative">
+        <Heading as="h3" scale="lg" color="textSubtle">
+          {t('Sale Paused!')}
         </Heading>
       </Box>
     </>

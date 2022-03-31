@@ -59,6 +59,9 @@ export interface Ifo {
 }
 
 //CC
+export type MintingStatus = 'idle' | 'coming_soon' | 'live' | 'finished' | 'paused'
+
+//CC
 export interface Minting {
   id: string
   isActive: boolean

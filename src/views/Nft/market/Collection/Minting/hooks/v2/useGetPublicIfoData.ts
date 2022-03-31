@@ -4,7 +4,7 @@ import { BSC_BLOCK_TIME } from 'config'
 import ifoV2Abi from 'config/abi/ifoV2.json'
 import coinCollectAbi from 'config/abi/coinCollectNft.json'
 import tokens from 'config/constants/tokens'
-import { Ifo, IfoStatus } from 'config/constants/types'
+import { Ifo, IfoStatus, Minting, MintingStatus } from 'config/constants/types'
 import { FixedNumber } from '@ethersproject/bignumber'
 
 import { useLpTokenPrice, usePriceCakeBusd } from 'state/farms/hooks'
@@ -30,7 +30,7 @@ const formatPool = (pool) => ({
 /**
  * Gets all public data of an IFO
  */
-const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
+const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
   const { address, releaseBlockNumber, version } = ifo
   const cakePriceUsd = usePriceCakeBusd()
   const lpTokenPriceInUsd = useLpTokenPrice(ifo.currency.symbol)
@@ -39,7 +39,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
 
   const [state, setState] = useState({
     isInitialized: false,
-    status: 'idle' as IfoStatus,
+    status: 'idle' as MintingStatus,
     blocksRemaining: 0,
     secondsUntilStart: 0,
     progress: 5,
@@ -77,6 +77,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
   
       const [
         totalSupply,
+        maxSupply,
         isSaleActive,
         cost,
         balance
@@ -86,6 +87,10 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
           {
             address,
             name: 'totalSupply',
+          },
+          {
+            address,
+            name: 'maxSupply',
           },
           {
             address,
@@ -102,21 +107,32 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
           },
         ],
       )
-
+    
       
-      const totalSupplyFormatted =  totalSupply ? totalSupply[0].toNumber() : 0
-      const costFormatted =  cost ? cost[0].toNumber() : 0
-      const balanceFormatted = balance ? balance[0].toNumber() : 0
-      const status = 'live'
+      const totalSupplyNum =  totalSupply ? totalSupply[0].toNumber() : 0
+      const maxSupplyNum=  maxSupply ? maxSupply[0].toNumber() : 0
+      const costNum =  cost ? cost[0].toNumber() : 0
+      const balanceNum = balance ? balance[0].toNumber() : 0
 
+      let status ='live' as MintingStatus
+      if(totalSupplyNum === maxSupplyNum) {
+        status= 'finished' as MintingStatus
+      } else if(!isSaleActive) {
+        status= 'paused' as MintingStatus
+      }
+
+      //Calculate Progress Percantage
+      const progress = (totalSupplyNum * 100) / maxSupplyNum
 
       setState((prev) => ({
         ...prev,
         isInitialized: true,
-        totalSupply: totalSupplyFormatted,
+        totalSupply: totalSupplyNum,
         isSaleActive,
-        cost: costFormatted,
-        balance: balanceFormatted,
+        cost: costNum,
+        balance: balanceNum,
+        status,
+        progress,
       }))
     },
     [releaseBlockNumber, address, version, abi],

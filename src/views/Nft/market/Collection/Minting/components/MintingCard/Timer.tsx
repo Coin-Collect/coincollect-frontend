@@ -100,6 +100,7 @@ const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
           <PocketWatchIcon width="42px" mr="8px" />
           <FlexGap gap="8px" alignItems="center">
             <LiveNowHeading as="h3">{`${t('Live Now').toUpperCase()}!`}</LiveNowHeading>
+            {/* TODO: Activate End Timer later
             <EndInHeading as="h3" scale="lg" color="white">
               {t('Ends in')}
             </EndInHeading>
@@ -121,6 +122,7 @@ const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
                 <Text color="white">{t('m')}</Text>
               </>
             </FlexGap>
+          */}
           </FlexGap>
         </>
       )}
