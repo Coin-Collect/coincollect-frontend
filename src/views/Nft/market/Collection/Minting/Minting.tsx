@@ -58,7 +58,7 @@ export default function Minting() {
   const router = useRouter()
   const collectionAddress = router.query.collectionAddress as string
   const collection = useGetCollection(collectionAddress)
-  const { totalSupply, maxSupply, cost, isSaleActive, numberTokensListed, banner, avatar } = collection
+  const { totalSupply, maxSupply, cost, status, numberTokensListed, banner, avatar } = collection
   const { t } = useTranslation()
   const { account, library } = useWeb3React()
   const { toastError } = useToast()
@@ -84,7 +84,7 @@ export default function Minting() {
           <StatBox>
             <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
             <StatBoxItem title={t('Price')} stat={cost} />
-            <StatBoxItem title={t('Status')} stat={"Active"} />
+            <StatBoxItem title={t('Status')} stat={status} />
           </StatBox>
         </MarketPageTitle>
       </MarketPageHeader>
