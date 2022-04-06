@@ -16,7 +16,7 @@ interface Props {
 
 const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walletIfoData }) => {
   const userPoolCharacteristics = walletIfoData[poolId]
-  const { status } = publicIfoData
+  const { status, cost } = publicIfoData
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
@@ -51,7 +51,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
       isLoading={userPoolCharacteristics.isPendingTx}
       endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
     >
-      {t('Mint')}
+      {t('Mint for ') + cost + ' MATIC'}
     </Button>
   )
 }

@@ -80,7 +80,7 @@ const cardConfig = (
       }
     case PoolIds.poolUnlimited:
       return {
-        title: meta?.version === 3.1 ? t('Free Mint') : t('Unlimited Sale'),
+        title: meta?.version === 3.1 ? t('Public Mint') : t('Unlimited Sale'),
         variant: 'violet',
         tooltip: t('No limits on the amount you can commit. Additional fee applies when claiming.'),
       }
@@ -127,7 +127,7 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
         <CardHeader p="16px 24px" variant={config.variant}>
           <Flex justifyContent="space-between" alignItems="center">
             <Text bold fontSize="20px" lineHeight={1}>
-              {config.title}
+              {publicIfoData.cost === 0 ? 'Free Mint' : config.title}
             </Text>
             <div ref={targetRef}>
               <HelpIcon />

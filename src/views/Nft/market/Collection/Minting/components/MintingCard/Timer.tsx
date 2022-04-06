@@ -89,17 +89,20 @@ const LiveNowHeading = styled(EndInHeading)`
 
 const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
   const { t } = useTranslation()
-  const { status, secondsUntilEnd } = publicIfoData
+  const { status, secondsUntilEnd, totalSupply, partialMaxSupply, isLastPrice, nextPrice } = publicIfoData
+  const remainingSupply = partialMaxSupply - totalSupply
   const timeUntil = getTimePeriods(secondsUntilEnd)
+  const message = !isLastPrice ? `Last ${remainingSupply} mint for this price!` : `Last ${remainingSupply} mint!`
   return (
     <Flex justifyContent="center" position="relative">
       {status === 'idle' ? (
         <Skeleton animation="pulse" variant="rect" width="100%" height="48px" />
       ) : (
         <>
-          <PocketWatchIcon width="42px" mr="8px" />
+          {/*<PocketWatchIcon width="42px" mr="8px" />*/}
           <FlexGap gap="8px" alignItems="center">
-            <LiveNowHeading as="h3">{`${t('Live Now').toUpperCase()}!`}</LiveNowHeading>
+            <LiveNowHeading as="h3">{message}</LiveNowHeading>
+            {!isLastPrice && (<EndInHeading as="h3" scale="lg" color="white">{`Next Price: ${nextPrice}`}</EndInHeading>)}
             {/* TODO: Activate End Timer later
             <EndInHeading as="h3" scale="lg" color="white">
               {t('Ends in')}

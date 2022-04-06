@@ -13,18 +13,16 @@ import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
 import { PublicIfoData } from '../../types'
 import { getStatus } from '../helpers'
 import { useWeb3React } from '@web3-react/core'
+import { formatEther } from '@ethersproject/units'
 
 // https://github.com/pancakeswap/pancake-contracts/blob/master/projects/ifo/contracts/IFOV2.sol#L431
 // 1,000,000,000 / 100
 const TAX_PRECISION = FixedNumber.from(10000000000)
 
-const formatPool = (pool) => ({
-  raisingAmountPool: pool ? new BigNumber(pool[0].toString()) : BIG_ZERO,
-  offeringAmountPool: pool ? new BigNumber(pool[1].toString()) : BIG_ZERO,
-  limitPerUserInLP: pool ? new BigNumber(pool[2].toString()) : BIG_ZERO,
-  hasTax: pool ? pool[3] : false,
-  totalAmountPool: pool ? new BigNumber(pool[4].toString()) : BIG_ZERO,
-  sumTaxesOverflow: pool ? new BigNumber(pool[5].toString()) : BIG_ZERO,
+const formatPriceDetails = (details) => ({
+  partialMaxSupply: details ? details[0].toNumber() : 0,
+  isLastPrice: details ? details[2] : true,
+  nextPrice: details ? parseFloat(formatEther(details[3])) : 0,
 })
 
 /**
@@ -80,7 +78,8 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
         maxSupply,
         isSaleActive,
         cost,
-        balance
+        balance,
+        priceDetails,
       ] = await multicallPolygonv1(
         abi,
         [
@@ -105,14 +104,24 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
             name: 'balanceOf',
             params: [account ? account : '0x514910771af9ca656af840dff83e8264ecf986ca']
           },
+          version === 3.1 && {
+            address,
+            name: 'getPriceDetails',
+          },
         ],
       )
-    
+        
+
+      
+
+      const priceDetailsFormatted = formatPriceDetails(priceDetails)
       
       const totalSupplyNum =  totalSupply ? totalSupply[0].toNumber() : 0
       const maxSupplyNum=  maxSupply ? maxSupply[0].toNumber() : 0
-      const costNum =  cost ? cost[0].toNumber() : 0
+      const formattedCost = cost ? parseFloat(formatEther(cost[0])) : 0
       const balanceNum = balance ? balance[0].toNumber() : 0
+
+      
 
       let status ='live' as MintingStatus
       if(totalSupplyNum === maxSupplyNum) {
@@ -122,17 +131,19 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
       }
 
       //Calculate Progress Percantage
-      const progress = (totalSupplyNum * 100) / maxSupplyNum
+
+      const progress = (totalSupplyNum * 100) / priceDetailsFormatted.partialMaxSupply
 
       setState((prev) => ({
         ...prev,
         isInitialized: true,
         totalSupply: totalSupplyNum,
         isSaleActive,
-        cost: costNum,
+        cost: formattedCost,
         balance: balanceNum,
         status,
         progress,
+        ...priceDetailsFormatted,
       }))
     },
     [releaseBlockNumber, address, version, abi],

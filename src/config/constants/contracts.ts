@@ -57,7 +57,7 @@ export default {
   },
   coinCollectNft: {
     137: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
-    80001: '0x11DdF94710AD390063357D532042Bd5f23A3fBd6',
+    80001: '0x6670815C9D9F591b6F1eD4001f69b159f4b8af29',
   },
   cakeVault: {
     56: '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC',
