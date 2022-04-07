@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { useState, useCallback } from 'react'
-import { BSC_BLOCK_TIME } from 'config'
+import { BSC_BLOCK_TIME, POLYGON_BLOCK_TIME } from 'config'
 import ifoV2Abi from 'config/abi/ifoV2.json'
 import coinCollectAbi from 'config/abi/coinCollectNft.json'
 import tokens from 'config/constants/tokens'
@@ -74,6 +74,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
     async (currentBlock: number, account: string | undefined) => {
   
       const [
+        startBlock,
         totalSupply,
         maxSupply,
         isSaleActive,
@@ -83,6 +84,10 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
       ] = await multicallPolygonv1(
         abi,
         [
+          {
+            address,
+            name: 'startBlock',
+          },
           {
             address,
             name: 'totalSupply',
@@ -111,24 +116,18 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
         ].filter(Boolean),
       )
         
-
       
 
       const priceDetailsFormatted = formatPriceDetails(priceDetails)
-      
+
+      const startBlockNum = startBlock ? startBlock[0].toNumber() : 0
       const totalSupplyNum =  totalSupply ? totalSupply[0].toNumber() : 0
-      const maxSupplyNum=  maxSupply ? maxSupply[0].toNumber() : 0
+      const maxSupplyNum =  maxSupply ? maxSupply[0].toNumber() : 0
       const formattedCost = cost ? parseFloat(formatEther(cost[0])) : 0
       const balanceNum = balance ? balance[0].toNumber() : 0
 
       
-
-      let status ='live' as MintingStatus
-      if(totalSupplyNum === maxSupplyNum) {
-        status= 'finished' as MintingStatus
-      } else if(!isSaleActive) {
-        status= 'paused' as MintingStatus
-      }
+      const status = getStatus(currentBlock, startBlockNum, totalSupplyNum, maxSupplyNum, isSaleActive)
 
       const isDynamicPrice = (priceDetailsFormatted.partialMaxSupply && priceDetailsFormatted.nextPrice);
 
@@ -139,6 +138,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
       setState((prev) => ({
         ...prev,
         isInitialized: true,
+        secondsUntilStart: (startBlockNum - currentBlock) * POLYGON_BLOCK_TIME,
         totalSupply: totalSupplyNum,
         isSaleActive,
         cost: formattedCost,

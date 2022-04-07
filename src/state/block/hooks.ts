@@ -1,7 +1,7 @@
 import { FAST_INTERVAL, SLOW_INTERVAL } from 'config/constants'
 // eslint-disable-next-line camelcase
 import useSWR, { unstable_serialize, useSWRConfig } from 'swr'
-import { simpleRpcProvider } from 'utils/providers'
+import { simplePolygonRpcProvider, simpleRpcProvider } from 'utils/providers'
 import useSWRImmutable from 'swr/immutable'
 
 const REFRESH_BLOCK_INTERVAL = 6000
@@ -12,7 +12,7 @@ export const usePollBlockNumber = () => {
   const { data } = useSWR(
     ['blockNumber'],
     async () => {
-      const blockNumber = await simpleRpcProvider.getBlockNumber()
+      const blockNumber = await simplePolygonRpcProvider.getBlockNumber()
       if (!cache.get(unstable_serialize(['initialBlockNumber']))) {
         mutate(['initialBlockNumber'], blockNumber)
       }
