@@ -92,14 +92,17 @@ const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
   const { status, secondsUntilEnd, totalSupply, partialMaxSupply, isLastPrice, nextPrice } = publicIfoData
   const remainingSupply = partialMaxSupply - totalSupply
   const timeUntil = getTimePeriods(secondsUntilEnd)
-  const message = !isLastPrice ? `Last ${remainingSupply} mint for this price!` : `Last ${remainingSupply} mint!`
+  const isDynamicPrice = (partialMaxSupply && nextPrice);
+  const message =isDynamicPrice ? (!isLastPrice ? `Last ${remainingSupply} mint for this price!` : `Last ${remainingSupply} mint!`) : `LIVE NOW!`
+  
+
   return (
     <Flex justifyContent="center" position="relative">
       {status === 'idle' ? (
         <Skeleton animation="pulse" variant="rect" width="100%" height="48px" />
       ) : (
         <>
-          {/*<PocketWatchIcon width="42px" mr="8px" />*/}
+          {Boolean(!isDynamicPrice) && <PocketWatchIcon width="42px" mr="8px" />}
           <FlexGap gap="8px" alignItems="center">
             <LiveNowHeading as="h3">{message}</LiveNowHeading>
             {!isLastPrice && (<EndInHeading as="h3" scale="lg" color="white">{`Next Price: ${nextPrice}`}</EndInHeading>)}

@@ -72,7 +72,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 export default CollectionPage
 
 export const getCollectionApi = async (collectionAddress: string): Promise<any> => {
-  const res = await fetch(`${API_NFT}/collections/0x0D464bDde2301C30871bB4C29bB7DD935f5a985C`)
+  const res = await fetch(`${API_NFT}/collections/${collectionAddress}`)
   if (res.ok) {
     const json = await res.json()
     return json.data

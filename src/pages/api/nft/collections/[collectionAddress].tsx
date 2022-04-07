@@ -4,6 +4,7 @@ import { Contract } from "ethers";
 import { getCoinCollectNftAddress } from "utils/addressHelpers";
 import { simplePolygonRpcProvider } from "utils/providers";
 import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
+import { mintingConfig } from "config/constants";
 const axios = require('axios');
 
 
@@ -22,7 +23,17 @@ const getDatas = async (contract: Contract) => {
 }
 
 
+
+
+
+
 export default async function handler(req, res) {
+
+
+  let { collectionAddress } = req.query
+
+  const activeMinting = mintingConfig.find((minting) => minting.address === collectionAddress)
+
 
  const contract = new Contract(getCoinCollectNftAddress(), coinCollectNftAbi, simplePolygonRpcProvider)
  const [totalSupply, maxSupply, cost, isSaleActive] = await getDatas(contract)
@@ -35,7 +46,7 @@ export default async function handler(req, res) {
   res.status(200).json({
     data: {
       "address": getCoinCollectNftAddress(),
-      "name": "CoinCollect NFTs",
+      "name": activeMinting.name,
       "description": "CoinCollect is the Decentralized MultiChain NFT DeFi Protocol operating on Multi-Chains, that helps NFT traders, high yield farmers, liquidity providers, developers and web 3.0 startups to participate in an open financial market with no barriers to entry.",
       "symbol": "cNFT",
       "totalSupply": totalSupply,

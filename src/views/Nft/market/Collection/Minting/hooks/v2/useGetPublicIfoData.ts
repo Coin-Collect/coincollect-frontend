@@ -108,7 +108,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
             address,
             name: 'getPriceDetails',
           },
-        ],
+        ].filter(Boolean),
       )
         
 
@@ -130,9 +130,11 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
         status= 'paused' as MintingStatus
       }
 
-      //Calculate Progress Percantage
+      const isDynamicPrice = (priceDetailsFormatted.partialMaxSupply && priceDetailsFormatted.nextPrice);
 
-      const progress = (totalSupplyNum * 100) / priceDetailsFormatted.partialMaxSupply
+      //Calculate Progress Percantage
+      const progress = isDynamicPrice ? (totalSupplyNum * 100) / priceDetailsFormatted.partialMaxSupply
+                                      : (totalSupplyNum * 100) / maxSupplyNum
 
       setState((prev) => ({
         ...prev,

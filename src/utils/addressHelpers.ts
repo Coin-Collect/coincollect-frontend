@@ -50,7 +50,9 @@ export const getEasterNftAddress = () => {
 export const getCoinCollectNftAddress = () => {
   return getAddress(addresses.coinCollectNft)
 }
-
+export const getCoinCollectBronzeNftAddress = () => {
+  return getAddress(addresses.coinCollectBronzeNft)
+}
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null

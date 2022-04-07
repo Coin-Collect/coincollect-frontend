@@ -50,7 +50,8 @@ const IfoStepBackground = styled(Box)`
   background: ${({ theme }) => theme.colors.gradients.bubblegum};
 `
 
-const activeIfo = mintingConfig.find((ifo) => ifo.isActive)
+
+
 
 
 export default function Minting() {
@@ -58,7 +59,8 @@ export default function Minting() {
   const router = useRouter()
   const collectionAddress = router.query.collectionAddress as string
   const collection = useGetCollection(collectionAddress)
-  const { totalSupply, maxSupply, cost, status, numberTokensListed, banner, avatar } = collection
+  const { totalSupply, maxSupply, cost, status, numberTokensListed, banner, avatar, name, description } = collection
+  const activeIfo = mintingConfig.find((ifo) => ifo.name === name)
   const { t } = useTranslation()
   const { account, library } = useWeb3React()
   const { toastError } = useToast()
@@ -78,8 +80,8 @@ export default function Minting() {
         </Flex>
         <BannerHeader bannerImage={banner.large} avatar={<AvatarImage src={avatar} />} />
         <MarketPageTitle
-          title={collection.name}
-          description={collection.description ? <Text color="textSubtle">{t(collection.description)}</Text> : null}
+          title={name}
+          description={description ? <Text color="textSubtle">{t(description)}</Text> : null}
         >
           <StatBox>
             <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
