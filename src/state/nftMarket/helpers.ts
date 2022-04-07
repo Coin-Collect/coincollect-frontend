@@ -62,13 +62,14 @@ const fetchCollectionsTotalSupply = async (collections: ApiCollection[]): Promis
   return []
 }
 
-/**
+/** TODO: Deactivated thegraph data fetching functions, activate later 
  * Fetch all collections data by combining data from the API (static metadata) and the Subgraph (dynamic market data)
  */
 export const getCollections = async (): Promise<Record<string, Collection>> => {
   try {
-    const [collections, collectionsMarket] = await Promise.all([getCollectionsApi(), getCollectionsSg()])
+    const [collections, /*collectionsMarket*/] = await Promise.all([getCollectionsApi(), /*getCollectionsSg()*/])
     const collectionApiData: ApiCollection[] = collections?.data ?? []
+    /*
     const collectionsTotalSupply = await fetchCollectionsTotalSupply(collectionApiData)
     const collectionApiDataCombinedOnChain = collectionApiData.map((collection, index) => {
       const totalSupplyFromApi = Number(collection.totalSupply) || 0
@@ -78,8 +79,9 @@ export const getCollections = async (): Promise<Record<string, Collection>> => {
         totalSupply: Math.max(totalSupplyFromApi, totalSupplyFromOnChain).toString(),
       }
     })
-
-    return combineCollectionData(collectionApiDataCombinedOnChain, collectionsMarket)
+    */
+    // @ts-ignore
+    return collectionApiData /*combineCollectionData(collectionApiDataCombinedOnChain, collectionsMarket)*/
   } catch (error) {
     console.error('Unable to fetch data:', error)
     return null

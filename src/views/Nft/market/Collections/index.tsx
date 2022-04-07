@@ -86,6 +86,19 @@ const Collectible = () => {
     })
   }, [collections, sortField])
 
+  // CC - Filtering
+  const finishedMintings = useMemo(()=> {
+    const collectionValues = collections ? Object.values(collections) : []
+    return collectionValues.filter((collection) => collection.status == 'finished')
+  }, [collections])
+
+  // CC - Filtering
+  const activeMintings = useMemo(()=> {
+    const collectionValues = collections ? Object.values(collections) : []
+    return collectionValues.filter((collection) => collection.status == 'live')
+  }, [collections])
+
+  
   const handleSortOptionChange = (option: OptionProps): void => {
     setSortField(option.value)
   }
@@ -140,11 +153,18 @@ const Collectible = () => {
             </Flex>
 
             <Collections
-              key="free-mint-collections"
-              title={t('Free Mint Collections')}
-              testId="nfts-free-mint-collections"
-              collections={sortedCollections}
+              key="active-mintings"
+              title={t('Live Mintings')}
+              testId="active-mintings"
+              collections={activeMintings}
             />
+
+            {finishedMintings && <Collections
+              key="finished-mintings"
+              title={t('Finished Mintings')}
+              testId="finished-mintings"
+              collections={finishedMintings}
+            />}
 
             <Collections
               key="coming-soon-collections"

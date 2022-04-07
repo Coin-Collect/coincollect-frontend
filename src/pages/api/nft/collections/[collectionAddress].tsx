@@ -34,6 +34,8 @@ export default async function handler(req, res) {
 
   const activeMinting = mintingConfig.find((minting) => minting.address === collectionAddress)
 
+  let { name, description, symbol, banner, avatar } = activeMinting
+
 
  const contract = new Contract(getCoinCollectNftAddress(), coinCollectNftAbi, simplePolygonRpcProvider)
  const [totalSupply, maxSupply, cost, isSaleActive] = await getDatas(contract)
@@ -46,17 +48,16 @@ export default async function handler(req, res) {
   res.status(200).json({
     data: {
       "address": getCoinCollectNftAddress(),
-      "name": activeMinting.name,
-      "description": "CoinCollect is the Decentralized MultiChain NFT DeFi Protocol operating on Multi-Chains, that helps NFT traders, high yield farmers, liquidity providers, developers and web 3.0 startups to participate in an open financial market with no barriers to entry.",
+      "name": name,
+      "description": description,
       "symbol": "cNFT",
       "totalSupply": totalSupply,
       "maxSupply": maxSupply,
       "cost": cost == 0 ? "Free" : cost,
       "status": status,
-      "avatar": "https://coincollect.org/assets/images/clone/nft350.png",
+      "avatar": avatar,
       "banner": {
-        "large": "https://coincollect.org/assets/images/clone/banner-lg.png",
-        "small": "https://coincollect.org/assets/images/clone/banner-lg.png"
+        "large": banner.large,
       },
       attributes: []
     }
