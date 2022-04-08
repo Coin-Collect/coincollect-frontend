@@ -10,7 +10,7 @@ const ifos: Minting[] = [
   //============================Free Mint NFTS====================================
   {
     id: 'coincollectfreenfts',
-    name: 'CoinCollect NFTs',
+    name: 'CoinCollect Starter NFTs',
     description: 'CoinCollect is a Decentralized NFT finance Protocol operating on Multi-Chains, that helps NFT traders, high yield farmers, liquidity providers, developers and web 3.0 startups to participate in an open financial market with no barriers to entry.',
     address: getCoinCollectNftAddress(),
     symbol: 'cNFT',
@@ -41,13 +41,13 @@ const ifos: Minting[] = [
     description: 'CoinCollect Bronze Nft Description',
     address: getCoinCollectBronzeNftAddress(),
     symbol: 'cNFTBronze',
-    totalSupply: 5000,
+    totalSupply: 3000,
     isActive: true,
     status: 'live',
-    avatar: "https://cdn.pixabay.com/photo/2020/11/10/15/51/bear-5730216__340.png",
+    avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
     banner: {
-      large: "https://cdn.pixabay.com/photo/2019/07/07/17/48/avatar-4322968_960_720.png",
-      small: "https://cdn.pixabay.com/photo/2019/07/07/17/48/avatar-4322968_960_720.png",
+      large: "https://coincollect.org/assets/images/clone/banners/bannerBronzeLg.png",
+      small: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
     },
     poolUnlimited: {
       saleAmount: '5000 NFT',
@@ -68,13 +68,13 @@ const ifos: Minting[] = [
     description: 'CoinCollect Silver Nft Description',
     address: getCoinCollectBronzeNftAddress(),
     symbol: 'cNFTSilver',
-    totalSupply: 5000,
+    totalSupply: 2000,
     isActive: true,
     status: 'live',
-    avatar: "https://cdn.pixabay.com/photo/2021/01/18/08/32/naruto-5927441__340.png",
+    avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
     banner: {
-      large: "https://cdn.pixabay.com/photo/2018/09/30/01/49/fantasy-3712662_960_720.jpg",
-      small: "https://cdn.pixabay.com/photo/2018/09/30/01/49/fantasy-3712662_960_720.jpg",
+      large: "https://coincollect.org/assets/images/clone/banners/bannerSilverLg.png",
+      small: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
     },
     poolUnlimited: {
       saleAmount: '5000 NFT',
@@ -95,13 +95,13 @@ const ifos: Minting[] = [
     description: 'CoinCollect Gold Nft Description',
     address: getCoinCollectBronzeNftAddress(),
     symbol: 'cNFTGold',
-    totalSupply: 5000,
+    totalSupply: 1000,
     isActive: true,
     status: 'live',
-    avatar: "https://cdn.pixabay.com/photo/2022/03/31/07/25/woman-7102383__340.png",
+    avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
     banner: {
-      large: "https://cdn.pixabay.com/photo/2019/07/05/05/47/fantasy-4317735_960_720.jpg",
-      small: "https://cdn.pixabay.com/photo/2019/07/05/05/47/fantasy-4317735_960_720.jpg",
+      large: "https://coincollect.org/assets/images/clone/banners/bannerGoldLg.png",
+      small: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     },
     poolUnlimited: {
       saleAmount: '5000 NFT',
