@@ -74,20 +74,16 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
     async (currentBlock: number, account: string | undefined) => {
   
       const [
-        startBlock,
         totalSupply,
         maxSupply,
         isSaleActive,
         cost,
         balance,
         priceDetails,
+        startBlock,
       ] = await multicallPolygonv1(
         abi,
         [
-          {
-            address,
-            name: 'startBlock',
-          },
           {
             address,
             name: 'totalSupply',
@@ -112,6 +108,10 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
           version === 3.1 && {
             address,
             name: 'getPriceDetails',
+          },
+          version === 3.1 && {
+            address,
+            name: 'startBlock',
           },
         ].filter(Boolean),
       )
