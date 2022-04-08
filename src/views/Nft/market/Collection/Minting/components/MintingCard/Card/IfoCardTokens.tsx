@@ -143,7 +143,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
   const { totalSupply } = publicIfoData
   const userPoolCharacteristics = walletIfoData[poolId]
 
-  const { currency, token } = ifo
+  const { currency, token, version } = ifo
   const { hasClaimed } = userPoolCharacteristics
   const distributionRatio = ifo[poolId].distributionRatio * 100
 
@@ -173,25 +173,23 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
           <OnSaleInfo token={token} distributionRatio={totalSupply} saleAmount={ifo[poolId].saleAmount} />
 
           <Box mt="16px">
-          {!isEligible && (
+
+          {(!isEligible && version == 3.1) && (
             <Message mb="24px" p="8px" variant="warning" icon={<ErrorIcon color="warning" width="24px" />}>
               <MessageText small display="inline">
                 {t('You dont have any CoinCollect NFT, nft holders will get %50 discount.')}
               </MessageText>
             </Message>
           )}
-          <IFORequirements
-            criterias={criterias}
-            admissionProfile={publicPoolCharacteristics?.admissionProfile}
-            pointThreshold={publicPoolCharacteristics?.pointThreshold}
-          />
-          {isEligible && (
+        
+          {(isEligible && version == 3.1) && (
             <Message mt="24px" p="8px" variant="success">
               <MessageText small display="inline">
                 {t('You are eligible to participate in this Private Sale!')}
               </MessageText>
             </Message>
           )}
+
         </Box>
         
         </>
