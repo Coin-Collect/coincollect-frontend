@@ -16,6 +16,7 @@ interface Props {
 
 const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walletIfoData }) => {
   const userPoolCharacteristics = walletIfoData[poolId]
+  const { isHolder, discountAmount, } = walletIfoData
   const { status, cost } = publicIfoData
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
@@ -23,7 +24,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
   const { account } = useActiveWeb3React()
 
   const setPendingTx = (isPending: boolean) => walletIfoData.setPendingTx(isPending, poolId)
-
+  
   const handleClaim = async () => {
 
     const receipt = await fetchWithCatchTxError(() => {
@@ -40,18 +41,18 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
       )
     }
     setPendingTx(false)
-
+    
   }
 
   return (
     <Button
       onClick={handleClaim}
-      disabled={userPoolCharacteristics.isPendingTx || status !== 'live'}
+      disabled={userPoolCharacteristics.isPendingTx || (status !== 'live' && !(status == 'coming_soon' && isHolder))}
       width="100%"
       isLoading={userPoolCharacteristics.isPendingTx}
       endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
     >
-      {t('Mint for ') + cost + ' MATIC'}
+      {t('Mint for ') + (cost - discountAmount) + ' MATIC'}
     </Button>
   )
 }
