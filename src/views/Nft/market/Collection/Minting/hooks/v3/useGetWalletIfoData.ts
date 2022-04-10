@@ -3,9 +3,10 @@ import { useWeb3React } from '@web3-react/core'
 import BigNumber from 'bignumber.js'
 import { Ifo, PoolIds } from 'config/constants/types'
 import { useCoinCollectNFTContract, useERC20, useIfoV2Contract } from 'hooks/useContract'
-import { multicallv2 } from 'utils/multicall'
+import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
 import ifoV2Abi from 'config/abi/ifoV2.json'
 import ifoV3Abi from 'config/abi/ifoV3.json'
+import coinCollectAbi from 'config/abi/coinCollectNft.json'
 import { useIfoPoolCredit } from 'state/pools/hooks'
 import { fetchIfoPoolUserAndCredit } from 'state/pools'
 import { useAppDispatch } from 'state'
@@ -74,9 +75,9 @@ const useGetWalletIfoData = (ifo: Ifo): WalletIfoData => {
       params: [account, [0, 1]],
     }))
 
-    const ifov3Calls =
+    const mintingV3Calls =
       version === 3.1
-        ? ['isQualifiedNFT', 'isQualifiedPoints'].map((name) => ({
+        ? ['isHolder'].map((name) => ({
             address,
             name,
             params: [account],
@@ -85,13 +86,16 @@ const useGetWalletIfoData = (ifo: Ifo): WalletIfoData => {
 
     dispatch(fetchIfoPoolUserAndCredit({ account }))
 
-    const abi = version === 3.1 ? ifoV3Abi : ifoV2Abi
+    const abi = coinCollectAbi
 
     //const [userInfo, amounts, isQualifiedNFT, isQualifiedPoints] = await multicallv2(abi, [...ifoCalls, ...ifov3Calls])
+    const [isHolder] = await multicallPolygonv1(abi, [...mintingV3Calls])
+
 
     setState((prevState) => ({
       ...prevState,
       isInitialized: true,
+      isHolder: isHolder ? isHolder[0] : false,
     }))
   }, [account, address, dispatch, version])
 

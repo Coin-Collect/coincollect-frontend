@@ -138,7 +138,9 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
     ),
     { placement: 'bottom' },
   )
-
+  
+  const { isHolder } = walletIfoData
+  const { holderDiscountPercentage } = publicIfoData
   const publicPoolCharacteristics = publicIfoData[poolId]
   const { totalSupply } = publicIfoData
   const userPoolCharacteristics = walletIfoData[poolId]
@@ -174,18 +176,23 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
 
           <Box mt="16px">
 
-          {(!isEligible && version == 3.1) && (
-            <Message mb="24px" p="8px" variant="warning" icon={<ErrorIcon color="warning" width="24px" />}>
-              <MessageText small display="inline">
-                {t('You dont have any CoinCollect NFT, nft holders will get %50 discount.')}
-              </MessageText>
-            </Message>
+          {(account && !isHolder && version == 3.1) && (
+            <Message my="24px" p="8px" variant="warning">
+            <Box>
+            <MessageText display="inline">
+            {t(`You don't have any CoinCollect NFT, NFT holders get %${holderDiscountPercentage} discount and doesn't have to wait for the countdown.`)}
+              </MessageText>{' '}
+              <MessageTextLink display="inline" fontWeight={700} href="/ifo#ifo-how-to" color="failure">
+                {t('Not too late')} »
+              </MessageTextLink>
+            </Box>
+          </Message>
           )}
         
-          {(isEligible && version == 3.1) && (
+          {(account && isHolder && version == 3.1) && (
             <Message mt="24px" p="8px" variant="success">
               <MessageText small display="inline">
-                {t('You are eligible to participate in this Private Sale!')}
+                {t('Wow! You are holder. You see special price and no need to wait for the countdown.')}
               </MessageText>
             </Message>
           )}

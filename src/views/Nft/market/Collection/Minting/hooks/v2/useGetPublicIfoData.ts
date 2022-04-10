@@ -81,6 +81,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
         balance,
         priceDetails,
         startBlock,
+        holderDiscountPercentage,
       ] = await multicallPolygonv1(
         abi,
         [
@@ -113,6 +114,10 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
             address,
             name: 'startBlock',
           },
+          version === 3.1 && {
+            address,
+            name: 'holderDiscountPercentage',
+          },
         ].filter(Boolean),
       )
         
@@ -125,7 +130,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
       const maxSupplyNum =  maxSupply ? maxSupply[0].toNumber() : 0
       const formattedCost = cost ? parseFloat(formatEther(cost[0])) : 0
       const balanceNum = balance ? balance[0].toNumber() : 0
-
+      const holderDiscountPercentageNum = holderDiscountPercentage ? holderDiscountPercentage[0].toNumber() : 0
       
       const status = getStatus(currentBlock, startBlockNum, totalSupplyNum, maxSupplyNum, isSaleActive)
 
@@ -143,6 +148,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
         isSaleActive,
         cost: formattedCost,
         balance: balanceNum,
+        holderDiscountPercentage: holderDiscountPercentageNum,
         status,
         progress,
         ...priceDetailsFormatted,
