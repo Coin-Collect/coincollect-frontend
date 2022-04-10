@@ -37,7 +37,7 @@ export default async function handler(req, res) {
   let { name, description, symbol, banner, avatar } = activeMinting
 
 
- const contract = new Contract(getCoinCollectNftAddress(), coinCollectNftAbi, simplePolygonRpcProvider)
+ const contract = new Contract(collectionAddress, coinCollectNftAbi, simplePolygonRpcProvider)
  const [totalSupply, maxSupply, cost, isSaleActive] = await getDatas(contract)
 
  let status = 'Active'
