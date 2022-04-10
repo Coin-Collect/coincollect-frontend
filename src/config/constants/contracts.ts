@@ -61,7 +61,7 @@ export default {
   },
   coinCollectBronzeNft: {
     137: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
-    80001: '0x82815cEf244006ea987C000Eaf65d61DcD912Ab5',
+    80001: '0x229aDaA91e366D38886CBA02D6EA9303fE3e1fe0',
   },
   cakeVault: {
     56: '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC',

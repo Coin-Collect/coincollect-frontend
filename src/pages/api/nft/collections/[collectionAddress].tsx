@@ -5,6 +5,7 @@ import { getCoinCollectNftAddress } from "utils/addressHelpers";
 import { simplePolygonRpcProvider } from "utils/providers";
 import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import { mintingConfig } from "config/constants";
+import { formatEther } from "@ethersproject/units";
 const axios = require('axios');
 
 
@@ -14,9 +15,10 @@ const getDatas = async (contract: Contract) => {
     const totalSupply = await contract.totalSupply()
     const maxSupply = await contract.maxSupply()
     const cost = await contract.cost()
+    const formattedCost = cost ? parseFloat(formatEther(cost)) : 0
     const isSaleActive = await contract.isSaleActive()
 
-    return [totalSupply.toNumber(), maxSupply.toNumber(), cost.toNumber(), isSaleActive]
+    return [totalSupply.toNumber(), maxSupply.toNumber(), formattedCost, isSaleActive]
 } catch(error) {
   return [0, 0, 0, 0]
 }

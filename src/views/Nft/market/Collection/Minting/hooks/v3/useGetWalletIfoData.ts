@@ -13,6 +13,7 @@ import { useAppDispatch } from 'state'
 import { BIG_ZERO } from 'utils/bigNumber'
 //import useIfoAllowance from '../useIfoAllowance'
 import { WalletIfoState, WalletIfoData } from '../../types'
+import { formatEther } from '@ethersproject/units'
 
 const initialState = {
   isInitialized: false,
@@ -77,7 +78,7 @@ const useGetWalletIfoData = (ifo: Ifo): WalletIfoData => {
 
     const mintingV3Calls =
       version === 3.1
-        ? ['isHolder'].map((name) => ({
+        ? ['isHolder', 'getDiscountByAddress'].map((name) => ({
             address,
             name,
             params: [account],
@@ -89,13 +90,14 @@ const useGetWalletIfoData = (ifo: Ifo): WalletIfoData => {
     const abi = coinCollectAbi
 
     //const [userInfo, amounts, isQualifiedNFT, isQualifiedPoints] = await multicallv2(abi, [...ifoCalls, ...ifov3Calls])
-    const [isHolder] = await multicallPolygonv1(abi, [...mintingV3Calls])
+    const [isHolder, discountAmount] = await multicallPolygonv1(abi, [...mintingV3Calls])
 
 
     setState((prevState) => ({
       ...prevState,
       isInitialized: true,
       isHolder: isHolder ? isHolder[0] : false,
+      discountAmount: discountAmount ? parseFloat(formatEther(discountAmount[0])) : 0,
     }))
   }, [account, address, dispatch, version])
 

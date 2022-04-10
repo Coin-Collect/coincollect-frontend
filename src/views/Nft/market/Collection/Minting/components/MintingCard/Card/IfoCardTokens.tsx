@@ -139,7 +139,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
     { placement: 'bottom' },
   )
   
-  const { isHolder } = walletIfoData
+  const { isHolder, discountAmount, } = walletIfoData
   const { holderDiscountPercentage } = publicIfoData
   const publicPoolCharacteristics = publicIfoData[poolId]
   const { totalSupply } = publicIfoData
@@ -192,7 +192,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
           {(account && isHolder && version == 3.1) && (
             <Message mt="24px" p="8px" variant="success">
               <MessageText small display="inline">
-                {t('Wow! You are holder. You see special price and no need to wait for the countdown.')}
+                {t(`Wow! You are holder. You saved ${discountAmount} MATIC and no need to wait for the countdown.`)}
               </MessageText>
             </Message>
           )}
