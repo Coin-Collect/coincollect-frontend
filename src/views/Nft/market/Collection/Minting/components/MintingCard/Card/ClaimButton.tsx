@@ -6,6 +6,7 @@ import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import { parseEther } from '@ethersproject/units'
 
 interface Props {
   poolId: PoolIds
@@ -29,7 +30,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
 
     const receipt = await fetchWithCatchTxError(() => {
       setPendingTx(true)
-      return walletIfoData.contract.mint(account, 1, {value: 100000000000000000})
+      return walletIfoData.contract.mint(account, 1, {value: parseEther((cost - discountAmount).toString())})
     })
     if (receipt?.status) {
       walletIfoData.setIsClaimed(poolId)
