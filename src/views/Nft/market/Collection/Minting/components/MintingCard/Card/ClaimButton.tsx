@@ -29,7 +29,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
 
     const receipt = await fetchWithCatchTxError(() => {
       setPendingTx(true)
-      return walletIfoData.contract.mint(account, 1)
+      return walletIfoData.contract.mint(account, 1, {value: 100000000000000000})
     })
     if (receipt?.status) {
       walletIfoData.setIsClaimed(poolId)
