@@ -16,9 +16,11 @@ const HomeBanner = () => {
       mt={[account ? '0' : '-16px', null, null, account ? '0' : '-48px']}
       pb="24px"
       style={{ gap: '16px' }}
-    >
+    > 
+      {/* TODO: Use this banners for minting later
       <FarmAuctionsBanner />
       <IFOBanner />
+    */}
     </Flex>
   ) : null
 }
