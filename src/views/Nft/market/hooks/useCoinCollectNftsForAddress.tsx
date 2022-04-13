@@ -60,38 +60,6 @@ const getCompleteAccountNftData = async (
   if (profileNftWithCollectionAddress?.tokenId) {
     walletNftIdsWithCollectionAddress.unshift(profileNftWithCollectionAddress)
   }
-
-  const uniqueCollectionAddresses = uniq(
-    walletNftIdsWithCollectionAddress.map((walletNftId) => walletNftId.collectionAddress),
-  )
-
-  
-
-  const walletNftsByCollection = uniqueCollectionAddresses.map((collectionAddress) => {
-    return {
-      collectionAddress,
-      idWithCollectionAddress: walletNftIdsWithCollectionAddress.filter(
-        (walletNft) => walletNft.collectionAddress === collectionAddress,
-      ),
-    }
-  })
-
-  
-
-  const walletMarketDataRequests = walletNftsByCollection.map((walletNftByCollection) => {
-    const tokenIdIn = walletNftByCollection.idWithCollectionAddress.map((walletNft) => walletNft.tokenId)
-    return getNftsMarketData({
-      tokenId_in: tokenIdIn,
-      collection: walletNftByCollection.collectionAddress.toLowerCase(),
-    })
-  })
-  
-
-  const walletMarketDataResponses = await Promise.all(walletMarketDataRequests)
-  const walletMarketData = walletMarketDataResponses.flat()
-
-  const walletNftsWithMarketData = attachMarketDataToWalletNfts(walletNftIdsWithCollectionAddress, walletMarketData)
-
   
 
   const walletTokenIds = walletNftIdsWithCollectionAddress
@@ -101,24 +69,21 @@ const getCompleteAccountNftData = async (
     })
     .map((nft) => nft.tokenId)
 
-  const marketDataForSaleNfts = await getNftsMarketData({ currentSeller: account.toLowerCase() })
-  const tokenIdsForSale = marketDataForSaleNfts.map((nft) => nft.tokenId)
+  
 
-  const forSaleNftIds = marketDataForSaleNfts.map((nft) => {
-    return { collectionAddress: nft.collection.id, tokenId: nft.tokenId }
-  })
+  
 
   const metadataForAllNfts = await getNftsFromDifferentCollectionsApi([
-    ...forSaleNftIds,
+    //...forSaleNftIds,
     ...walletNftIdsWithCollectionAddress,
   ])
 
   const completeNftData = combineNftMarketAndMetadata(
     metadataForAllNfts,
-    marketDataForSaleNfts,
-    walletNftsWithMarketData,
+    [],//marketDataForSaleNfts,
+    [],//walletNftsWithMarketData,
     walletTokenIds,
-    tokenIdsForSale,
+    [],//tokenIdsForSale,
     profileNftWithCollectionAddress?.tokenId,
   )
 
