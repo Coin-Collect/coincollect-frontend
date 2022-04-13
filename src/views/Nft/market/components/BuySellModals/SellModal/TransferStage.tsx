@@ -40,7 +40,7 @@ const TransferStage: React.FC<TransferStageProps> = ({
         {t('Transfer to New Wallet')}
       </Text>
       <Flex p="16px">
-        <RoundedImage src={nftToSell.image.thumbnail} height={68} width={68} mr="8px" />
+        <RoundedImage src={nftToSell.image.thumbnail} height={90} width={68} mr="8px" />
         <Grid flex="1" gridTemplateColumns="1fr 1fr" alignItems="center">
           <Text bold>{nftToSell.name}</Text>
           <Text fontSize="12px" color="textSubtle" textAlign="right">
