@@ -75,9 +75,9 @@ export const useIfoV2Contract = (address: string) => {
   return useMemo(() => getIfoV2Contract(address, library.getSigner()), [address, library])
 }
 
-export const useCoinCollectNFTContract = () => {
+export const useCoinCollectNFTContract = (address: string) => {
   const { library } = useActiveWeb3React()
-  return useMemo(() => getCoinCollectNFTContract(library.getSigner()), [library])
+  return useMemo(() => getCoinCollectNFTContract(address, library.getSigner()), [library])
 }
 
 export const useERC20 = (address: string, withSignerIfPossible = true) => {

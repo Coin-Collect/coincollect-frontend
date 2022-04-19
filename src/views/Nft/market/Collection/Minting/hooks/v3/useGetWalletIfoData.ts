@@ -48,7 +48,7 @@ const useGetWalletIfoData = (ifo: Minting): WalletIfoData => {
   const { address, currency, version } = ifo
 
   const { account } = useWeb3React()
-  const contract = useCoinCollectNFTContract()
+  const contract = useCoinCollectNFTContract(address)
   const currencyContract = useERC20(currency.address, false)
   //const allowance = useIfoAllowance(currencyContract, address)
 

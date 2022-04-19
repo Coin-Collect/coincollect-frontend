@@ -133,8 +133,8 @@ export const getIfoV1Contract = (address: string, signer?: Signer | Provider) =>
 export const getIfoV2Contract = (address: string, signer?: Signer | Provider) => {
   return getContract(ifoV2Abi, address, signer) as IfoV2
 }
-export const getCoinCollectNFTContract = (signer?: Signer | Provider) => {
-  return getContract(coinCollectNftAbi, getCoinCollectNftAddress(), signer) as IfoV2
+export const getCoinCollectNFTContract = (address: string, signer?: Signer | Provider) => {
+  return getContract(coinCollectNftAbi, address, signer) as IfoV2
 }
 export const getSouschefContract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)
