@@ -140,6 +140,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
       const progress = isDynamicPrice ? (totalSupplyNum * 100) / priceDetailsFormatted.partialMaxSupply
                                       : (totalSupplyNum * 100) / maxSupplyNum
 
+
       setState((prev) => ({
         ...prev,
         isInitialized: true,
