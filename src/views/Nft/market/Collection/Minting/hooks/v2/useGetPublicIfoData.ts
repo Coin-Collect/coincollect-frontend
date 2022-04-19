@@ -66,6 +66,11 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
     numberPoints: 0,
     balance: 0,
     totalSupply: 0,
+    cost: 0,
+    holderDiscountPercentage: 0,
+    partialMaxSupply: 0, 
+    isLastPrice: true, 
+    nextPrice: 0,
   })
 
   const abi = coinCollectAbi
@@ -139,6 +144,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
       //Calculate Progress Percantage
       const progress = isDynamicPrice ? (totalSupplyNum * 100) / priceDetailsFormatted.partialMaxSupply
                                       : (totalSupplyNum * 100) / maxSupplyNum
+
 
       setState((prev) => ({
         ...prev,

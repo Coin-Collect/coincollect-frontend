@@ -2,7 +2,7 @@ import { Token, ChainId } from '@pancakeswap/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -66,7 +66,7 @@ const ifos: Minting[] = [
     id: 'coincollectsilverfts',
     name: 'CoinCollect Silver NFTs',
     description: 'CoinCollect Silver Nft Description',
-    address: getCoinCollectBronzeNftAddress(),
+    address: getCoinCollectSilverNftAddress(),
     symbol: 'cNFTSilver',
     totalSupply: 2000,
     isActive: true,
@@ -93,7 +93,7 @@ const ifos: Minting[] = [
     id: 'coincollectgoldfts',
     name: 'CoinCollect Gold NFTs',
     description: 'CoinCollect Gold Nft Description',
-    address: getCoinCollectBronzeNftAddress(),
+    address: getCoinCollectGoldNftAddress(),
     symbol: 'cNFTGold',
     totalSupply: 1000,
     isActive: true,
