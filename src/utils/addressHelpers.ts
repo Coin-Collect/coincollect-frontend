@@ -53,6 +53,12 @@ export const getCoinCollectNftAddress = () => {
 export const getCoinCollectBronzeNftAddress = () => {
   return getAddress(addresses.coinCollectBronzeNft)
 }
+export const getCoinCollectSilverNftAddress = () => {
+  return getAddress(addresses.coinCollectSilverNft)
+}
+export const getCoinCollectGoldNftAddress = () => {
+  return getAddress(addresses.coinCollectGoldNft)
+}
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null

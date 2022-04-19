@@ -35,6 +35,11 @@ export interface PublicIfoData {
   thresholdPoints: EthersBigNumber
   balance: number
   totalSupply: number
+  cost: number
+  holderDiscountPercentage: number
+  partialMaxSupply: number
+  isLastPrice: boolean
+  nextPrice: number
 
   fetchIfoData: (currentBlock: number, account: string | undefined) => void
   [PoolIds.poolBasic]?: PoolCharacteristics
@@ -64,6 +69,8 @@ export interface WalletIfoState {
      */
     creditLeft: BigNumber
   }
+  isHolder: boolean
+  discountAmount: number
 }
 
 // Returned by useGetWalletIfoData

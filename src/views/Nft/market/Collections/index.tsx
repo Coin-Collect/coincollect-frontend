@@ -89,12 +89,14 @@ const Collectible = () => {
   // CC - Filtering
   const finishedMintings = useMemo(()=> {
     const collectionValues = collections ? Object.values(collections) : []
+    // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'finished')
   }, [collections])
 
   // CC - Filtering
   const activeMintings = useMemo(()=> {
     const collectionValues = collections ? Object.values(collections) : []
+    // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'live')
   }, [collections])
 

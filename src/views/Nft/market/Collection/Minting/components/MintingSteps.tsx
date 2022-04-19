@@ -21,7 +21,7 @@ import {
 } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter as RouterLink } from 'components/NextLink'
 import { useWeb3React } from '@web3-react/core'
-import { Ifo } from 'config/constants/types'
+import { Ifo, Minting } from 'config/constants/types'
 import { WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
 import useTokenBalance from 'hooks/useTokenBalance'
@@ -40,7 +40,7 @@ import { useBUSDCakeAmount } from 'hooks/useBUSDPrice'
 import { useCheckVaultApprovalStatus, useVaultApprove } from 'views/Pools/hooks/useApprove'
 
 interface Props {
-  ifo: Ifo
+  ifo: Minting
   walletIfoData: WalletIfoData
   isLive?: boolean
 }

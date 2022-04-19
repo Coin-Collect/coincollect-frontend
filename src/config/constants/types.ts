@@ -62,24 +62,32 @@ export interface Ifo {
 export type MintingStatus = 'idle' | 'coming_soon' | 'live' | 'finished' | 'paused'
 
 //CC
+interface MintingPoolInfo {
+  saleAmount: string
+  distributionRatio: number // Range [0-1]
+}
+
+//CC
 export interface Minting {
   id: string
+  name: string
   isActive: boolean
   status: string
   address: string
-  name: string
+  symbol: string
+  totalSupply: number
+  avatar: string
+  banner: {large: string, small: string}
   currency: Token
   token: Token
   releaseBlockNumber: number
-  articleUrl: string
-  campaignId: string
-  tokenOfferingPrice: number
   description?: string
+  articleUrl?: string
   twitterUrl?: string
   telegramUrl?: string
   version: number
-  [PoolIds.poolBasic]?: IfoPoolInfo
-  [PoolIds.poolUnlimited]: IfoPoolInfo
+  [PoolIds.poolBasic]?: MintingPoolInfo
+  [PoolIds.poolUnlimited]: MintingPoolInfo
 }
 
 export enum PoolCategory {

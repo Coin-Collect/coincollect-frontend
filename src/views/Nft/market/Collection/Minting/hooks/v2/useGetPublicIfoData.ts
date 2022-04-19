@@ -66,6 +66,11 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
     numberPoints: 0,
     balance: 0,
     totalSupply: 0,
+    cost: 0,
+    holderDiscountPercentage: 0,
+    partialMaxSupply: 0, 
+    isLastPrice: true, 
+    nextPrice: 0,
   })
 
   const abi = coinCollectAbi

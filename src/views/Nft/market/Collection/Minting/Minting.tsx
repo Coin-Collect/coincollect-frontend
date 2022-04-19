@@ -51,9 +51,6 @@ const IfoStepBackground = styled(Box)`
 `
 
 
-
-
-
 export default function Minting() {
 
   const router = useRouter()

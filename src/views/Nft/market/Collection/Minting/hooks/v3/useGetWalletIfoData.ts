@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import BigNumber from 'bignumber.js'
-import { Ifo, PoolIds } from 'config/constants/types'
+import { Ifo, Minting, PoolIds } from 'config/constants/types'
 import { useCoinCollectNFTContract, useERC20, useIfoV2Contract } from 'hooks/useContract'
 import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
 import ifoV2Abi from 'config/abi/ifoV2.json'
@@ -17,6 +17,8 @@ import { formatEther } from '@ethersproject/units'
 
 const initialState = {
   isInitialized: false,
+  isHolder: false,
+  discountAmount: 0,
   poolBasic: {
     amountTokenCommittedInLP: BIG_ZERO,
     offeringAmountInToken: BIG_ZERO,
@@ -38,7 +40,7 @@ const initialState = {
 /**
  * Gets all data from an IFO related to a wallet
  */
-const useGetWalletIfoData = (ifo: Ifo): WalletIfoData => {
+const useGetWalletIfoData = (ifo: Minting): WalletIfoData => {
   const [state, setState] = useState<WalletIfoState>(initialState)
   const dispatch = useAppDispatch()
   const credit = useIfoPoolCredit()

@@ -24,7 +24,7 @@ import styled from "styled-components"
 import IfoAchievement from "views/Nft/market/Collection/Minting/components/MintingCard/Achievement"
 import { IfoRibbon } from "views/Nft/market/Collection/Minting/components/MintingCard/IfoRibbon"
 import EnableStatus from 'views/Ifos/components/IfoFoldableCard/types'
-import useIfoApprove from 'views/Ifos/hooks/useIfoApprove'
+import useIfoApprove from 'views/Nft/market/Collection/Minting/hooks/useIfoApprove'
 import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import MintingPoolCard from './Card'
 

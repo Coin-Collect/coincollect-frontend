@@ -3,7 +3,7 @@ import tokens from 'config/constants/tokens'
 import { Text, Flex, Box, Skeleton, TooltipText, useTooltip } from '@pancakeswap/uikit'
 import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
-import { Ifo, PoolIds } from 'config/constants/types'
+import { Ifo, Minting, PoolIds } from 'config/constants/types'
 import { getBalanceNumber, formatNumber } from 'utils/formatBalance'
 import useBUSDPrice from 'hooks/useBUSDPrice'
 import { multiplyPriceByAmount } from 'utils/prices'
@@ -11,7 +11,7 @@ import { SkeletonCardDetails } from './Skeletons'
 
 export interface IfoCardDetailsProps {
   poolId: PoolIds
-  ifo: Ifo
+  ifo: Minting
   publicIfoData: PublicIfoData
   walletIfoData: WalletIfoData
   isEligible: boolean
@@ -39,7 +39,7 @@ const FooterEntry: React.FC<FooterEntryProps> = ({ label, value }) => {
   )
 }
 
-const MaxTokenEntry = ({ maxToken, ifo, poolId }: { maxToken: number; ifo: Ifo; poolId: PoolIds }) => {
+const MaxTokenEntry = ({ maxToken, ifo, poolId }: { maxToken: number; ifo: Minting; poolId: PoolIds }) => {
   const isCurrencyCake = ifo.currency === tokens.cake
   const isV3 = ifo.version === 3 || ifo.version === 3.1
   const { t } = useTranslation()
@@ -133,11 +133,14 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
     .plus(poolCharacteristic.raisingAmountPool)
     .div(poolCharacteristic.offeringAmountPool)
     .div(poolCharacteristic.raisingAmountPool.div(poolCharacteristic.offeringAmountPool))
-  const pricePerTokenWithFee = `~$${formatNumber(
+  
+    /*
+    const pricePerTokenWithFee = `~$${formatNumber(
     pricePerTokenWithFeeToOriginalRatio.times(ifo.tokenOfferingPrice).toNumber(),
     0,
     2,
   )}`
+  */
 
   const maxToken = ifo.version === 3.1 && poolId === PoolIds.poolBasic && !isEligible ? 0 : maxLpTokens
 
