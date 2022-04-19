@@ -56,7 +56,6 @@ const getCompleteAccountNftData = async (
 ): Promise<NftToken[]> => {
   const walletNftIdsWithCollectionAddress = await fetchWalletTokenIdsForCollections(account, collections)
   
-
   if (profileNftWithCollectionAddress?.tokenId) {
     walletNftIdsWithCollectionAddress.unshift(profileNftWithCollectionAddress)
   }
@@ -71,12 +70,11 @@ const getCompleteAccountNftData = async (
 
   
 
-  
-
   const metadataForAllNfts = await getNftsFromDifferentCollectionsApi([
     //...forSaleNftIds,
     ...walletNftIdsWithCollectionAddress,
   ])
+
 
   const completeNftData = combineNftMarketAndMetadata(
     metadataForAllNfts,
@@ -86,6 +84,7 @@ const getCompleteAccountNftData = async (
     [],//tokenIdsForSale,
     profileNftWithCollectionAddress?.tokenId,
   )
+
 
   return completeNftData
 }
@@ -107,8 +106,6 @@ export const fetchWalletTokenIdsForCollections = async (
   // TODO: Deploy multicallv2 and activate instead of v1
   //const balanceOfCallsResultRaw = await multicallv2(erc721Abi, balanceOfCalls, { requireSuccess: false })
   const balanceOfCallsResult = balanceOfCallsResultRaw.flat()
-
-  
 
   const tokenIdCalls = Object.values(collections)
     .map((collection, index) => {
@@ -155,10 +152,11 @@ export const fetchWalletTokenIdsForCollections = async (
 export const getNftsFromDifferentCollectionsApi = async (
   from: { collectionAddress: string; tokenId: string }[],
 ): Promise<NftToken[]> => {
-
-  const contract = getCoinCollectNFTContract(simplePolygonRpcProvider)
   
   const items = await Promise.all(from.map(async (token) => {
+
+    const contract = getCoinCollectNFTContract(token.collectionAddress, simplePolygonRpcProvider)
+
     //@ts-ignore
     const tokenURI = await contract.tokenURI(token.tokenId)
     const meta = await axios(tokenURI)
