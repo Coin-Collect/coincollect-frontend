@@ -83,7 +83,7 @@ const HarvestCard = () => {
             <NextLinkFromReactRouter to="nfts/collections">
               <Button width={['100%', null, null, 'auto']} variant="secondary">
                 <Text color="primary" bold>
-                  {t('Mint Free NFT')}
+                  {t('Mint NFT')}
                 </Text>
                 <ArrowForwardIcon ml="4px" color="primary" />
               </Button>

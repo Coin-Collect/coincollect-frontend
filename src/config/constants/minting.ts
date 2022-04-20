@@ -10,8 +10,8 @@ const ifos: Minting[] = [
   //============================Free Mint NFTS====================================
   {
     id: 'coincollectfreenfts',
-    name: 'CoinCollect Starter NFTs',
-    description: 'CoinCollect is a Decentralized NFT finance Protocol operating on Multi-Chains, that helps NFT traders, high yield farmers, liquidity providers, developers and web 3.0 startups to participate in an open financial market with no barriers to entry.',
+    name: 'CoinCollect Starter NFT',
+    description: 'CoinCollect Starter NFTs are most valuable FREE utility NFTs on the market. Starter NFT is a gift and a lifetime privilege to our community. Starter NFTs earn new tokens from pools and airdrops. it also has a chance on whitelists',
     address: getCoinCollectNftAddress(),
     symbol: 'cNFT',
     totalSupply: 5000,
@@ -37,10 +37,10 @@ const ifos: Minting[] = [
   //============================Bronze NFTS====================================
   {
     id: 'coincollectbronzefts',
-    name: 'CoinCollect Bronze NFTs',
-    description: 'CoinCollect Bronze Nft Description',
+    name: 'CoinCollect Bronze NFT',
+    description: 'CoinCollect Bronze NFTs are the cheapest valuable utility NFTs that has all the features of Starter NFTs also 5x more powerful than Starter NFTs. Bronze NFTs earn more than Starter NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectBronzeNftAddress(),
-    symbol: 'cNFTBronze',
+    symbol: 'BRONZE',
     totalSupply: 3000,
     isActive: true,
     status: 'live',
@@ -50,7 +50,7 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
     },
     poolUnlimited: {
-      saleAmount: '5000 NFT',
+      saleAmount: '3000 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
@@ -64,10 +64,10 @@ const ifos: Minting[] = [
   //============================Silver NFTS====================================
   {
     id: 'coincollectsilverfts',
-    name: 'CoinCollect Silver NFTs',
-    description: 'CoinCollect Silver Nft Description',
+    name: 'CoinCollect Silver NFT',
+    description: 'CoinCollect Silver NFTs are the medium powerful utility NFTs that has all the features of Bronze NFTs also 15x more powerful than Starter NFTs. Silver NFTs earn more than Bronze NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectSilverNftAddress(),
-    symbol: 'cNFTSilver',
+    symbol: 'SILVER',
     totalSupply: 2000,
     isActive: true,
     status: 'live',
@@ -77,7 +77,7 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
     },
     poolUnlimited: {
-      saleAmount: '5000 NFT',
+      saleAmount: '2000 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
@@ -91,10 +91,10 @@ const ifos: Minting[] = [
   //============================Gold NFTS====================================
   {
     id: 'coincollectgoldfts',
-    name: 'CoinCollect Gold NFTs',
-    description: 'CoinCollect Gold Nft Description',
+    name: 'CoinCollect Gold NFT',
+    description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectGoldNftAddress(),
-    symbol: 'cNFTGold',
+    symbol: 'GOLD',
     totalSupply: 1000,
     isActive: true,
     status: 'live',
@@ -104,7 +104,7 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     },
     poolUnlimited: {
-      saleAmount: '5000 NFT',
+      saleAmount: '1000 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,

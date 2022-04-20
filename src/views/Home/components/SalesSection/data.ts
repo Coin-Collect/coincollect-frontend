@@ -57,7 +57,7 @@ export const cakeSectionData = (t: TranslateFunction): SalesSectionProps => ({
   reverse: false,
   primaryButton: {
     to: '/nfts/collections',
-    text: t('Mint Free NFT'),
+    text: t('Mint NFT'),
     external: false,
   },
   secondaryButton: {
