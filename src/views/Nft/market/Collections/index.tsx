@@ -94,10 +94,17 @@ const Collectible = () => {
   }, [collections])
 
   // CC - Filtering
-  const activeMintings = useMemo(()=> {
+  const activePublicMintings = useMemo(()=> {
     const collectionValues = collections ? Object.values(collections) : []
     // @ts-ignore
-    return collectionValues.filter((collection) => collection.status == 'live')
+    return collectionValues.filter((collection) => collection.status == 'livepublic')
+  }, [collections])
+
+  // CC - Filtering
+  const activePrivateMintings = useMemo(()=> {
+    const collectionValues = collections ? Object.values(collections) : []
+    // @ts-ignore
+    return collectionValues.filter((collection) => collection.status == 'liveprivate')
   }, [collections])
 
   
@@ -155,10 +162,17 @@ const Collectible = () => {
             </Flex>
 
             <Collections
-              key="active-mintings"
-              title={t('Live Mintings')}
-              testId="active-mintings"
-              collections={activeMintings}
+              key="active-public-mintings"
+              title={t('Live Public Mintings')}
+              testId="active-public-mintings"
+              collections={activePublicMintings}
+            />
+
+            <Collections
+              key="active-private-mintings"
+              title={t('Live Private Mintings(Only Holders)')}
+              testId="active-private-mintings"
+              collections={activePrivateMintings}
             />
 
             {finishedMintings && <Collections

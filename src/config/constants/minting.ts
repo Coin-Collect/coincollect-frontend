@@ -43,7 +43,7 @@ const ifos: Minting[] = [
     symbol: 'BRONZE',
     totalSupply: 3000,
     isActive: true,
-    status: 'live',
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
     banner: {
       large: "https://coincollect.org/assets/images/clone/banners/bannerBronzeLg.png",
@@ -70,7 +70,7 @@ const ifos: Minting[] = [
     symbol: 'SILVER',
     totalSupply: 2000,
     isActive: true,
-    status: 'live',
+    status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
     banner: {
       large: "https://coincollect.org/assets/images/clone/banners/bannerSilverLg.png",
@@ -97,7 +97,7 @@ const ifos: Minting[] = [
     symbol: 'GOLD',
     totalSupply: 1000,
     isActive: true,
-    status: 'live',
+    status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
     banner: {
       large: "https://coincollect.org/assets/images/clone/banners/bannerGoldLg.png",
