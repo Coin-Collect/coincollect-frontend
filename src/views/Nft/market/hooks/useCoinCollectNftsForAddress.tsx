@@ -138,11 +138,11 @@ export const fetchWalletTokenIdsForCollections = async (
     if (tokenIdBn) {
       const { address: collectionAddress } = tokenIdCalls[index]
       tokenIdBn.forEach((tokenId)=>{
-        acc.push({ tokenId: tokenId.toString(), collectionAddress, nftLocation })
+        acc.push({ tokenId: tokenId.toString(), collectionAddress, nftLocation, symbol: collections[index]["symbol"] })
       })
       
     }
-    
+  
     return acc
   }, [])
   
@@ -164,7 +164,8 @@ export const getNftsFromDifferentCollectionsApi = async (
     let item = {
       tokenId: token.tokenId,
       name: meta.data.name,
-      collectionName: "cNFT",
+      //@ts-ignore
+      collectionName: token.symbol,
       collectionAddress: token.collectionAddress,
       description: meta.data.description,
       attributes: meta.data.attributes,

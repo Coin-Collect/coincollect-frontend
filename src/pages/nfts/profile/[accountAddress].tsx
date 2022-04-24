@@ -25,6 +25,7 @@ const NftProfilePage = () => {
     isLoading: isNftLoading,
     refresh: refreshUserNfts,
   } = useCoinCollectNftsForAddress(accountAddress, profile, isProfileFetching)
+  
   return (
     <>
       {/* TODO: Activate Later
