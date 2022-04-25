@@ -60,7 +60,7 @@ export default {
     80001: '0x11DdF94710AD390063357D532042Bd5f23A3fBd6',
   },
   coinCollectBronzeNft: {
-    137: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
+    137: '0x0B8E7D22CE826f1228a82525b8779dBdD9E24B80',
     80001: '0x2c65d5355813D3E1f86d1c9b25DCFF367bBd913D',
   },
   coinCollectSilverNft: {
