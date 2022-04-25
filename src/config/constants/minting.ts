@@ -13,7 +13,7 @@ const ifos: Minting[] = [
     name: 'CoinCollect Starter NFT',
     description: 'CoinCollect Starter NFTs are most valuable FREE utility NFTs on the market. Starter NFT is a gift and a lifetime privilege to our community. Starter NFTs earn new tokens from pools and airdrops. it also has a chance on whitelists',
     address: getCoinCollectNftAddress(),
-    symbol: 'cNFT',
+    symbol: 'STARTER',
     totalSupply: 5000,
     isActive: true,
     status: 'finished',
