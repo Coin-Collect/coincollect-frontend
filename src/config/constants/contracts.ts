@@ -68,7 +68,7 @@ export default {
     80001: '0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9',
   },
   coinCollectGoldNft: {
-    137: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
+    137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
     80001: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
   },
   cakeVault: {
