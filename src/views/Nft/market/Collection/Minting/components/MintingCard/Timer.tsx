@@ -24,6 +24,7 @@ export const SoonTimer: React.FC<Props> = ({ publicIfoData }) => {
   const { t } = useTranslation()
   const { status, secondsUntilStart } = publicIfoData
   const timeUntil = getTimePeriods(secondsUntilStart)
+
   return (
     <Flex justifyContent="center" position="relative">
       {status === 'idle' ? (
@@ -35,7 +36,15 @@ export const SoonTimer: React.FC<Props> = ({ publicIfoData }) => {
               {t('Start in')}
             </Heading>
             <FlexGap gap="4px" alignItems="baseline">
-              {timeUntil.days ? (
+            {timeUntil.months ? (
+                <>
+                  <Heading scale="lg" color="secondary">
+                    {timeUntil.months}
+                  </Heading>
+                  <Text color="secondary">{t('m')}</Text>
+                </>
+              ) : null}
+              {timeUntil.months || timeUntil.days ? (
                 <>
                   <Heading scale="lg" color="secondary">
                     {timeUntil.days}
@@ -43,7 +52,7 @@ export const SoonTimer: React.FC<Props> = ({ publicIfoData }) => {
                   <Text color="secondary">{t('d')}</Text>
                 </>
               ) : null}
-              {timeUntil.days || timeUntil.hours ? (
+              {timeUntil.months || timeUntil.days || timeUntil.hours ? (
                 <>
                   <Heading color="secondary" scale="lg">
                     {timeUntil.hours}
