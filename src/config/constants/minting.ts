@@ -41,7 +41,7 @@ const ifos: Minting[] = [
     description: 'CoinCollect Bronze NFTs are the cheapest valuable utility NFTs that has all the features of Starter NFTs also 5x more powerful than Starter NFTs. Bronze NFTs earn more than Starter NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectBronzeNftAddress(),
     symbol: 'BRONZE',
-    totalSupply: 3000,
+    totalSupply: 3300,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
@@ -50,7 +50,7 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
     },
     poolUnlimited: {
-      saleAmount: '3000 NFT',
+      saleAmount: '3300 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
@@ -68,7 +68,7 @@ const ifos: Minting[] = [
     description: 'CoinCollect Silver NFTs are the medium powerful utility NFTs that has all the features of Bronze NFTs also 15x more powerful than Starter NFTs. Silver NFTs earn more than Bronze NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectSilverNftAddress(),
     symbol: 'SILVER',
-    totalSupply: 2000,
+    totalSupply: 2200,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
@@ -77,7 +77,7 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
     },
     poolUnlimited: {
-      saleAmount: '2000 NFT',
+      saleAmount: '2200 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
@@ -95,7 +95,7 @@ const ifos: Minting[] = [
     description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectGoldNftAddress(),
     symbol: 'GOLD',
-    totalSupply: 1000,
+    totalSupply: 1100,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
@@ -104,7 +104,7 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     },
     poolUnlimited: {
-      saleAmount: '1000 NFT',
+      saleAmount: '1100 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
