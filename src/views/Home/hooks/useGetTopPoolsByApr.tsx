@@ -10,25 +10,44 @@ import { getAprData } from 'views/Pools/helpers'
 import { FetchStatus } from 'config/constants/types'
 
 export function usePoolsWithVault() {
+
+  // Gets only non-vault pools
   const { pools: poolsWithoutAutoVault } = usePools()
+  
+
   const cakeVault = useCakeVault()
+  
+  
   const ifoPool = useIfoPoolVault()
+  
   const pools = useMemo(() => {
+    
+    
     const activePools = poolsWithoutAutoVault.filter((pool) => !pool.isFinished)
+    
     const cakePool = activePools.find((pool) => pool.sousId === 0)
+
+    // VaultKey switches between ifo or cake vault
     const cakeAutoVault = { ...cakePool, vaultKey: VaultKey.CakeVault }
+    
     const ifoPoolVault = { ...cakePool, vaultKey: VaultKey.IfoPool }
+    
+
     const cakeAutoVaultWithApr = {
       ...cakeAutoVault,
       apr: getAprData(cakeAutoVault, cakeVault.fees.performanceFeeAsDecimal).apr,
       rawApr: cakePool.apr,
     }
+
     const ifoPoolWithApr = {
       ...ifoPoolVault,
       apr: getAprData(ifoPoolVault, ifoPool.fees.performanceFeeAsDecimal).apr,
       rawApr: cakePool.apr,
     }
-    return [ifoPoolWithApr, cakeAutoVaultWithApr, ...poolsWithoutAutoVault]
+
+    // ifoPoolWithApr excluded from array below
+    return [cakeAutoVaultWithApr, ...poolsWithoutAutoVault]
+    
   }, [poolsWithoutAutoVault, cakeVault.fees.performanceFeeAsDecimal, ifoPool.fees.performanceFeeAsDecimal])
 
   return pools
