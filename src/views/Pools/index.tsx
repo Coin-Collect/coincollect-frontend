@@ -103,7 +103,7 @@ const Pools: React.FC = () => {
     return total.plus(vault.totalCakeInVault)
   }, BIG_ZERO)
 
-  // Get all pools
+  // This line gets all pools
   const pools = usePoolsWithVault()
 
   // TODO aren't arrays in dep array checked just by reference, i.e. it will rerender every time reference changes?

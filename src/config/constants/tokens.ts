@@ -4,6 +4,7 @@ import { CHAIN_ID } from './networks'
 import { SerializedToken } from './types'
 
 const { MAINNET, TESTNET } = ChainId
+const MUMBAITESTNET = 80001
 
 interface TokenList {
   [symbol: string]: Token
@@ -25,8 +26,8 @@ export const mainnetTokens = defineTokens({
     '0x0000000000000000000000000000000000000000',
     18,
     'COLLECT',
-    'COLLECT',
-    'https://www.coin-collect.org/',
+    'CoinCollect Token',
+    'https://www.coincollect.org/',
   ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
@@ -2036,6 +2037,14 @@ export const testnetTokens = defineTokens({
     'Wrapped BNB',
     'https://www.binance.com/',
   ),
+  collect: new Token(
+    MUMBAITESTNET,
+    '0xA8Cc006BE50a72c6f96D2319DaB2266F9676bfDc',
+    18,
+    'COLLECT',
+    'CoinCollect Token',
+    'https://www.coincollect.org/',
+  ),
   cake: new Token(
     TESTNET,
     '0xa35062141Fa33BCA92Ce69FeD37D0E8908868AAe',
@@ -2074,7 +2083,7 @@ const tokens = () => {
   const chainId = CHAIN_ID
 
   // If testnet - return list comprised of testnetTokens wherever they exist, and mainnetTokens where they don't
-  if (parseInt(chainId, 10) === ChainId.TESTNET) {
+  if (parseInt(chainId, 10) === MUMBAITESTNET) {
     return Object.keys(mainnetTokens).reduce((accum, key) => {
       return { ...accum, [key]: testnetTokens[key] || mainnetTokens[key] }
     }, {} as typeof testnetTokens & typeof mainnetTokens)
