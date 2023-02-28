@@ -9,7 +9,7 @@ const serializedTokens = serializeTokens()
 
 export const vaultPoolConfig = {
   [VaultKey.CakeVault]: {
-    name: <Trans>Auto CAKE</Trans>,
+    name: <Trans>Auto COLLECT</Trans>,
     description: <Trans>Automatic restaking</Trans>,
     autoCompoundFrequency: 5000,
     gasLimit: 380000,
