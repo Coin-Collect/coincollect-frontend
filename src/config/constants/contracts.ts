@@ -80,6 +80,10 @@ export default {
     56: '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC',
     97: '',
   },
+  coinCollectAutoPoolVault: {
+    137: '', // TODO: fill this
+    80001: '0x8ef990781e534fd7DE473908DCb6fE1BbD33faaD',
+  },
   ifoPool: {
     56: '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8',
     97: '',

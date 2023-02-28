@@ -149,6 +149,7 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
     const liveData = poolsConfig.map((pool) => {
       const blockLimit = blockLimits.find((entry) => entry.sousId === pool.sousId)
       const totalStaking = totalStakings.find((entry) => entry.sousId === pool.sousId)
+    
       const isPoolEndBlockExceeded = currentBlock > 0 && blockLimit ? currentBlock > Number(blockLimit.endBlock) : false
       const isPoolFinished = pool.isFinished || isPoolEndBlockExceeded
 
@@ -265,6 +266,7 @@ export const updateUserPendingReward =
     dispatch(updatePoolsUserData({ sousId, field: 'pendingReward', value: pendingRewards[sousId] }))
   }
 
+// Gets VaultAutoPool public datas like total staked
 export const fetchCakeVaultPublicData = createAsyncThunk<CakeVault>('cakeVault/fetchPublicData', async () => {
   const publicVaultInfo = await fetchPublicVaultData()
   return publicVaultInfo

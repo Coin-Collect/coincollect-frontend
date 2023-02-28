@@ -73,6 +73,9 @@ export const getVaultPoolAddress = (vaultKey: VaultKey) => {
 export const getCakeVaultAddress = () => {
   return getAddress(addresses.cakeVault)
 }
+export const getCoinCollectAutoPoolVaultAddress = () => {
+  return getAddress(addresses.coinCollectAutoPoolVault)
+}
 export const getIfoPoolAddress = () => {
   return getAddress(addresses.ifoPool)
 }
