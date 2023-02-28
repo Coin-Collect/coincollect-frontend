@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { parseUnits } from '@ethersproject/units'
 import { unstakeFarm } from 'utils/calls'
-import { useMasterchef, useSousChef } from 'hooks/useContract'
+import { useCoinCollectPool, useSousChef } from 'hooks/useContract'
 import getGasPrice from 'utils/getGasPrice'
 
 const sousUnstake = (sousChefContract: any, amount: string, decimals: number) => {
@@ -19,7 +19,7 @@ const sousEmergencyUnstake = (sousChefContract: any) => {
 }
 
 const useUnstakePool = (sousId: number, enableEmergencyWithdraw = false) => {
-  const masterChefContract = useMasterchef()
+  const masterChefContract = useCoinCollectPool()
   const sousChefContract = useSousChef(sousId)
 
   const handleUnstake = useCallback(

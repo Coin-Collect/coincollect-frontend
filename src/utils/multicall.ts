@@ -71,4 +71,27 @@ export const multicallPolygonv1 = async <T = any>(abi: any[], calls: Call[]): Pr
   return res as any
 }
 
+export const multicallPolygonv2 = async <T = any>(
+  abi: any[],
+  calls: Call[],
+  options: MulticallOptions = { requireSuccess: true },
+): Promise<T> => {
+  const { requireSuccess } = options
+  const multi = getMulticallPolygonContract()
+  const itf = new Interface(abi)
+
+  const calldata = calls.map((call) => ({
+    target: call.address.toLowerCase(),
+    callData: itf.encodeFunctionData(call.name, call.params),
+  }))
+
+  const returnData = await multi.tryAggregate(requireSuccess, calldata)
+  const res = returnData.map((call, i) => {
+    const [result, data] = call
+    return result ? itf.decodeFunctionResult(calls[i].name, data) : null
+  })
+
+  return res as any
+}
+
 export default multicall

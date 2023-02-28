@@ -3,6 +3,11 @@ export default {
     97: '0x1d32c2945C8FDCBc7156c553B7cEa4325a17f4f9',
     56: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
   },
+  // Only Pool Version Masterchef
+  coinCollectPool: {
+    137: '', // TODO: fill
+    80001: '0x9F138199e9AdB7a0a7f6Db8C9CD7f982a8564f17',
+  },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',
     56: '0x6ab8463a4185b80905e05a9ff80a2d6b714b9e95',
@@ -16,8 +21,8 @@ export default {
     97: '0x8F3273Fb89B075b1645095ABaC6ed17B2d4Bc576',
   },
   multiCallPolygon: {
-    137: '0x11ce4B23bD875D7F5C6a31084f55fDe1e9A87507',
-    80001: '0x08411ADd0b5AA8ee47563b146743C13b3556c9Cc',
+    137: '0x11ce4B23bD875D7F5C6a31084f55fDe1e9A87507', // TODO: Update for multicallV2 
+    80001: '0x033C6bb553a2Cd521586A45771FA7278420eF11a',
   },
   pancakeProfile: {
     56: '0xDf4dBf6536201370F95e06A0F8a7a70fE40E388a',

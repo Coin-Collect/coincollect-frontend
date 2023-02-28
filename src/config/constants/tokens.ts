@@ -4,7 +4,9 @@ import { CHAIN_ID } from './networks'
 import { SerializedToken } from './types'
 
 const { MAINNET, TESTNET } = ChainId
-const MUMBAITESTNET = 80001
+
+const POLYGON_MAINNET = 137
+const MUMBAI_TESTNET = 80001
 
 interface TokenList {
   [symbol: string]: Token
@@ -22,7 +24,7 @@ export const mainnetTokens = defineTokens({
     'https://www.binance.com/',
   ),
   collect: new Token(
-    MAINNET,
+    POLYGON_MAINNET,
     '0x0000000000000000000000000000000000000000',
     18,
     'COLLECT',
@@ -2038,11 +2040,11 @@ export const testnetTokens = defineTokens({
     'https://www.binance.com/',
   ),
   collect: new Token(
-    MUMBAITESTNET,
+    MUMBAI_TESTNET,
     '0xA8Cc006BE50a72c6f96D2319DaB2266F9676bfDc',
     18,
     'COLLECT',
-    'CoinCollect Token',
+    'CoinCollect Test Token',
     'https://www.coincollect.org/',
   ),
   cake: new Token(
@@ -2083,7 +2085,7 @@ const tokens = () => {
   const chainId = CHAIN_ID
 
   // If testnet - return list comprised of testnetTokens wherever they exist, and mainnetTokens where they don't
-  if (parseInt(chainId, 10) === MUMBAITESTNET) {
+  if (parseInt(chainId, 10) === MUMBAI_TESTNET) {
     return Object.keys(mainnetTokens).reduce((accum, key) => {
       return { ...accum, [key]: testnetTokens[key] || mainnetTokens[key] }
     }, {} as typeof testnetTokens & typeof mainnetTokens)

@@ -11,6 +11,10 @@ export const getAddress = (address: Address): string => {
 export const getMasterChefAddress = () => {
   return getAddress(addresses.masterChef)
 }
+// Only Pool Version Masterchef
+export const getCoinCollectPoolAddress = () => {
+  return getAddress(addresses.coinCollectPool)
+}
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }

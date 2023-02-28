@@ -3,7 +3,7 @@ import { stakeFarm } from 'utils/calls'
 import BigNumber from 'bignumber.js'
 import { DEFAULT_TOKEN_DECIMAL, DEFAULT_GAS_LIMIT } from 'config'
 import { BIG_TEN } from 'utils/bigNumber'
-import { useMasterchef, useSousChef } from 'hooks/useContract'
+import { useCoinCollectPool, useSousChef } from 'hooks/useContract'
 import getGasPrice from 'utils/getGasPrice'
 
 const options = {
@@ -27,7 +27,7 @@ const sousStakeBnb = async (sousChefContract, amount) => {
 }
 
 const useStakePool = (sousId: number, isUsingBnb = false) => {
-  const masterChefContract = useMasterchef()
+  const masterChefContract = useCoinCollectPool()
   const sousChefContract = useSousChef(sousId)
 
   const handleStake = useCallback(

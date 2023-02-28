@@ -36,6 +36,7 @@ import {
   getBunnySpecialXmasAddress,
   getMulticallPolygonAddress,
   getCoinCollectNftAddress,
+  getCoinCollectPoolAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -53,6 +54,7 @@ import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import pointCenterIfo from 'config/abi/pointCenterIfo.json'
 import lotteryV2Abi from 'config/abi/lotteryV2.json'
 import masterChef from 'config/abi/masterchef.json'
+import coinCollectPool from 'config/abi/coinCollectPool.json'
 import sousChef from 'config/abi/sousChef.json'
 import sousChefV2 from 'config/abi/sousChefV2.json'
 import sousChefBnb from 'config/abi/sousChefBnb.json'
@@ -93,6 +95,7 @@ import type {
   PancakeProfile,
   LotteryV2,
   Masterchef,
+  CoinCollectPool,
   SousChef,
   SousChefV2,
   BunnySpecial,
@@ -113,8 +116,14 @@ import type {
   PointCenterIfo,
 } from 'config/abi/types'
 
+// No need for polygon
 const getContract = (abi: any, address: string, signer?: Signer | Provider) => {
   const signerOrProvider = signer ?? simpleRpcProvider
+  return new Contract(address, abi, signerOrProvider)
+}
+
+const getContractForPolygon = (abi: any, address: string, signer?: Signer | Provider) => {
+  const signerOrProvider = signer ?? simplePolygonRpcProvider
   return new Contract(address, abi, signerOrProvider)
 }
 
@@ -169,6 +178,10 @@ export const getLotteryV2Contract = (signer?: Signer | Provider) => {
 }
 export const getMasterchefContract = (signer?: Signer | Provider) => {
   return getContract(masterChef, getMasterChefAddress(), signer) as Masterchef
+}
+// Only Pool Version Masterchef
+export const getCoinCollectPoolContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectPool, getCoinCollectPoolAddress(), signer) as CoinCollectPool
 }
 export const getClaimRefundContract = (signer?: Signer | Provider) => {
   return getContract(claimRefundAbi, getClaimRefundAddress(), signer) as ClaimRefund

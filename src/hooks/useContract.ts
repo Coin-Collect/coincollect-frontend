@@ -33,6 +33,7 @@ import {
   getErc721CollectionContract,
   getBunnySpecialXmasContract,
   getCoinCollectNFTContract,
+  getCoinCollectPoolContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
@@ -130,6 +131,12 @@ export const useLotteryV2Contract = () => {
 export const useMasterchef = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getMasterchefContract(library.getSigner()), [library])
+}
+
+// Only Pool Version Masterchef
+export const useCoinCollectPool = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectPoolContract(library.getSigner()), [library])
 }
 
 export const useSousChef = (id) => {

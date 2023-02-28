@@ -3,7 +3,7 @@ import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
 import poolsConfig from 'config/constants/pools'
 import sousChefABI from 'config/abi/sousChef.json'
 import erc20ABI from 'config/abi/erc20.json'
-import multicall, { multicallv2 } from 'utils/multicall'
+import multicall, { multicallPolygonv1, multicallPolygonv2, multicallv2 } from 'utils/multicall'
 import { getAddress } from 'utils/addressHelpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 import chunk from 'lodash/chunk'
@@ -60,7 +60,7 @@ const poolsBalanceOf = poolsConfig.map((poolConfig) => {
 })
 
 export const fetchPoolsTotalStaking = async () => {
-  const poolsTotalStaked = await multicall(erc20ABI, poolsBalanceOf)
+  const poolsTotalStaked = await multicallPolygonv1(erc20ABI, poolsBalanceOf)
 
   return poolsConfig.map((p, index) => ({
     sousId: p.sousId,
@@ -86,7 +86,7 @@ export const fetchPoolsStakingLimits = async (
     })
     .flat()
 
-  const poolStakingResultRaw = await multicallv2(sousChefV2, poolStakingCalls, { requireSuccess: false })
+  const poolStakingResultRaw = await multicallPolygonv2(sousChefV2, poolStakingCalls, { requireSuccess: false })
   const chunkSize = poolStakingCalls.length / validPools.length
   const poolStakingChunkedResultRaw = chunk(poolStakingResultRaw.flat(), chunkSize)
   return poolStakingChunkedResultRaw.reduce((accum, stakingLimitRaw, index) => {

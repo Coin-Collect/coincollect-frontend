@@ -14,7 +14,7 @@ export const vaultPoolConfig = {
     autoCompoundFrequency: 5000,
     gasLimit: 380000,
     tokenImage: {
-      primarySrc: `/images/tokens/${tokens.cake.address}.svg`,
+      primarySrc: `/images/tokens/${tokens.collect.address}.svg`,
       secondarySrc: '/images/tokens/autorenew.svg',
     },
   },
@@ -30,14 +30,16 @@ export const vaultPoolConfig = {
   },
 } as const
 
+/// It chooses network id which determined in environment
 const pools: SerializedPoolConfig[] = [
   {
     sousId: 0,
-    stakingToken: serializedTokens.cake,
-    earningToken: serializedTokens.cake,
+    stakingToken: serializedTokens.collect,
+    earningToken: serializedTokens.collect,
     contractAddress: {
       97: '0x1d32c2945C8FDCBc7156c553B7cEa4325a17f4f9',
       56: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
+      80001: '0x9F138199e9AdB7a0a7f6Db8C9CD7f982a8564f17'
     },
     poolCategory: PoolCategory.CORE,
     harvest: true,
@@ -45,6 +47,7 @@ const pools: SerializedPoolConfig[] = [
     sortOrder: 1,
     isFinished: false,
   },
+  /*
   {
     sousId: 267,
     stakingToken: serializedTokens.cake,
@@ -60,6 +63,9 @@ const pools: SerializedPoolConfig[] = [
     deployedBlockNumber: 15556925,
     version: 3,
   },
+  */
 ].filter((p) => !!p.contractAddress[ChainId.MAINNET])
+
+
 
 export default pools
