@@ -37,6 +37,7 @@ import {
   getMulticallPolygonAddress,
   getCoinCollectNftAddress,
   getCoinCollectPoolAddress,
+  getCoinCollectAutoPoolVaultAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -63,6 +64,7 @@ import tradingCompetitionAbi from 'config/abi/tradingCompetition.json'
 import tradingCompetitionV2Abi from 'config/abi/tradingCompetitionV2.json'
 import easterNftAbi from 'config/abi/easterNft.json'
 import cakeVaultAbi from 'config/abi/cakeVault.json'
+import coinCollectAutoPoolVaultAbi from 'config/abi/coinCollectAutoPoolVault.json'
 import ifoPoolAbi from 'config/abi/ifoPool.json'
 import predictionsAbi from 'config/abi/predictions.json'
 import chainlinkOracleAbi from 'config/abi/chainlinkOracle.json'
@@ -115,6 +117,7 @@ import type {
   Erc721collection,
   PointCenterIfo,
 } from 'config/abi/types'
+import { CoinCollectAutoPoolVault } from 'config/abi/types/CoinCollectAutoPoolVault'
 
 // No need for polygon
 const getContract = (abi: any, address: string, signer?: Signer | Provider) => {
@@ -161,6 +164,10 @@ export const getPointCenterIfoContract = (signer?: Signer | Provider) => {
 export const getCakeContract = (signer?: Signer | Provider) => {
   return getContract(cakeAbi, tokens.cake.address, signer) as Cake
 }
+// -----
+export const getCoinCollectContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(cakeAbi, tokens.collect.address, signer) as Cake
+}
 export const getProfileContract = (signer?: Signer | Provider) => {
   return getContract(profileABI, getPancakeProfileAddress(), signer) as PancakeProfile
 }
@@ -198,6 +205,11 @@ export const getEasterNftContract = (signer?: Signer | Provider) => {
 }
 export const getCakeVaultContract = (signer?: Signer | Provider) => {
   return getContract(cakeVaultAbi, getCakeVaultAddress(), signer) as CakeVault
+}
+
+// For CoinCollect Auto Pool // CakeVaultContract
+export const getCoinCollectAutoPoolVaultContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectAutoPoolVaultAbi, getCoinCollectAutoPoolVaultAddress(), signer) as CoinCollectAutoPoolVault
 }
 export const getIfoPoolContract = (signer?: Signer | Provider) => {
   return getContract(ifoPoolAbi, getIfoPoolAddress(), signer) as IfoPool

@@ -34,11 +34,14 @@ import {
   getBunnySpecialXmasContract,
   getCoinCollectNFTContract,
   getCoinCollectPoolContract,
+  getCoinCollectAutoPoolVaultContract,
+  getCoinCollectContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
 import {
   CakeVault,
+  CoinCollectAutoPoolVault,
   EnsPublicResolver,
   EnsRegistrar,
   Erc20,
@@ -101,6 +104,14 @@ export const useCake = (withSignerIfPossible = true) => {
   const { account, library } = useActiveWeb3React()
   return useMemo(
     () => getCakeContract(withSignerIfPossible ? getProviderOrSigner(library, account) : null),
+    [account, library, withSignerIfPossible],
+  )
+}
+
+export const useCoinCollect = (withSignerIfPossible = true) => {
+  const { account, library } = useActiveWeb3React()
+  return useMemo(
+    () => getCoinCollectContract(withSignerIfPossible ? getProviderOrSigner(library, account) : null),
     [account, library, withSignerIfPossible],
   )
 }
@@ -177,11 +188,11 @@ export const useEasterNftContract = () => {
   return useMemo(() => getEasterNftContract(library.getSigner()), [library])
 }
 
-export const useVaultPoolContract = (vaultKey: VaultKey): CakeVault | IfoPool => {
+export const useVaultPoolContract = (vaultKey: VaultKey): CoinCollectAutoPoolVault | IfoPool => {
   const { library } = useActiveWeb3React()
   return useMemo(() => {
     return vaultKey === VaultKey.CakeVault
-      ? getCakeVaultContract(library.getSigner())
+      ? getCoinCollectAutoPoolVaultContract(library.getSigner())
       : getIfoPoolContract(library.getSigner())
   }, [library, vaultKey])
 }
