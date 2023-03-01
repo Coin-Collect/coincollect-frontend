@@ -63,10 +63,15 @@ const CollectModal: React.FC<CollectModalProps> = ({
   )
 
   const handleHarvestConfirm = async () => {
+    
     const receipt = await fetchWithCatchTxError(() => {
+
+      // Compound
       if (shouldCompound) {
         return onStake(fullBalance, earningToken.decimals)
       }
+      
+      // Harvest
       return onReward()
     })
     if (receipt?.status) {
