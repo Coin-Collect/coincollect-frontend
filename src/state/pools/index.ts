@@ -73,6 +73,7 @@ const initialState: PoolsState = {
 const cakePool = poolsConfig.find((pool) => pool.sousId === 0)
 const cakePoolAddress = getAddress(cakePool.contractAddress)
 const cakeContract = getCakeContract()
+
 export const fetchCakePoolPublicDataAsync = () => async (dispatch, getState) => {
   const prices = getTokenPricesFromFarm(getState().farms.data)
   const stakingTokenAddress = cakePool.stakingToken.address ? cakePool.stakingToken.address.toLowerCase() : null
@@ -134,6 +135,7 @@ export const fetchCakePoolUserDataAsync = (account: string) => async (dispatch) 
   )
 }
 
+// This func trigger for calculation APR/APY
 export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (dispatch, getState) => {
   try {
     const blockLimits = await fetchPoolsBlockLimits()
@@ -145,6 +147,7 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
     }
 
     const prices = getTokenPricesFromFarm(getState().farms.data)
+    
 
     const liveData = poolsConfig.map((pool) => {
       const blockLimit = blockLimits.find((entry) => entry.sousId === pool.sousId)
@@ -156,7 +159,10 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
       const stakingTokenAddress = pool.stakingToken.address ? pool.stakingToken.address.toLowerCase() : null
       const stakingTokenPrice = stakingTokenAddress ? prices[stakingTokenAddress] : 0
 
+
+
       const earningTokenAddress = pool.earningToken.address ? pool.earningToken.address.toLowerCase() : null
+  
       const earningTokenPrice = earningTokenAddress ? prices[earningTokenAddress] : 0
       const apr = !isPoolFinished
         ? getPoolApr(
