@@ -202,6 +202,12 @@ export const useCakeVaultContract = () => {
   return useMemo(() => getCakeVaultContract(library.getSigner()), [library])
 }
 
+// New
+export const useCoinCollectAutoPoolVaultContract = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectAutoPoolVaultContract(library.getSigner()), [library])
+}
+
 export const useIfoPoolContract = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getIfoPoolContract(library.getSigner()), [library])

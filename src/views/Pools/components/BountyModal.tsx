@@ -14,7 +14,7 @@ import {
   MessageText,
 } from '@pancakeswap/uikit'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { useCakeVaultContract } from 'hooks/useContract'
+import { useCoinCollectAutoPoolVaultContract } from 'hooks/useContract'
 import useTheme from 'hooks/useTheme'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
@@ -53,7 +53,7 @@ const BountyModal: React.FC<BountyModalProps> = ({
   const { theme } = useTheme()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
-  const cakeVaultContract = useCakeVaultContract()
+  const cakeVaultContract = useCoinCollectAutoPoolVaultContract()
   const { callWithGasPrice } = useCallWithGasPrice()
   const callFeeAsDecimal = callFee / 100
   const totalYieldToDisplay = getBalanceNumber(totalPendingCakeHarvest, 18)
