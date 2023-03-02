@@ -2047,6 +2047,14 @@ export const testnetTokens = defineTokens({
     'CoinCollect Test Token',
     'https://www.coincollect.org/',
   ),
+  usdc: new Token(
+    MUMBAI_TESTNET,
+    '0xef21802e25bd223100205e2a3e80aacb5e7211f1',
+    18,
+    'USDC',
+    'USDC Test Token',
+    'https://www.coincollect.org/',
+  ),
   cake: new Token(
     TESTNET,
     '0xa35062141Fa33BCA92Ce69FeD37D0E8908868AAe',

@@ -11,44 +11,27 @@ const farms: SerializedFarmConfig[] = [
    */
   {
     pid: 0,
-    lpSymbol: 'CAKE',
+    lpSymbol: 'COLLECT',
     lpAddresses: {
       97: '0x9C21123D94b93361a29B2C2EFB3d5CD8B17e0A9e',
       56: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
+      80001: '0xA8Cc006BE50a72c6f96D2319DaB2266F9676bfDc'
     },
     token: serializedTokens.syrup,
     quoteToken: serializedTokens.wbnb,
   },
   {
     pid: 251,
-    lpSymbol: 'CAKE-BNB LP',
+    lpSymbol: 'COLLECT-USDC LP',
     lpAddresses: {
       97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
       56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
+      80001: '0x2BE9C56D6Cd333067716B9457254A82b79B8cB38'
     },
-    token: serializedTokens.cake,
-    quoteToken: serializedTokens.wbnb,
+    token: serializedTokens.collect,
+    quoteToken: serializedTokens.usdc,
   },
-  {
-    pid: 252,
-    lpSymbol: 'BUSD-BNB LP',
-    lpAddresses: {
-      97: '',
-      56: '0x58F876857a02D6762E0101bb5C46A8c1ED44Dc16',
-    },
-    token: serializedTokens.busd,
-    quoteToken: serializedTokens.wbnb,
-  },
-  {
-    pid: 491,
-    lpSymbol: 'HIGH-BUSD LP',
-    lpAddresses: {
-      97: '',
-      56: '0xe98ac95A1dB2fCaaa9c7D4ba7ecfCE4877ca2bEa',
-    },
-    token: serializedTokens.high,
-    quoteToken: serializedTokens.busd,
-  },
+  
 ].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
 
 export default farms

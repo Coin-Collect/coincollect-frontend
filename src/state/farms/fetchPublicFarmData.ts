@@ -1,12 +1,14 @@
 import erc20 from 'config/abi/erc20.json'
 import chunk from 'lodash/chunk'
 import { getAddress, getMasterChefAddress } from 'utils/addressHelpers'
-import { multicallv2 } from 'utils/multicall'
+import { multicallPolygonv2 } from 'utils/multicall'
 import { SerializedFarm } from '../types'
 import { SerializedFarmConfig } from '../../config/constants/types'
 
+// TODO: Make it compatible both V2, V3 pools
 const fetchFarmCalls = (farm: SerializedFarm) => {
   const { lpAddresses, token, quoteToken } = farm
+  
   const lpAddress = getAddress(lpAddresses)
   return [
     // Balance of token in the LP contract
@@ -22,6 +24,7 @@ const fetchFarmCalls = (farm: SerializedFarm) => {
       params: [lpAddress],
     },
     // Balance of LP tokens in the master chef contract
+    /*
     {
       address: lpAddress,
       name: 'balanceOf',
@@ -31,6 +34,17 @@ const fetchFarmCalls = (farm: SerializedFarm) => {
     {
       address: lpAddress,
       name: 'totalSupply',
+    },
+    */
+    // Dummy
+    {
+      address: token.address,
+      name: 'decimals',
+    },
+    // Dummy
+    {
+      address: quoteToken.address,
+      name: 'decimals',
     },
     // Token decimals
     {
@@ -48,6 +62,6 @@ const fetchFarmCalls = (farm: SerializedFarm) => {
 export const fetchPublicFarmsData = async (farms: SerializedFarmConfig[]): Promise<any[]> => {
   const farmCalls = farms.flatMap((farm) => fetchFarmCalls(farm))
   const chunkSize = farmCalls.length / farms.length
-  const farmMultiCallResult = await multicallv2(erc20, farmCalls)
+  const farmMultiCallResult = await multicallPolygonv2(erc20, farmCalls)
   return chunk(farmMultiCallResult, chunkSize)
 }

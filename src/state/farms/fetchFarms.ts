@@ -6,6 +6,7 @@ import { fetchMasterChefData } from './fetchMasterChefData'
 
 
 const fetchFarms = async (farmsToFetch: SerializedFarmConfig[]) => {
+  
   // Information about LP Token Contract(Pair)
   const farmResult = await fetchPublicFarmsData(farmsToFetch)
 
