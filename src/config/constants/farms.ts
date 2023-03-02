@@ -40,15 +40,14 @@ const farms: SerializedFarmConfig[] = [
     quoteToken: serializedTokens.wbnb,
   },
   {
-    pid: 36,
-    lpSymbol: 'NYA-CAKE LP',
+    pid: 491,
+    lpSymbol: 'HIGH-BUSD LP',
     lpAddresses: {
-      97: '0xE66790075ad839978fEBa15D4d8bB2b415556a1D',
-      56: '0x2730bf486d658838464a4ef077880998d944252d',
+      97: '',
+      56: '0xe98ac95A1dB2fCaaa9c7D4ba7ecfCE4877ca2bEa',
     },
-    token: serializedTokens.nya,
-    quoteToken: serializedTokens.cake,
-    isCommunity: true,
+    token: serializedTokens.high,
+    quoteToken: serializedTokens.busd,
   },
 ].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
 

@@ -4,6 +4,7 @@ import { filterFarmsByQuoteToken } from 'utils/farmsPriceHelpers'
 import { SerializedFarm } from 'state/types'
 import tokens from 'config/constants/tokens'
 
+// Gets pairs using specified token as primary token
 const getFarmFromTokenSymbol = (
   farms: SerializedFarm[],
   tokenSymbol: string,

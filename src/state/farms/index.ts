@@ -41,6 +41,7 @@ const initialState: SerializedFarmsState = {
 export const nonArchivedFarms = farmsConfig.filter(({ pid }) => !isArchivedPid(pid))
 
 // Async thunks
+// Main Function for Farm Data and Price Calculation
 export const fetchFarmsPublicDataAsync = createAsyncThunk<
   [SerializedFarm[], number],
   number[],
