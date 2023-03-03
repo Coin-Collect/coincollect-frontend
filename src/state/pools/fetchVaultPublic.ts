@@ -3,7 +3,7 @@ import { convertSharesToCake } from 'views/Pools/helpers'
 import { multicallPolygonv2, multicallv2 } from 'utils/multicall'
 import cakeVaultAbi from 'config/abi/cakeVault.json'
 import coinCollectAutoPoolVaultAbi from 'config/abi/coinCollectAutoPoolVault.json'
-import { getCakeVaultAddress, getCoinCollectAutoPoolVaultAddress } from 'utils/addressHelpers'
+import { getCoinCollectAutoPoolVaultAddress } from 'utils/addressHelpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 
 export const fetchPublicVaultData = async () => {
@@ -51,12 +51,12 @@ export const fetchPublicVaultData = async () => {
 export const fetchVaultFees = async () => {
   try {
     const calls = ['performanceFee', 'callFee', 'withdrawFee', 'withdrawFeePeriod'].map((method) => ({
-      address: getCakeVaultAddress(),
+      address: getCoinCollectAutoPoolVaultAddress(),
       name: method,
     }))
 
-    const [[performanceFee], [callFee], [withdrawalFee], [withdrawalFeePeriod]] = await multicallv2(cakeVaultAbi, calls)
-
+    const [[performanceFee], [callFee], [withdrawalFee], [withdrawalFeePeriod]] = await multicallPolygonv2(cakeVaultAbi, calls)
+    
     return {
       performanceFee: performanceFee.toNumber(),
       callFee: callFee.toNumber(),

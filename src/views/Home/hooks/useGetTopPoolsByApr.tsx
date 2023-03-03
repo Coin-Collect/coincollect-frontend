@@ -33,7 +33,7 @@ export function usePoolsWithVault() {
     
     const ifoPoolVault = { ...cakePool, vaultKey: VaultKey.IfoPool }
     
-
+    // APY VAULT
     const cakeAutoVaultWithApr = {
       ...cakeAutoVault,
       apr: getAprData(cakeAutoVault, cakeVault.fees.performanceFeeAsDecimal).apr,
