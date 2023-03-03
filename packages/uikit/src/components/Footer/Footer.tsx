@@ -86,7 +86,7 @@ const MenuItem: React.FC<FooterProps> = ({
               dropdownPosition="top-right"
             />
           </Flex>
-          
+          */}
           <Flex order={[1, null, 2]} mb={["24px", null, "0"]} justifyContent="space-between" alignItems="center">
             <Box mr="20px">
               <CakePrice cakePriceUsd={cakePriceUsd} color={darkColors.textSubtle as keyof Colors} />
@@ -101,7 +101,7 @@ const MenuItem: React.FC<FooterProps> = ({
               {buyCakeLabel}
             </Button>
           </Flex>
-          */}
+          
         </StyledToolsContainer>
       </Flex>
     </StyledFooter>
