@@ -135,7 +135,7 @@ const Pools: React.FC = () => {
   const hasStakeInFinishedPools = stakedOnlyFinishedPools.length > 0
 
   useFetchCakeVault()
-  useFetchIfoPool(false)
+  //useFetchIfoPool(false) // TODO:IFO Data disabled
   useFetchPublicPoolsData()
   useFetchUserPools(account)
 

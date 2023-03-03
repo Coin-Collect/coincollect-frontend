@@ -62,7 +62,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ pool, account }) => {
     totalCakeInVault,
     fees: { performanceFee },
   } = useVaultPoolByKey(vaultKey)
-
+  
   const vaultPools = useVaultPools()
   const cakeInVaults = Object.values(vaultPools).reduce((total, vault) => {
     return total.plus(vault.totalCakeInVault)
