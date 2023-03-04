@@ -6,7 +6,7 @@ export default {
   // Only Pool Version Masterchef
   coinCollectPool: {
     137: '', // TODO: fill
-    80001: '0x13009fd4b2ab3238d7f96dd6Ab5D3E00C3E1fCce',
+    80001: '0x13009fd4b2ab3238d7f96dd6Ab5D3E00C3E1fCce', // CHANGE_ADDRESS:CoinCollectPool (test)
   },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',
@@ -82,7 +82,7 @@ export default {
   },
   coinCollectAutoPoolVault: {
     137: '', // TODO: fill this
-    80001: '0x3433a66FE99cE5C6746A4d41D7a4f75b1B5f2D16',
+    80001: '0x3433a66FE99cE5C6746A4d41D7a4f75b1B5f2D16', // CHANGE_ADDRESS:CoinCollectAutoPool (test)
   },
   ifoPool: {
     56: '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8',
