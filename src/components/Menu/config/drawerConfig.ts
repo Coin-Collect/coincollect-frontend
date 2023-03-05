@@ -11,12 +11,7 @@ const drawerLinks: MenuItemsType[] = [
             {
                 label: 'Collections',
                 href: '/nfts/collections',
-            },
-            {
-                label: 'Marketplace (soon)',
-                href: '/nfts',
-            },
-            
+            },            
 
         ],
     },
@@ -24,14 +19,14 @@ const drawerLinks: MenuItemsType[] = [
         label: 'Yield',
         icon: 'FarmIcon',
         href: '/farms',
-        initialOpenState: false,
+        initialOpenState: true,
         items: [
             {
-                label: 'Farms (soon)',
+                label: 'Farms',
                 href: '/farms',
             },
             {
-                label: 'Stake (soon)',
+                label: 'Stake',
                 href: '/pools',
             },
 
@@ -45,11 +40,11 @@ const drawerLinks: MenuItemsType[] = [
         initialOpenState: false,
         items: [
             {
-                label: 'Swap (soon)',
+                label: 'Swap',
                 href: '/swap',
             },
             {
-                label: 'Liquidity (soon)',
+                label: 'Liquidity',
                 href: '/liquidity',
             },
         ],

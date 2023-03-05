@@ -56,9 +56,9 @@ export const cakeSectionData = (t: TranslateFunction): SalesSectionProps => ({
   ),
   reverse: false,
   primaryButton: {
-    to: '/nfts/collections',
-    text: t('Mint NFT'),
-    external: false,
+    to: 'https://app.uniswap.org/#/swap?outputCurrency=0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
+    text: t('Buy $COLLECT'),
+    external: true,
   },
   secondaryButton: {
     to: 'https://docs.coincollect.org/',
