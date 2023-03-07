@@ -1,7 +1,8 @@
-import { JSBI, Percent, Token } from '@pancakeswap/sdk'
+import { /*ChainId,*/ JSBI, Percent, Token } from '@pancakeswap/sdk'
 import { mainnetTokens, testnetTokens } from './tokens'
 
 // CAUTION: This declaration was inside @pancakeswap/sdk
+// TODO: Make customized clone of @pancakeswap/sdk
 declare enum ChainId {
   MAINNET = 56,
   TESTNET = 97,
@@ -30,16 +31,7 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   ],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
   137: [],
-  80001: [
-    mainnetTokens.wbnb,
-    mainnetTokens.cake,
-    mainnetTokens.busd,
-    mainnetTokens.usdt,
-    mainnetTokens.btcb,
-    mainnetTokens.ust,
-    mainnetTokens.eth,
-    mainnetTokens.usdc,
-  ]
+  80001: []
 }
 
 /**
@@ -72,7 +64,7 @@ export const BASES_TO_TRACK_LIQUIDITY_FOR: ChainTokenList = {
   [ChainId.MAINNET]: [mainnetTokens.wbnb, mainnetTokens.dai, mainnetTokens.busd, mainnetTokens.usdt],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
   137: [],
-  80001: [mainnetTokens.wbnb, mainnetTokens.dai, mainnetTokens.busd, mainnetTokens.usdt],
+  80001: []
 }
 
 export const PINNED_PAIRS: { readonly [chainId in ChainId]?: [Token, Token][] } = {
