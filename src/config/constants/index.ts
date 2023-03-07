@@ -1,5 +1,13 @@
-import { ChainId, JSBI, Percent, Token } from '@pancakeswap/sdk'
+import { JSBI, Percent, Token } from '@pancakeswap/sdk'
 import { mainnetTokens, testnetTokens } from './tokens'
+
+// CAUTION: This declaration was inside @pancakeswap/sdk
+declare enum ChainId {
+  MAINNET = 56,
+  TESTNET = 97,
+  POLYGON_MAINNET = 137,
+  MUMBAI_TESTNET = 80001,
+}
 
 export const ROUTER_ADDRESS = '0x10ED43C718714eb63d5aA57B78B54704E256024E'
 
@@ -21,6 +29,17 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
     mainnetTokens.usdc,
   ],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
+  137: [],
+  80001: [
+    mainnetTokens.wbnb,
+    mainnetTokens.cake,
+    mainnetTokens.busd,
+    mainnetTokens.usdt,
+    mainnetTokens.btcb,
+    mainnetTokens.ust,
+    mainnetTokens.eth,
+    mainnetTokens.usdc,
+  ]
 }
 
 /**
@@ -44,12 +63,16 @@ export const CUSTOM_BASES: { [chainId in ChainId]?: { [tokenAddress: string]: To
 export const SUGGESTED_BASES: ChainTokenList = {
   [ChainId.MAINNET]: [mainnetTokens.busd, mainnetTokens.cake, mainnetTokens.btcb],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
+  137: [],
+  80001: [mainnetTokens.busd, mainnetTokens.cake, mainnetTokens.btcb]
 }
 
 // used to construct the list of all pairs we consider by default in the frontend
 export const BASES_TO_TRACK_LIQUIDITY_FOR: ChainTokenList = {
   [ChainId.MAINNET]: [mainnetTokens.wbnb, mainnetTokens.dai, mainnetTokens.busd, mainnetTokens.usdt],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
+  137: [],
+  80001: [mainnetTokens.wbnb, mainnetTokens.dai, mainnetTokens.busd, mainnetTokens.usdt],
 }
 
 export const PINNED_PAIRS: { readonly [chainId in ChainId]?: [Token, Token][] } = {
