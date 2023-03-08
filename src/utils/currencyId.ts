@@ -1,4 +1,4 @@
-import { Currency, ETHER, Token } from '@pancakeswap/sdk'
+import { Currency, ETHER, Token } from '@coincollect/sdk'
 
 export function currencyId(currency: Currency): string {
   if (currency === ETHER) return 'BNB'

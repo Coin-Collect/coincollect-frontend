@@ -1,4 +1,4 @@
-import { Token } from '@pancakeswap/sdk'
+import { Token } from '@coincollect/sdk'
 import { SerializedToken } from 'config/constants/types'
 import { parseUnits } from '@ethersproject/units'
 

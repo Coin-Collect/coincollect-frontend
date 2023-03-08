@@ -1,4 +1,4 @@
-import { /*ChainId,*/ JSBI, Percent, Token } from '@pancakeswap/sdk'
+import { /*ChainId,*/ JSBI, Percent, Token } from '@coincollect/sdk'
 import { mainnetTokens, testnetTokens } from './tokens'
 
 // CAUTION: This declaration was inside @pancakeswap/sdk

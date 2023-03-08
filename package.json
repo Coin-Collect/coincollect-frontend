@@ -37,6 +37,7 @@
   "dependencies": {
     "@binance-chain/bsc-connector": "^1.0.0",
     "@blocto/blocto-connector": "^0.2.3",
+    "@coincollect/sdk": "github:coin-collect/coincollect-sdk",
     "@ethersproject/abi": "^5.5.0",
     "@ethersproject/address": "^5.5.0",
     "@ethersproject/bignumber": "^5.5.0",
@@ -48,7 +49,6 @@
     "@ethersproject/strings": "^5.5.0",
     "@ethersproject/units": "^5.5.0",
     "@next/bundle-analyzer": "^12.0.7",
-    "@pancakeswap/sdk": "^2.4.5",
     "@reduxjs/toolkit": "^1.5.0",
     "@sentry/nextjs": "^6.17.9",
     "@snapshot-labs/snapshot.js": "^0.3.25",

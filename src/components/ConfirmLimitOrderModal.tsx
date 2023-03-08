@@ -1,4 +1,4 @@
-import { Trade } from '@pancakeswap/sdk'
+import { Trade } from '@coincollect/sdk'
 import { ArrowDownIcon, Button, Flex, Message, MessageText, Modal, Spinner, Text } from '@pancakeswap/uikit'
 import { CurrencyLogo } from 'components/Logo'
 import { useTranslation } from 'contexts/Localization'

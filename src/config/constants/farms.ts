@@ -1,7 +1,7 @@
 import { serializeTokens } from './tokens'
 import { SerializedFarmConfig } from './types'
 import { CHAIN_ID } from './networks'
-import { ChainId } from '@pancakeswap/sdk'
+import { ChainId } from '@coincollect/sdk'
 
 const serializedTokens = serializeTokens()
 
