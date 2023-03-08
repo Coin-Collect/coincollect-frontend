@@ -37,7 +37,7 @@ import {
   getCoinCollectAutoPoolVaultContract,
   getCoinCollectContract,
 } from 'utils/contractHelpers'
-import { getMulticallAddress } from 'utils/addressHelpers'
+import { getMulticallAddress, getMulticallPolygonAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
 import {
   CakeVault,
@@ -342,5 +342,5 @@ export function usePairContract(pairAddress?: string, withSignerIfPossible?: boo
 }
 
 export function useMulticallContract() {
-  return useContract<Multicall>(getMulticallAddress(), multiCallAbi, false)
+  return useContract<Multicall>(getMulticallPolygonAddress(), multiCallAbi, false)
 }

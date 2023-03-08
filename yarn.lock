@@ -386,7 +386,7 @@
     "js-sha3" "^0.8.0"
 
 "@coincollect/sdk@github:coin-collect/coincollect-sdk":
-  "resolved" "git+ssh://git@github.com/coin-collect/coincollect-sdk.git#d14632b7eccb6b87524eeb8903559a5d2348c514"
+  "resolved" "git+ssh://git@github.com/coin-collect/coincollect-sdk.git#96143d55c4244909e3a4b2d7b8a4604ed0f7af55"
   "version" "2.4.3"
   dependencies:
     "big.js" "^5.2.2"
