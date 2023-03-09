@@ -11,7 +11,7 @@ import { ChainId, JSBI, Percent, Token, CurrencyAmount, Currency, ETHER } from '
 import { ROUTER_ADDRESS } from '../config/constants'
 import { BASE_BSC_SCAN_URLS, BASE_POLYGON_SCAN_URLS } from '../config'
 import { TokenAddressMap } from '../state/lists/hooks'
-import { simpleRpcProvider } from './providers'
+import { simplePolygonRpcProvider, simpleRpcProvider } from './providers'
 
 // returns the checksummed address if the address is valid, otherwise returns false
 export function isAddress(value: any): string | false {
@@ -122,7 +122,7 @@ export function getContract(address: string, ABI: any, signer?: Signer | Provide
     throw Error(`Invalid 'address' parameter '${address}'.`)
   }
 
-  return new Contract(address, ABI, signer ?? simpleRpcProvider)
+  return new Contract(address, ABI, signer ?? simplePolygonRpcProvider) // CAUTION: You can switch provider between polygon and bsc. default:simpleRpcProvider
 }
 
 // account is optional

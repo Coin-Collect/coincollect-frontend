@@ -56,7 +56,7 @@ export const SUGGESTED_BASES: ChainTokenList = {
   [ChainId.MAINNET]: [mainnetTokens.busd, mainnetTokens.cake, mainnetTokens.btcb],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
   137: [],
-  80001: [mainnetTokens.busd, mainnetTokens.cake, mainnetTokens.btcb]
+  80001: [testnetTokens.usdc]
 }
 
 // used to construct the list of all pairs we consider by default in the frontend
