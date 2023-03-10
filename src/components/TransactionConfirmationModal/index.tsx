@@ -20,7 +20,7 @@ import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { wrappedCurrency } from 'utils/wrappedCurrency'
 import { RowFixed } from '../Layout/Row'
 import { AutoColumn, ColumnCenter } from '../Layout/Column'
-import { getBscScanLink } from '../../utils'
+import { getPolygonScanLink } from '../../utils'
 
 const Wrapper = styled.div`
   width: 100%;
@@ -81,8 +81,8 @@ function TransactionSubmittedContent({
         <AutoColumn gap="12px" justify="center">
           <Text fontSize="20px">{t('Transaction Submitted')}</Text>
           {chainId && hash && (
-            <Link external small href={getBscScanLink(hash, 'transaction', chainId)}>
-              {t('View on BscScan')}
+            <Link external small href={getPolygonScanLink(hash, 'transaction')}>
+              {t('View on PolygonScan')}
             </Link>
           )}
           {currencyToAdd && library?.provider?.isMetaMask && (
