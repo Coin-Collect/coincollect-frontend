@@ -17,6 +17,14 @@
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://app.coincollect.org/images/tokens/0x0000000000000000000000000000000000000000.png"
+    },
+    {
+      "name": "WMATIC Token",
+      "symbol": "WMATIC",
+      "address": "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": "https://app.coincollect.org/images/tokens/0x0000000000000000000000000000000000000000.png"
     }
   ]
 }
