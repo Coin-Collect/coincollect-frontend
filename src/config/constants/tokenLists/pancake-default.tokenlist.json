@@ -25,6 +25,14 @@
       "chainId": 80001,
       "decimals": 18,
       "logoURI": ""
+    },
+    {
+      "name": "USDC Token",
+      "symbol": "USDC",
+      "address": "0xef21802e25bd223100205e2a3e80aacb5e7211f1",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": ""
     }
   ]
 }
