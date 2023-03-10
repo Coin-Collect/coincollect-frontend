@@ -282,7 +282,7 @@ export default function AddLiquidity() {
           router.replace(`/add/${newCurrencyIdB}`, undefined, { shallow: true })
         }
       } else {
-        router.replace(`/add/${currencyIdA || 'BNB'}/${newCurrencyIdB}`, undefined, { shallow: true })
+        router.replace(`/add/${currencyIdA || 'MATIC'}/${newCurrencyIdB}`, undefined, { shallow: true })
       }
     },
     [currencyIdA, router, currencyIdB],
