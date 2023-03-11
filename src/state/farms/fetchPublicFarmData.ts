@@ -1,6 +1,6 @@
 import erc20 from 'config/abi/erc20.json'
 import chunk from 'lodash/chunk'
-import { getAddress, getMasterChefAddress } from 'utils/addressHelpers'
+import { getAddress, getCoinCollectFarmAddress } from 'utils/addressHelpers'
 import { multicallPolygonv2 } from 'utils/multicall'
 import { SerializedFarm } from '../types'
 import { SerializedFarmConfig } from '../../config/constants/types'
@@ -24,27 +24,15 @@ const fetchFarmCalls = (farm: SerializedFarm) => {
       params: [lpAddress],
     },
     // Balance of LP tokens in the master chef contract
-    /*
     {
       address: lpAddress,
       name: 'balanceOf',
-      params: [getMasterChefAddress()],
+      params: [getCoinCollectFarmAddress()],
     },
     // Total supply of LP tokens
     {
       address: lpAddress,
       name: 'totalSupply',
-    },
-    */
-    // Dummy
-    {
-      address: token.address,
-      name: 'decimals',
-    },
-    // Dummy
-    {
-      address: quoteToken.address,
-      name: 'decimals',
     },
     // Token decimals
     {

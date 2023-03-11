@@ -1,5 +1,5 @@
 import tokens from 'config/constants/tokens'
-import { getCakeVaultAddress, getIfoPoolAddress, getMasterChefAddress } from 'utils/addressHelpers'
+import { getCakeVaultAddress, getCoinCollectFarmAddress, getIfoPoolAddress, getMasterChefAddress } from 'utils/addressHelpers'
 
 const cakeLpAddress = '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0'
 
@@ -243,9 +243,9 @@ const CakeBnbLpReserve0Strategy = {
 const CakeBnbLpCakeBnbBalanceStrategy = {
   name: 'contract-call',
   params: {
-    address: getMasterChefAddress(),
+    address: getCoinCollectFarmAddress(),
     decimals: 0,
-    args: [251, '%{address}'],
+    args: [1, '%{address}'],
     output: 'amount',
     methodABI: {
       inputs: [

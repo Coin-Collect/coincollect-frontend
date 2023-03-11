@@ -38,6 +38,7 @@ import {
   getCoinCollectNftAddress,
   getCoinCollectPoolAddress,
   getCoinCollectAutoPoolVaultAddress,
+  getCoinCollectFarmAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -56,6 +57,7 @@ import pointCenterIfo from 'config/abi/pointCenterIfo.json'
 import lotteryV2Abi from 'config/abi/lotteryV2.json'
 import masterChef from 'config/abi/masterchef.json'
 import coinCollectPool from 'config/abi/coinCollectPool.json'
+import coinCollectFarm from 'config/abi/coinCollectFarm.json'
 import sousChef from 'config/abi/sousChef.json'
 import sousChefV2 from 'config/abi/sousChefV2.json'
 import sousChefBnb from 'config/abi/sousChefBnb.json'
@@ -116,6 +118,7 @@ import type {
   PancakeSquad,
   Erc721collection,
   PointCenterIfo,
+  CoinCollectFarm,
 } from 'config/abi/types'
 import { CoinCollectAutoPoolVault } from 'config/abi/types/CoinCollectAutoPoolVault'
 
@@ -189,6 +192,10 @@ export const getMasterchefContract = (signer?: Signer | Provider) => {
 // Only Pool Version Masterchef
 export const getCoinCollectPoolContract = (signer?: Signer | Provider) => {
   return getContractForPolygon(coinCollectPool, getCoinCollectPoolAddress(), signer) as CoinCollectPool
+}
+// Only Farm Version Masterchef
+export const getCoinCollectFarmContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectFarm, getCoinCollectFarmAddress(), signer) as CoinCollectFarm
 }
 export const getClaimRefundContract = (signer?: Signer | Provider) => {
   return getContract(claimRefundAbi, getClaimRefundAddress(), signer) as ClaimRefund

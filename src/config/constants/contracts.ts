@@ -8,6 +8,11 @@ export default {
     137: '', // TODO: fill
     80001: '0x13009fd4b2ab3238d7f96dd6Ab5D3E00C3E1fCce', // CHANGE_ADDRESS:CoinCollectPool (test)
   },
+  // Only Pool Version Masterchef
+  coinCollectFarm: {
+    137: '', // TODO: fill
+    80001: '0x41D1c2F5E0bd15be75109A9f44aDe968eEff6944', // CHANGE_ADDRESS:CoinCollectFarm (test)
+  },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',
     56: '0x6ab8463a4185b80905e05a9ff80a2d6b714b9e95',

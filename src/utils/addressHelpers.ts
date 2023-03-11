@@ -15,6 +15,10 @@ export const getMasterChefAddress = () => {
 export const getCoinCollectPoolAddress = () => {
   return getAddress(addresses.coinCollectPool)
 }
+// Only Farm Version Masterchef
+export const getCoinCollectFarmAddress = () => {
+  return getAddress(addresses.coinCollectFarm)
+}
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }

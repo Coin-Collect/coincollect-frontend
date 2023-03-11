@@ -90,7 +90,7 @@ const getFarmsPrices = (farms: SerializedFarm[]) => {
   //const bnbBusdFarm = farms.find((farm) => farm.pid === 252)
   //const bnbPriceBusd = bnbBusdFarm.tokenPriceVsQuote ? BIG_ONE.div(bnbBusdFarm.tokenPriceVsQuote) : BIG_ZERO
 
-  const collectCusdFarm = farms.find((farm) => farm.pid === 251)
+  const collectCusdFarm = farms.find((farm) => farm.pid === 1)
   const collectPriceCusd = collectCusdFarm.tokenPriceVsQuote ? BIG_ONE.div(collectCusdFarm.tokenPriceVsQuote) : BIG_ZERO
 
   const farmsWithPrices = farms.map((farm) => {
