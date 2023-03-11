@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 import { stakeFarm } from 'utils/calls'
-import { useMasterchef } from 'hooks/useContract'
+import { useCoinCollectFarm } from 'hooks/useContract'
 
 const useStakeFarms = (pid: number) => {
-  const masterChefContract = useMasterchef()
+  const masterChefContract = useCoinCollectFarm() //useMasterchef()
 
   const handleStake = useCallback(
     async (amount: string) => {
