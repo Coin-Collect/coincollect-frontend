@@ -33,6 +33,14 @@
       "chainId": 80001,
       "decimals": 18,
       "logoURI": ""
+    },
+    {
+      "name": "USDT Token",
+      "symbol": "USDT",
+      "address": "0x6Add000b64258A977be4bE177A57a5cC8d59939f",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": ""
     }
   ]
 }
