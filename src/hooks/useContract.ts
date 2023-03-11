@@ -36,6 +36,7 @@ import {
   getCoinCollectPoolContract,
   getCoinCollectAutoPoolVaultContract,
   getCoinCollectContract,
+  getCoinCollectFarmContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress, getMulticallPolygonAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
@@ -148,6 +149,12 @@ export const useMasterchef = () => {
 export const useCoinCollectPool = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getCoinCollectPoolContract(library.getSigner()), [library])
+}
+
+// Only Farm Version Masterchef
+export const useCoinCollectFarm = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectFarmContract(library.getSigner()), [library])
 }
 
 export const useSousChef = (id) => {
