@@ -31,7 +31,7 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   ],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
   137: [],
-  80001: [testnetTokens.usdc,testnetTokens.wmatic,testnetTokens.collect]
+  80001: [testnetTokens.usdc,testnetTokens.wmatic,testnetTokens.collect,testnetTokens.usdt]
 }
 
 /**
@@ -64,7 +64,7 @@ export const BASES_TO_TRACK_LIQUIDITY_FOR: ChainTokenList = {
   [ChainId.MAINNET]: [mainnetTokens.wbnb, mainnetTokens.dai, mainnetTokens.busd, mainnetTokens.usdt],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
   137: [],
-  80001: [testnetTokens.usdc,testnetTokens.wmatic]
+  80001: [testnetTokens.usdc,testnetTokens.usdt,testnetTokens.wmatic]
 }
 
 export const PINNED_PAIRS: { readonly [chainId in ChainId]?: [Token, Token][] } = {
