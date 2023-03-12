@@ -10,7 +10,7 @@ declare enum ChainId {
   MUMBAI_TESTNET = 80001,
 }
 
-export const ROUTER_ADDRESS = '0x26568c1cBC5b15aa00A7419AFe9e9809379836B0' // CAUTION: Change before mainnet
+export const ROUTER_ADDRESS = '0x26568c1cBC5b15aa00A7419AFe9e9809379836B0' // CHANGE_ADDRESS | DON'T FORGET | CAUTION: Change before mainnet
 
 // a list of tokens by chain
 type ChainTokenList = {
