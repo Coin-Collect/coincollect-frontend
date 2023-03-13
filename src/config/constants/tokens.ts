@@ -2057,7 +2057,7 @@ export const testnetTokens = defineTokens({
   ),
   collect: new Token(
     MUMBAI_TESTNET,
-    '0xA8Cc006BE50a72c6f96D2319DaB2266F9676bfDc', // CHANGE_ADDRESS:CollectToken (test)
+    '0xE564106bacd4D3b74a79e0fbDabF0c43828a1DBB', // CHANGE_ADDRESS:CollectToken (test)
     18,
     'COLLECT',
     'CoinCollect Test Token',
