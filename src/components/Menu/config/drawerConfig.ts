@@ -37,7 +37,7 @@ const drawerLinks: MenuItemsType[] = [
         label: 'Trade',
         icon: 'TradeIcon',
         href: '/farms',
-        initialOpenState: false,
+        initialOpenState: true,
         items: [
             {
                 label: 'Swap',
