@@ -421,7 +421,6 @@ export function usePairAdder(): (pair: Pair) => void {
  * @param tokenB the other token
  */
 export function toV2LiquidityToken([tokenA, tokenB]: [Token, Token]): Token {
-  console.log("Chain:" + tokenA.chainId + " Token 1:" + tokenA.address + "-" + "Token 2:"+ tokenB.address)
   return new Token(tokenA.chainId, Pair.getAddress(tokenA, tokenB), 18, 'COLLECT-LP', 'CoinCollect LPs')
 }
 
