@@ -25,15 +25,15 @@ const farms: SerializedFarmConfig[] = [
   */
   {
     pid: 1,
-    lpSymbol: 'COLLECT-USDC LP',
+    lpSymbol: 'COLLECT-USDT LP',
     lpAddresses: {
       97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
       56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
-      137: '',
+      137: '0x0cCc84b6506003487AEC687085e82C2f912E607B',
       80001: '0x9472B107edb58f05d14299898B69A41729710959' // CHANGE_ADDRESS:Pair
     },
     token: serializedTokens.collect,
-    quoteToken: serializedTokens.usdc,
+    quoteToken: serializedTokens.usdt,
   },
   {
     pid: 2,
@@ -41,7 +41,7 @@ const farms: SerializedFarmConfig[] = [
     lpAddresses: {
       97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
       56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
-      137: '',
+      137: '0xFb09801B10298dB9663D2790F5D5Bc6aFa354497',
       80001: '0xD1D0A3E50422eb78F0dF124cac424e9528DA70C4' // CHANGE_ADDRESS:Pair
     },
     token: serializedTokens.collect,
