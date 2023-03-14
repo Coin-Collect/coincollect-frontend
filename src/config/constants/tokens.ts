@@ -33,7 +33,7 @@ export const mainnetTokens = defineTokens({
   ),
   collect: new Token(
     POLYGON_MAINNET,
-    '0x0000000000000000000000000000000000000000',
+    '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
     18,
     'COLLECT',
     'CoinCollect Token',
@@ -101,9 +101,17 @@ export const mainnetTokens = defineTokens({
     'Dai Stablecoin',
     'https://www.makerdao.com/',
   ),
-  usdt: new Token(
+  /*usdt: new Token(
     MAINNET,
     '0x55d398326f99059fF775485246999027B3197955',
+    18,
+    'USDT',
+    'Tether USD',
+    'https://tether.to/',
+  ),*/
+  usdt: new Token(
+    POLYGON_MAINNET,
+    '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
     18,
     'USDT',
     'Tether USD',
@@ -133,12 +141,20 @@ export const mainnetTokens = defineTokens({
     'Binance-Peg Ethereum Token',
     'https://ethereum.org/en/',
   ),
-  usdc: new Token(
+  /*usdc: new Token(
     MAINNET,
     '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
     18,
     'USDC',
     'Binance-Peg USD Coin',
+    'https://www.centre.io/usdc',
+  ),*/
+  usdc: new Token(
+    POLYGON_MAINNET,
+    '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+    18,
+    'USDC',
+    'Polygon-Peg USD Coin',
     'https://www.centre.io/usdc',
   ),
   kalm: new Token(
