@@ -386,7 +386,7 @@
     "js-sha3" "^0.8.0"
 
 "@coincollect/sdk@github:coin-collect/coincollect-sdk":
-  "resolved" "git+ssh://git@github.com/coin-collect/coincollect-sdk.git#653e3cb642eb774bd3d50eb01e5bf1967ad9ec6c"
+  "resolved" "git+ssh://git@github.com/coin-collect/coincollect-sdk.git#cebcb8a1341901acf33f41b994d4b922d82a1ec0"
   "version" "2.4.3"
   dependencies:
     "big.js" "^5.2.2"
@@ -1951,9 +1951,9 @@
   dependencies:
     "glob" "7.1.7"
 
-"@next/swc-darwin-arm64@12.1.0":
-  "integrity" "sha512-R8vcXE2/iONJ1Unf5Ptqjk6LRW3bggH+8drNkkzH4FLEQkHtELhvcmJwkXcuipyQCsIakldAXhRbZmm3YN1vXg=="
-  "resolved" "https://registry.npmjs.org/@next/swc-darwin-arm64/-/swc-darwin-arm64-12.1.0.tgz"
+"@next/swc-win32-x64-msvc@12.1.0":
+  "integrity" "sha512-aBvcbMwuanDH4EMrL2TthNJy+4nP59Bimn8egqv6GHMVj0a44cU6Au4PjOhLNqEh9l+IpRGBqMTzec94UdC5xg=="
+  "resolved" "https://registry.npmjs.org/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-12.1.0.tgz"
   "version" "12.1.0"
 
 "@nodelib/fs.scandir@2.1.5":
@@ -2148,7 +2148,7 @@
   dependencies:
     "@octokit/openapi-types" "^11.2.0"
 
-"@pancakeswap/uikit@file:/Users/kazimakgul/Documents/GitHub/coincollect-frontend/packages/uikit":
+"@pancakeswap/uikit@file:C:\\Users\\Monster\\Desktop\\SC\\coincollect\\coincollect-frontend\\packages\\uikit":
   "resolved" "file:packages/uikit"
   "version" "0.64.0"
   dependencies:
@@ -6215,11 +6215,6 @@
   "integrity" "sha1-FQStJSMVjKpA20onh8sBQRmU6k8="
   "resolved" "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   "version" "1.0.0"
-
-"fsevents@^2.3.2":
-  "integrity" "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA=="
-  "resolved" "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz"
-  "version" "2.3.2"
 
 "function-bind@^1.1.1":
   "integrity" "sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A=="
@@ -11679,9 +11674,9 @@
   dependencies:
     "safe-buffer" "^5.0.1"
 
-"turbo-darwin-arm64@1.1.4":
-  "integrity" "sha512-sl5TiMLNqWKvKpQsh6lg2sUXRTVt5lfRqnStVw/E/5BTm/KIBZTNWHmx0hO8/LwDmXenVtpiW7h7BbWewfPqTQ=="
-  "resolved" "https://registry.npmjs.org/turbo-darwin-arm64/-/turbo-darwin-arm64-1.1.4.tgz"
+"turbo-windows-64@1.1.4":
+  "integrity" "sha512-DMitFYd5eIhZ2CyPUeds3JXDB/onXBdA2DEj9cxVXY7q2ZBE4rpoV0Ft/mh15LsQZhwap9ipgddbCn16OGFvzw=="
+  "resolved" "https://registry.npmjs.org/turbo-windows-64/-/turbo-windows-64-1.1.4.tgz"
   "version" "1.1.4"
 
 "turbo@^1.1.4":
