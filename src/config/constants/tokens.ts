@@ -112,7 +112,7 @@ export const mainnetTokens = defineTokens({
   usdt: new Token(
     POLYGON_MAINNET,
     '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-    18,
+    6,
     'USDT',
     'Tether USD',
     'https://tether.to/',
@@ -2090,7 +2090,7 @@ export const testnetTokens = defineTokens({
   usdt: new Token(
     MUMBAI_TESTNET,
     '0x6Add000b64258A977be4bE177A57a5cC8d59939f',
-    18,
+    6,
     'USDT',
     'USDT Test Token',
     'https://www.coincollect.org/',
