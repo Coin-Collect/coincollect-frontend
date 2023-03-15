@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import styled from 'styled-components'
 import { formatBigNumber, formatLocalisedCompactNumber } from 'utils/formatBalance'
-import { multicallv2 } from 'utils/multicall'
+import { multicallPolygonv2 } from 'utils/multicall'
 
 const StyledColumn = styled(Flex)<{ noMobileBorder?: boolean }>`
   flex-direction: column;
@@ -44,7 +44,7 @@ const Grid = styled.div`
   }
 `
 
-const emissionsPerBlock = 14.25
+const emissionsPerBlock = 6.8
 
 const CakeDataRow = () => {
   const { t } = useTranslation()
@@ -64,19 +64,20 @@ const CakeDataRow = () => {
 
   useSlowRefreshEffect(() => {
     const fetchTokenData = async () => {
-      const totalSupplyCall = { address: tokens.cake.address, name: 'totalSupply' }
+      const totalSupplyCall = { address: tokens.collect.address, name: 'totalSupply' }
       const burnedTokenCall = {
-        address: tokens.cake.address,
+        address: tokens.collect.address,
         name: 'balanceOf',
         params: ['0x000000000000000000000000000000000000dEaD'],
       }
-      const tokenDataResultRaw = await multicallv2(cakeAbi, [totalSupplyCall, burnedTokenCall], {
+      const tokenDataResultRaw = await multicallPolygonv2(cakeAbi, [totalSupplyCall, burnedTokenCall], {
         requireSuccess: false,
       })
       const [totalSupply, burned] = tokenDataResultRaw.flat()
       setCakeSupply(totalSupply && burned ? +formatBigNumber(totalSupply.sub(burned)) : 0)
       setBurnedBalance(burned ? +formatBigNumber(burned) : 0)
     }
+
 
     if (loadData) {
       fetchTokenData()
