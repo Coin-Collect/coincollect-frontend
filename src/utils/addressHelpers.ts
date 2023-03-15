@@ -71,7 +71,9 @@ export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null
   }
-  return getAddress(addresses[vaultKey])
+  // CAUTION: This line below added by CoinCollect
+  const address = vaultKey == "cakeVault" ? addresses.coinCollectAutoPoolVault : addresses[vaultKey]
+  return getAddress(address)
 }
 
 export const getCakeVaultAddress = () => {

@@ -12,7 +12,7 @@ import {
   TimerIcon,
   useTooltip,
 } from '@pancakeswap/uikit'
-import { BASE_BSC_SCAN_URL } from 'config'
+import { BASE_POLYGON_SCAN_URL } from 'config'
 import { getBscScanLink } from 'utils'
 import { useCurrentBlock } from 'state/block/hooks'
 import { useVaultPoolByKey, useVaultPools } from 'state/pools/hooks'
@@ -295,11 +295,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
         {(isXs || isSm) && aprRow}
         {(isXs || isSm || isMd) && totalStakedRow}
         {shouldShowBlockCountdown && blocksRow}
+        {/*
         <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
           <LinkExternal href={`/info/token/${earningToken.address}`} bold={false}>
             {t('See Token Info')}
           </LinkExternal>
         </Flex>
+        */}
         <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
           <LinkExternal href={earningToken.projectLink} bold={false}>
             {t('View Project Site')}
@@ -308,7 +310,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
         {poolContractAddress && (
           <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
             <LinkExternal
-              href={`${BASE_BSC_SCAN_URL}/address/${vaultKey ? vaultContractAddress : poolContractAddress}`}
+              href={`${BASE_POLYGON_SCAN_URL}/address/${vaultKey ? vaultContractAddress : poolContractAddress}`}
               bold={false}
             >
               {t('View Contract')}
