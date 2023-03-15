@@ -8,6 +8,7 @@ import { useSlowRefreshEffect } from 'hooks/useRefreshEffect'
 import { useEffect, useState } from 'react'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import styled from 'styled-components'
+import { getCoinCollectPoolAddress } from 'utils/addressHelpers'
 import { formatBigNumber, formatLocalisedCompactNumber } from 'utils/formatBalance'
 import { multicallPolygonv2 } from 'utils/multicall'
 
@@ -45,6 +46,7 @@ const Grid = styled.div`
 `
 
 const emissionsPerBlock = 6.8
+const collectPoolAddress = getCoinCollectPoolAddress()
 
 const CakeDataRow = () => {
   const { t } = useTranslation()
@@ -52,6 +54,7 @@ const CakeDataRow = () => {
   const [loadData, setLoadData] = useState(false)
   const [cakeSupply, setCakeSupply] = useState(0)
   const [burnedBalance, setBurnedBalance] = useState(0)
+  const [tvl, setTvl] = useState(0)
   const cakePriceBusd = usePriceCakeBusd()
   const mcap = cakePriceBusd.times(cakeSupply)
   const mcapString = formatLocalisedCompactNumber(mcap.toNumber())
@@ -70,12 +73,19 @@ const CakeDataRow = () => {
         name: 'balanceOf',
         params: ['0x000000000000000000000000000000000000dEaD'],
       }
-      const tokenDataResultRaw = await multicallPolygonv2(cakeAbi, [totalSupplyCall, burnedTokenCall], {
+      const tvlTokenCall = {
+        address: tokens.collect.address,
+        name: 'balanceOf',
+        params: [collectPoolAddress],
+      }
+      const tokenDataResultRaw = await multicallPolygonv2(cakeAbi, [totalSupplyCall, burnedTokenCall, tvlTokenCall], {
         requireSuccess: false,
       })
-      const [totalSupply, burned] = tokenDataResultRaw.flat()
+      const [totalSupply, burned, tvlBalance] = tokenDataResultRaw.flat()
+      
       setCakeSupply(totalSupply && burned ? +formatBigNumber(totalSupply.sub(burned)) : 0)
       setBurnedBalance(burned ? +formatBigNumber(burned) : 0)
+      setTvl(tvlBalance ? +formatBigNumber(tvlBalance) : 0)
     }
 
 
@@ -98,9 +108,9 @@ const CakeDataRow = () => {
         )}
       </Flex>
       <StyledColumn>
-        <Text color="textSubtle">{t('Burned to date')}</Text>
-        {burnedBalance ? (
-          <Balance decimals={0} lineHeight="1.1" fontSize="24px" bold value={burnedBalance} />
+        <Text color="textSubtle">{t('Total Value Locked (TVL)')}</Text>
+        {tvl ? (
+          <Balance decimals={0} lineHeight="1.1" fontSize="24px" bold value={tvl} />
         ) : (
           <Skeleton height={24} width={126} my="4px" />
         )}
