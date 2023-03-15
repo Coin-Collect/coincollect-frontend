@@ -5,6 +5,7 @@ import { useGasPrice } from 'state/user/hooks'
 import get from 'lodash/get'
 import * as Sentry from '@sentry/react'
 
+// Gas Settings
 export function useCallWithGasPrice() {
   const gasPrice = useGasPrice()
 
