@@ -4,7 +4,7 @@ import { LinkExternal, Text } from '@pancakeswap/uikit'
 import { FarmWithStakedValue } from 'views/Farms/components/FarmCard/FarmCard'
 import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import { getAddress } from 'utils/addressHelpers'
-import { getBscScanLink } from 'utils'
+import { getPolygonScanLink } from 'utils'
 import { FarmAuctionTag, CoreTag, DualTag } from 'components/Tags'
 
 import HarvestAction from './HarvestAction'
@@ -148,7 +148,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
     tokenAddress: token.address,
   })
   const lpAddress = getAddress(farm.lpAddresses)
-  const bsc = getBscScanLink(lpAddress, 'address')
+  const bsc = getPolygonScanLink(lpAddress, 'address')
   const info = `/info/pool/${lpAddress}`
 
   return (
@@ -162,7 +162,9 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
           </StakeContainer>
         )}
         <StyledLinkExternal href={bsc}>{t('View Contract')}</StyledLinkExternal>
-        <StyledLinkExternal href={info}>{t('See Pair Info')}</StyledLinkExternal>
+
+        {/* <StyledLinkExternal href={info}>{t('See Pair Info')}</StyledLinkExternal> */}
+        
         <TagsContainer>
           {farm.isCommunity ? <FarmAuctionTag /> : <CoreTag />}
           {dual ? <DualTag /> : null}

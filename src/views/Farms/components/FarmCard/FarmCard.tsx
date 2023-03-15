@@ -3,10 +3,10 @@ import BigNumber from 'bignumber.js'
 import styled from 'styled-components'
 import { Card, Flex, Text, Skeleton } from '@pancakeswap/uikit'
 import { DeserializedFarm } from 'state/types'
-import { getBscScanLink } from 'utils'
+import { getPolygonScanLink } from 'utils'
 import { useTranslation } from 'contexts/Localization'
 import ExpandableSectionButton from 'components/ExpandableSectionButton'
-import { BASE_ADD_LIQUIDITY_URL } from 'config'
+import { BASE_COINCOLLECT_ADD_LIQUIDITY_URL } from 'config'
 import { getAddress } from 'utils/addressHelpers'
 import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import DetailsSection from './DetailsSection'
@@ -55,15 +55,15 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
       : ''
 
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
-  const earnLabel = farm.dual ? farm.dual.earnLabel : t('CAKE + Fees')
+  const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT + Fees')
 
   const liquidityUrlPathParts = getLiquidityUrlPathParts({
     quoteTokenAddress: farm.quoteToken.address,
     tokenAddress: farm.token.address,
   })
-  const addLiquidityUrl = `${BASE_ADD_LIQUIDITY_URL}/${liquidityUrlPathParts}`
+  const addLiquidityUrl = `${BASE_COINCOLLECT_ADD_LIQUIDITY_URL}/${liquidityUrlPathParts}`
   const lpAddress = getAddress(farm.lpAddresses)
-  const isPromotedFarm = farm.token.symbol === 'CAKE'
+  const isPromotedFarm = farm.token.symbol === 'COLLECT'
 
   return (
     <StyledCard isActive={isPromotedFarm}>
@@ -118,7 +118,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         {showExpandableSection && (
           <DetailsSection
             removed={removed}
-            bscScanAddress={getBscScanLink(lpAddress, 'address')}
+            bscScanAddress={getPolygonScanLink(lpAddress, 'address')}
             infoAddress={`/info/pool/${lpAddress}`}
             totalValueFormatted={totalValueFormatted}
             lpLabel={lpLabel}
