@@ -25,7 +25,7 @@ export const mainnetTokens = defineTokens({
   ),
   wmatic: new Token(
     POLYGON_MAINNET,
-    '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
+    '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
     18,
     'WMATIC',
     'Wrapped Matic',
@@ -2081,7 +2081,7 @@ export const testnetTokens = defineTokens({
   ),
   usdc: new Token(
     MUMBAI_TESTNET,
-    '0xef21802e25bd223100205e2a3e80aacb5e7211f1',
+    '0xEF21802E25BD223100205e2A3e80aacb5e7211F1',
     18,
     'USDC',
     'USDC Test Token',
