@@ -17,6 +17,7 @@ export function useCallWithGasPrice() {
    * @param overrides An overrides object to pass to the method. gasPrice passed in here will take priority over the price returned by useGasPrice
    * @returns https://docs.ethers.io/v5/api/providers/types/#providers-TransactionReceipt
    */
+  // @ts-ignore
   const callWithGasPrice = useCallback(
     async (
       contract: Contract,
