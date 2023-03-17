@@ -191,7 +191,7 @@ const CreateProposal = () => {
                 name="body"
                 onTextChange={handleEasyMdeChange}
                 value={body}
-                options={options}
+                options={options} // @ts-ignore
                 required
               />
               {formErrors.body && fieldsState.body && <FormErrors errors={formErrors.body} />}
