@@ -1,5 +1,5 @@
 import { Currency, ETHER, Token } from '@coincollect/sdk'
-import { BinanceIcon } from '@pancakeswap/uikit'
+import { MaticIcon } from '@pancakeswap/uikit'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 import useHttpLocations from '../../hooks/useHttpLocations'
@@ -36,7 +36,7 @@ export default function CurrencyLogo({
   }, [currency, uriLocations])
 
   if (currency === ETHER) {
-    return <BinanceIcon width={size} style={style} />
+    return <MaticIcon width={size} style={style} />
   }
 
   return <StyledLogo size={size} srcs={srcs} alt={`${currency?.symbol ?? 'token'} logo`} style={style} />

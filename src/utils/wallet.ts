@@ -1,6 +1,6 @@
 // Set of helper functions to facilitate wallet setup
 
-import { BASE_BSC_SCAN_URL, BASE_POLYGON_SCAN_URL, BASE_URL } from 'config'
+import { BASE_BSC_SCAN_URL, BASE_COINCOLLECT_URL, BASE_POLYGON_SCAN_URL } from 'config'
 import { maticNodes, mumbaiNodes, nodes } from './getRpcUrl'
 
 /**
@@ -91,7 +91,7 @@ export const registerToken = async (tokenAddress: string, tokenSymbol: string, t
         address: tokenAddress,
         symbol: tokenSymbol,
         decimals: tokenDecimals,
-        image: `${BASE_URL}/images/tokens/${tokenAddress}.png`,
+        image: `${BASE_COINCOLLECT_URL}/images/tokens/${tokenAddress}.png`,
       },
     },
   })
