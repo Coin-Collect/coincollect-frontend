@@ -1,7 +1,11 @@
 import { ChainId } from '@coincollect/sdk'
-
+import BigNumber from 'bignumber.js'
 import { BIG_TEN } from 'utils/bigNumber'
 
+BigNumber.config({
+  EXPONENTIAL_AT: 1000,
+  DECIMAL_PLACES: 80,
+})
 
 export const BSC_BLOCK_TIME = 3
 export const POLYGON_BLOCK_TIME = 2.2
