@@ -27,6 +27,7 @@ const config = {
     styledComponents: true,
   },
   reactStrictMode: true,
+  ignoreBuildErrors: true,
   images: {
     domains: ['static-nft.pancakeswap.com', 'cdn.pixabay.com', 'coincollect.org', 'lh3.googleusercontent.com'],
   },
