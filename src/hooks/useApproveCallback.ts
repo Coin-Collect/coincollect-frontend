@@ -83,6 +83,7 @@ export function useApproveCallback(
     })
 
     // eslint-disable-next-line consistent-return
+    // @ts-ignore
     return callWithGasPrice(
       tokenContract,
       'approve',
