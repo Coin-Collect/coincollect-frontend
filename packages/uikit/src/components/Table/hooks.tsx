@@ -296,7 +296,7 @@ export const makeRender = <T extends DataType>(
   // eslint-disable-next-line
   value: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-shadow
-  render: (({ value: val, row }: { value: any; row: T }) => ReactNode) | undefined,
+  render: (({ value, row }: { value: any; row: T }) => ReactNode) | undefined,
   row: T
 ): (() => React.ReactNode) => {
   return render ? () => render({ row, value }) : () => value;
