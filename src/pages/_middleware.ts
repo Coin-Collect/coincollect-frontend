@@ -22,6 +22,7 @@ export async function middleware(req: NextRequest) {
     BLOCK_COUNTRIES.some((c) => c === country) || BLOCK_REGIONS.some((r) => r === `${country}-${region}`)
 
   if (shouldBlock) {
+    // @ts-ignore
     res.cookie(BLOCK_COUNTRIES_COOKIE_NAME, String(shouldBlock))
   } else {
     res.clearCookie(BLOCK_COUNTRIES_COOKIE_NAME)
