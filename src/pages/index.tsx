@@ -107,8 +107,8 @@ export const getStaticProps: GetStaticProps = async () => {
   }
 
   try {
-    const response = await fetch('https://openapi.debank.com/v1/protocol?id=bsc_pancakeswap')
-    const responseData: DeBankTvlResponse = await response.json()
+    //const response = await fetch('https://openapi.debank.com/v1/protocol?id=bsc_pancakeswap')
+    //const responseData: DeBankTvlResponse = await response.json()
     results.tvl = null // Fix this line
   } catch (error) {
     if (process.env.NODE_ENV === 'production') {
