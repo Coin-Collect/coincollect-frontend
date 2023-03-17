@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ChangeEvent, FormEvent, useEffect, useState, useMemo } from 'react'
 import {
   AutoRenewIcon,
@@ -191,7 +192,7 @@ const CreateProposal = () => {
                 name="body"
                 onTextChange={handleEasyMdeChange}
                 value={body}
-                options={options} // @ts-ignore
+                options={options}
                 required
               />
               {formErrors.body && fieldsState.body && <FormErrors errors={formErrors.body} />}
