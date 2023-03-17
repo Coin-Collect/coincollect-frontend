@@ -25,6 +25,7 @@ export async function middleware(req: NextRequest) {
     // @ts-ignore
     res.cookie(BLOCK_COUNTRIES_COOKIE_NAME, String(shouldBlock))
   } else {
+    // @ts-ignore
     res.clearCookie(BLOCK_COUNTRIES_COOKIE_NAME)
   }
 
