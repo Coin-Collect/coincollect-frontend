@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Ваші токени %symbol% внесено в пул!",
   "Max stake for this pool: %amount% %token%": "Максимальний внесок у цей пул: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Максимальний повний внесок: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "РВД включає домішування, а РВС – ні. CAKE цього пулу обчислюється автоматично, тому ми відображаємо РВД.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "РВД включає домішування, а РВС – ні. CAKE цього пулу обчислюється автоматично, тому ми відображаємо РВД.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Винагороди цього пулу не обчислюються автоматично, тому ми відображаємо РВС.",
   "Auto": "Авто",
   "Manual": "Вручну",

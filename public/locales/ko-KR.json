@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "%symbol% 자금이 풀에 예치되었습니다!",
   "Max stake for this pool: %amount% %token%": "이 풀에 대한 최대 예치: %amount% %token%",
   "Maximum total stake: %amount% %token%": "총 최대 예치: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY는 혼합을 포함하고 APR은 포함하지 않습니다. 이 풀의 CAKE은 자동으로 혼합되므로, APY가 표시됩니다.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY는 혼합을 포함하고 APR은 포함하지 않습니다. 이 풀의 CAKE은 자동으로 혼합되므로, APY가 표시됩니다.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "이 풀의 리워드는 자동으로 혼합되지 않으므로, APR이 표시됩니다.",
   "Auto": "자동",
   "Manual": "수동",

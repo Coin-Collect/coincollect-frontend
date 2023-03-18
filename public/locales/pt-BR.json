@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Seus fundos de %symbol% foram colocados em stake na reserva!",
   "Max stake for this pool: %amount% %token%": "Stake máx. para esta reserva: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Stake máxima total: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "O APY inclui capitalização, o APR não. O CAKE desta reserva é capitalizado automaticamente, por isso mostramos o APY.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "O APY inclui capitalização, o APR não. O CAKE desta reserva é capitalizado automaticamente, por isso mostramos o APY.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "As recompensas desta reserva não são capitalizadas automaticamente, por isso mostramos a APR",
   "Auto": "Automático",
   "Manual": "Manual",

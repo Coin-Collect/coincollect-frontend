@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Τα χρήματά σας %symbol% έχουν γίνει stake στην δεξαμενή!",
   "Max stake for this pool: %amount% %token%": "Μέγιστο stake για αυτή την δεξαμενή: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Μέγιστο συνολικό stake: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "Το APY περιλαμβάνει ανατοκισμό, το APR δεν περιλαμβάνει. Το CAKE αυτής της δεξαμενής ανατοκίζεται αυτόματα, γι' αυτό εμφανίζεται το APY.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "Το APY περιλαμβάνει ανατοκισμό, το APR δεν περιλαμβάνει. Το CAKE αυτής της δεξαμενής ανατοκίζεται αυτόματα, γι' αυτό εμφανίζεται το APY.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Οι ανταμοιβές αυτής της δεξαμενής δεν ανατοκίζονται αυτόματα, γι' αυτό εμφανίζεται στο APR",
   "Auto": "Αυτόματα",
   "Manual": "Χειροκίνητα",

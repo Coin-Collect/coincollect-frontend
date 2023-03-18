@@ -298,7 +298,7 @@
   "Your %symbol% funds have been staked in the pool!": "Your %symbol% funds have been staked in the pool!",
   "Max stake for this pool: %amount% %token%": "Max stake for this pool: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Maximum total stake: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "This pool’s rewards aren’t compounded automatically, so we show APR",
   "Auto": "Auto",
   "Manual": "Manual",

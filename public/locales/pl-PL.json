@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Twoje środki w %symbol% zostały umieszczone w puli!",
   "Max stake for this pool: %amount% %token%": "Maksymalne stakowanie w tej puli: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Maksymalne stakowanie łącznie: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY obejmuje składanie, APR nie. CAKE z tej puli jest składany automatycznie, więc pokazujemy APY.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY obejmuje składanie, APR nie. CAKE z tej puli jest składany automatycznie, więc pokazujemy APY.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Nagrody z tej puli nie są składane automatycznie, dlatego pokazujemy APR",
   "Auto": "Automatycznie",
   "Manual": "Ręcznie",
