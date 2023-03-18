@@ -39,7 +39,7 @@ export default function Manage({
         <ButtonMenuItem width="50%">{t('Lists')}</ButtonMenuItem>
         <ButtonMenuItem width="50%">{t('Tokens')}</ButtonMenuItem>
       </StyledButtonMenu>
-      {showLists ? (
+      {false ? (
         <ManageLists setModalView={setModalView} setImportList={setImportList} setListUrl={setListUrl} />
       ) : (
         <ManageTokens setModalView={setModalView} setImportToken={setImportToken} />
