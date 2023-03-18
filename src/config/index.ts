@@ -36,7 +36,7 @@ export const BASE_BSC_SCAN_URL = BASE_BSC_SCAN_URLS[ChainId.MAINNET]
 export const DEFAULT_TOKEN_DECIMAL = BIG_TEN.pow(18)
 
 // CAUTION: Added by CoinCollect
-export const COLLECT_PER_BLOCK_FARM = 10 // You can set and test Farm emission
+export const COLLECT_PER_BLOCK_FARM = 0.35 // You can set and test Farm emission
 export const COLLECT_PER_YEAR_FARM = COLLECT_PER_BLOCK_FARM * BLOCKS_PER_YEAR 
 
 export const BASE_COINCOLLECT_URL = 'https://app.coincollect.org'
