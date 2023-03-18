@@ -13,14 +13,14 @@ import {
 } from 'state/types'
 import cakeAbi from 'config/abi/cake.json'
 import tokens from 'config/constants/tokens'
-import masterChef from 'config/abi/masterchef.json'
-import { getAddress, getMasterChefAddress } from 'utils/addressHelpers'
+import coinCollectPool from 'config/abi/coinCollectPool.json'
+import { getAddress, getCoinCollectPoolAddress } from 'utils/addressHelpers'
 import { getPoolApr } from 'utils/apr'
 import { BIG_ZERO } from 'utils/bigNumber'
-import { getCakeContract } from 'utils/contractHelpers'
+import { getCoinCollectContract } from 'utils/contractHelpers'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { simpleRpcProvider } from 'utils/providers'
-import { multicallv2 } from 'utils/multicall'
+import { simplePolygonRpcProvider } from 'utils/providers'
+import { multicallPolygonv2 } from 'utils/multicall'
 import { fetchIfoPoolFeesData, fetchPublicIfoPoolData } from './fetchIfoPoolPublic'
 import fetchIfoPoolUserData from './fetchIfoPoolUser'
 import {
@@ -72,7 +72,7 @@ const initialState: PoolsState = {
 // Thunks
 const cakePool = poolsConfig.find((pool) => pool.sousId === 0)
 const cakePoolAddress = getAddress(cakePool.contractAddress)
-const cakeContract = getCakeContract()
+const cakeContract = getCoinCollectContract()
 
 export const fetchCakePoolPublicDataAsync = () => async (dispatch, getState) => {
   const prices = getTokenPricesFromFarm(getState().farms.data)
@@ -113,14 +113,14 @@ export const fetchCakePoolUserDataAsync = (account: string) => async (dispatch) 
     params: [account],
   }
   const cakeContractCalls = [allowanceCall, balanceOfCall]
-  const [[allowance], [stakingTokenBalance]] = await multicallv2(cakeAbi, cakeContractCalls)
+  const [[allowance], [stakingTokenBalance]] = await multicallPolygonv2(cakeAbi, cakeContractCalls)
 
-  const masterChefCalls = ['pendingCake', 'userInfo'].map((method) => ({
-    address: getMasterChefAddress(),
+  const masterChefCalls = ['pendingReward', 'userInfo'].map((method) => ({
+    address: getCoinCollectPoolAddress(),
     name: method,
     params: ['0', account],
   }))
-  const [[pendingReward], { amount: masterPoolAmount }] = await multicallv2(masterChef, masterChefCalls)
+  const [[pendingReward], { amount: masterPoolAmount }] = await multicallPolygonv2(coinCollectPool, masterChefCalls)
 
   dispatch(
     setPoolUserData({
@@ -138,12 +138,12 @@ export const fetchCakePoolUserDataAsync = (account: string) => async (dispatch) 
 // This func trigger for calculation APR/APY
 export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (dispatch, getState) => {
   try {
-    const blockLimits = await fetchPoolsBlockLimits()
+    const blockLimits = await fetchPoolsBlockLimits() // TODO: Need to update to polygon
     const totalStakings = await fetchPoolsTotalStaking()
     const profileRequirements = await fetchPoolsProfileRequirement()
     let currentBlock = currentBlockNumber
     if (!currentBlock) {
-      currentBlock = await simpleRpcProvider.getBlockNumber()
+      currentBlock = await simplePolygonRpcProvider.getBlockNumber()
     }
 
     const prices = getTokenPricesFromFarm(getState().farms.data)
