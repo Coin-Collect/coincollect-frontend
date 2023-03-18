@@ -121,10 +121,11 @@ export const useCakeVault = () => {
   return useVaultPoolByKey(VaultKey.CakeVault)
 }
 
+// TODO: IFO data disabled
 export const useVaultPools = () => {
   return {
     [VaultKey.CakeVault]: useVaultPoolByKey(VaultKey.CakeVault),
-    [VaultKey.IfoPool]: useVaultPoolByKey(VaultKey.IfoPool),
+    //[VaultKey.IfoPool]: useVaultPoolByKey(VaultKey.IfoPool),
   }
 }
 

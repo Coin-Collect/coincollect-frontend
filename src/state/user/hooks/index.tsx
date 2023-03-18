@@ -1,4 +1,4 @@
-import { ChainId, Pair, Token } from '@pancakeswap/sdk'
+import { ChainId, Pair, Token } from '@coincollect/sdk'
 import { differenceInDays } from 'date-fns'
 import flatMap from 'lodash/flatMap'
 import { useCallback, useMemo } from 'react'
@@ -377,10 +377,11 @@ export function useRemoveUserAddedToken(): (chainId: number, address: string) =>
   )
 }
 
+// Gas Settings
 export function useGasPrice(): string {
   const chainId = CHAIN_ID
   const userGas = useSelector<AppState, AppState['user']['gasPrice']>((state) => state.user.gasPrice)
-  return chainId === ChainId.MAINNET.toString() ? userGas : GAS_PRICE_GWEI.testnet
+  return chainId === ChainId.POLYGON.toString() ? userGas : GAS_PRICE_GWEI.testnet
 }
 
 export function useGasPriceManager(): [string, (userGasPrice: string) => void] {
@@ -421,7 +422,7 @@ export function usePairAdder(): (pair: Pair) => void {
  * @param tokenB the other token
  */
 export function toV2LiquidityToken([tokenA, tokenB]: [Token, Token]): Token {
-  return new Token(tokenA.chainId, Pair.getAddress(tokenA, tokenB), 18, 'Cake-LP', 'Pancake LPs')
+  return new Token(tokenA.chainId, Pair.getAddress(tokenA, tokenB), 18, 'COLLECT-LP', 'CoinCollect LPs')
 }
 
 /**
@@ -429,7 +430,7 @@ export function toV2LiquidityToken([tokenA, tokenB]: [Token, Token]): Token {
  */
 export function useTrackedTokenPairs(): [Token, Token][] {
   const { chainId } = useActiveWeb3React()
-  const tokens = useAllTokens(true)
+  const tokens = useAllTokens(false) // default: true
 
   // pinned pairs
   const pinnedPairs = useMemo(() => (chainId ? PINNED_PAIRS[chainId] ?? [] : []), [chainId])

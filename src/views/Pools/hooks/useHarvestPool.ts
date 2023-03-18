@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { harvestFarm } from 'utils/calls'
 import { BIG_ZERO } from 'utils/bigNumber'
 import getGasPrice from 'utils/getGasPrice'
-import { useMasterchef, useSousChef } from 'hooks/useContract'
+import { useCoinCollectPool, useSousChef } from 'hooks/useContract'
 import { DEFAULT_GAS_LIMIT } from 'config'
 
 const options = {
@@ -21,7 +21,7 @@ const harvestPoolBnb = async (sousChefContract) => {
 
 const useHarvestPool = (sousId, isUsingBnb = false) => {
   const sousChefContract = useSousChef(sousId)
-  const masterChefContract = useMasterchef()
+  const masterChefContract = useCoinCollectPool() // useMasterchef()
 
   const handleHarvest = useCallback(async () => {
     if (sousId === 0) {

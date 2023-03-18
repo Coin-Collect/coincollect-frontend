@@ -31,8 +31,8 @@ const formatPriceDetails = (details) => ({
 const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
   const { address, releaseBlockNumber, version } = ifo
   const cakePriceUsd = usePriceCakeBusd()
-  const lpTokenPriceInUsd = useLpTokenPrice(ifo.currency.symbol)
-  const currencyPriceInUSD = ifo.currency === tokens.cake ? cakePriceUsd : lpTokenPriceInUsd
+  //const lpTokenPriceInUsd = useLpTokenPrice(ifo.currency.symbol)
+  const currencyPriceInUSD = new BigNumber(1)
   const { account } = useWeb3React()
 
   const [state, setState] = useState({

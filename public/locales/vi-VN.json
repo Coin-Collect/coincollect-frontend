@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Tiền %symbol% của bạn đã được đặt cọc vào nhóm!",
   "Max stake for this pool: %amount% %token%": "Đặt cọc tối đa cho nhóm này: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Tổng đặt cọc tối đa: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY bao gồm lãi kép, APR thì không. CAKE của nhóm này sẽ được tính lãi kép tự động, vậy nên chúng tôi hiển thị số APY.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY bao gồm lãi kép, APR thì không. CAKE của nhóm này sẽ được tính lãi kép tự động, vậy nên chúng tôi hiển thị số APY.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Phần thưởng của nhóm này không được tính lãi kép tự động, vậy nên chúng tôi hiển thị APR",
   "Auto": "Tự động",
   "Manual": "Thủ công",

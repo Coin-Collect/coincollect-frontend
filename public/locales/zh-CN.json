@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "您已在糖浆池中成功质押 %symbol% 资金！",
   "Max stake for this pool: %amount% %token%": "该糖浆池的最大质押限制：%amount% %token%",
   "Maximum total stake: %amount% %token%": "最大总质押金额：%amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "年化收益率包括复利，年化利率不包括。此糖浆池中的 CAKE 会自动计算复利，因此我们显示年化收益率。",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "年化收益率包括复利，年化利率不包括。此糖浆池中的 CAKE 会自动计算复利，因此我们显示年化收益率。",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "此糖浆池的奖励不会自动计算复利，因此我们显示年化利率",
   "Auto": "自动",
   "Manual": "手动",

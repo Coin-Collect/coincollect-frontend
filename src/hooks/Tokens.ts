@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { parseBytes32String } from '@ethersproject/strings'
-import { Currency, ETHER, Token, currencyEquals, ChainId } from '@pancakeswap/sdk'
+import { Currency, ETHER, Token, currencyEquals, ChainId } from '@coincollect/sdk'
 import { useMemo } from 'react'
 import { arrayify } from '@ethersproject/bytes'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
@@ -21,8 +21,8 @@ import { filterTokens } from '../components/SearchModal/filtering'
 
 // reduce token map into standard address <-> Token mapping, optionally include user added tokens
 function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
-  //const { chainId } = useActiveWeb3React()
-  const chainId = ChainId.MAINNET; 
+  const { chainId } = useActiveWeb3React()
+  //const chainId = ChainId.MAINNET; 
   const userAddedTokens = useUserAddedTokens()
 
   return useMemo(() => {
@@ -148,6 +148,7 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
   const tokenContractBytes32 = useBytes32TokenContract(address || undefined, false)
   const token: Token | undefined = address ? tokens[address] : undefined
 
+  // @ts-ignore
   const tokenName = useSingleCallResult(token ? undefined : tokenContract, 'name', undefined, NEVER_RELOAD)
   const tokenNameBytes32 = useSingleCallResult(
     token ? undefined : tokenContractBytes32,
@@ -155,8 +156,11 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
     undefined,
     NEVER_RELOAD,
   )
+
+  // @ts-ignore
   const symbol = useSingleCallResult(token ? undefined : tokenContract, 'symbol', undefined, NEVER_RELOAD)
   const symbolBytes32 = useSingleCallResult(token ? undefined : tokenContractBytes32, 'symbol', undefined, NEVER_RELOAD)
+  // @ts-ignore
   const decimals = useSingleCallResult(token ? undefined : tokenContract, 'decimals', undefined, NEVER_RELOAD)
 
   return useMemo(() => {
@@ -189,7 +193,7 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
 }
 
 export function useCurrency(currencyId: string | undefined): Currency | null | undefined {
-  const isBNB = currencyId?.toUpperCase() === 'BNB'
+  const isBNB = currencyId?.toUpperCase() === 'MATIC'
   const token = useToken(isBNB ? undefined : currencyId)
   return isBNB ? ETHER : token
 }

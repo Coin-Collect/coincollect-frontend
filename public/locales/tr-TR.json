@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "%symbol% fonunuz havuzda stake edildi!",
   "Max stake for this pool: %amount% %token%": "Bu havuz için maksimum stake: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Maksimum toplam stake: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "Yıllık Getiri Yüzdesi (APY) bileştirme içerir, Yıllık Yüzde Oranı (APR) içermez. Bu havuzun CAKE'i, otomatik olarak bileştirilir, dolayısıyla APY'yi gösterir.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "Yıllık Getiri Yüzdesi (APY) bileştirme içerir, Yıllık Yüzde Oranı (APR) içermez. Bu havuzun CAKE'i, otomatik olarak bileştirilir, dolayısıyla APY'yi gösterir.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Bu havuzun ödülleri otomatik olarak bileştirilmedi, bu yüzden APR gösteriyoruz",
   "Auto": "Otomatik",
   "Manual": "Manuel",

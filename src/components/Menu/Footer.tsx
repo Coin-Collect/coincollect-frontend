@@ -42,7 +42,7 @@ const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) 
   return (
     <Wrapper $isSide={isSide}>
       <Flex flexDirection={isSide ? 'column' : ['column', 'column', 'row']} alignItems="center">
-        <ButtonMenu variant="subtle" scale="sm" activeIndex={0}>
+        {/*<ButtonMenu variant="subtle" scale="sm" activeIndex={0}>
           <ButtonMenuItem>V2</ButtonMenuItem>
           <ButtonMenuItem as="a" href="https://docs.coincollect.org">
             {t('V1 (old)')}
@@ -56,7 +56,7 @@ const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) 
           mb={['8px', '8px', 0]}
         >
           {t('Convert ERC-20 to BEP-20')}
-        </LinkExternal>
+  </LinkExternal> */}
       </Flex>
       {isSide && <Flex flexGrow={1} />}
       <Flex

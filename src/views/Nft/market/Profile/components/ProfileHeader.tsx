@@ -47,6 +47,9 @@ const ProfileHeader: React.FC<HeaderProps> = ({
     />,
     false,
   )
+  
+  // CAUTION: Profile details disabled here
+  profile = null
 
   const isConnectedAccount = account?.toLowerCase() === accountPath?.toLowerCase()
   const numNftCollected = !isNftLoading ? (nftCollected ? formatNumber(nftCollected, 0, 0) : '-') : null

@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Dana %symbol% Anda telah ditumpuk di pool!",
   "Max stake for this pool: %amount% %token%": "Tumpukan maks. untuk pool ini: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Maksimum total tumpukan: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY termasuk penggabungan, APR tidak. CAKE pool ini digabungkan secara otomatis, sehingga APY yang diperlihatkan.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY termasuk penggabungan, APR tidak. CAKE pool ini digabungkan secara otomatis, sehingga APY yang diperlihatkan.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Hadiah pool ini tidak digabungkan secara otomatis, sehingga APR yang diperlihatkan",
   "Auto": "Otomatis",
   "Manual": "Manual",

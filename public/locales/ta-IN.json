@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "உங்கள் %symbol% நிதிகள், குளத்தில் ஸ்டேக் செய்யப்பட்டுள்ளன!",
   "Max stake for this pool: %amount% %token%": "இக்குளத்திற்கான அதிகபட்ச ஸ்டேக்: %amount% %token%",
   "Maximum total stake: %amount% %token%": "அதிகபட்ச மொத்த ஸ்டேக்: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY ஒன்றுகூட்டுதலை உள்ளடங்குகிறது, APR செய்வதில்லை. இக்குளத்தின் CAKE தானாக ஒன்றுகூட்டப்படுகிறது, எனவே நாங்கள் APY-ஐ காட்டுகிறோம்.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY ஒன்றுகூட்டுதலை உள்ளடங்குகிறது, APR செய்வதில்லை. இக்குளத்தின் CAKE தானாக ஒன்றுகூட்டப்படுகிறது, எனவே நாங்கள் APY-ஐ காட்டுகிறோம்.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "இக்குளத்தின் வெகுமதிகள் தானாக ஒன்றுகூட்டப்படுவதில்லை, எனவே நாங்கள் APR-ஐ காட்டுகிறோம்",
   "Auto": "தானி",
   "Manual": "கைமுறை",

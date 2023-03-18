@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "%symbol%-varasi on panostettu pooliin!",
   "Max stake for this pool: %amount% %token%": "Tämän poolin enimmäispanostus: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Enimmäispanostus yhteensä: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "Vuosituottoon sisältyy kertaantuminen APR:ään ei. Tämän poolin CAKE kertaantuu automaattisesti, joten näytämme vuosituoton.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "Vuosituottoon sisältyy kertaantuminen APR:ään ei. Tämän poolin CAKE kertaantuu automaattisesti, joten näytämme vuosituoton.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Tämän poolin palkinnot eivät kertaannu automaattisesti, joten näytämme APR:n",
   "Auto": "Automaattinen",
   "Manual": "Manuaalinen",

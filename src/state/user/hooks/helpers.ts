@@ -1,4 +1,4 @@
-import { Token } from '@pancakeswap/sdk'
+import { Token } from '@coincollect/sdk'
 import { SerializedToken } from 'config/constants/types'
 import { parseUnits } from '@ethersproject/units'
 
@@ -24,10 +24,11 @@ export function deserializeToken(serializedToken: SerializedToken): Token {
   )
 }
 
+// Gas Settings
 export enum GAS_PRICE {
-  default = '5',
-  fast = '6',
-  instant = '7',
+  default = '250',
+  fast = '350',
+  instant = '450',
   testnet = '10',
 }
 

@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "পুলে আপনার %symbol% তহবিল স্টেক করা হয়েছে!",
   "Max stake for this pool: %amount% %token%": "এই পুলের সর্বোচ্চ স্টেক: %amount% %token%",
   "Maximum total stake: %amount% %token%": "এই পুলের সর্বোচ্চ স্টেক: %amount%%token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "কম্পাউন্ডিং APY-এ অন্তর্ভুক্ত, APR-এ নয়। এই পুলের CAKE স্বয়ংক্রিয়ভাবে কম্পাউন্ড হয়, তাই আমরা APY দেখাই।",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "কম্পাউন্ডিং APY-এ অন্তর্ভুক্ত, APR-এ নয়। এই পুলের CAKE স্বয়ংক্রিয়ভাবে কম্পাউন্ড হয়, তাই আমরা APY দেখাই।",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "এই পুলের পুরস্কার স্বয়ংক্রিয়ভাবে কম্পাউন্ড হয় না, তাই আমরা APR দেখাই।",
   "Auto": "স্বয়ংক্রিয়",
   "Manual": "ম্যানুয়াল",

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BigNumber } from '@ethersproject/bignumber'
 import { TransactionResponse } from '@ethersproject/providers'
-import { Currency, currencyEquals, ETHER, TokenAmount, WETH } from '@pancakeswap/sdk'
+import { Currency, currencyEquals, ETHER, TokenAmount, WETH } from '@coincollect/sdk'
 import { Button, Text, Flex, AddIcon, CardBody, Message, useModal } from '@pancakeswap/uikit'
 import { useIsTransactionUnsupported } from 'hooks/Trades'
 import { useTranslation } from 'contexts/Localization'
@@ -282,7 +282,7 @@ export default function AddLiquidity() {
           router.replace(`/add/${newCurrencyIdB}`, undefined, { shallow: true })
         }
       } else {
-        router.replace(`/add/${currencyIdA || 'BNB'}/${newCurrencyIdB}`, undefined, { shallow: true })
+        router.replace(`/add/${currencyIdA || 'MATIC'}/${newCurrencyIdB}`, undefined, { shallow: true })
       }
     },
     [currencyIdA, router, currencyIdB],

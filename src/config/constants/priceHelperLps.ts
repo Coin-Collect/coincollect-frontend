@@ -9,6 +9,7 @@ const priceHelperLps: SerializedFarmConfig[] = [
    * Prices are then fetched for all farms (masterchef + priceHelperLps).
    * Before storing to redux, farms without a PID are filtered out.
    */
+  /*
   {
     pid: null,
     lpSymbol: 'QSD-BNB LP',
@@ -19,6 +20,7 @@ const priceHelperLps: SerializedFarmConfig[] = [
     token: tokens.qsd,
     quoteToken: tokens.wbnb,
   },
+  */
 ]
 
 export default priceHelperLps

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import { Pair } from '@pancakeswap/sdk'
+import { Pair } from '@coincollect/sdk'
 import { Text, Flex, CardBody, CardFooter, Button, AddIcon } from '@pancakeswap/uikit'
 import Link from 'next/link'
 import { useTranslation } from 'contexts/Localization'
@@ -45,7 +45,9 @@ export default function Pool() {
     [tokenPairsWithLiquidityTokens, v2PairsBalances],
   )
 
+
   const v2Pairs = usePairs(liquidityTokensWithBalances.map(({ tokens }) => tokens))
+  
   const v2IsLoading =
     fetchingV2PairBalances || v2Pairs?.length < liquidityTokensWithBalances.length || v2Pairs?.some((V2Pair) => !V2Pair)
 

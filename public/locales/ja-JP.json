@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "あなたの%symbol%の資金がプールにステーキングされました！",
   "Max stake for this pool: %amount% %token%": "このプールの最大ステーキング額：%amount% %token%",
   "Maximum total stake: %amount% %token%": "最大合計ステーキング額：%amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APYには複利運用が含まれており、APRには含まれていません。このプールのCAKEは自動的に複利運用されるので、APYを表示しています。",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APYには複利運用が含まれており、APRには含まれていません。このプールのCAKEは自動的に複利運用されるので、APYを表示しています。",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "このプールの報酬は自動的には複利運用されないので、APRを表示しています。",
   "Auto": "自動",
   "Manual": "手動",

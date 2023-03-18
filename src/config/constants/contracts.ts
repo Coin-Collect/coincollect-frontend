@@ -3,6 +3,16 @@ export default {
     97: '0x1d32c2945C8FDCBc7156c553B7cEa4325a17f4f9',
     56: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
   },
+  // Only Pool Version Masterchef
+  coinCollectPool: {
+    137: '0x46A928F2386b8c38cdde028a32c5b7aa19F40445',
+    80001: '0xE26C5d768D97db78Effee63d79028B27d51d67cD', // CHANGE_ADDRESS:CoinCollectPool (test)
+  },
+  // Only Pool Version Masterchef
+  coinCollectFarm: {
+    137: '0x981930c422c9df6C2b056d62c8e638376596B8C6', // TODO: fill
+    80001: '0x12D14aA656129DdDb2c901E735ac27c9Ac6d1195', // CHANGE_ADDRESS:CoinCollectFarm (test)
+  },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',
     56: '0x6ab8463a4185b80905e05a9ff80a2d6b714b9e95',
@@ -16,8 +26,8 @@ export default {
     97: '0x8F3273Fb89B075b1645095ABaC6ed17B2d4Bc576',
   },
   multiCallPolygon: {
-    137: '0x11ce4B23bD875D7F5C6a31084f55fDe1e9A87507',
-    80001: '0x08411ADd0b5AA8ee47563b146743C13b3556c9Cc',
+    137: '0xF4Cc2d222871956BAC896e9887Dd865Fb58A952b',
+    80001: '0x033C6bb553a2Cd521586A45771FA7278420eF11a',
   },
   pancakeProfile: {
     56: '0xDf4dBf6536201370F95e06A0F8a7a70fE40E388a',
@@ -74,6 +84,10 @@ export default {
   cakeVault: {
     56: '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC',
     97: '',
+  },
+  coinCollectAutoPoolVault: {
+    137: '0x56c2704C7f148597FD6BC5A0E1b35a130f381F10', // CHANGE_ADDRESS:CoinCollectAutoPool 
+    80001: '0x727858Fb7f05E71E1b5fB429b30Bb9EdbAb2Ef6E', // CHANGE_ADDRESS:CoinCollectAutoPool (test)
   },
   ifoPool: {
     56: '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8',

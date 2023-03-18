@@ -29,11 +29,4 @@ const FarmsPage = () => {
 
 FarmsPage.Layout = FarmsPageLayout
 
-//Page disabled
-export const getStaticProps: GetStaticProps = async () => {
-  return {
-    notFound: true,
-  }
-}
-
 export default FarmsPage

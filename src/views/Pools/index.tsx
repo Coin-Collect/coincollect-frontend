@@ -103,10 +103,13 @@ const Pools: React.FC = () => {
     return total.plus(vault.totalCakeInVault)
   }, BIG_ZERO)
 
+  // This line gets all pools
   const pools = usePoolsWithVault()
 
   // TODO aren't arrays in dep array checked just by reference, i.e. it will rerender every time reference changes?
   const [finishedPools, openPools] = useMemo(() => partition(pools, (pool) => pool.isFinished), [pools])
+  
+  
   const stakedOnlyFinishedPools = useMemo(
     () =>
       finishedPools.filter((pool) => {
@@ -117,6 +120,8 @@ const Pools: React.FC = () => {
       }),
     [finishedPools, vaultPools],
   )
+
+
   const stakedOnlyOpenPools = useMemo(
     () =>
       openPools.filter((pool) => {
@@ -130,7 +135,7 @@ const Pools: React.FC = () => {
   const hasStakeInFinishedPools = stakedOnlyFinishedPools.length > 0
 
   useFetchCakeVault()
-  useFetchIfoPool(false)
+  //useFetchIfoPool(false) // TODO:IFO Data disabled
   useFetchPublicPoolsData()
   useFetchUserPools(account)
 
@@ -318,16 +323,19 @@ const Pools: React.FC = () => {
             </LabelWrapper>
           </FilterContainer>
         </PoolControls>
+
         {showFinishedPools && (
           <Text fontSize="20px" color="failure" pb="32px">
             {t('These pools are no longer distributing rewards. Please unstake your tokens.')}
           </Text>
         )}
+
         {account && !userDataLoaded && stakedOnly && (
           <Flex justifyContent="center" mb="4px">
             <Loading />
           </Flex>
         )}
+        
         {viewMode === ViewMode.CARD ? cardLayout : tableLayout}
         <div ref={observerRef} />
         <Image

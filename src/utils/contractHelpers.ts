@@ -36,6 +36,9 @@ import {
   getBunnySpecialXmasAddress,
   getMulticallPolygonAddress,
   getCoinCollectNftAddress,
+  getCoinCollectPoolAddress,
+  getCoinCollectAutoPoolVaultAddress,
+  getCoinCollectFarmAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -53,6 +56,8 @@ import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import pointCenterIfo from 'config/abi/pointCenterIfo.json'
 import lotteryV2Abi from 'config/abi/lotteryV2.json'
 import masterChef from 'config/abi/masterchef.json'
+import coinCollectPool from 'config/abi/coinCollectPool.json'
+import coinCollectFarm from 'config/abi/coinCollectFarm.json'
 import sousChef from 'config/abi/sousChef.json'
 import sousChefV2 from 'config/abi/sousChefV2.json'
 import sousChefBnb from 'config/abi/sousChefBnb.json'
@@ -61,6 +66,7 @@ import tradingCompetitionAbi from 'config/abi/tradingCompetition.json'
 import tradingCompetitionV2Abi from 'config/abi/tradingCompetitionV2.json'
 import easterNftAbi from 'config/abi/easterNft.json'
 import cakeVaultAbi from 'config/abi/cakeVault.json'
+import coinCollectAutoPoolVaultAbi from 'config/abi/coinCollectAutoPoolVault.json'
 import ifoPoolAbi from 'config/abi/ifoPool.json'
 import predictionsAbi from 'config/abi/predictions.json'
 import chainlinkOracleAbi from 'config/abi/chainlinkOracle.json'
@@ -93,6 +99,7 @@ import type {
   PancakeProfile,
   LotteryV2,
   Masterchef,
+  CoinCollectPool,
   SousChef,
   SousChefV2,
   BunnySpecial,
@@ -111,10 +118,18 @@ import type {
   PancakeSquad,
   Erc721collection,
   PointCenterIfo,
+  CoinCollectFarm,
 } from 'config/abi/types'
+import { CoinCollectAutoPoolVault } from 'config/abi/types/CoinCollectAutoPoolVault'
 
+// No need for polygon
 const getContract = (abi: any, address: string, signer?: Signer | Provider) => {
   const signerOrProvider = signer ?? simpleRpcProvider
+  return new Contract(address, abi, signerOrProvider)
+}
+
+const getContractForPolygon = (abi: any, address: string, signer?: Signer | Provider) => {
+  const signerOrProvider = signer ?? simplePolygonRpcProvider
   return new Contract(address, abi, signerOrProvider)
 }
 
@@ -152,6 +167,10 @@ export const getPointCenterIfoContract = (signer?: Signer | Provider) => {
 export const getCakeContract = (signer?: Signer | Provider) => {
   return getContract(cakeAbi, tokens.cake.address, signer) as Cake
 }
+// -----
+export const getCoinCollectContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(cakeAbi, tokens.collect.address, signer) as Cake
+}
 export const getProfileContract = (signer?: Signer | Provider) => {
   return getContract(profileABI, getPancakeProfileAddress(), signer) as PancakeProfile
 }
@@ -170,6 +189,14 @@ export const getLotteryV2Contract = (signer?: Signer | Provider) => {
 export const getMasterchefContract = (signer?: Signer | Provider) => {
   return getContract(masterChef, getMasterChefAddress(), signer) as Masterchef
 }
+// Only Pool Version Masterchef
+export const getCoinCollectPoolContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectPool, getCoinCollectPoolAddress(), signer) as CoinCollectPool
+}
+// Only Farm Version Masterchef
+export const getCoinCollectFarmContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectFarm, getCoinCollectFarmAddress(), signer) as CoinCollectFarm
+}
 export const getClaimRefundContract = (signer?: Signer | Provider) => {
   return getContract(claimRefundAbi, getClaimRefundAddress(), signer) as ClaimRefund
 }
@@ -185,6 +212,11 @@ export const getEasterNftContract = (signer?: Signer | Provider) => {
 }
 export const getCakeVaultContract = (signer?: Signer | Provider) => {
   return getContract(cakeVaultAbi, getCakeVaultAddress(), signer) as CakeVault
+}
+
+// For CoinCollect Auto Pool // CakeVaultContract
+export const getCoinCollectAutoPoolVaultContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectAutoPoolVaultAbi, getCoinCollectAutoPoolVaultAddress(), signer) as CoinCollectAutoPoolVault
 }
 export const getIfoPoolContract = (signer?: Signer | Provider) => {
   return getContract(ifoPoolAbi, getIfoPoolAddress(), signer) as IfoPool

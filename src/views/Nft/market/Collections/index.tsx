@@ -263,6 +263,21 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
         {/* ======Dummy Collections====== */}
         <CollectionCard
           key="dummy"
+          bgSrc="https://coincollect.org/assets/images/clone/web3sports.png"
+          avatarSrc="https://coincollect.org/assets/images/clone/web3slogo128.png"
+          collectionName="Web3Sports"
+          url="https://web3sports.app"
+        >
+          <Flex alignItems="center">
+            <Text fontSize="12px" color="textSubtle">
+              MaxSupply
+            </Text>
+            <BNBAmountLabel amount={1000} />
+          </Flex>
+        </CollectionCard>
+
+        <CollectionCard
+          key="dummy"
           bgSrc="https://coincollect.org/assets/images/clone/mortalkombat.jpeg"
           avatarSrc="https://coincollect.org/assets/images/clone/mklogo.jpeg"
           collectionName="Mortal Kombat (soon)"

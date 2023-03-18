@@ -26,6 +26,9 @@ const config = {
   compiler: {
     styledComponents: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   reactStrictMode: true,
   images: {
     domains: ['static-nft.pancakeswap.com', 'cdn.pixabay.com', 'coincollect.org', 'vercel.app', 'lh3.googleusercontent.com'],

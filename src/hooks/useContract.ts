@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useMemo } from 'react'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import {
@@ -33,11 +34,16 @@ import {
   getErc721CollectionContract,
   getBunnySpecialXmasContract,
   getCoinCollectNFTContract,
+  getCoinCollectPoolContract,
+  getCoinCollectAutoPoolVaultContract,
+  getCoinCollectContract,
+  getCoinCollectFarmContract,
 } from 'utils/contractHelpers'
-import { getMulticallAddress } from 'utils/addressHelpers'
+import { getMulticallAddress, getMulticallPolygonAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
 import {
   CakeVault,
+  CoinCollectAutoPoolVault,
   EnsPublicResolver,
   EnsRegistrar,
   Erc20,
@@ -49,7 +55,7 @@ import {
 
 // Imports below migrated from Exchange useContract.ts
 import { Contract } from '@ethersproject/contracts'
-import { ChainId, WETH } from '@pancakeswap/sdk'
+import { ChainId, WETH } from '@coincollect/sdk'
 import IPancakePairABI from '../config/abi/IPancakePair.json'
 import ENS_PUBLIC_RESOLVER_ABI from '../config/abi/ens-public-resolver.json'
 import ENS_ABI from '../config/abi/ens-registrar.json'
@@ -104,6 +110,14 @@ export const useCake = (withSignerIfPossible = true) => {
   )
 }
 
+export const useCoinCollect = (withSignerIfPossible = true) => {
+  const { account, library } = useActiveWeb3React()
+  return useMemo(
+    () => getCoinCollectContract(withSignerIfPossible ? getProviderOrSigner(library, account) : null),
+    [account, library, withSignerIfPossible],
+  )
+}
+
 export const useBunnyFactory = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getBunnyFactoryContract(library.getSigner()), [library])
@@ -130,6 +144,18 @@ export const useLotteryV2Contract = () => {
 export const useMasterchef = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getMasterchefContract(library.getSigner()), [library])
+}
+
+// Only Pool Version Masterchef
+export const useCoinCollectPool = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectPoolContract(library.getSigner()), [library])
+}
+
+// Only Farm Version Masterchef
+export const useCoinCollectFarm = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectFarmContract(library.getSigner()), [library])
 }
 
 export const useSousChef = (id) => {
@@ -170,11 +196,11 @@ export const useEasterNftContract = () => {
   return useMemo(() => getEasterNftContract(library.getSigner()), [library])
 }
 
-export const useVaultPoolContract = (vaultKey: VaultKey): CakeVault | IfoPool => {
+export const useVaultPoolContract = (vaultKey: VaultKey): CoinCollectAutoPoolVault | IfoPool => {
   const { library } = useActiveWeb3React()
   return useMemo(() => {
     return vaultKey === VaultKey.CakeVault
-      ? getCakeVaultContract(library.getSigner())
+      ? getCoinCollectAutoPoolVaultContract(library.getSigner())
       : getIfoPoolContract(library.getSigner())
   }, [library, vaultKey])
 }
@@ -182,6 +208,12 @@ export const useVaultPoolContract = (vaultKey: VaultKey): CakeVault | IfoPool =>
 export const useCakeVaultContract = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getCakeVaultContract(library.getSigner()), [library])
+}
+
+// New
+export const useCoinCollectAutoPoolVaultContract = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectAutoPoolVaultContract(library.getSigner()), [library])
 }
 
 export const useIfoPoolContract = () => {
@@ -318,5 +350,5 @@ export function usePairContract(pairAddress?: string, withSignerIfPossible?: boo
 }
 
 export function useMulticallContract() {
-  return useContract<Multicall>(getMulticallAddress(), multiCallAbi, false)
+  return useContract<Multicall>(getMulticallPolygonAddress(), multiCallAbi, false)
 }

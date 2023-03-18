@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "您的 %symbol% 資金已在資金池中質押！",
   "Max stake for this pool: %amount% %token%": "此資金池的最大質押金額：%amount% %token%",
   "Maximum total stake: %amount% %token%": "最大總質押金額：%amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "APY 會計算複利，APR 則不會。此資金池的 CAKE 已自動計算複利，因此我們顯示 APY。",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "APY 會計算複利，APR 則不會。此資金池的 CAKE 已自動計算複利，因此我們顯示 APY。",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "此資金池的獎勵不會自動計算複利，因此我們顯示 APR",
   "Auto": "自動",
   "Manual": "手動",

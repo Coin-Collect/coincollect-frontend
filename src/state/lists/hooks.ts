@@ -1,4 +1,4 @@
-import { ChainId, Token } from '@pancakeswap/sdk'
+import { /*ChainId,*/ Token } from '@coincollect/sdk'
 import { Tags, TokenInfo, TokenList } from '@uniswap/token-lists'
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
@@ -7,6 +7,16 @@ import { AppState } from '../index'
 import DEFAULT_TOKEN_LIST from '../../config/constants/tokenLists/pancake-default.tokenlist.json'
 import { UNSUPPORTED_LIST_URLS } from '../../config/constants/lists'
 import UNSUPPORTED_TOKEN_LIST from '../../config/constants/tokenLists/pancake-unsupported.tokenlist.json'
+
+
+// CAUTION: This declaration was inside @pancakeswap/sdk
+// TODO: Make customized clone of @pancakeswap/sdk
+declare enum ChainId {
+  MAINNET = 56,
+  TESTNET = 97,
+  POLYGON_MAINNET = 137,
+  MUMBAI_TESTNET = 80001,
+}
 
 type TagDetails = Tags[keyof Tags]
 export interface TagInfo extends TagDetails {
@@ -53,6 +63,8 @@ export type TokenAddressMap = Readonly<{
 const EMPTY_LIST: TokenAddressMap = {
   [ChainId.MAINNET]: {},
   [ChainId.TESTNET]: {},
+  137: {}, // CAUTION: No need after clone @pancakeswap/sdk
+  80001: {} // CAUTION: No need after clone @pancakeswap/sdk
 }
 
 const listCache: WeakMap<TokenList, TokenAddressMap> | null =
@@ -105,6 +117,8 @@ function combineMaps(map1: TokenAddressMap, map2: TokenAddressMap): TokenAddress
   return {
     [ChainId.MAINNET]: { ...map1[ChainId.MAINNET], ...map2[ChainId.MAINNET] },
     [ChainId.TESTNET]: { ...map1[ChainId.TESTNET], ...map2[ChainId.TESTNET] },
+    [137]: { ...map1[137], ...map2[137] }, // CAUTION: No need after clone @pancakeswap/sdk
+    [80001]: { ...map1[80001], ...map2[80001] }, // CAUTION: No need after clone @pancakeswap/sdk
   }
 }
 

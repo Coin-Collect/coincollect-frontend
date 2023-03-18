@@ -1,4 +1,4 @@
-import { ChainId } from '@pancakeswap/sdk'
+import { ChainId } from '@coincollect/sdk'
 import addresses from 'config/constants/contracts'
 import { Address } from 'config/constants/types'
 import { VaultKey } from 'state/types'
@@ -10,6 +10,14 @@ export const getAddress = (address: Address): string => {
 
 export const getMasterChefAddress = () => {
   return getAddress(addresses.masterChef)
+}
+// Only Pool Version Masterchef
+export const getCoinCollectPoolAddress = () => {
+  return getAddress(addresses.coinCollectPool)
+}
+// Only Farm Version Masterchef
+export const getCoinCollectFarmAddress = () => {
+  return getAddress(addresses.coinCollectFarm)
 }
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
@@ -63,11 +71,16 @@ export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null
   }
-  return getAddress(addresses[vaultKey])
+  // CAUTION: This line below added by CoinCollect
+  const address = vaultKey == "cakeVault" ? addresses.coinCollectAutoPoolVault : addresses[vaultKey]
+  return getAddress(address)
 }
 
 export const getCakeVaultAddress = () => {
   return getAddress(addresses.cakeVault)
+}
+export const getCoinCollectAutoPoolVaultAddress = () => {
+  return getAddress(addresses.coinCollectAutoPoolVault)
 }
 export const getIfoPoolAddress = () => {
   return getAddress(addresses.ifoPool)

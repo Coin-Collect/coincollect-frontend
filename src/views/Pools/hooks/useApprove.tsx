@@ -5,7 +5,7 @@ import { MaxUint256 } from '@ethersproject/constants'
 import { useAppDispatch } from 'state'
 import { updateUserAllowance } from 'state/actions'
 import { useTranslation } from 'contexts/Localization'
-import { useCake, useSousChef, useVaultPoolContract } from 'hooks/useContract'
+import { useCake, useCoinCollect, useSousChef, useVaultPoolContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import useCatchTxError from 'hooks/useCatchTxError'
@@ -58,7 +58,10 @@ export const useVaultApprove = (vaultKey: VaultKey, setLastUpdated: () => void) 
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
   const vaultPoolContract = useVaultPoolContract(vaultKey)
   const { callWithGasPrice } = useCallWithGasPrice()
-  const cakeContract = useCake()
+  
+
+  //const cakeContract = useCake()
+  const cakeContract = useCoinCollect()
 
   const handleApprove = async () => {
     const receipt = await fetchWithCatchTxError(() => {
@@ -68,7 +71,7 @@ export const useVaultApprove = (vaultKey: VaultKey, setLastUpdated: () => void) 
       toastSuccess(
         t('Contract Enabled'),
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('You can now stake in the %symbol% vault!', { symbol: 'CAKE' })}
+          {t('You can now stake in the %symbol% vault!', { symbol: 'COLLECT' })}
         </ToastDescriptionWithTx>,
       )
       setLastUpdated()
@@ -80,7 +83,8 @@ export const useVaultApprove = (vaultKey: VaultKey, setLastUpdated: () => void) 
 
 export const useCheckVaultApprovalStatus = (vaultKey: VaultKey) => {
   const { account } = useWeb3React()
-  const cakeContract = useCake(false)
+  //const cakeContract = useCake(false)
+  const cakeContract = useCoinCollect(false)
   const vaultPoolContract = useVaultPoolContract(vaultKey)
 
   const key = useMemo<UseSWRContractKey>(

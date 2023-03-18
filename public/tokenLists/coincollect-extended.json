@@ -1,0 +1,32 @@
+{
+  "name": "CoinCollect Extended",
+  "timestamp": "2023-03-14T10:13:43.432Z",
+  "version": {
+    "major": 2,
+    "minor": 16,
+    "patch": 127
+  },
+  "logoURI": "https://app.coincollect.org/logo.png",
+  "keywords": [
+    "coincollect",
+    "extended"
+  ],
+  "tokens": [
+    {
+      "name": "PancakeSwap Token",
+      "symbol": "CAKE",
+      "address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+      "chainId": 56,
+      "decimals": 18,
+      "logoURI": "https://tokens.pancakeswap.finance/images/0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82.png"
+    },
+    {
+      "name": "8PAY Network",
+      "symbol": "8PAY",
+      "address": "0xFeea0bDd3D07eb6FE305938878C0caDBFa169042",
+      "chainId": 56,
+      "decimals": 18,
+      "logoURI": "https://tokens.pancakeswap.finance/images/0xFeea0bDd3D07eb6FE305938878C0caDBFa169042.png"
+    }
+  ]
+}

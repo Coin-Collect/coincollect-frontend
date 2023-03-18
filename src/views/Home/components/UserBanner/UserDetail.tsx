@@ -35,10 +35,14 @@ const StyledNoProfileAvatarIcon = styled(NoProfileAvatarIcon)`
 `
 
 const UserDetail = () => {
-  const { profile, isLoading } = useProfile()
+  //const { profile, isLoading } = useProfile()
   const { t } = useTranslation()
   const { account } = useWeb3React()
   const truncatedAddress = truncateHash(account)
+
+  // CAUTION: Profile details disabled here
+  const profile = null
+  const isLoading = false
 
   const getDesktopHeading = () => {
     if (profile) {

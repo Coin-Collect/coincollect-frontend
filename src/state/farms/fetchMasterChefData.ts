@@ -1,13 +1,13 @@
 import masterchefABI from 'config/abi/masterchef.json'
 import chunk from 'lodash/chunk'
-import { multicallv2 } from 'utils/multicall'
+import { multicallPolygonv2 } from 'utils/multicall'
 import { SerializedFarmConfig } from '../../config/constants/types'
 import { SerializedFarm } from '../types'
-import { getMasterChefAddress } from '../../utils/addressHelpers'
-import { getMasterchefContract } from '../../utils/contractHelpers'
+import { getCoinCollectFarmAddress } from '../../utils/addressHelpers'
+import { getCoinCollectFarmContract } from '../../utils/contractHelpers'
 
-const masterChefAddress = getMasterChefAddress()
-const masterChefContract = getMasterchefContract()
+const masterChefAddress = getCoinCollectFarmAddress() //getMasterChefAddress()
+const masterChefContract = getCoinCollectFarmContract() //getMasterchefContract
 
 export const fetchMasterChefFarmPoolLength = async () => {
   const poolLength = await masterChefContract.poolLength()
@@ -37,7 +37,9 @@ export const fetchMasterChefData = async (farms: SerializedFarmConfig[]): Promis
   const masterChefAggregatedCalls = masterChefCalls
     .filter((masterChefCall) => masterChefCall[0] !== null && masterChefCall[1] !== null)
     .flat()
-  const masterChefMultiCallResult = await multicallv2(masterchefABI, masterChefAggregatedCalls)
+
+  const masterChefMultiCallResult = await multicallPolygonv2(masterchefABI, masterChefAggregatedCalls)
+  
   const masterChefChunkedResultRaw = chunk(masterChefMultiCallResult, chunkSize)
   let masterChefChunkedResultCounter = 0
   return masterChefCalls.map((masterChefCall) => {

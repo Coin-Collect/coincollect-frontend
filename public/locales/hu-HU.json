@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "%symbol% pénzeszközeit lekötötte az összevont alapban!",
   "Max stake for this pool: %amount% %token%": "Maximális tét ebben az összevont alapban: %amount%%token%",
   "Maximum total stake: %amount% %token%": "Maximális tét összesen: %amount%%token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "Az APY tartalmazza a kamatos kamatot, az APR nem. Ebben az összevont alapban a CAKE felhalmozása automatikus, így az APY-t mutatjuk.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "Az APY tartalmazza a kamatos kamatot, az APR nem. Ebben az összevont alapban a CAKE felhalmozása automatikus, így az APY-t mutatjuk.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Ebben az összevont alapban jutalmat nem halmozzák, ezért az APR-t mutatjuk",
   "Auto": "Auto",
   "Manual": "Manuális",

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Token, Currency } from '@pancakeswap/sdk'
+import { Token, Currency } from '@coincollect/sdk'
 import { Button, Text, ErrorIcon, Flex, Message, Checkbox, Link, Tag, Grid } from '@pancakeswap/uikit'
 import { AutoColumn } from 'components/Layout/Column'
 import { useAddUserToken } from 'state/user/hooks'
-import { getBscScanLink } from 'utils'
+import { getPolygonScanLink } from 'utils'
 import truncateHash from 'utils/truncateHash'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useCombinedInactiveList } from 'state/lists/hooks'
@@ -32,7 +32,7 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
       <Message variant="warning">
         <Text>
           {t(
-            'Anyone can create a BEP20 token on BSC with any name, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.',
+            'Anyone can create a ERC20 token on POLYGON with any name, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.',
           )}
           <br />
           <br />
@@ -66,8 +66,8 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
             {chainId && (
               <Flex justifyContent="space-between" width="100%">
                 <Text mr="4px">{address}</Text>
-                <Link href={getBscScanLink(token.address, 'address', chainId)} external>
-                  ({t('View on BscScan')})
+                <Link href={getPolygonScanLink(token.address, 'address', chainId.toString())} external>
+                  ({t('View on PolygonScan')})
                 </Link>
               </Flex>
             )}

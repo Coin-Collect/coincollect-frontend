@@ -1,8 +1,9 @@
 import BigNumber from 'bignumber.js'
 import { convertSharesToCake } from 'views/Pools/helpers'
-import { multicallv2 } from 'utils/multicall'
+import { multicallPolygonv2, multicallv2 } from 'utils/multicall'
 import cakeVaultAbi from 'config/abi/cakeVault.json'
-import { getCakeVaultAddress } from 'utils/addressHelpers'
+import coinCollectAutoPoolVaultAbi from 'config/abi/coinCollectAutoPoolVault.json'
+import { getCoinCollectAutoPoolVaultAddress } from 'utils/addressHelpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 
 export const fetchPublicVaultData = async () => {
@@ -10,17 +11,21 @@ export const fetchPublicVaultData = async () => {
     const calls = [
       'getPricePerFullShare',
       'totalShares',
-      'calculateHarvestCakeRewards',
-      'calculateTotalPendingCakeRewards',
+      'calculateHarvestCoinCollectRewards',
+      'calculateTotalPendingCoinCollectRewards',
     ].map((method) => ({
-      address: getCakeVaultAddress(),
+      address: getCoinCollectAutoPoolVaultAddress(),
       name: method,
     }))
 
-    const [[sharePrice], [shares], [estimatedCakeBountyReward], [totalPendingCakeHarvest]] = await multicallv2(
-      cakeVaultAbi,
+    
+
+    const [[sharePrice], [shares], [estimatedCakeBountyReward], [totalPendingCakeHarvest]] = await multicallPolygonv2(
+      coinCollectAutoPoolVaultAbi,
       calls,
     )
+
+
 
     const totalSharesAsBigNumber = shares ? new BigNumber(shares.toString()) : BIG_ZERO
     const sharePriceAsBigNumber = sharePrice ? new BigNumber(sharePrice.toString()) : BIG_ZERO
@@ -46,12 +51,12 @@ export const fetchPublicVaultData = async () => {
 export const fetchVaultFees = async () => {
   try {
     const calls = ['performanceFee', 'callFee', 'withdrawFee', 'withdrawFeePeriod'].map((method) => ({
-      address: getCakeVaultAddress(),
+      address: getCoinCollectAutoPoolVaultAddress(),
       name: method,
     }))
 
-    const [[performanceFee], [callFee], [withdrawalFee], [withdrawalFeePeriod]] = await multicallv2(cakeVaultAbi, calls)
-
+    const [[performanceFee], [callFee], [withdrawalFee], [withdrawalFeePeriod]] = await multicallPolygonv2(cakeVaultAbi, calls)
+    
     return {
       performanceFee: performanceFee.toNumber(),
       callFee: callFee.toNumber(),

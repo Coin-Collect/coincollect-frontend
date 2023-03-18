@@ -1,9 +1,12 @@
-import { ChainId, Token } from '@pancakeswap/sdk'
+import { ChainId, Token } from '@coincollect/sdk'
 import { serializeToken } from 'state/user/hooks/helpers'
 import { CHAIN_ID } from './networks'
 import { SerializedToken } from './types'
 
 const { MAINNET, TESTNET } = ChainId
+
+const POLYGON_MAINNET = 137
+const MUMBAI_TESTNET = 80001
 
 interface TokenList {
   [symbol: string]: Token
@@ -20,13 +23,21 @@ export const mainnetTokens = defineTokens({
     'Wrapped BNB',
     'https://www.binance.com/',
   ),
+  wmatic: new Token(
+    POLYGON_MAINNET,
+    '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+    18,
+    'WMATIC',
+    'Wrapped Matic',
+    'https://polygon.technology/',
+  ),
   collect: new Token(
-    MAINNET,
-    '0x0000000000000000000000000000000000000000',
+    POLYGON_MAINNET,
+    '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
     18,
     'COLLECT',
-    'COLLECT',
-    'https://www.coin-collect.org/',
+    'CoinCollect Token',
+    'https://www.coincollect.org/',
   ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
@@ -90,10 +101,18 @@ export const mainnetTokens = defineTokens({
     'Dai Stablecoin',
     'https://www.makerdao.com/',
   ),
-  usdt: new Token(
+  /*usdt: new Token(
     MAINNET,
     '0x55d398326f99059fF775485246999027B3197955',
     18,
+    'USDT',
+    'Tether USD',
+    'https://tether.to/',
+  ),*/
+  usdt: new Token(
+    POLYGON_MAINNET,
+    '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    6,
     'USDT',
     'Tether USD',
     'https://tether.to/',
@@ -122,12 +141,20 @@ export const mainnetTokens = defineTokens({
     'Binance-Peg Ethereum Token',
     'https://ethereum.org/en/',
   ),
-  usdc: new Token(
+  /*usdc: new Token(
     MAINNET,
     '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
     18,
     'USDC',
     'Binance-Peg USD Coin',
+    'https://www.centre.io/usdc',
+  ),*/
+  usdc: new Token(
+    POLYGON_MAINNET,
+    '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+    6,
+    'USDC',
+    'Polygon-Peg USD Coin',
     'https://www.centre.io/usdc',
   ),
   kalm: new Token(
@@ -2036,6 +2063,38 @@ export const testnetTokens = defineTokens({
     'Wrapped BNB',
     'https://www.binance.com/',
   ),
+  wmatic: new Token(
+    MUMBAI_TESTNET,
+    '0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889',
+    18,
+    'WMATIC',
+    'Wrapped Matic',
+    'https://polygon.technology/',
+  ),
+  collect: new Token(
+    MUMBAI_TESTNET,
+    '0xE564106bacd4D3b74a79e0fbDabF0c43828a1DBB', // CHANGE_ADDRESS:CollectToken (test)
+    18,
+    'COLLECT',
+    'CoinCollect Test Token',
+    'https://www.coincollect.org/',
+  ),
+  usdc: new Token(
+    MUMBAI_TESTNET,
+    '0xEF21802E25BD223100205e2A3e80aacb5e7211F1',
+    18,
+    'USDC',
+    'USDC Test Token',
+    'https://www.coincollect.org/',
+  ),
+  usdt: new Token(
+    MUMBAI_TESTNET,
+    '0x6Add000b64258A977be4bE177A57a5cC8d59939f',
+    6,
+    'USDT',
+    'USDT Test Token',
+    'https://www.coincollect.org/',
+  ),
   cake: new Token(
     TESTNET,
     '0xa35062141Fa33BCA92Ce69FeD37D0E8908868AAe',
@@ -2074,7 +2133,7 @@ const tokens = () => {
   const chainId = CHAIN_ID
 
   // If testnet - return list comprised of testnetTokens wherever they exist, and mainnetTokens where they don't
-  if (parseInt(chainId, 10) === ChainId.TESTNET) {
+  if (parseInt(chainId, 10) === MUMBAI_TESTNET) {
     return Object.keys(mainnetTokens).reduce((accum, key) => {
       return { ...accum, [key]: testnetTokens[key] || mainnetTokens[key] }
     }, {} as typeof testnetTokens & typeof mainnetTokens)

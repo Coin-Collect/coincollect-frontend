@@ -16,7 +16,7 @@ import { useTranslation } from 'contexts/Localization'
 import useTheme from 'hooks/useTheme'
 import useToast from 'hooks/useToast'
 import { ToastDescriptionWithTx } from 'components/Toast'
-import { Token } from '@pancakeswap/sdk'
+import { Token } from '@coincollect/sdk'
 import { formatNumber } from 'utils/formatBalance'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { updateUserBalance, updateUserPendingReward, updateUserStakedBalance } from 'state/pools'
@@ -63,10 +63,15 @@ const CollectModal: React.FC<CollectModalProps> = ({
   )
 
   const handleHarvestConfirm = async () => {
+    
     const receipt = await fetchWithCatchTxError(() => {
+
+      // Compound
       if (shouldCompound) {
         return onStake(fullBalance, earningToken.decimals)
       }
+      
+      // Harvest
       return onReward()
     })
     if (receipt?.status) {

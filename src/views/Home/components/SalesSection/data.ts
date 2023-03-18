@@ -30,8 +30,8 @@ export const earnSectionData = (t: TranslateFunction): SalesSectionProps => ({
   bodyText: t('PancakeSwap makes it easy to make your crypto work for you.'),
   reverse: true,
   primaryButton: {
-    to: '/nfts/collections',
-    text: t('Explore'),
+    to: '/pools',
+    text: t('Stake'),
     external: false,
   },
   secondaryButton: {
@@ -56,8 +56,8 @@ export const cakeSectionData = (t: TranslateFunction): SalesSectionProps => ({
   ),
   reverse: false,
   primaryButton: {
-    to: '/nfts/collections',
-    text: t('Mint NFT'),
+    to: '/swap?outputCurrency=0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
+    text: t('Buy COLLECT'),
     external: false,
   },
   secondaryButton: {

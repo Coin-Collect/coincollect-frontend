@@ -537,7 +537,7 @@
   "Your %symbol% funds have been staked in the pool!": "Ang iyong %symbol% mga pondo ay na-stake sa iyong pool!",
   "Max stake for this pool: %amount% %token%": "Max na stake para sa pool na ito: %amount% %token%",
   "Maximum total stake: %amount% %token%": "Maximum na kabuuang stake: %amount% %token%",
-  "APY includes compounding, APR doesn’t. This pool’s CAKE is compounded automatically, so we show APY.": "Kabilang sa APY ang compounding, wala sa APR. Ang CAKE ng pool na ito ay awtomatikong ma-compound, kaya ipinapakita namin ang APY.",
+  "APY includes compounding, APR doesn’t. This pool’s COLLECT is compounded automatically, so we show APY.": "Kabilang sa APY ang compounding, wala sa APR. Ang CAKE ng pool na ito ay awtomatikong ma-compound, kaya ipinapakita namin ang APY.",
   "This pool’s rewards aren’t compounded automatically, so we show APR": "Ang mga gantimpala ng pool na ito ay hindi awtomatikong ma-compound, kaya ipinapakita namin ang APR",
   "Auto": "Auto",
   "Manual": "Manual",
