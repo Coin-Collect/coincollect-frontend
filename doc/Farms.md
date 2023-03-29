@@ -10,3 +10,7 @@
 
 Farms data are used on several pages, so they are fetched when the app is mounted (`usePollCoreFarmData` in `App.tsx`).
 Data are stored in the global redux state (`/state/farms`).
+
+## LP Rewards
+
+Don't forget to update lpAprs.json according to swap frequency.

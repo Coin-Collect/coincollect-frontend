@@ -1,5 +1,5 @@
-const PANCAKE_EXTENDED = 'https://beta.coincollect.org/coincollect-extended.json'
-const PANCAKE_TOP100 = 'https://beta.coincollect.org/coincollect-top-100.json'
+const PANCAKE_EXTENDED = 'https://beta.coincollect.org/tokenlists/coincollect-extended.json'
+const PANCAKE_TOP100 = 'https://beta.coincollect.org/tokenlists/coincollect-top-100.json'
 
 export const UNSUPPORTED_LIST_URLS: string[] = []
 
