@@ -29,6 +29,10 @@ const drawerLinks: MenuItemsType[] = [
                 label: 'Stake',
                 href: '/pools',
             },
+            {
+                label: 'NFT Stake',
+                href: '/nftpools',
+            },
 
         ],
     },
