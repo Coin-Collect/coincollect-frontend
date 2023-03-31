@@ -1,6 +1,6 @@
 import { useWeb3React } from '@web3-react/core'
 import BigNumber from 'bignumber.js'
-import { farmsConfig } from 'config/constants'
+import { nftFarmsConfig } from 'config/constants'
 import { useFastRefreshEffect, useSlowRefreshEffect } from 'hooks/useRefreshEffect'
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
@@ -48,7 +48,7 @@ export const usePollFarmsWithUserData = (includeArchive = false) => {
   const { account } = useWeb3React()
 
   useSlowRefreshEffect(() => {
-    const farmsToFetch = includeArchive ? farmsConfig : nonArchivedFarms
+    const farmsToFetch = includeArchive ? nftFarmsConfig : nonArchivedFarms
     const pids = farmsToFetch.map((farmToFetch) => farmToFetch.pid)
 
     dispatch(fetchFarmsPublicDataAsync(pids))
