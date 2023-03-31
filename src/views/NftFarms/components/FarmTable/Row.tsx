@@ -4,7 +4,7 @@ import { FarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard
 import { useMatchBreakpoints } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import useDelayedUnmount from 'hooks/useDelayedUnmount'
-import { useFarmUser } from 'state/farms/hooks'
+import { useFarmUser } from 'state/nftFarms/hooks'
 
 import Apr, { AprProps } from './Apr'
 import Farm, { FarmProps } from './Farm'

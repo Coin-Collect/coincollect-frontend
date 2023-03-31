@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js'
 import { Flex, IconButton, useModal, CalculateIcon } from '@pancakeswap/uikit'
 import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { useTranslation } from 'contexts/Localization'
-import { useFarmUser, useLpTokenPrice } from 'state/farms/hooks'
+import { useFarmUser, useLpTokenPrice } from 'state/nftFarms/hooks'
 
 const ApyLabelContainer = styled(Flex)`
   cursor: pointer;

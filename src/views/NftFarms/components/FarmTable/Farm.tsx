@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { useFarmUser } from 'state/farms/hooks'
+import { useFarmUser } from 'state/nftFarms/hooks'
 import { useTranslation } from 'contexts/Localization'
 import { Text } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
