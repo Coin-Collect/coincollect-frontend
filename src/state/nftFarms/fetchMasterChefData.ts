@@ -3,11 +3,11 @@ import chunk from 'lodash/chunk'
 import { multicallPolygonv2 } from 'utils/multicall'
 import { SerializedFarmConfig } from '../../config/constants/types'
 import { SerializedFarm } from '../types'
-import { getCoinCollectFarmAddress } from '../../utils/addressHelpers'
-import { getCoinCollectFarmContract } from '../../utils/contractHelpers'
+import { getCoinCollectNftStakeAddress } from '../../utils/addressHelpers'
+import { getCoinCollectNftStakeContract } from '../../utils/contractHelpers'
 
-const masterChefAddress = getCoinCollectFarmAddress() //getMasterChefAddress()
-const masterChefContract = getCoinCollectFarmContract() //getMasterchefContract
+const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
+const masterChefContract = getCoinCollectNftStakeContract() //getMasterchefContract
 
 export const fetchMasterChefFarmPoolLength = async () => {
   const poolLength = await masterChefContract.poolLength()

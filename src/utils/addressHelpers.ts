@@ -19,6 +19,10 @@ export const getCoinCollectPoolAddress = () => {
 export const getCoinCollectFarmAddress = () => {
   return getAddress(addresses.coinCollectFarm)
 }
+// Nft Farm Version Masterchef
+export const getCoinCollectNftStakeAddress = () => {
+  return getAddress(addresses.coinCollectNftStake)
+}
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }

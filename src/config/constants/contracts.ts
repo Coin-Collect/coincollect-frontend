@@ -10,8 +10,13 @@ export default {
   },
   // Only Pool Version Masterchef
   coinCollectFarm: {
-    137: '0x981930c422c9df6C2b056d62c8e638376596B8C6', // TODO: fill
+    137: '0x981930c422c9df6C2b056d62c8e638376596B8C6', 
     80001: '0x12D14aA656129DdDb2c901E735ac27c9Ac6d1195', // CHANGE_ADDRESS:CoinCollectFarm (test)
+  },
+  // Only NFT Pool Version Masterchef
+  coinCollectNftStake: {
+    137: '0x981930c422c9df6C2b056d62c8e638376596B8C6', // TODO: fill
+    80001: '0x2d05Aa4B680A93C5C96339C3a1eD803D98eF7B65', // CHANGE_ADDRESS:CoinCollectNftStake (test)
   },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',
