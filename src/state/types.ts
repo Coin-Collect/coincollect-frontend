@@ -527,6 +527,7 @@ export interface UserRound {
 
 export interface State {
   farms: SerializedFarmsState
+  nftFarms: SerializedFarmsState
   pools: PoolsState
   predictions: PredictionsState
   lottery: LotteryState

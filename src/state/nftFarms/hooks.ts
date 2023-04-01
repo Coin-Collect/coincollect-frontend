@@ -73,7 +73,7 @@ export const usePollCoreFarmData = () => {
 }
 
 export const useFarms = (): DeserializedFarmsState => {
-  const farms = useSelector((state: State) => state.farms)
+  const farms = useSelector((state: State) => state.nftFarms)
   const deserializedFarmsData = farms.data.map(deserializeFarm)
   const { loadArchivedFarmsData, userDataLoaded, poolLength } = farms
   return {
@@ -85,16 +85,16 @@ export const useFarms = (): DeserializedFarmsState => {
 }
 
 export const useFarmsPoolLength = (): number => {
-  return useSelector((state: State) => state.farms.poolLength)
+  return useSelector((state: State) => state.nftFarms.poolLength)
 }
 
 export const useFarmFromPid = (pid: number): DeserializedFarm => {
-  const farm = useSelector((state: State) => state.farms.data.find((f) => f.pid === pid))
+  const farm = useSelector((state: State) => state.nftFarms.data.find((f) => f.pid === pid))
   return deserializeFarm(farm)
 }
 
 export const useFarmFromLpSymbol = (lpSymbol: string): DeserializedFarm => {
-  const farm = useSelector((state: State) => state.farms.data.find((f) => f.lpSymbol === lpSymbol))
+  const farm = useSelector((state: State) => state.nftFarms.data.find((f) => f.lpSymbol === lpSymbol))
   return deserializeFarm(farm)
 }
 

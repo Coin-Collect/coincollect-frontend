@@ -50,7 +50,7 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
     state: AppState
   }
 >(
-  'farms/fetchFarmsPublicDataAsync',
+  'nftFarms/fetchFarmsPublicDataAsync',
   async (pids) => {
     
     const poolLength = await fetchMasterChefFarmPoolLength()
@@ -71,8 +71,8 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
   },
   {
     condition: (arg, { getState }) => {
-      const { farms } = getState()
-      if (farms.loadingKeys[stringify({ type: fetchFarmsPublicDataAsync.typePrefix, arg })]) {
+      const { nftFarms } = getState()
+      if (nftFarms.loadingKeys[stringify({ type: fetchFarmsPublicDataAsync.typePrefix, arg })]) {
         console.debug('farms action is fetching, skipping here')
         return false
       }
@@ -96,7 +96,7 @@ export const fetchFarmUserDataAsync = createAsyncThunk<
     state: AppState
   }
 >(
-  'farms/fetchFarmUserDataAsync',
+  'nftFarms/fetchFarmUserDataAsync',
   async ({ account, pids }) => {
     const poolLength = await fetchMasterChefFarmPoolLength()
     const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
@@ -145,7 +145,7 @@ const serializeLoadingKey = (
 }
 
 export const farmsSlice = createSlice({
-  name: 'Farms',
+  name: 'NFTFarms',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
