@@ -13,7 +13,7 @@ const nftFarms: SerializedFarmConfig[] = [
       97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
       56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
       137: '0x0cCc84b6506003487AEC687085e82C2f912E607B',
-      80001: '0x9472B107edb58f05d14299898B69A41729710959' // CHANGE_ADDRESS:Pair
+      80001: '0x82c11f89E495750F19056BD76E1234b94203cEE0' // CHANGE_ADDRESS:ERC20PegForNFT
     },
     token: serializedTokens.collect,
     quoteToken: serializedTokens.usdt,

@@ -56,14 +56,14 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
     const poolLength = await fetchMasterChefFarmPoolLength()
     const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
     const farmsCanFetch = farmsToFetch.filter((f) => poolLength.gt(f.pid))
-    
     // Add price helper farms
     const farmsWithPriceHelpers = farmsCanFetch.concat(priceHelperLpsConfig)
 
     const farms = await fetchFarms(farmsWithPriceHelpers)
-    const farmsWithPrices = getFarmsPrices(farms)
+    // const farmsWithPrices = getFarmsPrices(farms) TODO: Remove related file
+    
     // Filter out price helper LP config farms
-    const farmsWithoutHelperLps = farmsWithPrices.filter((farm: SerializedFarm) => {
+    const farmsWithoutHelperLps = farms.filter((farm: SerializedFarm) => {   // farmsWithPrices --> farms
       return farm.pid || farm.pid === 0
     })
 

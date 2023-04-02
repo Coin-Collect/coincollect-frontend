@@ -1,4 +1,5 @@
 import masterchefABI from 'config/abi/masterchef.json'
+import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
 import chunk from 'lodash/chunk'
 import { multicallPolygonv2 } from 'utils/multicall'
 import { SerializedFarmConfig } from '../../config/constants/types'
@@ -38,7 +39,7 @@ export const fetchMasterChefData = async (farms: SerializedFarmConfig[]): Promis
     .filter((masterChefCall) => masterChefCall[0] !== null && masterChefCall[1] !== null)
     .flat()
 
-  const masterChefMultiCallResult = await multicallPolygonv2(masterchefABI, masterChefAggregatedCalls)
+  const masterChefMultiCallResult = await multicallPolygonv2(coinCollectNftStakeABI, masterChefAggregatedCalls)
   
   const masterChefChunkedResultRaw = chunk(masterChefMultiCallResult, chunkSize)
   let masterChefChunkedResultCounter = 0

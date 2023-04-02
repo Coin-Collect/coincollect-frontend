@@ -1,15 +1,16 @@
 import erc20 from 'config/abi/erc20.json'
 import chunk from 'lodash/chunk'
-import { getAddress, getCoinCollectFarmAddress } from 'utils/addressHelpers'
+import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
 import { multicallPolygonv2 } from 'utils/multicall'
 import { SerializedFarm } from '../types'
 import { SerializedFarmConfig } from '../../config/constants/types'
 
-// TODO: Make it compatible both V2, V3 pools
 const fetchFarmCalls = (farm: SerializedFarm) => {
   const { lpAddresses, token, quoteToken } = farm
   
+  // Stake Pool Address
   const lpAddress = getAddress(lpAddresses)
+  
   return [
     // Balance of token in the LP contract
     {
@@ -27,7 +28,7 @@ const fetchFarmCalls = (farm: SerializedFarm) => {
     {
       address: lpAddress,
       name: 'balanceOf',
-      params: [getCoinCollectFarmAddress()],
+      params: [getCoinCollectNftStakeAddress()],
     },
     // Total supply of LP tokens
     {
