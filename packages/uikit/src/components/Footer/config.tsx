@@ -106,7 +106,7 @@ export const socials: SocialLinkType[] = [
   {
     label: "Discord",
     icon: "Discord",
-    href: "https://discord.gg/trs9VqC9gq",
+    href: "https://discord.gg/FW9dnRFZk9",
   },
 ];
 

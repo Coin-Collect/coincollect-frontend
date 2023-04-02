@@ -18,7 +18,7 @@ const Stats = () => {
   const users = formatLocalisedCompactNumber(addressCount)
   const tvlString = tvl ? formatLocalisedCompactNumber(tvl) : '-'
 
-  const tvlText = t('And those users are now entrusting the platform with over $%tvl% in funds.', { tvl: tvlString })
+  const tvlText = t('And those users are now entrusting the platform with over $%tvl% in funds.')
   const [entrusting, inFunds] = tvlText.split(tvlString)
 
   const UsersCardData: IconCardData = {
@@ -48,7 +48,7 @@ const Stats = () => {
       <Flex flexWrap="wrap">
         <Text display="inline" textAlign="center" color="textSubtle" mb="20px">
           {entrusting}
-          <>{tvl ? <>{}</> : <Skeleton display="inline-block" height={16} width={70} mt="2px" />}</>
+         
           {inFunds}
         </Text>
       </Flex>
@@ -67,7 +67,7 @@ const Stats = () => {
         </IconCard>
         <IconCard {...TradesCardData} mr={[null, null, null, '16px']} mb={['16px', null, null, '0']}>
           <StatCardContent
-            headingText={t('future sale whitelist', { trades })}
+            headingText={t('Upcoming sale whitelist', { trades })}
             bodyText={t('made in the last 30 days')}
             highlightColor={theme.colors.primary}
           />

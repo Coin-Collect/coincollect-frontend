@@ -176,7 +176,7 @@ export const socials: { label?: string, icon: string, items?: { label?: string, 
   {
     label: "Discord",
     icon: "DiscordIcon",
-    href: "https://discord.gg/trs9VqC9gq",
+    href: "https://discord.gg/FW9dnRFZk9",
   },
   {
     label: "Instagram",
