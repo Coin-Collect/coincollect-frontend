@@ -3,11 +3,11 @@ import erc20ABI from 'config/abi/erc20.json'
 import masterchefABI from 'config/abi/masterchef.json'
 import coinCollectFarmABI from 'config/abi/coinCollectFarm.json'
 import { multicallPolygonv1 } from 'utils/multicall'
-import { getAddress, getCoinCollectFarmAddress } from 'utils/addressHelpers'
+import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
 import { SerializedFarmConfig } from 'config/constants/types'
 
 export const fetchFarmUserAllowances = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
-  const masterChefAddress = getCoinCollectFarmAddress() //getMasterChefAddress()
+  const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
 
   const calls = farmsToFetch.map((farm) => {
     const lpContractAddress = getAddress(farm.lpAddresses)
@@ -39,7 +39,7 @@ export const fetchFarmUserTokenBalances = async (account: string, farmsToFetch: 
 }
 
 export const fetchFarmUserStakedBalances = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
-  const masterChefAddress = getCoinCollectFarmAddress() //getMasterChefAddress()
+  const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
 
   const calls = farmsToFetch.map((farm) => {
     return {
@@ -57,7 +57,7 @@ export const fetchFarmUserStakedBalances = async (account: string, farmsToFetch:
 }
 
 export const fetchFarmUserEarnings = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
-  const masterChefAddress = getCoinCollectFarmAddress() //getMasterChefAddress()
+  const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
 
   const calls = farmsToFetch.map((farm) => {
     return {
