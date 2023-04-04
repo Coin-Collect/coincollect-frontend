@@ -3,13 +3,12 @@ import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
 import { Image, Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex } from '@pancakeswap/uikit'
 import { ChainId } from '@coincollect/sdk'
-import { NextLinkFromReactRouter } from 'components/NextLink'
 import styled from 'styled-components'
 import FlexLayout from 'components/Layout/Flex'
 import Page from 'components/Layout/Page'
 import { useFarms, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
 import useIntersectionObserver from 'hooks/useIntersectionObserver'
-import { DeserializedFarm } from 'state/types'
+import { DeserializedNftFarm } from 'state/types'
 import { useTranslation } from 'contexts/Localization'
 import { getBalanceNumber } from 'utils/formatBalance'
 import { getFarmApr } from 'utils/apr'
@@ -23,12 +22,13 @@ import PageHeader from 'components/PageHeader'
 import SearchInput from 'components/SearchInput'
 import Select, { OptionProps } from 'components/Select/Select'
 import Loading from 'components/Loading'
-import { FarmWithStakedValue } from './components/FarmCard/FarmCard'
+import { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
 import Table from './components/FarmTable/FarmTable'
 import FarmTabButtons from './components/FarmTabButtons'
 import { RowProps } from './components/FarmTable/Row'
 import ToggleView from './components/ToggleView/ToggleView'
 import { DesktopColumnSchema } from './components/types'
+import { getAddress } from 'utils/addressHelpers'
 
 const ControlContainer = styled.div`
   display: flex;
@@ -158,22 +158,21 @@ const Farms: React.FC = ({ children }) => {
   )
 
   const farmsList = useCallback(
-    (farmsToDisplay: DeserializedFarm[]): FarmWithStakedValue[] => {
-      let farmsToDisplayWithAPR: FarmWithStakedValue[] = farmsToDisplay.map((farm) => {
-        if (!farm.lpTotalInQuoteToken || !farm.quoteTokenPriceBusd) {
+    (farmsToDisplay: DeserializedNftFarm[]): NftFarmWithStakedValue[] => {
+      let farmsToDisplayWithAPR: NftFarmWithStakedValue[] = farmsToDisplay.map((farm) => {
+        if (!farm.totalStaked) {
           return farm
         }
-        const totalLiquidity = new BigNumber(farm.lpTotalInQuoteToken).times(farm.quoteTokenPriceBusd)
+        const totalLiquidity = farm.totalStaked
         const { cakeRewardsApr, lpRewardsApr } = isActive
           ? getFarmApr(new BigNumber(farm.poolWeight), cakePrice, totalLiquidity, farm.lpAddresses[ChainId.POLYGON])
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
-
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
       })
 
       if (query) {
         const lowercaseQuery = latinise(query.toLowerCase())
-        farmsToDisplayWithAPR = farmsToDisplayWithAPR.filter((farm: FarmWithStakedValue) => {
+        farmsToDisplayWithAPR = farmsToDisplayWithAPR.filter((farm: NftFarmWithStakedValue) => {
           return latinise(farm.lpSymbol.toLowerCase()).includes(lowercaseQuery)
         })
       }
@@ -191,26 +190,26 @@ const Farms: React.FC = ({ children }) => {
   const chosenFarmsMemoized = useMemo(() => {
     let chosenFarms = []
 
-    const sortFarms = (farms: FarmWithStakedValue[]): FarmWithStakedValue[] => {
+    const sortFarms = (farms: NftFarmWithStakedValue[]): NftFarmWithStakedValue[] => {
       switch (sortOption) {
         case 'apr':
-          return orderBy(farms, (farm: FarmWithStakedValue) => farm.apr + farm.lpRewardsApr, 'desc')
+          return orderBy(farms, (farm: NftFarmWithStakedValue) => farm.apr + farm.lpRewardsApr, 'desc')
         case 'multiplier':
           return orderBy(
             farms,
-            (farm: FarmWithStakedValue) => (farm.multiplier ? Number(farm.multiplier.slice(0, -1)) : 0),
+            (farm: NftFarmWithStakedValue) => (farm.multiplier ? Number(farm.multiplier.slice(0, -1)) : 0),
             'desc',
           )
         case 'earned':
           return orderBy(
             farms,
-            (farm: FarmWithStakedValue) => (farm.userData ? Number(farm.userData.earnings) : 0),
+            (farm: NftFarmWithStakedValue) => (farm.userData ? Number(farm.userData.earnings) : 0),
             'desc',
           )
         case 'liquidity':
-          return orderBy(farms, (farm: FarmWithStakedValue) => Number(farm.liquidity), 'desc')
+          return orderBy(farms, (farm: NftFarmWithStakedValue) => Number(farm.liquidity), 'desc')
         case 'latest':
-          return orderBy(farms, (farm: FarmWithStakedValue) => Number(farm.pid), 'desc')
+          return orderBy(farms, (farm: NftFarmWithStakedValue) => Number(farm.pid), 'desc')
         default:
           return farms
       }
@@ -257,28 +256,23 @@ const Farms: React.FC = ({ children }) => {
   }, [isIntersecting])
 
   const rowData = chosenFarmsMemoized.map((farm) => {
-    const { token, quoteToken } = farm
-    const tokenAddress = token.address
-    const quoteTokenAddress = quoteToken.address
+    
     const lpLabel = farm.lpSymbol && farm.lpSymbol.split(' ')[0].toUpperCase().replace('PANCAKE', '')
 
     const row: RowProps = {
       apr: {
-        value: getDisplayApr(farm.apr, farm.lpRewardsApr),
+        value: getDisplayApr(farm.apr),
         pid: farm.pid,
         multiplier: farm.multiplier,
         lpLabel,
         lpSymbol: farm.lpSymbol,
-        tokenAddress,
-        quoteTokenAddress,
         cakePrice,
         originalValue: farm.apr,
       },
       farm: {
         label: lpLabel,
         pid: farm.pid,
-        token: farm.token,
-        quoteToken: farm.quoteToken,
+        nftAddress: getAddress(farm.nftAddresses)
       },
       earned: {
         earnings: getBalanceNumber(new BigNumber(farm.userData.earnings)),

@@ -1,6 +1,6 @@
 import { useEffect, useState, createElement } from 'react'
 import styled from 'styled-components'
-import { FarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
+import { NftFarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
 import { useMatchBreakpoints } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import useDelayedUnmount from 'hooks/useDelayedUnmount'
@@ -22,7 +22,7 @@ export interface RowProps {
   earned: EarnedProps
   multiplier: MultiplierProps
   liquidity: LiquidityProps
-  details: FarmWithStakedValue
+  details: NftFarmWithStakedValue
 }
 
 interface RowPropsWithLoading extends RowProps {

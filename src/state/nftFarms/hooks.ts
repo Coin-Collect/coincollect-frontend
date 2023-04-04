@@ -9,36 +9,35 @@ import { deserializeToken } from 'state/user/hooks/helpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceAmount } from 'utils/formatBalance'
 import { fetchFarmsPublicDataAsync, fetchFarmUserDataAsync, nonArchivedFarms } from '.'
-import { DeserializedFarm, DeserializedFarmsState, DeserializedFarmUserData, SerializedFarm, State } from '../types'
+import { DeserializedNftFarm, DeserializedNftFarmsState, DeserializedNftFarmUserData, SerializedNftFarm, State } from '../types'
 
-const deserializeFarmUserData = (farm: SerializedFarm): DeserializedFarmUserData => {
+const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFarmUserData => {
   return {
-    allowance: farm.userData ? new BigNumber(farm.userData.allowance) : BIG_ZERO,
+    allowance: farm.userData ? farm.userData.allowance : false,
     tokenBalance: farm.userData ? new BigNumber(farm.userData.tokenBalance) : BIG_ZERO,
     stakedBalance: farm.userData ? new BigNumber(farm.userData.stakedBalance) : BIG_ZERO,
     earnings: farm.userData ? new BigNumber(farm.userData.earnings) : BIG_ZERO,
   }
 }
 
-const deserializeFarm = (farm: SerializedFarm): DeserializedFarm => {
-  const { lpAddresses, lpSymbol, pid, dual, multiplier, isCommunity, quoteTokenPriceBusd, tokenPriceBusd } = farm
+const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
+  const { lpAddresses, nftAddresses, lpSymbol, pid, dual, multiplier, quoteTokenPriceBusd, tokenPriceBusd } = farm
 
   return {
     lpAddresses,
+    nftAddresses,
     lpSymbol,
     pid,
     dual,
     multiplier,
-    isCommunity,
     quoteTokenPriceBusd,
     tokenPriceBusd,
-    token: deserializeToken(farm.token),
-    quoteToken: deserializeToken(farm.quoteToken),
-    userData: deserializeFarmUserData(farm),
+    userData: deserializeNftFarmUserData(farm),
     tokenAmountTotal: farm.tokenAmountTotal ? new BigNumber(farm.tokenAmountTotal) : BIG_ZERO,
     lpTotalInQuoteToken: farm.lpTotalInQuoteToken ? new BigNumber(farm.lpTotalInQuoteToken) : BIG_ZERO,
     lpTotalSupply: farm.lpTotalSupply ? new BigNumber(farm.lpTotalSupply) : BIG_ZERO,
     tokenPriceVsQuote: farm.tokenPriceVsQuote ? new BigNumber(farm.tokenPriceVsQuote) : BIG_ZERO,
+    totalStaked: farm.totalStaked ? new BigNumber(farm.totalStaked) : BIG_ZERO,
     poolWeight: farm.poolWeight ? new BigNumber(farm.poolWeight) : BIG_ZERO,
   }
 }
@@ -72,9 +71,9 @@ export const usePollCoreFarmData = () => {
   }, [dispatch])
 }
 
-export const useFarms = (): DeserializedFarmsState => {
+export const useFarms = (): DeserializedNftFarmsState => {
   const farms = useSelector((state: State) => state.nftFarms)
-  const deserializedFarmsData = farms.data.map(deserializeFarm)
+  const deserializedFarmsData = farms.data.map(deserializeNftFarm)
   const { loadArchivedFarmsData, userDataLoaded, poolLength } = farms
   return {
     loadArchivedFarmsData,
@@ -88,17 +87,17 @@ export const useFarmsPoolLength = (): number => {
   return useSelector((state: State) => state.nftFarms.poolLength)
 }
 
-export const useFarmFromPid = (pid: number): DeserializedFarm => {
+export const useFarmFromPid = (pid: number): DeserializedNftFarm => {
   const farm = useSelector((state: State) => state.nftFarms.data.find((f) => f.pid === pid))
-  return deserializeFarm(farm)
+  return deserializeNftFarm(farm)
 }
 
-export const useFarmFromLpSymbol = (lpSymbol: string): DeserializedFarm => {
+export const useFarmFromLpSymbol = (lpSymbol: string): DeserializedNftFarm => {
   const farm = useSelector((state: State) => state.nftFarms.data.find((f) => f.lpSymbol === lpSymbol))
-  return deserializeFarm(farm)
+  return deserializeNftFarm(farm)
 }
 
-export const useFarmUser = (pid): DeserializedFarmUserData => {
+export const useFarmUser = (pid): DeserializedNftFarmUserData => {
   const { userData } = useFarmFromPid(pid)
   const { allowance, tokenBalance, stakedBalance, earnings } = userData
   return {

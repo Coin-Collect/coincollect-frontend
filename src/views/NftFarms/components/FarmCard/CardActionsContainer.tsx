@@ -9,7 +9,7 @@ import useCatchTxError from 'hooks/useCatchTxError'
 import { useCallback } from 'react'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
-import { DeserializedFarm } from 'state/types'
+import { DeserializedNftFarm } from 'state/types'
 import styled from 'styled-components'
 import { getAddress } from 'utils/addressHelpers'
 import useApproveFarm from '../../hooks/useApproveFarm'
@@ -19,12 +19,12 @@ import StakeAction from './StakeAction'
 const Action = styled.div`
   padding-top: 16px;
 `
-export interface FarmWithStakedValue extends DeserializedFarm {
+export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
 }
 
 interface FarmCardActionsProps {
-  farm: FarmWithStakedValue
+  farm: NftFarmWithStakedValue
   account?: string
   addLiquidityUrl?: string
   cakePrice?: BigNumber
@@ -38,7 +38,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { pid, lpAddresses } = farm
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
   const lpAddress = getAddress(lpAddresses)
-  const isApproved = account && allowance && allowance.isGreaterThan(0)
+  const isApproved = account && allowance
   const dispatch = useAppDispatch()
 
   const lpContract = useERC20(lpAddress)

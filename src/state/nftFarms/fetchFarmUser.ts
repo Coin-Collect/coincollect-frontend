@@ -1,27 +1,27 @@
 import BigNumber from 'bignumber.js'
 import erc20ABI from 'config/abi/erc20.json'
+import erc721ABI from 'config/abi/erc721collection.json'
 import masterchefABI from 'config/abi/masterchef.json'
 import coinCollectFarmABI from 'config/abi/coinCollectFarm.json'
 import { multicallPolygonv1 } from 'utils/multicall'
 import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
-import { SerializedFarmConfig } from 'config/constants/types'
+import { SerializedNftFarmConfig } from 'config/constants/types'
 
-export const fetchFarmUserAllowances = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
+export const fetchFarmUserAllowances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
   const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
 
   const calls = farmsToFetch.map((farm) => {
-    const lpContractAddress = getAddress(farm.lpAddresses)
-    return { address: lpContractAddress, name: 'allowance', params: [account, masterChefAddress] }
+    const nftContractAddress = getAddress(farm.nftAddresses)
+    return { address: nftContractAddress, name: 'isApprovedForAll', params: [account, masterChefAddress] }
   })
-
-  const rawLpAllowances = await multicallPolygonv1<BigNumber[]>(erc20ABI, calls)
-  const parsedLpAllowances = rawLpAllowances.map((lpBalance) => {
-    return new BigNumber(lpBalance).toJSON()
+  const rawNftAllowances = await multicallPolygonv1<boolean[]>(erc721ABI, calls)
+  const parsedNftAllowances = rawNftAllowances.map((approved) => {
+    return approved
   })
-  return parsedLpAllowances
+  return parsedNftAllowances
 }
 
-export const fetchFarmUserTokenBalances = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
+export const fetchFarmUserTokenBalances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
   const calls = farmsToFetch.map((farm) => {
     const lpContractAddress = getAddress(farm.lpAddresses)
     return {
@@ -38,7 +38,7 @@ export const fetchFarmUserTokenBalances = async (account: string, farmsToFetch: 
   return parsedTokenBalances
 }
 
-export const fetchFarmUserStakedBalances = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
+export const fetchFarmUserStakedBalances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
   const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
 
   const calls = farmsToFetch.map((farm) => {
@@ -56,7 +56,7 @@ export const fetchFarmUserStakedBalances = async (account: string, farmsToFetch:
   return parsedStakedBalances
 }
 
-export const fetchFarmUserEarnings = async (account: string, farmsToFetch: SerializedFarmConfig[]) => {
+export const fetchFarmUserEarnings = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
   const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
 
   const calls = farmsToFetch.map((farm) => {

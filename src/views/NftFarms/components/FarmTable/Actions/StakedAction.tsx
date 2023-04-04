@@ -18,7 +18,7 @@ import styled from 'styled-components'
 import { getAddress } from 'utils/addressHelpers'
 import { getBalanceAmount, getBalanceNumber, getFullDisplayBalance } from 'utils/formatBalance'
 import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
-import { FarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
+import { NftFarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
 import useApproveFarm from '../../../hooks/useApproveFarm'
 import useStakeFarms from '../../../hooks/useStakeFarms'
 import useUnstakeFarms from '../../../hooks/useUnstakeFarms'
@@ -30,7 +30,7 @@ const IconButtonWrapper = styled.div`
   display: flex;
 `
 
-interface StackedActionProps extends FarmWithStakedValue {
+interface StackedActionProps extends NftFarmWithStakedValue {
   userDataReady: boolean
   lpLabel?: string
   displayApr?: string
@@ -43,8 +43,6 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   lpSymbol,
   lpLabel,
   lpAddresses,
-  quoteToken,
-  token,
   userDataReady,
   displayApr,
 }) => {
@@ -59,14 +57,11 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   const lpPrice = useLpTokenPrice(lpSymbol)
   const cakePrice = usePriceCakeBusd()
 
-  const isApproved = account && allowance && allowance.isGreaterThan(0)
+  const isApproved = account && allowance
 
   const lpAddress = getAddress(lpAddresses)
-  const liquidityUrlPathParts = getLiquidityUrlPathParts({
-    quoteTokenAddress: quoteToken.address,
-    tokenAddress: token.address,
-  })
-  const addLiquidityUrl = `${BASE_ADD_LIQUIDITY_URL}/${liquidityUrlPathParts}`
+  
+  const apyModalLink = "https://app.coincollect.org"
 
   const handleStake = async (amount: string) => {
     const receipt = await fetchWithCatchTxError(() => {
@@ -120,7 +115,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       onConfirm={handleStake}
       tokenName={lpSymbol}
       multiplier={multiplier}
-      addLiquidityUrl={addLiquidityUrl}
+      addLiquidityUrl={apyModalLink}
       cakePrice={cakePrice}
     />,
   )

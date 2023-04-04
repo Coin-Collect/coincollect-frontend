@@ -1,15 +1,13 @@
 import styled from 'styled-components'
-import { Tag, Flex, Heading, Skeleton } from '@pancakeswap/uikit'
+import { Tag, Flex, Heading, Skeleton, TokenImage } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CoreTag } from 'components/Tags'
-import { TokenPairImage } from 'components/TokenImage'
+
 
 export interface ExpandableSectionProps {
   lpLabel?: string
   multiplier?: string
-  isCommunityFarm?: boolean
-  token: Token
-  quoteToken: Token
+  nftToken?: string
 }
 
 const Wrapper = styled(Flex)`
@@ -22,14 +20,14 @@ const MultiplierTag = styled(Tag)`
   margin-left: 4px;
 `
 
-const CardHeading: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, isCommunityFarm, token, quoteToken }) => {
+
+const CardHeading: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken }) => {
   return (
     <Wrapper justifyContent="space-between" alignItems="center" mb="12px">
-      <TokenPairImage variant="inverted" primaryToken={token} secondaryToken={quoteToken} width={64} height={64} />
+      <TokenImage src={`/images/tokens/${nftToken}.svg`} width={64} height={64} />
       <Flex flexDirection="column" alignItems="flex-end">
         <Heading mb="4px">{lpLabel.split(' ')[0]}</Heading>
         <Flex justifyContent="center">
-          {isCommunityFarm ? <FarmAuctionTag /> : <CoreTag />}
           {multiplier ? (
             <MultiplierTag variant="secondary">{multiplier}</MultiplierTag>
           ) : (

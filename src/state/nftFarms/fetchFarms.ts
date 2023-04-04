@@ -46,6 +46,7 @@ const fetchFarms = async (farmsToFetch: SerializedFarmConfig[]) => {
       lpTotalSupply: new BigNumber(lpTotalSupply).toJSON(),
       lpTotalInQuoteToken: lpTotalInQuoteToken.toJSON(),
       tokenPriceVsQuote: quoteTokenAmountTotal.div(tokenAmountTotal).toJSON(),
+      totalStaked: new BigNumber(lpTokenBalanceMC).toJSON(),
       poolWeight: poolWeight.toJSON(),
       multiplier: `${allocPoint.div(100).toString()}X`,
     }

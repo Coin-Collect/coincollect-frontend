@@ -1,16 +1,14 @@
 import styled from 'styled-components'
 import { useFarmUser } from 'state/nftFarms/hooks'
 import { useTranslation } from 'contexts/Localization'
-import { Text } from '@pancakeswap/uikit'
+import { Text, TokenImage } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { TokenPairImage } from 'components/TokenImage'
 
 export interface FarmProps {
   label: string
   pid: number
-  token: Token
-  quoteToken: Token
+  nftAddress: string
 }
 
 const Container = styled.div`
@@ -32,7 +30,7 @@ const TokenWrapper = styled.div`
   }
 `
 
-const Farm: React.FunctionComponent<FarmProps> = ({ token, quoteToken, label, pid }) => {
+const Farm: React.FunctionComponent<FarmProps> = ({label, pid, nftAddress}) => {
   const { stakedBalance } = useFarmUser(pid)
   const { t } = useTranslation()
   const rawStakedBalance = getBalanceNumber(stakedBalance)
@@ -52,7 +50,7 @@ const Farm: React.FunctionComponent<FarmProps> = ({ token, quoteToken, label, pi
   return (
     <Container>
       <TokenWrapper>
-        <TokenPairImage variant="inverted" primaryToken={token} secondaryToken={quoteToken} width={40} height={40} />
+        <TokenImage src={`/images/tokens/${nftAddress}.svg`} width={40} height={40} />
       </TokenWrapper>
       <div>
         {handleRenderFarming()}

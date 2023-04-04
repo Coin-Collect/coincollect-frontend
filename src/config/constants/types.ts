@@ -120,6 +120,30 @@ export interface DeserializedFarmConfig extends FarmConfigBaseProps {
   quoteToken: Token
 }
 
+// New type for NFT Stake config
+interface NftFarmConfigBaseProps {
+  pid: number
+  lpSymbol: string
+  lpAddresses: Address
+  nftAddresses: Address
+  multiplier?: string
+  dual?: {
+    rewardPerBlock: number
+    earnLabel: string
+    endBlock: number
+  }
+}
+
+// New type for NFT Stake config
+export interface SerializedNftFarmConfig extends NftFarmConfigBaseProps {
+  
+}
+
+// New type for NFT Stake config
+export interface DeserializedNftFarmConfig extends NftFarmConfigBaseProps {
+  
+}
+
 export interface PoolDeployedBlockNumber {
   [key: string]: number
 }

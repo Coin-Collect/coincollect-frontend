@@ -2,19 +2,17 @@ import { useState } from 'react'
 import BigNumber from 'bignumber.js'
 import styled from 'styled-components'
 import { Card, Flex, Text, Skeleton } from '@pancakeswap/uikit'
-import { DeserializedFarm } from 'state/types'
+import { DeserializedNftFarm } from 'state/types'
 import { getPolygonScanLink } from 'utils'
 import { useTranslation } from 'contexts/Localization'
 import ExpandableSectionButton from 'components/ExpandableSectionButton'
-import { BASE_COINCOLLECT_ADD_LIQUIDITY_URL } from 'config'
 import { getAddress } from 'utils/addressHelpers'
-import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import DetailsSection from './DetailsSection'
 import CardHeading from './CardHeading'
 import CardActionsContainer from './CardActionsContainer'
 import ApyButton from './ApyButton'
 
-export interface FarmWithStakedValue extends DeserializedFarm {
+export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
   lpRewardsApr?: number
   liquidity?: BigNumber
@@ -37,7 +35,7 @@ const ExpandingWrapper = styled.div`
 `
 
 interface FarmCardProps {
-  farm: FarmWithStakedValue
+  farm: NftFarmWithStakedValue
   displayApr: string
   removed: boolean
   cakePrice?: BigNumber
@@ -49,21 +47,14 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
 
   const [showExpandableSection, setShowExpandableSection] = useState(false)
 
-  const totalValueFormatted =
-    farm.liquidity && farm.liquidity.gt(0)
-      ? `$${farm.liquidity.toNumber().toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-      : ''
 
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
   const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT + Fees')
 
-  const liquidityUrlPathParts = getLiquidityUrlPathParts({
-    quoteTokenAddress: farm.quoteToken.address,
-    tokenAddress: farm.token.address,
-  })
-  const addLiquidityUrl = `${BASE_COINCOLLECT_ADD_LIQUIDITY_URL}/${liquidityUrlPathParts}`
+  const apyModalLink = "https://app.coincollect.org"
   const lpAddress = getAddress(farm.lpAddresses)
-  const isPromotedFarm = farm.token.symbol === 'COLLECT'
+  const nftAddress = getAddress(farm.nftAddresses)
+  const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
 
   return (
     <StyledCard isActive={isPromotedFarm}>
@@ -71,9 +62,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         <CardHeading
           lpLabel={lpLabel}
           multiplier={farm.multiplier}
-          isCommunityFarm={farm.isCommunity}
-          token={farm.token}
-          quoteToken={farm.quoteToken}
+          nftToken= {nftAddress}
         />
         {!removed && (
           <Flex justifyContent="space-between" alignItems="center">
@@ -86,7 +75,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
                   lpSymbol={farm.lpSymbol}
                   multiplier={farm.multiplier}
                   lpLabel={lpLabel}
-                  addLiquidityUrl={addLiquidityUrl}
+                  addLiquidityUrl={apyModalLink}
                   cakePrice={cakePrice}
                   apr={farm.apr}
                   displayApr={displayApr}
@@ -106,7 +95,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
           lpLabel={lpLabel}
           account={account}
           cakePrice={cakePrice}
-          addLiquidityUrl={addLiquidityUrl}
+          addLiquidityUrl={apyModalLink}
         />
       </FarmCardInnerContainer>
 
@@ -120,9 +109,9 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
             removed={removed}
             bscScanAddress={getPolygonScanLink(lpAddress, 'address')}
             infoAddress={`/info/pool/${lpAddress}`}
-            totalValueFormatted={totalValueFormatted}
+            totalStaked={farm.liquidity}
             lpLabel={lpLabel}
-            addLiquidityUrl={addLiquidityUrl}
+            addLiquidityUrl={apyModalLink}
           />
         )}
       </ExpandingWrapper>

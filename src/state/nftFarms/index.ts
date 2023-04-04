@@ -19,20 +19,20 @@ import {
   fetchFarmUserTokenBalances,
   fetchFarmUserStakedBalances,
 } from './fetchFarmUser'
-import { SerializedFarmsState, SerializedFarm } from '../types'
+import { SerializedNftFarmsState, SerializedNftFarm } from '../types'
 import { fetchMasterChefFarmPoolLength } from './fetchMasterChefData'
 
 const noAccountFarmConfig = farmsConfig.map((farm) => ({
   ...farm,
   userData: {
-    allowance: '0',
+    allowance: false,
     tokenBalance: '0',
     stakedBalance: '0',
     earnings: '0',
   },
 }))
 
-const initialState: SerializedFarmsState = {
+const initialState: SerializedNftFarmsState = {
   data: noAccountFarmConfig,
   loadArchivedFarmsData: false,
   userDataLoaded: false,
@@ -44,7 +44,7 @@ export const nonArchivedFarms = farmsConfig.filter(({ pid }) => !isArchivedPid(p
 // Async thunks
 // Main Function for Farm Data and Price Calculation
 export const fetchFarmsPublicDataAsync = createAsyncThunk<
-  [SerializedFarm[], number],
+  [SerializedNftFarm[], number],
   number[],
   {
     state: AppState
@@ -60,10 +60,11 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
     const farmsWithPriceHelpers = farmsCanFetch.concat(priceHelperLpsConfig)
 
     const farms = await fetchFarms(farmsWithPriceHelpers)
+
     // const farmsWithPrices = getFarmsPrices(farms) TODO: Remove related file
     
     // Filter out price helper LP config farms
-    const farmsWithoutHelperLps = farms.filter((farm: SerializedFarm) => {   // farmsWithPrices --> farms
+    const farmsWithoutHelperLps = farms.filter((farm: SerializedNftFarm) => {   // farmsWithPrices --> farms
       return farm.pid || farm.pid === 0
     })
 
@@ -81,16 +82,16 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
   },
 )
 
-interface FarmUserDataResponse {
+interface NftFarmUserDataResponse {
   pid: number
-  allowance: string
+  allowance: bool
   tokenBalance: string
   stakedBalance: string
   earnings: string
 }
 
 export const fetchFarmUserDataAsync = createAsyncThunk<
-  FarmUserDataResponse[],
+  NftFarmUserDataResponse[],
   { account: string; pids: number[] },
   {
     state: AppState

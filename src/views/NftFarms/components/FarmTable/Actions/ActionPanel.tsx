@@ -1,7 +1,7 @@
 import styled, { keyframes, css } from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 import { LinkExternal, Text } from '@pancakeswap/uikit'
-import { FarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
+import { NftFarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
 import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import { getAddress } from 'utils/addressHelpers'
 import { getPolygonScanLink } from 'utils'
@@ -17,7 +17,7 @@ export interface ActionPanelProps {
   apr: AprProps
   multiplier: MultiplierProps
   liquidity: LiquidityProps
-  details: FarmWithStakedValue
+  details: NftFarmWithStakedValue
   userDataReady: boolean
   expanded: boolean
 }
@@ -141,12 +141,11 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
 
   const { t } = useTranslation()
   const isActive = farm.multiplier !== '0X'
-  const { quoteToken, token, dual } = farm
+  const { dual } = farm
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
-  const liquidityUrlPathParts = getLiquidityUrlPathParts({
-    quoteTokenAddress: quoteToken.address,
-    tokenAddress: token.address,
-  })
+  
+  const apyModalLink = "https://app.coincollect.org"
+
   const lpAddress = getAddress(farm.lpAddresses)
   const bsc = getPolygonScanLink(lpAddress, 'address')
   const info = `/info/pool/${lpAddress}`
@@ -156,7 +155,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
       <InfoContainer>
         {isActive && (
           <StakeContainer>
-            <StyledLinkExternal href={`/add/${liquidityUrlPathParts}`}>
+            <StyledLinkExternal href={apyModalLink}>
               {t('Get %symbol%', { symbol: lpLabel })}
             </StyledLinkExternal>
           </StakeContainer>
@@ -166,7 +165,6 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
         {/* <StyledLinkExternal href={info}>{t('See Pair Info')}</StyledLinkExternal> */}
         
         <TagsContainer>
-          {farm.isCommunity ? <FarmAuctionTag /> : <CoreTag />}
           {dual ? <DualTag /> : null}
         </TagsContainer>
       </InfoContainer>

@@ -13,6 +13,8 @@ import {
   TranslatableText,
   DeserializedFarmConfig,
   FetchStatus,
+  SerializedNftFarmConfig,
+  DeserializedNftFarmConfig,
 } from 'config/constants/types'
 import { NftToken, State as NftMarketState } from './nftMarket/types'
 
@@ -59,6 +61,45 @@ export interface DeserializedFarm extends DeserializedFarmConfig {
   tokenPriceVsQuote?: BigNumber
   poolWeight?: BigNumber
   userData?: DeserializedFarmUserData
+}
+
+// Types for NFT Stake
+interface SerializedNftFarmUserData {
+  allowance: boolean
+  tokenBalance: string
+  stakedBalance: string
+  earnings: string
+}
+// Types for NFT Stake
+export interface DeserializedNftFarmUserData {
+  allowance: boolean
+  tokenBalance: BigNumber
+  stakedBalance: BigNumber
+  earnings: BigNumber
+}
+// Types for NFT Stake
+export interface SerializedNftFarm extends SerializedNftFarmConfig {
+  tokenPriceBusd?: string
+  quoteTokenPriceBusd?: string
+  tokenAmountTotal?: SerializedBigNumber
+  lpTotalInQuoteToken?: SerializedBigNumber
+  lpTotalSupply?: SerializedBigNumber
+  totalStaked?: SerializedBigNumber
+  tokenPriceVsQuote?: SerializedBigNumber
+  poolWeight?: SerializedBigNumber
+  userData?: SerializedNftFarmUserData
+}
+// Types for NFT Stake
+export interface DeserializedNftFarm extends DeserializedNftFarmConfig {
+  tokenPriceBusd?: string
+  quoteTokenPriceBusd?: string
+  tokenAmountTotal?: BigNumber
+  lpTotalInQuoteToken?: BigNumber
+  lpTotalSupply?: BigNumber
+  totalStaked?: BigNumber
+  tokenPriceVsQuote?: BigNumber
+  poolWeight?: BigNumber
+  userData?: DeserializedNftFarmUserData
 }
 
 export enum VaultKey {
@@ -133,6 +174,22 @@ export interface SerializedFarmsState {
 
 export interface DeserializedFarmsState {
   data: DeserializedFarm[]
+  loadArchivedFarmsData: boolean
+  userDataLoaded: boolean
+  poolLength?: number
+}
+
+// State types for Nft Stake
+export interface SerializedNftFarmsState {
+  data: SerializedNftFarm[]
+  loadArchivedFarmsData: boolean
+  userDataLoaded: boolean
+  loadingKeys: Record<string, boolean>
+  poolLength?: number
+}
+// State types for Nft Stake
+export interface DeserializedNftFarmsState {
+  data: DeserializedNftFarm[]
   loadArchivedFarmsData: boolean
   userDataLoaded: boolean
   poolLength?: number
@@ -527,7 +584,7 @@ export interface UserRound {
 
 export interface State {
   farms: SerializedFarmsState
-  nftFarms: SerializedFarmsState
+  nftFarms: SerializedNftFarmsState
   pools: PoolsState
   predictions: PredictionsState
   lottery: LotteryState
