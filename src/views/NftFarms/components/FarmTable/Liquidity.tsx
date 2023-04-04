@@ -2,6 +2,8 @@ import styled from 'styled-components'
 import { HelpIcon, Text, Skeleton, useTooltip } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import BigNumber from 'bignumber.js'
+import Balance from 'components/Balance'
+import { getBalanceNumber } from 'utils/formatBalance'
 
 const ReferenceElement = styled.div`
   display: inline-block;
@@ -12,7 +14,7 @@ export interface LiquidityProps {
 }
 
 const LiquidityWrapper = styled.div`
-  min-width: 110px;
+  min-width: 48px;
   font-weight: 600;
   text-align: right;
   margin-right: 14px;
@@ -31,13 +33,13 @@ const Container = styled.div`
 const Liquidity: React.FunctionComponent<LiquidityProps> = ({ liquidity }) => {
   const displayLiquidity =
     liquidity && liquidity.gt(0) ? (
-      `$${Number(liquidity).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+      <Balance small value={getBalanceNumber(liquidity, 18)} decimals={0} />
     ) : (
       <Skeleton width={60} />
     )
   const { t } = useTranslation()
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
-    t('Total value of the funds in this farm’s liquidity pool'),
+    t('Total amount of NFT staked in this pool'),
     { placement: 'top-end', tooltipOffset: [20, 10] },
   )
 

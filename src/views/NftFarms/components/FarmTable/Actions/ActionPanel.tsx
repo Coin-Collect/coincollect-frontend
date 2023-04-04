@@ -178,7 +178,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
           <Multiplier {...multiplier} />
         </ValueWrapper>
         <ValueWrapper>
-          <Text>{t('Liquidity')}</Text>
+          <Text>{t('Total Staked')}</Text>
           <Liquidity {...liquidity} />
         </ValueWrapper>
       </ValueContainer>
