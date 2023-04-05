@@ -84,7 +84,7 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
 
 interface NftFarmUserDataResponse {
   pid: number
-  allowance: bool
+  allowance: boolean
   tokenBalance: string
   stakedBalance: string
   earnings: string

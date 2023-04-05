@@ -16,7 +16,7 @@ export const fetchFarmUserAllowances = async (account: string, farmsToFetch: Ser
   })
   const rawNftAllowances = await multicallPolygonv1<boolean[]>(erc721ABI, calls)
   const parsedNftAllowances = rawNftAllowances.map((approved) => {
-    return approved
+    return approved?.[0]
   })
   return parsedNftAllowances
 }
