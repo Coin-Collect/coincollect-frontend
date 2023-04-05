@@ -38,6 +38,7 @@ import {
   getCoinCollectAutoPoolVaultContract,
   getCoinCollectContract,
   getCoinCollectFarmContract,
+  getCoinCollectNftStakeContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress, getMulticallPolygonAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
@@ -156,6 +157,12 @@ export const useCoinCollectPool = () => {
 export const useCoinCollectFarm = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getCoinCollectFarmContract(library.getSigner()), [library])
+}
+
+// Nft Farm Version Masterchef
+export const useCoinCollectNftStake = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectNftStakeContract(library.getSigner()), [library])
 }
 
 export const useSousChef = (id) => {

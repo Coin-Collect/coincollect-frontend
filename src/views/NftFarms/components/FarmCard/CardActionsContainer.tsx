@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { useTranslation } from 'contexts/Localization'
-import { useERC20 } from 'hooks/useContract'
+import { useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useCallback } from 'react'
@@ -12,7 +12,7 @@ import { fetchFarmUserDataAsync } from 'state/nftFarms'
 import { DeserializedNftFarm } from 'state/types'
 import styled from 'styled-components'
 import { getAddress } from 'utils/addressHelpers'
-import useApproveFarm from '../../hooks/useApproveFarm'
+import useApproveNftFarm from '../../hooks/useApproveFarm'
 import HarvestAction from './HarvestAction'
 import StakeAction from './StakeAction'
 
@@ -35,15 +35,15 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
-  const { pid, lpAddresses } = farm
+  const { pid, nftAddresses } = farm
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
-  const lpAddress = getAddress(lpAddresses)
+  const nftAddress = getAddress(nftAddresses)
   const isApproved = account && allowance
   const dispatch = useAppDispatch()
 
-  const lpContract = useERC20(lpAddress)
+  const nftContract = useErc721CollectionContract(nftAddress)
 
-  const { onApprove } = useApproveFarm(lpContract)
+  const { onApprove } = useApproveNftFarm(nftContract)
 
   const handleApprove = useCallback(async () => {
     const receipt = await fetchWithCatchTxError(() => {
