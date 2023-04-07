@@ -7,6 +7,7 @@ import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { useTranslation } from 'contexts/Localization'
 import { getFullDisplayBalance, formatNumber } from 'utils/formatBalance'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
+import { RoundedImage } from 'views/Nft/market/Collection/IndividualNFTPage/shared/styles'
 
 const AnnualRoiContainer = styled(Flex)`
   cursor: pointer;
@@ -18,6 +19,10 @@ const AnnualRoiDisplay = styled(Text)`
   overflow: hidden;
   text-align: right;
   text-overflow: ellipsis;
+`
+
+const SelectedNft = styled(RoundedImage)`
+  box-shadow:0px 0px 5px 1px azure;
 `
 
 interface DepositModalProps {
@@ -52,6 +57,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const [val, setVal] = useState('')
   const [pendingTx, setPendingTx] = useState(false)
   const [showRoiCalculator, setShowRoiCalculator] = useState(false)
+  const [selectedNftList, setSelectedNftList] = useState<number[]>([])
   const { t } = useTranslation()
   const fullBalance = useMemo(() => {
     return getFullDisplayBalance(max)
@@ -81,6 +87,25 @@ const DepositModal: React.FC<DepositModalProps> = ({
     [setVal],
   )
 
+  const nftList = [
+                    {"id":1, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/450.png"},
+                    {"id":2, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/451.png"},
+                    {"id":3, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/452.png"},
+                    {"id":4, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/453.png"},
+                    {"id":5, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/454.png"},
+                    {"id":6, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/455.png"},
+                    {"id":7, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/456.png"},
+                    {"id":8, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/457.png"},
+                    
+                  ].map((nft)=>selectedNftList.includes(nft.id) ? <SelectedNft onClick={()=>handleSelectNft(nft.id)} src={nft.image} height={90} width={68} m="8px" /> :
+                                                                  <RoundedImage onClick={()=>handleSelectNft(nft.id)} src={nft.image} height={90} width={68} m="8px" />)
+
+  const handleSelectNft = useCallback((id:number) => {
+     const newSelectedNftList = selectedNftList.includes(id) ? selectedNftList.filter(i => i !== id) : [...selectedNftList, id];
+     setSelectedNftList(newSelectedNftList)
+  }, [selectedNftList, setSelectedNftList])
+  
+
   const handleSelectMax = useCallback(() => {
     setVal(fullBalance)
   }, [fullBalance, setVal])
@@ -105,35 +130,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }
 
   return (
-    <Modal title={t('Stake LP tokens')} onDismiss={onDismiss}>
-      <ModalInput
-        value={val}
-        onSelectMax={handleSelectMax}
-        onChange={handleChange}
-        max={fullBalance}
-        symbol={tokenName}
-        addLiquidityUrl={addLiquidityUrl}
-        inputTitle={t('Stake')}
-      />
-      <Flex mt="24px" alignItems="center" justifyContent="space-between">
-        <Text mr="8px" color="textSubtle">
-          {t('Annual ROI at current rates')}:
-        </Text>
-        {Number.isFinite(annualRoiAsNumber) ? (
-          <AnnualRoiContainer
-            alignItems="center"
-            onClick={() => {
-              setShowRoiCalculator(true)
-            }}
-          >
-            <AnnualRoiDisplay>${formattedAnnualRoi}</AnnualRoiDisplay>
-            <IconButton variant="text" scale="sm">
-              <CalculateIcon color="textSubtle" width="18px" />
-            </IconButton>
-          </AnnualRoiContainer>
-        ) : (
-          <Skeleton width={60} />
-        )}
+    <Modal title={t('Stake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
+     
+      <Flex flexWrap="wrap" justifyContent= "space-evenly">
+        {(nftList)}
       </Flex>
       <ModalActions>
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
