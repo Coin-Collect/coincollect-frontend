@@ -122,6 +122,7 @@ import type {
   PointCenterIfo,
   CoinCollectFarm,
   CoinCollectNftStake,
+  CoinCollectNft,
 } from 'config/abi/types'
 import { CoinCollectAutoPoolVault } from 'config/abi/types/CoinCollectAutoPoolVault'
 
@@ -152,7 +153,7 @@ export const getIfoV2Contract = (address: string, signer?: Signer | Provider) =>
   return getContract(ifoV2Abi, address, signer) as IfoV2
 }
 export const getCoinCollectNFTContract = (address: string, signer?: Signer | Provider) => {
-  return getContract(coinCollectNftAbi, address, signer) as IfoV2
+  return getContract(coinCollectNftAbi, address, signer) as CoinCollectNft
 }
 export const getSouschefContract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)
