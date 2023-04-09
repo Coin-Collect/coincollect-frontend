@@ -78,9 +78,9 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     }
   }
 
-  const handleUnstake = async (amount: string) => {
+  const handleUnstake = async (tokenIds: number[]) => {
     const receipt = await fetchWithCatchTxError(() => {
-      return onUnstake(amount)
+      return onUnstake(tokenIds)
     })
     if (receipt?.status) {
       toastSuccess(
@@ -121,7 +121,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     />,
   )
   const [onPresentWithdraw] = useModal(
-    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} />,
+    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} pid={pid} />,
   )
   const lpContract = useERC20(lpAddress)
   const dispatch = useAppDispatch()

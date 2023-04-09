@@ -75,9 +75,9 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
     }
   }
 
-  const handleUnstake = async (amount: string) => {
+  const handleUnstake = async (tokenIds: number[]) => {
     const receipt = await fetchWithCatchTxError(() => {
-      return onUnstake(amount)
+      return onUnstake(tokenIds)
     })
     if (receipt?.status) {
       toastSuccess(
@@ -118,7 +118,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
     />,
   )
   const [onPresentWithdraw] = useModal(
-    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={tokenName} />,
+    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={tokenName} pid={pid} />,
   )
 
   const renderStakingButtons = () => {

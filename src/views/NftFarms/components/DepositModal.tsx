@@ -83,14 +83,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const annualRoiAsNumber = annualRoi.toNumber()
   const formattedAnnualRoi = formatNumber(annualRoiAsNumber, annualRoi.gt(10000) ? 0 : 2, annualRoi.gt(10000) ? 0 : 2)
 
-  const handleChange = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
-      if (e.currentTarget.validity.valid) {
-        setVal(e.currentTarget.value.replace(/,/g, '.'))
-      }
-    },
-    [setVal],
-  )
 
   const {nfts, isLoading} = useNftsForCollectionAndAddress(pid)
 
@@ -104,9 +96,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }, [selectedNftList, setSelectedNftList])
   
 
-  const handleSelectMax = useCallback(() => {
-    setVal(fullBalance)
-  }, [fullBalance, setVal])
 
   if (showRoiCalculator) {
     return (
