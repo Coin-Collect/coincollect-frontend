@@ -60,15 +60,15 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
 
-  const handleStake = async (amount: string) => {
+  const handleStake = async (tokenIds: number[]) => {
     const receipt = await fetchWithCatchTxError(() => {
-      return onStake(amount)
+      return onStake(tokenIds)
     })
     if (receipt?.status) {
       toastSuccess(
         `${t('Staked')}!`,
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('Your funds have been staked in the farm')}
+          {t('Your tokens have been staked in the pool')}
         </ToastDescriptionWithTx>,
       )
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))

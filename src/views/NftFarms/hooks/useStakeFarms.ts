@@ -1,13 +1,13 @@
 import { useCallback } from 'react'
-import { stakeFarm } from 'utils/calls'
-import { useCoinCollectFarm } from 'hooks/useContract'
+import { stakeNftFarm } from 'utils/calls'
+import { useCoinCollectNftStake } from 'hooks/useContract'
 
 const useStakeFarms = (pid: number) => {
-  const masterChefContract = useCoinCollectFarm() //useMasterchef()
+  const masterChefContract = useCoinCollectNftStake() //useMasterchef()
 
   const handleStake = useCallback(
-    async (amount: string) => {
-      return stakeFarm(masterChefContract, pid, amount)
+    async (tokenIds: number[]) => {
+      return stakeNftFarm(masterChefContract, pid, tokenIds)
     },
     [masterChefContract, pid],
   )

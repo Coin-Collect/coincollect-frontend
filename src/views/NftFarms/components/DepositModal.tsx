@@ -34,7 +34,7 @@ interface DepositModalProps {
   multiplier?: string
   lpPrice: BigNumber
   lpLabel?: string
-  onConfirm: (amount: string) => void
+  onConfirm: (tokenIds: number[]) => void
   onDismiss?: () => void
   tokenName?: string
   apr?: number
@@ -158,11 +158,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
         <Button
           width="100%"
           disabled={
-            pendingTx || !lpTokensToStake.isFinite() || lpTokensToStake.eq(0) || lpTokensToStake.gt(fullBalanceNumber)
+            pendingTx || selectedNftList.length == 0
           }
           onClick={async () => {
             setPendingTx(true)
-            await onConfirm(val)
+            await onConfirm(selectedNftList)
             onDismiss?.()
             setPendingTx(false)
           }}
