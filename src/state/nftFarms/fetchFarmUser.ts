@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
-import erc20ABI from 'config/abi/erc20.json'
 import erc721ABI from 'config/abi/erc721collection.json'
 import masterchefABI from 'config/abi/masterchef.json'
+import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
 import coinCollectFarmABI from 'config/abi/coinCollectFarm.json'
 import { multicallPolygonv1 } from 'utils/multicall'
 import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
@@ -20,18 +20,19 @@ export const fetchFarmUserAllowances = async (account: string, farmsToFetch: Ser
   })
   return parsedNftAllowances
 }
-
+// Staked Nft Balance
 export const fetchFarmUserTokenBalances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
+  const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
+
   const calls = farmsToFetch.map((farm) => {
-    const lpContractAddress = getAddress(farm.lpAddresses)
     return {
-      address: lpContractAddress,
+      address: masterChefAddress,
       name: 'balanceOf',
-      params: [account],
+      params: [farm.pid, account],
     }
   })
 
-  const rawTokenBalances = await multicallPolygonv1(erc20ABI, calls)
+  const rawTokenBalances = await multicallPolygonv1(coinCollectNftStakeABI, calls)
   const parsedTokenBalances = rawTokenBalances.map((tokenBalance) => {
     return new BigNumber(tokenBalance).toJSON()
   })

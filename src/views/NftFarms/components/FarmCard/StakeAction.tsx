@@ -90,16 +90,6 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
     }
   }
 
-  const displayBalance = useCallback(() => {
-    const stakedBalanceBigNumber = getBalanceAmount(stakedBalance)
-    if (stakedBalanceBigNumber.gt(0) && stakedBalanceBigNumber.lt(0.0000001)) {
-      return '<0.0000001'
-    }
-    if (stakedBalanceBigNumber.gt(0)) {
-      return stakedBalanceBigNumber.toFixed(8, BigNumber.ROUND_DOWN)
-    }
-    return stakedBalanceBigNumber.toFixed(3, BigNumber.ROUND_DOWN)
-  }, [stakedBalance])
 
   const [onPresentDeposit] = useModal(
     <DepositModal
@@ -148,17 +138,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   return (
     <Flex justifyContent="space-between" alignItems="center">
       <Flex flexDirection="column" alignItems="flex-start">
-        <Heading color={stakedBalance.eq(0) ? 'textDisabled' : 'text'}>{displayBalance()}</Heading>
-        {stakedBalance.gt(0) && lpPrice.gt(0) && (
-          <Balance
-            fontSize="12px"
-            color="textSubtle"
-            decimals={2}
-            value={getBalanceNumber(lpPrice.times(stakedBalance))}
-            unit=" USD"
-            prefix="~"
-          />
-        )}
+        <Heading color={tokenBalance.eq(0) ? 'textDisabled' : 'text'}>{tokenBalance.toNumber()}</Heading>
       </Flex>
       {renderStakingButtons()}
     </Flex>

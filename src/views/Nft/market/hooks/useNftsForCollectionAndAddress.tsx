@@ -12,7 +12,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
     const [isLoading, setIsLoading] = useState(true)
     const [allNfts, setAllNfts] = useState<{tokenId: number; image: any;}[]>(null)
     
-    const nftPool = nftFarmsConfig.filter(({ pid }) => pid ==selectedPid )[0]
+    const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
     const collectionAddress = getAddress(nftPool.nftAddresses)
     const collectionContract = useCoinCollectNFTContract(collectionAddress)
 
@@ -22,7 +22,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             try {
               const tokenIds = await collectionContract.walletOfOwner(account)
 
-              const tokenIdsNumber = await  Promise.all(tokenIds.map(async (id) => {
+              const tokenIdsNumber = await Promise.all(tokenIds.map(async (id) => {
 
                 //@ts-ignore
                 const tokenURI = await collectionContract.tokenURI(id.toNumber())

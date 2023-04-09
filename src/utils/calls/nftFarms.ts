@@ -15,14 +15,10 @@ export const stakeNftFarm = async (masterChefContract, pid, tokenIds) => {
 export const unstakeNftFarm = async (masterChefContract, pid, tokenIds) => {
   const gasPrice = getGasPrice()
   const gasLimit = 340000 * tokenIds.length // Increase for each token
-  return masterChefContract.unStakeAll(pid, tokenIds, { gasLimit, gasPrice })
+  return masterChefContract.unstakeAll(pid, tokenIds, { gasLimit, gasPrice })
 }
 
 export const harvestNftFarm = async (masterChefContract, pid) => {
   const gasPrice = getGasPrice()
-  if (pid === 0) {
-    return masterChefContract.leaveStaking('0', { ...options, gasPrice })
-  }
-
-  return masterChefContract.deposit(pid, '0', { ...options, gasPrice })
+  return masterChefContract.harvest(pid, { ...options, gasPrice })
 }

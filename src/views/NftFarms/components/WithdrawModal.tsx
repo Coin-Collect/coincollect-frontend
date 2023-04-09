@@ -23,7 +23,6 @@ interface WithdrawModalProps {
 }
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max, tokenName = '', pid }) => {
-  const [val, setVal] = useState('')
   const [pendingTx, setPendingTx] = useState(false)
   const [selectedNftList, setSelectedNftList] = useState<number[]>([])
   const { t } = useTranslation()
