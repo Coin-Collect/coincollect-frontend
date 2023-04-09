@@ -49,7 +49,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
 
 
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
-  const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT + Fees')
+  const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT')
 
   const apyModalLink = "https://app.coincollect.org"
   const lpAddress = getAddress(farm.lpAddresses)

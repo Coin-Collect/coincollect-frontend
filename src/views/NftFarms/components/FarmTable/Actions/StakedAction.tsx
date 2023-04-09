@@ -117,6 +117,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       multiplier={multiplier}
       addLiquidityUrl={apyModalLink}
       cakePrice={cakePrice}
+      pid={pid}
     />,
   )
   const [onPresentWithdraw] = useModal(
@@ -211,7 +212,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
             variant="secondary"
             disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
           >
-            {t('Stake LP')}
+            {t('Stake NFT')}
           </Button>
         </ActionContent>
       </ActionContainer>

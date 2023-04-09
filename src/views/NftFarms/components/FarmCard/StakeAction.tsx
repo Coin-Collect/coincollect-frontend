@@ -114,6 +114,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
       displayApr={displayApr}
       addLiquidityUrl={addLiquidityUrl}
       cakePrice={cakePrice}
+      pid={pid}
     />,
   )
   const [onPresentWithdraw] = useModal(
@@ -126,7 +127,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
         onClick={onPresentDeposit}
         disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
       >
-        {t('Stake LP')}
+        {t('Stake NFT')}
       </Button>
     ) : (
       <IconButtonWrapper>

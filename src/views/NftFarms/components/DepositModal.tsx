@@ -8,6 +8,9 @@ import { useTranslation } from 'contexts/Localization'
 import { getFullDisplayBalance, formatNumber } from 'utils/formatBalance'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
 import { RoundedImage } from 'views/Nft/market/Collection/IndividualNFTPage/shared/styles'
+import { useNftsForCollectionAndAddress } from 'views/Nft/market/hooks/useNftsForCollectionAndAddress'
+import CircleLoader from 'components/Loader/CircleLoader'
+import NoNftsImage from 'views/Nft/market/components/Activity/NoNftsImage'
 
 const AnnualRoiContainer = styled(Flex)`
   cursor: pointer;
@@ -38,6 +41,7 @@ interface DepositModalProps {
   displayApr?: string
   addLiquidityUrl?: string
   cakePrice?: BigNumber
+  pid?: number
 }
 
 const DepositModal: React.FC<DepositModalProps> = ({
@@ -53,6 +57,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   apr,
   addLiquidityUrl,
   cakePrice,
+  pid,
 }) => {
   const [val, setVal] = useState('')
   const [pendingTx, setPendingTx] = useState(false)
@@ -87,18 +92,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
     [setVal],
   )
 
-  const nftList = [
-                    {"id":1, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/450.png"},
-                    {"id":2, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/451.png"},
-                    {"id":3, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/452.png"},
-                    {"id":4, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/453.png"},
-                    {"id":5, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/454.png"},
-                    {"id":6, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/455.png"},
-                    {"id":7, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/456.png"},
-                    {"id":8, "name":"Goal Nft 1", "image":"https://ipfs.io/ipfs/QmbmhwszW3dAST7vkeVS7KwtPDZtfHuhVxvnts5n44oyYs/457.png"},
-                    
-                  ].map((nft)=>selectedNftList.includes(nft.id) ? <SelectedNft onClick={()=>handleSelectNft(nft.id)} src={nft.image} height={90} width={68} m="8px" /> :
-                                                                  <RoundedImage onClick={()=>handleSelectNft(nft.id)} src={nft.image} height={90} width={68} m="8px" />)
+  const {nfts, isLoading} = useNftsForCollectionAndAddress(pid)
+
+
+  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNft onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
+                                                                  <RoundedImage onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
 
   const handleSelectNft = useCallback((id:number) => {
      const newSelectedNftList = selectedNftList.includes(id) ? selectedNftList.filter(i => i !== id) : [...selectedNftList, id];
@@ -131,10 +129,28 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   return (
     <Modal title={t('Stake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
+
+      {nftList.length === 0 && !isLoading ? (
+          <Flex p="24px" flexDirection="column" alignItems="center">
+          <NoNftsImage />
+          <Text pt="8px" bold>
+            {t('No NFTs found')}
+          </Text>
+        </Flex>
+      ) :
+      nftList.length > 0 ? (
+        <Flex flexWrap="wrap" justifyContent= "space-evenly">
+          { nftList }
+        </Flex>
+      ) : (
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <CircleLoader size='30px' />
+        </Flex>
+      )
      
-      <Flex flexWrap="wrap" justifyContent= "space-evenly">
-        {(nftList)}
-      </Flex>
+      }
+     
+      
       <ModalActions>
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
           {t('Cancel')}
