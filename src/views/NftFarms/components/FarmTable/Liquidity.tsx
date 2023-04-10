@@ -32,7 +32,7 @@ const Container = styled.div`
 
 const Liquidity: React.FunctionComponent<LiquidityProps> = ({ liquidity }) => {
   const displayLiquidity =
-    liquidity && liquidity.gt(0) ? (
+    liquidity ? (
       <Balance small value={getBalanceNumber(liquidity, 18)} decimals={0} />
     ) : (
       <Skeleton width={60} />
