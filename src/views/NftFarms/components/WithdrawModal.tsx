@@ -10,8 +10,13 @@ import CircleLoader from 'components/Loader/CircleLoader'
 import styled from 'styled-components'
 import { useStakedNfts } from 'views/Nft/market/hooks/useStakedNfts'
 
-const SelectedNft = styled(RoundedImage)`
-  box-shadow:0px 0px 5px 1px azure;
+const NftBox = styled(RoundedImage)`
+    border-radius: 6px;
+`
+
+const SelectedNftBox = styled(RoundedImage)`
+    border-radius: 6px;
+    box-shadow: 0 0 10px 4px #e91e63;
 `
 
 interface WithdrawModalProps {
@@ -32,8 +37,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
 
   const {nfts, isLoading} = useStakedNfts(pid)
 
-  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNft key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
-                                                                          <RoundedImage key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
+  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
+                                                                          <NftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
 
   const handleSelectNft = useCallback((id:number) => {
     const newSelectedNftList = selectedNftList.includes(id) ? selectedNftList.filter(i => i !== id) : [...selectedNftList, id];
