@@ -11,7 +11,7 @@ import useIntersectionObserver from 'hooks/useIntersectionObserver'
 import { DeserializedNftFarm } from 'state/types'
 import { useTranslation } from 'contexts/Localization'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { getFarmApr } from 'utils/apr'
+import { getNftFarmApr } from 'utils/apr'
 import orderBy from 'lodash/orderBy'
 import isArchivedPid from 'utils/farmHelpers'
 import { latinise } from 'utils/latinise'
@@ -165,7 +165,7 @@ const Farms: React.FC = ({ children }) => {
         }
         const totalLiquidity = farm.totalStaked
         const { cakeRewardsApr, lpRewardsApr } = isActive
-          ? getFarmApr(new BigNumber(farm.poolWeight), cakePrice, totalLiquidity, farm.lpAddresses[ChainId.POLYGON])
+          ? getNftFarmApr(new BigNumber(farm.poolWeight), cakePrice, totalLiquidity, farm.lpAddresses[ChainId.POLYGON])
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
       })
