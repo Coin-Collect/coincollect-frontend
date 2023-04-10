@@ -32,8 +32,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
 
   const {nfts, isLoading} = useStakedNfts(pid)
 
-  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNft onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
-                                                                          <RoundedImage onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
+  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNft key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
+                                                                          <RoundedImage key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
 
   const handleSelectNft = useCallback((id:number) => {
     const newSelectedNftList = selectedNftList.includes(id) ? selectedNftList.filter(i => i !== id) : [...selectedNftList, id];
