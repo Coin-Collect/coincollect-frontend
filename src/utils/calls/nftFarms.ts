@@ -8,7 +8,7 @@ const options = {
 
 export const stakeNftFarm = async (masterChefContract, pid, tokenIds) => {
   const gasPrice = getGasPrice()
-  const gasLimit = 350000 * tokenIds.length // Increase for each token
+  const gasLimit = 360000 * tokenIds.length // Increase for each token
   return masterChefContract.stakeAll(pid, tokenIds, { gasLimit, gasPrice })
 }
 
