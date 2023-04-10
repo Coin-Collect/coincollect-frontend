@@ -61,7 +61,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
 
   const lpAddress = getAddress(lpAddresses)
   
-  const apyModalLink = "https://app.coincollect.org"
+  const apyModalLink = "/nfts/collections"
 
   const handleStake = async (tokenIds: number[]) => {
     const receipt = await fetchWithCatchTxError(() => {

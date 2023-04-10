@@ -51,7 +51,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
   const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT')
 
-  const apyModalLink = "https://app.coincollect.org"
+  const apyModalLink = "/nfts/collections"
   const lpAddress = getAddress(farm.lpAddresses)
   const nftAddress = getAddress(farm.nftAddresses)
   const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix

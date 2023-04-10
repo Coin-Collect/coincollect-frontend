@@ -144,7 +144,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   const { dual } = farm
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
   
-  const apyModalLink = "https://app.coincollect.org"
+  const apyModalLink = "/nfts/collections"
 
   const lpAddress = getAddress(farm.lpAddresses)
   const bsc = getPolygonScanLink(lpAddress, 'address')
