@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
-import { BLOCKS_PER_YEAR, COLLECT_PER_YEAR_FARM } from 'config'
+import { BLOCKS_PER_YEAR, COLLECT_PER_YEAR_FARM, COLLECT_PER_YEAR_NFTFARM } from 'config'
 import lpAprs from 'config/constants/lpAprs.json'
+import { getBalanceNumber } from './formatBalance'
 
 /**
  * Get the APR value in %
@@ -56,18 +57,21 @@ export const getFarmApr = (
  */
  export const getNftFarmApr = (
   poolWeight: BigNumber,
-  cakePriceUsd: BigNumber,
-  poolLiquidityUsd: BigNumber,
-  farmAddress: string,
+  tokenBalance: BigNumber,
+  totalLiquidity: BigNumber,
 ): { cakeRewardsApr: number; lpRewardsApr: number } => {
-  const yearlyCakeRewardAllocation = poolWeight ? poolWeight.times(COLLECT_PER_YEAR_FARM) : new BigNumber(NaN)
-  const cakeRewardsApr = yearlyCakeRewardAllocation.times(cakePriceUsd).div(poolLiquidityUsd).times(100)
+  
+  const liquidity = getBalanceNumber(totalLiquidity, 18)
+
+  const yearlyCakeRewardAllocation = poolWeight ? poolWeight.times(COLLECT_PER_YEAR_NFTFARM) : new BigNumber(NaN)
+  const cakeRewardsApr = yearlyCakeRewardAllocation.div(liquidity)
+
   let cakeRewardsAprAsNumber = null
   if (!cakeRewardsApr.isNaN() && cakeRewardsApr.isFinite()) {
     cakeRewardsAprAsNumber = cakeRewardsApr.toNumber()
   }
-  const lpRewardsApr =  0
-  return { cakeRewardsApr: cakeRewardsAprAsNumber, lpRewardsApr }
+
+  return { cakeRewardsApr: cakeRewardsAprAsNumber / 365, lpRewardsApr: 0 }
 }
 
 export default null

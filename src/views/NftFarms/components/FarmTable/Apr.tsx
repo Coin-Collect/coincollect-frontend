@@ -55,31 +55,17 @@ const Apr: React.FC<AprProps> = ({
   const liquidityUrlPathParts = getLiquidityUrlPathParts({ quoteTokenAddress, tokenAddress })
   const addLiquidityUrl = `${BASE_ADD_LIQUIDITY_URL}/${liquidityUrlPathParts}`
 
-  return originalValue !== 0 ? (
+  return (
     <Container>
       {originalValue ? (
-        <ApyButton
-          variant={hideButton ? 'text' : 'text-and-button'}
-          pid={pid}
-          lpSymbol={lpSymbol}
-          lpLabel={lpLabel}
-          multiplier={multiplier}
-          cakePrice={cakePrice}
-          apr={originalValue}
-          displayApr={value}
-          addLiquidityUrl={addLiquidityUrl}
-        />
+        value
       ) : (
         <AprWrapper>
           <Skeleton width={60} />
         </AprWrapper>
       )}
     </Container>
-  ) : (
-    <Container>
-      <AprWrapper>{originalValue}%</AprWrapper>
-    </Container>
-  )
+  ) 
 }
 
 export default Apr

@@ -114,7 +114,7 @@ const Row: React.FunctionComponent<RowPropsWithLoading> = (props) => {
                 return (
                   <td key={key}>
                     <CellInner>
-                      <CellLayout label={t('APR')}>
+                      <CellLayout label={t('Daily Reward')}>
                         <Apr {...props.apr} hideButton={isSmallerScreen} />
                       </CellLayout>
                     </CellInner>
@@ -153,7 +153,7 @@ const Row: React.FunctionComponent<RowPropsWithLoading> = (props) => {
               </CellLayout>
             </EarnedMobileCell>
             <AprMobileCell>
-              <CellLayout label={t('APR')}>
+              <CellLayout label={t('Daily Reward')}>
                 <Apr {...props.apr} hideButton />
               </CellLayout>
             </AprMobileCell>

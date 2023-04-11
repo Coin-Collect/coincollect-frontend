@@ -66,20 +66,10 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         />
         {!removed && (
           <Flex justifyContent="space-between" alignItems="center">
-            <Text>{t('APR')}:</Text>
+            <Text>{t('Daily Reward')}:</Text>
             <Text bold style={{ display: 'flex', alignItems: 'center' }}>
               {farm.apr ? (
-                <ApyButton
-                  variant="text-and-button"
-                  pid={farm.pid}
-                  lpSymbol={farm.lpSymbol}
-                  multiplier={farm.multiplier}
-                  lpLabel={lpLabel}
-                  addLiquidityUrl={apyModalLink}
-                  cakePrice={cakePrice}
-                  apr={farm.apr}
-                  displayApr={displayApr}
-                />
+                displayApr
               ) : (
                 <Skeleton height={24} width={80} />
               )}

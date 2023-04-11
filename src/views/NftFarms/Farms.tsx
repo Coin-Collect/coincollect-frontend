@@ -104,10 +104,7 @@ const StyledImage = styled(Image)`
 `
 const NUMBER_OF_FARMS_VISIBLE = 12
 
-export const getDisplayApr = (cakeRewardsApr?: number, lpRewardsApr?: number) => {
-  if (cakeRewardsApr && lpRewardsApr) {
-    return (cakeRewardsApr + lpRewardsApr).toLocaleString('en-US', { maximumFractionDigits: 2 })
-  }
+export const getDisplayApr = (cakeRewardsApr?: number) => {
   if (cakeRewardsApr) {
     return cakeRewardsApr.toLocaleString('en-US', { maximumFractionDigits: 2 })
   }
@@ -165,7 +162,7 @@ const Farms: React.FC = ({ children }) => {
         }
         const totalLiquidity = farm.totalStaked
         const { cakeRewardsApr, lpRewardsApr } = isActive
-          ? getNftFarmApr(new BigNumber(farm.poolWeight), cakePrice, totalLiquidity, farm.lpAddresses[ChainId.POLYGON])
+          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.userData.tokenBalance, totalLiquidity)
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
       })
