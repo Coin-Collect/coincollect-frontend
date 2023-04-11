@@ -145,10 +145,8 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
   
   const apyModalLink = "/nfts/collections"
-
-  const lpAddress = getAddress(farm.lpAddresses)
-  const bsc = getPolygonScanLink(lpAddress, 'address')
-  const info = `/info/pool/${lpAddress}`
+  const nftAddress = getAddress(farm.nftAddresses)
+  const bsc = getPolygonScanLink(nftAddress, 'address')
 
   return (
     <Container expanded={expanded}>

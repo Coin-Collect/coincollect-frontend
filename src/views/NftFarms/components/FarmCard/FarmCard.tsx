@@ -97,7 +97,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         {showExpandableSection && (
           <DetailsSection
             removed={removed}
-            bscScanAddress={getPolygonScanLink(lpAddress, 'address')}
+            bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
             infoAddress={`/info/pool/${lpAddress}`}
             totalStaked={farm.liquidity}
             lpLabel={lpLabel}
