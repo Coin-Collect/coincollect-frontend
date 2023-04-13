@@ -51,7 +51,7 @@ export const useStakedNfts = (selectedPid: number) => {
                 let meta = null;
                 try {
                   meta = await axios(tokenURI)
-                  return {tokenId: id, image: meta.data.image.replace("ipfs:", IPFS_GATEWAY)}
+                  return {tokenId: id, image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
                 } catch (error) {
                   console.log('IPFS link is broken!', error);
                   return {tokenId: id, image: 'images/nfts/no-profile-md.png'}
