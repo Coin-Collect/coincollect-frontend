@@ -123,7 +123,7 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
           {t('How does the IFO credit calculated?')}
         </TooltipText>
       </Box>
-      {hasProfile && (
+      {false && (
         <SmallStakePoolCard borderRadius="default" p="16px">
           <FlexGap justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="16px">
             <Flex>
