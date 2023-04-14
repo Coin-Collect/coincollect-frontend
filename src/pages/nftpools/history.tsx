@@ -16,7 +16,7 @@ const FarmsHistoryPage = () => {
         <FarmCard
           key={farm.pid}
           farm={farm}
-          displayApr={getDisplayApr(farm.apr, farm.lpRewardsApr)}
+          displayApr={getDisplayApr(farm.apr)}
           cakePrice={cakePrice}
           account={account}
           removed

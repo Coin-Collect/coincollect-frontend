@@ -14,13 +14,13 @@ const FarmTabButtons: React.FC<FarmTabButtonsProps> = ({ hasStakeInFinishedFarms
 
   let activeIndex
   switch (router.pathname) {
-    case '/farms':
+    case '/nftpools':
       activeIndex = 0
       break
-    case '/farms/history':
+    case '/nftpools/history':
       activeIndex = 1
       break
-    case '/farms/archived':
+    case '/nftpools/archived':
       activeIndex = 2
       break
     default:
@@ -31,11 +31,11 @@ const FarmTabButtons: React.FC<FarmTabButtonsProps> = ({ hasStakeInFinishedFarms
   return (
     <Wrapper>
       <ButtonMenu activeIndex={activeIndex} scale="sm" variant="subtle">
-        <ButtonMenuItem as={NextLinkFromReactRouter} to="/farms">
+        <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools">
           {t('Live')}
         </ButtonMenuItem>
         <NotificationDot show={hasStakeInFinishedFarms}>
-          <ButtonMenuItem as={NextLinkFromReactRouter} to="/farms/history" id="finished-farms-button">
+          <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools/history" id="finished-farms-button">
             {t('Finished')}
           </ButtonMenuItem>
         </NotificationDot>
