@@ -57,7 +57,7 @@ const Grid = styled.div`
   }
 `
 
-const emissionsPerBlock = 1.85
+const emissionsPerBlock = 2.36
 const collectPoolAddress = getCoinCollectPoolAddress()
 
 const CakeDataRow = () => {

@@ -114,6 +114,7 @@ export const BLOCKED_ADDRESSES: string[] = [
 ]
 
 export { default as farmsConfig } from './farms'
+export { default as nftFarmsConfig } from './nftFarms'
 export { default as poolsConfig } from './pools'
 export { default as ifosConfig } from './ifo'
 export { default as mintingConfig } from './minting'

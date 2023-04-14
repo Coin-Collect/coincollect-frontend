@@ -13,7 +13,6 @@ import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import erc721Abi from 'config/abi/erc721.json'
 import { attachMarketDataToWalletNfts, combineNftMarketAndMetadata, getNftsMarketData } from 'state/nftMarket/helpers'
 import { API_NFT } from 'config/constants/endpoints'
-import { useCoinCollectNFTContract } from 'hooks/useContract'
 import { getCoinCollectNFTContract } from 'utils/contractHelpers'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import axios from 'axios'
@@ -157,24 +156,43 @@ export const getNftsFromDifferentCollectionsApi = async (
 
     const contract = getCoinCollectNFTContract(token.collectionAddress, simplePolygonRpcProvider)
 
-    //@ts-ignore
-    const tokenURI = await contract.tokenURI(token.tokenId)
-    const meta = await axios(tokenURI)
-    
-    let item = {
-      tokenId: token.tokenId,
-      name: meta.data.name,
+    let meta = null;
+    try {
       //@ts-ignore
-      collectionName: token.symbol,
-      collectionAddress: token.collectionAddress,
-      description: meta.data.description,
-      attributes: meta.data.attributes,
-      image: {
-        original: meta.data.image.replace("ipfs:", IPFS_GATEWAY),
-        thumbnail: meta.data.image.replace("ipfs:", IPFS_GATEWAY),
+      const tokenURI = await contract.tokenURI(token.tokenId)
+      meta = await axios.get(tokenURI)
+      return {
+        tokenId: token.tokenId,
+        name: meta.data.name,
+        //@ts-ignore
+        collectionName: token.symbol,
+        collectionAddress: token.collectionAddress,
+        description: meta.data.description,
+        attributes: meta.data.attributes,
+        image: {
+          original: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`),
+          thumbnail: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`),
+        }
       }
-    }
-    return item
+   } catch (error) {
+      console.log('IPFS link is broken!', error);
+      return {
+        tokenId: token.tokenId,
+        name: "Name data cannot be fetched",
+        //@ts-ignore
+        collectionName: token.symbol,
+        collectionAddress: token.collectionAddress,
+        description: "Description data cannot be fetched",
+        attributes: "Attribute data cannot be fetched",
+        image: {
+          original: 'images/nfts/no-profile-md.png',
+          thumbnail: 'images/nfts/no-profile-md.png',
+        }
+      }
+   }
+
+
+
   }))
   
   return items
