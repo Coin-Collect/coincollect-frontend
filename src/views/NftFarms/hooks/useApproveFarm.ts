@@ -8,7 +8,7 @@ const useApproveNftFarm = (nftContract: Contract) => {
   const masterChefContract = useCoinCollectNftStake() //useMasterchef()
   const { callWithGasPrice } = useCallWithGasPrice()
   const handleApprove = useCallback(async () => {
-    return callWithGasPrice(nftContract, 'setApprovalForAll', [masterChefContract.address, MaxUint256])
+    return callWithGasPrice(nftContract, 'setApprovalForAll', [masterChefContract.address, true])
   }, [nftContract, masterChefContract, callWithGasPrice])
 
   return { onApprove: handleApprove }
