@@ -156,12 +156,10 @@ export const getNftsFromDifferentCollectionsApi = async (
 
     const contract = getCoinCollectNFTContract(token.collectionAddress, simplePolygonRpcProvider)
 
-    //@ts-ignore
-    const tokenURI = await contract.tokenURI(token.tokenId)
-    
     let meta = null;
-    
     try {
+      //@ts-ignore
+      const tokenURI = await contract.tokenURI(token.tokenId)
       meta = await axios.get(tokenURI)
       return {
         tokenId: token.tokenId,
