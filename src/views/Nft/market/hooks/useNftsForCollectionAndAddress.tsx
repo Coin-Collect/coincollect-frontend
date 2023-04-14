@@ -24,11 +24,10 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
 
               const tokenIdsNumber = await Promise.all(tokenIds.map(async (id) => {
 
-                //@ts-ignore
-                const tokenURI = await collectionContract.tokenURI(id.toNumber())
-
                 let meta = null;
                 try {
+                  //@ts-ignore
+                  const tokenURI = await collectionContract.tokenURI(id.toNumber())
                   meta = await axios.get(tokenURI)
                   return {tokenId: id.toNumber(), image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
                 } catch (error) {
@@ -37,9 +36,11 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
                 }
                 
               }))
-              
+              console.log("promise done")
               setAllNfts(tokenIdsNumber)
             } catch (error) {
+              console.log("promise error")
+              console.log(error)
               setAllNfts(null)
             } finally {
               setIsLoading(false)
@@ -50,7 +51,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             getNfts()
         }
       
-    }, [allNfts])
+    }, [])
     
     
 

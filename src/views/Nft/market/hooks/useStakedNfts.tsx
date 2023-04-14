@@ -45,11 +45,10 @@ export const useStakedNfts = (selectedPid: number) => {
               
               const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (id) => {
                 
-                //@ts-ignore
-                const tokenURI = await collectionContract.tokenURI(id)
-                
                 let meta = null;
                 try {
+                  //@ts-ignore
+                  const tokenURI = await collectionContract.tokenURI(id)
                   meta = await axios(tokenURI)
                   return {tokenId: id, image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
                 } catch (error) {
@@ -72,7 +71,7 @@ export const useStakedNfts = (selectedPid: number) => {
             getNfts()
         }
       
-    }, [allNfts])
+    }, [])
     
     
 
