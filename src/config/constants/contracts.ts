@@ -15,7 +15,7 @@ export default {
   },
   // Only NFT Pool Version Masterchef
   coinCollectNftStake: {
-    137: '0x981930c422c9df6C2b056d62c8e638376596B8C6', // TODO: fill
+    137: '0x5aE558bc57e13642CCC3c664DE75aa718193017B',
     80001: '0xc56ccD0d132f4eFC8FC76E802B7Bcd5284CEEB43', // CHANGE_ADDRESS:CoinCollectNftStake (test)
   },
   sousChef: {
