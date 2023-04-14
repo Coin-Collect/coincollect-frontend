@@ -29,7 +29,7 @@ export enum GAS_PRICE {
   default = '250',
   fast = '350',
   instant = '450',
-  testnet = '10',
+  testnet = '250',
 }
 
 export const GAS_PRICE_GWEI = {
