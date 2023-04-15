@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 import {
   Modal,
@@ -39,6 +39,7 @@ import { vaultPoolConfig } from 'config/constants/pools'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import { convertCakeToShares, convertSharesToCake } from '../../helpers'
 import FeeSummary from './FeeSummary'
+import { useCheckVaultApprovalStatus, useVaultApprove } from 'views/Pools/hooks/useApprove'
 
 interface VaultStakeModalProps {
   pool: DeserializedPool
@@ -79,7 +80,7 @@ const CreditEndNotice = () => {
   )
 }
 
-const VaultStakeModal: React.FC<VaultStakeModalProps> = ({
+const VaultStakeModal: React.FC<React.PropsWithChildren<VaultStakeModalProps>> = ({
   pool,
   stakingMax,
   performanceFee,
@@ -92,10 +93,12 @@ const VaultStakeModal: React.FC<VaultStakeModalProps> = ({
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
   const vaultPoolContract = useVaultPoolContract(pool.vaultKey)
   const { callWithGasPrice } = useCallWithGasPrice()
+
   const {
     userData: { lastDepositedTime, userShares },
     pricePerFullShare,
   } = useVaultPoolByKey(pool.vaultKey)
+
   const { t } = useTranslation()
   const { theme } = useTheme()
   const { toastSuccess } = useToast()
@@ -106,7 +109,17 @@ const VaultStakeModal: React.FC<VaultStakeModalProps> = ({
   const cakePriceBusd = usePriceCakeBusd()
   const usdValueStaked = new BigNumber(stakeAmount).times(cakePriceBusd)
   const formattedUsdValueStaked = cakePriceBusd.gt(0) && stakeAmount ? formatNumber(usdValueStaked.toNumber()) : ''
+  const { allowance, setLastUpdated } = useCheckVaultApprovalStatus(vaultKey)
+  const { handleApprove: handleCakeApprove, pendingTx: cakePendingTx } = useVaultApprove(vaultKey, setLastUpdated)
 
+  const needEnable = useMemo(() => {
+    if (!isRemovingStake) {
+      const amount = getDecimalAmount(new BigNumber(stakeAmount))
+      return amount.gt(allowance)
+    }
+    return false
+  }, [allowance, stakeAmount, isRemovingStake])
+  
   const callOptions = {
     gasLimit: vaultPoolConfig[pool.vaultKey].gasLimit,
   }
@@ -244,10 +257,16 @@ const VaultStakeModal: React.FC<VaultStakeModalProps> = ({
       </Flex>
       <BalanceInput
         value={stakeAmount}
+        isWarning={needEnable}
         onUserInput={handleStakeInputChange}
         currencyValue={cakePriceBusd.gt(0) && `~${formattedUsdValueStaked || 0} USD`}
         decimals={stakingToken.decimals}
       />
+      {needEnable && (
+        <Text color="failure" textAlign="right" fontSize="12px" mt="8px">
+          {t('Insufficient token allowance. Click "Enable" to approve.')}
+        </Text>
+      )}
       <Text mt="8px" ml="auto" color="textSubtle" fontSize="12px" mb="8px">
         {t('Balance: %balance%', { balance: getFullDisplayBalance(stakingMax, stakingToken.decimals) })}
       </Text>
@@ -299,15 +318,26 @@ const VaultStakeModal: React.FC<VaultStakeModalProps> = ({
           )}
         </Flex>
       )}
-      <Button
-        isLoading={pendingTx}
-        endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
-        onClick={handleConfirmClick}
-        disabled={!stakeAmount || parseFloat(stakeAmount) === 0}
-        mt="24px"
-      >
-        {pendingTx ? t('Confirming') : t('Confirm')}
-      </Button>
+      {needEnable ? (
+        <Button
+          isLoading={cakePendingTx}
+          endIcon={cakePendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+          onClick={handleCakeApprove}
+          mt="24px"
+        >
+          {t('Enable')}
+        </Button>
+      ) : (
+        <Button
+          isLoading={pendingTx}
+          endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+          onClick={handleConfirmClick}
+          disabled={!stakeAmount || parseFloat(stakeAmount) === 0}
+          mt="24px"
+        >
+          {pendingTx ? t('Confirming') : t('Confirm')}
+        </Button>
+      )}
       {!isRemovingStake && (
         <Button mt="8px" as="a" external href={getTokenLink} variant="secondary">
           {t('Get %symbol%', { symbol: stakingToken.symbol })}

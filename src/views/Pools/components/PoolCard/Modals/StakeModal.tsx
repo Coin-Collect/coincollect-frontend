@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 import {
@@ -24,12 +24,16 @@ import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { getFullDisplayBalance, formatNumber, getDecimalAmount } from 'utils/formatBalance'
 import { DeserializedPool } from 'state/types'
-import { updateUserBalance, updateUserPendingReward, updateUserStakedBalance } from 'state/pools'
+import { updateUserAllowance, updateUserBalance, updateUserPendingReward, updateUserStakedBalance } from 'state/pools'
 import { useAppDispatch } from 'state'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
 import PercentageButton from './PercentageButton'
+import { useApprovePool } from 'views/Pools/hooks/useApprove'
+import { usePool } from 'state/pools/hooks'
+
 import useStakePool from '../../../hooks/useStakePool'
 import useUnstakePool from '../../../hooks/useUnstakePool'
+import { useERC20 } from 'hooks/useContract'
 
 interface StakeModalProps {
   isBnbPool: boolean
@@ -65,6 +69,7 @@ const StakeModal: React.FC<StakeModalProps> = ({
   onDismiss,
 }) => {
   const { sousId, stakingToken, earningTokenPrice, apr, userData, stakingLimit, earningToken } = pool
+  const { pool: singlePool } = usePool(sousId)
   const { account } = useWeb3React()
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
@@ -114,6 +119,14 @@ const StakeModal: React.FC<StakeModalProps> = ({
     setHasReachedStakedLimit,
     fullDecimalStakeAmount,
   ])
+
+  const stakingTokenContract = useERC20(stakingToken.address || '')
+  const { handleApprove, pendingTx: enablePendingTx } = useApprovePool(
+    stakingTokenContract,
+    sousId,
+    earningToken.symbol,
+  )
+
 
   const handleStakeInputChange = (input: string) => {
     if (input) {
@@ -169,6 +182,19 @@ const StakeModal: React.FC<StakeModalProps> = ({
       dispatch(updateUserBalance(sousId, account))
       onDismiss?.()
     }
+  }
+
+  const needEnable = useMemo(() => {
+    if (!isRemovingStake && !pendingTx) {
+      const amount = getDecimalAmount(new BigNumber(stakeAmount))
+      return amount.gt(singlePool.userData.allowance)
+    }
+    return false
+  }, [singlePool, stakeAmount, pendingTx, isRemovingStake])
+
+  const handleEnableApprove = async () => {
+    await handleApprove()
+    dispatch(updateUserAllowance(sousId, account))
   }
 
   if (showRoiCalculator) {
@@ -234,6 +260,11 @@ const StakeModal: React.FC<StakeModalProps> = ({
           })}
         </Text>
       )}
+      {needEnable && (
+        <Text color="failure" textAlign="right" fontSize="12px" mt="8px">
+          {t('Insufficient token allowance. Click "Enable" to approve.')}
+        </Text>
+      )}
       <Text ml="auto" color="textSubtle" fontSize="12px" mb="8px">
         {t('Balance: %balance%', {
           balance: getFullDisplayBalance(getCalculatedStakingLimit(), stakingToken.decimals),
@@ -285,15 +316,26 @@ const StakeModal: React.FC<StakeModalProps> = ({
           </Text>
         </Flex>
       )}
-      <Button
-        isLoading={pendingTx}
-        endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
-        onClick={handleConfirmClick}
-        disabled={!stakeAmount || parseFloat(stakeAmount) === 0 || hasReachedStakeLimit || userNotEnoughToken}
-        mt="24px"
-      >
+      {needEnable ? (
+        <Button
+          isLoading={enablePendingTx}
+          endIcon={enablePendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+          onClick={handleEnableApprove}
+          mt="24px"
+        >
+          {t("Enable")}
+        </Button>
+      ) : (
+        <Button
+          isLoading={pendingTx}
+          endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+          onClick={handleConfirmClick}
+          disabled={!stakeAmount || parseFloat(stakeAmount) === 0 || hasReachedStakeLimit || userNotEnoughToken}
+          mt="24px"
+        >
         {pendingTx ? t('Confirming') : t('Confirm')}
       </Button>
+      )}
       {!isRemovingStake && (
         <StyledLink external href={getTokenLink}>
           <Button width="100%" mt="8px" variant="secondary">
