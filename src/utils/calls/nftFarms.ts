@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { DEFAULT_GAS_LIMIT, DEFAULT_TOKEN_DECIMAL } from 'config'
 import getGasPrice from 'utils/getGasPrice'
+import { callWithEstimateGas } from 'utils/calls'
 
 const options = {
   gasLimit: DEFAULT_GAS_LIMIT,
@@ -8,14 +9,16 @@ const options = {
 
 export const stakeNftFarm = async (masterChefContract, pid, tokenIds) => {
   const gasPrice = getGasPrice()
-  const gasLimit = 360000 * tokenIds.length // Increase for each token
-  return masterChefContract.stakeAll(pid, tokenIds, { gasLimit, gasPrice })
+  return callWithEstimateGas(masterChefContract, 'stakeAll', [pid, tokenIds], {
+    gasPrice,
+  })
 }
 
 export const unstakeNftFarm = async (masterChefContract, pid, tokenIds) => {
   const gasPrice = getGasPrice()
-  const gasLimit = 350000 * tokenIds.length // Increase for each token
-  return masterChefContract.unstakeAll(pid, tokenIds, { gasLimit, gasPrice })
+  return callWithEstimateGas(masterChefContract, 'unstakeAll', [pid, tokenIds], {
+    gasPrice,
+  })
 }
 
 export const harvestNftFarm = async (masterChefContract, pid) => {
