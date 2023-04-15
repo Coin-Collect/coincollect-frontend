@@ -18,6 +18,7 @@ export const useStakedNfts = (selectedPid: number) => {
     const { tokenBalance } = useFarmUser(selectedPid)
     const [isLoading, setIsLoading] = useState(true)
     const [allNfts, setAllNfts] = useState<{tokenId: number; image: any;}[]>(null)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const nftStakeContractAddress = getCoinCollectNftStakeAddress()
     
     const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
@@ -61,6 +62,7 @@ export const useStakedNfts = (selectedPid: number) => {
               
               setAllNfts(tokenIdsNumber)
             } catch (error) {
+              setErrorMessage("Network error!")
               setAllNfts(null)
             } finally {
               setIsLoading(false)
@@ -75,6 +77,6 @@ export const useStakedNfts = (selectedPid: number) => {
     
     
 
-    return { nfts: allNfts ?? [], isLoading }
+    return { nfts: allNfts ?? [], isLoading, errorMessage }
 }
 

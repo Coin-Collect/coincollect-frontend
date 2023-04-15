@@ -4,7 +4,6 @@ import FarmCard from 'views/NftFarms/components/FarmCard/FarmCard'
 import { getDisplayApr } from 'views/NftFarms/Farms'
 import { usePriceCakeBusd } from 'state/nftFarms/hooks'
 import { useWeb3React } from '@web3-react/core'
-import { GetStaticProps } from 'next/types'
 
 const FarmsPage = () => {
   const { account } = useWeb3React()
@@ -17,7 +16,7 @@ const FarmsPage = () => {
         <FarmCard
           key={farm.pid}
           farm={farm}
-          displayApr={getDisplayApr(farm.apr, farm.lpRewardsApr)}
+          displayApr={getDisplayApr(farm.apr)}
           cakePrice={cakePrice}
           account={account}
           removed={false}

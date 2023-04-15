@@ -11,10 +11,12 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
     const { account } = useWeb3React()
     const [isLoading, setIsLoading] = useState(true)
     const [allNfts, setAllNfts] = useState<{tokenId: number; image: any;}[]>(null)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
     
     const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
     const collectionAddress = getAddress(nftPool.nftAddresses)
     const collectionContract = useCoinCollectNFTContract(collectionAddress)
+
 
     useEffect(() => {
      
@@ -41,6 +43,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             } catch (error) {
               console.log("promise error")
               console.log(error)
+              setErrorMessage("Network error!")
               setAllNfts(null)
             } finally {
               setIsLoading(false)
@@ -55,6 +58,6 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
     
     
 
-    return { nfts: allNfts ?? [], isLoading }
+    return { nfts: allNfts ?? [], isLoading, errorMessage }
 }
 
