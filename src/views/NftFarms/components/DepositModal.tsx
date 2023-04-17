@@ -88,7 +88,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const annualRoiAsNumber = annualRoi.toNumber()
   const formattedAnnualRoi = formatNumber(annualRoiAsNumber, annualRoi.gt(10000) ? 0 : 2, annualRoi.gt(10000) ? 0 : 2)
 
-  const {nfts, isLoading, errorMessage} = useNftsForCollectionAndAddress(pid)
+  const {nfts, isLoading, error} = useNftsForCollectionAndAddress(pid)
 
 
   const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
@@ -123,7 +123,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   return (
     <Modal title={t('Stake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
 
-    {nftList.length === 0 && !isLoading && !errorMessage ? (
+    {nftList.length === 0 && !isLoading && !error ? (
       <Flex p="24px" flexDirection="column" alignItems="center">
         <NoNftsImage />
         <Text pt="8px" bold>
@@ -134,13 +134,13 @@ const DepositModal: React.FC<DepositModalProps> = ({
       <Flex flexWrap="wrap" justifyContent="space-evenly">
         {nftList}
       </Flex>
-    ) : errorMessage ? (
+    ) : error ? (
       <Flex p="24px" flexDirection="column" alignItems="center">
         <Button variant="light" onClick={onDismiss} width="100%">
           {t('Retry')}
         </Button>
         <Text pt="8px" bold>
-          {t('%errorMessage%', { errorMessage })}
+          {t('Network error!')}
         </Text>
       </Flex>
     ) : (

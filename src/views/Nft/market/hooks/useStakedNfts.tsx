@@ -10,26 +10,25 @@ import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
 import BigNumber from 'bignumber.js'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { getAddress } from 'utils/addressHelpers'
+import useSWR from 'swr'
+import { isAddress } from 'utils'
+import { FetchStatus } from 'config/constants/types'
 import { useCoinCollectNFTContract } from 'hooks/useContract'
 
 
 export const useStakedNfts = (selectedPid: number) => {
     const { account } = useWeb3React()
     const { tokenBalance } = useFarmUser(selectedPid)
-    const [isLoading, setIsLoading] = useState(true)
-    const [allNfts, setAllNfts] = useState<{tokenId: number; image: any;}[]>(null)
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const nftStakeContractAddress = getCoinCollectNftStakeAddress()
     
     const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
     const collectionAddress = getAddress(nftPool.nftAddresses)
     const collectionContract = useCoinCollectNFTContract(collectionAddress)
 
-    useEffect(() => {
+    
      
         const getNfts = async () => {
 
-            try {
               const calls = range(tokenBalance.toNumber()).map((i) => {
                 return {
                   address: nftStakeContractAddress,
@@ -59,24 +58,11 @@ export const useStakedNfts = (selectedPid: number) => {
 
               }))
 
-              
-              setAllNfts(tokenIdsNumber)
-            } catch (error) {
-              setErrorMessage("Network error!")
-              setAllNfts(null)
-            } finally {
-              setIsLoading(false)
-            }
+              return tokenIdsNumber
         }
 
-        if(!allNfts) {
-            getNfts()
-        }
-      
-    }, [])
-    
-    
+        const { data, status, error } = useSWR(isAddress(account) ? [account, selectedPid, 'stakedNftList'] : null, async () => getNfts())
 
-    return { nfts: allNfts ?? [], isLoading, errorMessage }
+        return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, error }
 }
 
