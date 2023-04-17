@@ -29,6 +29,9 @@ interface FarmCardActionsProps {
   addLiquidityUrl?: string
   cakePrice?: BigNumber
   lpLabel?: string
+  allowance?: BigNumber
+  enablePendingTx?: boolean
+  handleApprove?: () => void
 }
 
 const IconButtonWrapper = styled.div`
@@ -49,6 +52,9 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   addLiquidityUrl,
   cakePrice,
   lpLabel,
+  allowance,
+  enablePendingTx,
+  handleApprove,
 }) => {
   const { t } = useTranslation()
   const { onStake } = useStakeFarms(pid)
@@ -114,6 +120,10 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
       displayApr={displayApr}
       addLiquidityUrl={addLiquidityUrl}
       cakePrice={cakePrice}
+      decimals={18}
+      allowance={allowance}
+      enablePendingTx={enablePendingTx}
+      handleApprove={handleApprove}
     />,
   )
   const [onPresentWithdraw] = useModal(

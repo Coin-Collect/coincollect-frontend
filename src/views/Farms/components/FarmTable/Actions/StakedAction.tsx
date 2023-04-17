@@ -109,24 +109,6 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     return stakedBalanceBigNumber.toFixed(3, BigNumber.ROUND_DOWN)
   }, [stakedBalance])
 
-  const [onPresentDeposit] = useModal(
-    <DepositModal
-      max={tokenBalance}
-      lpPrice={lpPrice}
-      lpLabel={lpLabel}
-      apr={apr}
-      displayApr={displayApr}
-      stakedBalance={stakedBalance}
-      onConfirm={handleStake}
-      tokenName={lpSymbol}
-      multiplier={multiplier}
-      addLiquidityUrl={addLiquidityUrl}
-      cakePrice={cakePrice}
-    />,
-  )
-  const [onPresentWithdraw] = useModal(
-    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} />,
-  )
   const lpContract = useERC20(lpAddress)
   const dispatch = useAppDispatch()
   const { onApprove } = useApproveFarm(lpContract)
@@ -140,6 +122,30 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
     }
   }, [onApprove, dispatch, account, pid, t, toastSuccess, fetchWithCatchTxError])
+
+  const [onPresentDeposit] = useModal(
+    <DepositModal
+      max={tokenBalance}
+      lpPrice={lpPrice}
+      lpLabel={lpLabel}
+      apr={apr}
+      displayApr={displayApr}
+      stakedBalance={stakedBalance}
+      onConfirm={handleStake}
+      tokenName={lpSymbol}
+      multiplier={multiplier}
+      addLiquidityUrl={addLiquidityUrl}
+      cakePrice={cakePrice}
+      decimals={18}
+      allowance={allowance}
+      enablePendingTx={pendingTx}
+      handleApprove={handleApprove}
+    />,
+  )
+  const [onPresentWithdraw] = useModal(
+    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} />,
+  )
+
 
   if (!account) {
     return (

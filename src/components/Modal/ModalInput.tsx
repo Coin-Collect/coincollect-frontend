@@ -14,6 +14,7 @@ interface ModalInputProps {
   addLiquidityUrl?: string
   inputTitle?: string
   decimals?: number
+  needEnable?: boolean
 }
 
 const getBoxShadow = ({ isWarning = false, theme }) => {
@@ -59,7 +60,7 @@ const StyledErrorMessage = styled(Text)`
   }
 `
 
-const ModalInput: React.FC<ModalInputProps> = ({
+const ModalInput: React.FC<React.PropsWithChildren<ModalInputProps>> = ({
   max,
   symbol,
   onChange,
@@ -68,6 +69,7 @@ const ModalInput: React.FC<ModalInputProps> = ({
   addLiquidityUrl,
   inputTitle,
   decimals = 18,
+  needEnable,
 }) => {
   const { t } = useTranslation()
   const isBalanceZero = max === '0' || !max
@@ -111,6 +113,11 @@ const ModalInput: React.FC<ModalInputProps> = ({
             {t('Get %symbol%', { symbol })}
           </Link>
         </StyledErrorMessage>
+      )}
+      {needEnable && (
+        <Text color="failure" fontSize="12px" mt="8px">
+          {t('Insufficient token allowance. Click "Enable" to approve.')}
+        </Text>
       )}
     </div>
   )

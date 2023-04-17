@@ -66,6 +66,9 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         lpLabel={lpLabel}
         cakePrice={cakePrice}
         addLiquidityUrl={addLiquidityUrl}
+        allowance={allowance}
+        enablePendingTx={pendingTx}
+        handleApprove={handleApprove}
       />
     ) : (
       <Button mt="8px" width="100%" disabled={pendingTx} onClick={handleApprove}>

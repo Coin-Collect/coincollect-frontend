@@ -1,12 +1,13 @@
 import BigNumber from 'bignumber.js'
 import { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { Flex, Text, Button, Modal, LinkExternal, CalculateIcon, IconButton, Skeleton } from '@pancakeswap/uikit'
+import { Flex, Text, Button, Modal, LinkExternal, CalculateIcon, IconButton, Skeleton, AutoRenewIcon } from '@pancakeswap/uikit'
 import { ModalActions, ModalInput } from 'components/Modal'
 import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { useTranslation } from 'contexts/Localization'
-import { getFullDisplayBalance, formatNumber } from 'utils/formatBalance'
+import { getFullDisplayBalance, formatNumber, getDecimalAmount } from 'utils/formatBalance'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
+
 
 const AnnualRoiContainer = styled(Flex)`
   cursor: pointer;
@@ -33,9 +34,13 @@ interface DepositModalProps {
   displayApr?: string
   addLiquidityUrl?: string
   cakePrice?: BigNumber
+  decimals: number;
+  allowance?: BigNumber
+  enablePendingTx?: boolean
+  handleApprove?: () => void
 }
 
-const DepositModal: React.FC<DepositModalProps> = ({
+const DepositModal: React.FC<React.PropsWithChildren<DepositModalProps>> = ({
   max,
   stakedBalance,
   onConfirm,
@@ -48,6 +53,10 @@ const DepositModal: React.FC<DepositModalProps> = ({
   apr,
   addLiquidityUrl,
   cakePrice,
+  decimals,
+  allowance,
+  enablePendingTx,
+  handleApprove,
 }) => {
   const [val, setVal] = useState('')
   const [pendingTx, setPendingTx] = useState(false)
@@ -56,6 +65,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const fullBalance = useMemo(() => {
     return getFullDisplayBalance(max)
   }, [max])
+
+  const needEnable = useMemo(() => {
+    if (allowance) {
+      const amount = getDecimalAmount(new BigNumber(val), decimals);
+      return amount.gt(allowance);
+    }
+    return false;
+  }, [allowance, decimals, val]);
 
   const lpTokensToStake = new BigNumber(val)
   const fullBalanceNumber = new BigNumber(fullBalance)
@@ -114,6 +131,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         symbol={tokenName}
         addLiquidityUrl={addLiquidityUrl}
         inputTitle={t('Stake')}
+        needEnable={needEnable}
       />
       <Flex mt="24px" alignItems="center" justifyContent="space-between">
         <Text mr="8px" color="textSubtle">
@@ -136,24 +154,37 @@ const DepositModal: React.FC<DepositModalProps> = ({
         )}
       </Flex>
       <ModalActions>
-        <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
-          {t('Cancel')}
-        </Button>
-        <Button
-          width="100%"
-          disabled={
-            pendingTx || !lpTokensToStake.isFinite() || lpTokensToStake.eq(0) || lpTokensToStake.gt(fullBalanceNumber)
-          }
-          onClick={async () => {
-            setPendingTx(true)
-            await onConfirm(val)
-            onDismiss?.()
-            setPendingTx(false)
-          }}
-        >
-          {pendingTx ? t('Confirming') : t('Confirm')}
-        </Button>
-      </ModalActions>
+          <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
+            {t("Cancel")}
+          </Button>
+          {needEnable ? (
+            <Button
+              width="100%"
+              isLoading={enablePendingTx}
+              endIcon={enablePendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+              onClick={handleApprove}
+            >
+              {t("Enable")}
+            </Button>
+          ) : pendingTx ? (
+            <Button width="100%" isLoading={pendingTx} endIcon={<AutoRenewIcon spin color="currentColor" />}>
+              {t("Confirming")}
+            </Button>
+          ) : (
+            <Button
+              width="100%"
+              disabled={!lpTokensToStake.isFinite() || lpTokensToStake.eq(0) || lpTokensToStake.gt(fullBalanceNumber)}
+              onClick={async () => {
+                setPendingTx(true);
+                await onConfirm(val);
+                onDismiss?.();
+                setPendingTx(false);
+              }}
+            >
+              {t("Confirm")}
+            </Button>
+          )}
+        </ModalActions>
       <LinkExternal href={addLiquidityUrl} style={{ alignSelf: 'center' }}>
         {t('Get %symbol%', { symbol: tokenName })}
       </LinkExternal>
