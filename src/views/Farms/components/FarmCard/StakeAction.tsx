@@ -125,6 +125,9 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
       enablePendingTx={enablePendingTx}
       handleApprove={handleApprove}
     />,
+    true,
+    true,
+    `farm-deposit-modal-${pid}`,
   )
   const [onPresentWithdraw] = useModal(
     <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={tokenName} />,

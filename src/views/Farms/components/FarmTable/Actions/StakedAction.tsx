@@ -141,6 +141,9 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       enablePendingTx={pendingTx}
       handleApprove={handleApprove}
     />,
+    true,
+    true,
+    `farm-deposit-modal-${pid}`,
   )
   const [onPresentWithdraw] = useModal(
     <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} />,
