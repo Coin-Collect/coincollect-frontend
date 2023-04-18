@@ -1,4 +1,5 @@
 import Metamask from "../../components/Svg/Icons/Metamask";
+import Okx from "../../components/Svg/Icons/Okx";
 import WalletConnect from "../../components/Svg/Icons/WalletConnect";
 import TrustWallet from "../../components/Svg/Icons/TrustWallet";
 import MathWallet from "../../components/Svg/Icons/MathWallet";
@@ -12,22 +13,28 @@ import { Config, ConnectorNames } from "./types";
 
 const connectors: Config[] = [
   {
+    title: "OKX Wallet",
+    icon: Okx,
+    connectorId: ConnectorNames.OKX,
+    priority: 1,
+  },
+  {
     title: "Metamask",
     icon: Metamask,
     connectorId: ConnectorNames.Injected,
-    priority: 1,
+    priority: 2,
   },
   {
     title: "WalletConnect",
     icon: WalletConnect,
     connectorId: ConnectorNames.WalletConnect,
-    priority: 2,
+    priority: 3,
   },
   {
     title: "Trust Wallet",
     icon: TrustWallet,
     connectorId: ConnectorNames.Injected,
-    priority: 3,
+    priority: 4,
   },
   {
     title: "MathWallet",
@@ -41,19 +48,13 @@ const connectors: Config[] = [
     connectorId: ConnectorNames.Injected,
     priority: 999,
   },
-
-  {
-    title: "Binance Chain",
-    icon: BinanceChain,
-    connectorId: ConnectorNames.BSC,
-    priority: 999,
-  },
   {
     title: "SafePal",
     icon: SafePal,
     connectorId: ConnectorNames.Injected,
     priority: 999,
   },
+  /*
   {
     title: "Coin98",
     icon: Coin98,
@@ -66,6 +67,7 @@ const connectors: Config[] = [
     connectorId: ConnectorNames.Blocto,
     priority: 999,
   },
+  */
 ];
 
 export default connectors;

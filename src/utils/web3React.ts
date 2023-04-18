@@ -8,6 +8,7 @@ import { toUtf8Bytes } from '@ethersproject/strings'
 import { Web3Provider } from '@ethersproject/providers'
 import { CHAIN_ID } from 'config/constants/networks'
 import getNodeUrl from './getRpcUrl'
+import { OkxConnector } from './CustomConnectors/okx-web3-connector'
 
 const POLLING_INTERVAL = 12000
 const rpcUrl = getNodeUrl()
@@ -23,6 +24,7 @@ const walletconnect = new WalletConnectConnector({
 })
 
 const bscConnector = new BscConnector({ supportedChainIds: [chainId] })
+const okxConnector = new OkxConnector({ supportedChainIds: [chainId] })
 
 //TODO: Fix type issue later
 // @ts-ignore
@@ -30,6 +32,7 @@ export const connectorsByName: { [connectorName in ConnectorNames]: any } = {
   [ConnectorNames.Injected]: injected,
   [ConnectorNames.WalletConnect]: walletconnect,
   [ConnectorNames.BSC]: bscConnector,
+  [ConnectorNames.OKX]: okxConnector,
 }
 
 export const getLibrary = (provider): Web3Provider => {

@@ -77,6 +77,7 @@ export { default as MedalPurpleIcon } from "./Icons/MedalPurple";
 export { default as MedalSilverIcon } from "./Icons/MedalSilver";
 export { default as MedalTealIcon } from "./Icons/MedalTeal";
 export { default as MetamaskIcon } from "./Icons/Metamask";
+export { default as OkxIcon } from "./Icons/Okx";
 export { default as MinusIcon } from "./Icons/Minus";
 export { default as MoonIcon } from "./Icons/Moon";
 export { default as MoreHorizontalIcon } from "./Icons/MoreHorizontal";
