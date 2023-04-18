@@ -29,7 +29,7 @@ const useAuth = () => {
       if (connector) {
         activate(connector, async (error: Error) => {
           if (error instanceof UnsupportedChainIdError) {
-            const hasSetup = await setupNetworkforPolygon()
+            const hasSetup = await setupNetworkforPolygon(connectorID)
             if (hasSetup) {
               activate(connector)
             }

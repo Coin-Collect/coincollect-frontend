@@ -43,8 +43,8 @@ export const setupNetwork = async () => {
  * Prompt the user to add Polygon as a network on Metamask, or switch to Polygon if the wallet is on a different network
  * @returns {boolean} true if the setup succeeded, false otherwise
  */
- export const setupNetworkforPolygon = async () => {
-  const provider = window.ethereum
+ export const setupNetworkforPolygon = async (connector) => {
+  const provider = connector == "okx" ? window.okxwallet : window.ethereum
   if (provider) {
     const chainId = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID, 10)
     try {
