@@ -21,6 +21,17 @@ const GasSettings = () => {
         />
       </Flex>
       <Flex flexWrap="wrap">
+      <Button
+          mt="4px"
+          mr="4px"
+          scale="sm"
+          onClick={() => {
+            setGasPrice(GAS_PRICE_GWEI.rpcDefault)
+          }}
+          variant={gasPrice === GAS_PRICE_GWEI.rpcDefault ? 'primary' : 'tertiary'}
+        >
+          {t('Default')}
+        </Button>
         <Button
           mt="4px"
           mr="4px"

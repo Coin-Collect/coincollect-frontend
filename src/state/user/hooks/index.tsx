@@ -3,7 +3,7 @@ import { differenceInDays } from 'date-fns'
 import flatMap from 'lodash/flatMap'
 import { useCallback, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { CHAIN_ID } from 'config/constants/networks'
+import useSWR from 'swr'
 import { BASES_TO_TRACK_LIQUIDITY_FOR, PINNED_PAIRS } from 'config/constants'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useAllTokens } from 'hooks/Tokens'
@@ -378,15 +378,39 @@ export function useRemoveUserAddedToken(): (chainId: number, address: string) =>
 }
 
 // Gas Settings
-export function useGasPrice(): string {
-  const chainId = CHAIN_ID
+export function useGasPrice(chainIdOverride?: number): string {
+  const { chainId: chainId_, library } = useActiveWeb3React()
+  const chainId = chainIdOverride ?? chainId_
+  
   const userGas = useSelector<AppState, AppState['user']['gasPrice']>((state) => state.user.gasPrice)
-  return chainId === ChainId.POLYGON.toString() ? userGas : GAS_PRICE_GWEI.testnet
+  const { data: polygonProviderGasPrice = GAS_PRICE_GWEI.default } = useSWR(
+    library &&
+      library.provider &&
+      chainId === ChainId.POLYGON &&
+      userGas === GAS_PRICE_GWEI.rpcDefault && ['polygonProviderGasPrice', library.provider],
+    async () => {
+      const gasPrice = await library.getGasPrice()
+      return gasPrice.toString()
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    },
+  )
+
+  
+  if (chainId === ChainId.POLYGON) {
+    return userGas === GAS_PRICE_GWEI.rpcDefault ? polygonProviderGasPrice : userGas
+  }
+  if (chainId === ChainId.MUMBAI) {
+    return GAS_PRICE_GWEI.testnet
+  }
+  return undefined
 }
 
 export function useGasPriceManager(): [string, (userGasPrice: string) => void] {
   const dispatch = useDispatch<AppDispatch>()
-  const userGasPrice = useGasPrice()
+  const userGasPrice = useSelector<AppState, AppState['user']['gasPrice']>((state) => state.user.gasPrice)
 
   const setGasPrice = useCallback(
     (gasPrice: string) => {
