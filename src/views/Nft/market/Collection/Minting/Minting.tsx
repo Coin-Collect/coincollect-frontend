@@ -36,6 +36,17 @@ import { mintingConfig } from 'config/constants'
 import MintingSteps from "./components/MintingSteps";
 import MintingQuestions from "./components/MintingQuestions";
 import MintingLayout, { MintingLayoutWrapper } from "./components/MintingLayout";
+import IfoPoolVaultCard from "views/Ifos/components/IfoPoolVaultCard";
+import { useContext } from 'react'
+import { FarmsPageLayout, FarmsContext } from 'views/NftFarms'
+import FarmCard from 'views/NftFarms/components/FarmCard/FarmCard'
+import { getDisplayApr } from 'views/NftFarms/Farms'
+import { useFarmFromLpSymbol, useFarmFromPid, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
+import useStakeFarms from "views/NftFarms/hooks/useStakeFarms";
+import { StyledCard } from "../../../../../../packages/uikit/src/components/Card/StyledCard";
+import FlexLayout from "components/Layout/Flex";
+import NftStakeCard from "./components/NftStakeCard";
+import PoolCard from "views/Pools/components/PoolCard";
 
 
 const BackLink = styled(NextLinkFromReactRouter)`
@@ -63,7 +74,13 @@ export default function Minting() {
   const { toastError } = useToast()
   const publicIfoData = useGetPublicIfoV2Data(activeIfo)
   const walletIfoData = useGetWalletIfoV3Data(activeIfo)
+  const { chosenFarmsMemoized } = useContext(FarmsContext)
+  const cakePrice = usePriceCakeBusd()
 
+  usePollFarmsWithUserData()
+  const lpSymbolFromCollectionName = name.replace('CoinCollect', '').trim()
+  const farm= useFarmFromLpSymbol(lpSymbolFromCollectionName)
+  
   return (
     <>
       <PageMeta />
@@ -97,6 +114,9 @@ export default function Minting() {
         <Container>
 
           <MintingLayoutWrapper>
+          
+          <NftStakeCard farm={farm} account={account} />
+          
             <MintingCurrentCard ifo={activeIfo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
           </MintingLayoutWrapper>
 
