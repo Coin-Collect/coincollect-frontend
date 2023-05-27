@@ -18,6 +18,10 @@ export default {
     137: '0x5aE558bc57e13642CCC3c664DE75aa718193017B',
     80001: '0xc56ccD0d132f4eFC8FC76E802B7Bcd5284CEEB43', // CHANGE_ADDRESS:CoinCollectNftStake (test)
   },
+  coinCollectClaimReward: {
+    137: '',
+    80001: '0xA4b38c5ABE21C1F6b3bFfdEbffefe69EfD7045B0', // CHANGE_ADDRESS:CoinCollectClaimReward (test)
+  },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',
     56: '0x6ab8463a4185b80905e05a9ff80a2d6b714b9e95',

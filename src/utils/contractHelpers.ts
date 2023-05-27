@@ -40,6 +40,7 @@ import {
   getCoinCollectAutoPoolVaultAddress,
   getCoinCollectFarmAddress,
   getCoinCollectNftStakeAddress,
+  getCoinCollectClaimRewardAddress,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -60,6 +61,7 @@ import masterChef from 'config/abi/masterchef.json'
 import coinCollectPool from 'config/abi/coinCollectPool.json'
 import coinCollectFarm from 'config/abi/coinCollectFarm.json'
 import coinCollectNftStake from 'config/abi/coinCollectNftStake.json'
+import coinCollectClaimReward from 'config/abi/coinCollectClaimReward.json'
 import sousChef from 'config/abi/sousChef.json'
 import sousChefV2 from 'config/abi/sousChefV2.json'
 import sousChefBnb from 'config/abi/sousChefBnb.json'
@@ -122,6 +124,7 @@ import type {
   PointCenterIfo,
   CoinCollectFarm,
   CoinCollectNftStake,
+  CoinCollectClaimReward,
   CoinCollectNft,
 } from 'config/abi/types'
 import { CoinCollectAutoPoolVault } from 'config/abi/types/CoinCollectAutoPoolVault'
@@ -204,6 +207,9 @@ export const getCoinCollectFarmContract = (signer?: Signer | Provider) => {
 // NFT Stake Version Masterchef
 export const getCoinCollectNftStakeContract = (signer?: Signer | Provider) => {
   return getContractForPolygon(coinCollectNftStake, getCoinCollectNftStakeAddress(), signer) as CoinCollectNftStake
+}
+export const getCoinCollectClaimRewardContract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectClaimReward, getCoinCollectClaimRewardAddress(), signer) as CoinCollectClaimReward
 }
 export const getClaimRefundContract = (signer?: Signer | Provider) => {
   return getContract(claimRefundAbi, getClaimRefundAddress(), signer) as ClaimRefund
