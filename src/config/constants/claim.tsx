@@ -11,6 +11,7 @@ const claims: any[] = [
     baseAmount: 50,
     isFinished: false,
   },
+  /*
   {
     name: 'Holder Party',
     description: <Trans>Rewards ready for top 100 Collect holders</Trans>,
@@ -29,6 +30,7 @@ const claims: any[] = [
     baseAmount: 15,
     isFinished: false,
   },
+  */
 ]
 
 
