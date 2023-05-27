@@ -40,15 +40,15 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
             <>
               {claimData.isLoading || claimData.data === undefined ? (
                 <Skeleton width="100%" height="52px" />
-              ) : (claimData.data[claimId].rewardBalance ?? 0) === 0 ? (
-                <Button disabled>{t('Insufficient Balance')}</Button>
-              ) : (claimData.data[claimId].weight ?? 0) === 0 ? (
-                <Button disabled>{t(`${claim.requiredToken} required!`)}</Button>
               ) : claim.isFinished ? (
                 <Button disabled>{t('Claim Closed')}</Button>
+              ) : (claimData.data[claimId].userWeight || 0) === 0 ? (
+                <Button disabled>{t(`${claim.requiredToken} required!`)}</Button>
+              ) : (claimData.data[claimId].rewardBalance ?? 0) === 0 ? (
+                <Button disabled>{t('Insufficient Balance')}</Button>
               ) : (
                 <Button isLoading={true} disabled={claim.isFinished}>
-                  {t(`Claim ${claim.baseAmount * (claimData.data[claimId].weight ?? 1)} ${claim.rewardToken}`)}
+                  {t(`Claim ${claim.baseAmount * (claimData.data[claimId].userWeight || 1)} ${claim.rewardToken}`)}
                 </Button>
               )}
             </>
