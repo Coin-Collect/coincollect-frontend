@@ -1,16 +1,11 @@
-import BigNumber from 'bignumber.js'
-
 import { CardBody, Flex, Text, CardRibbon, Image, Button, Skeleton } from '@pancakeswap/uikit'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { useTranslation } from 'contexts/Localization'
-import { BIG_ZERO } from 'utils/bigNumber'
-import { DeserializedPool } from 'state/types'
-import { TokenPairImage } from 'components/TokenImage'
-import AprRow from './AprRow'
 import { StyledCard } from './StyledCard'
 import ClaimCardHeader, { ClaimCardHeaderTitle } from './ClaimCardHeader'
-import CardActions from './CardActions'
 import styled from 'styled-components'
+import ClaimAction from './CardActions/ClaimAction'
+import { NotEligibleWarning } from '../NotEligibleWarning'
 
 export const RoundedImage = styled(Image)`
   border-radius: ${({ theme }) => theme.radii.default};
@@ -30,6 +25,8 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
       </ClaimCardHeader>
 
       <CardBody p={24} pt={10}>
+      {claimData.data !== undefined && (claimData.data[claimId].userWeight || 0) === 0 && (<NotEligibleWarning requiredToken={claim.requiredToken} nftCount={claimData.data[claimId].nftsToClaim[1].length
+ || 0} />)}
       <ClaimCardHeaderTitle
           title={claim.name}
           subTitle={claim.description}
@@ -47,18 +44,11 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
               ) : (claimData.data[claimId].rewardBalance ?? 0) === 0 ? (
                 <Button disabled>{t('Insufficient Balance')}</Button>
               ) : (
-                <Button isLoading={true} disabled={claim.isFinished}>
-                  {t(`Claim ${claim.baseAmount * (claimData.data[claimId].userWeight || 1)} ${claim.rewardToken}`)}
-                </Button>
+                <ClaimAction claimId={claimId} claim={claim} claimData={claimData} />
               )}
             </>
           ) : (
-            <>
-              <Text mb="10px" textTransform="uppercase" fontSize="12px" color="textSubtle" bold>
-                {t('Start earning')}
-              </Text>
               <ConnectWalletButton />
-            </>
           )}
         </Flex>
       </CardBody>

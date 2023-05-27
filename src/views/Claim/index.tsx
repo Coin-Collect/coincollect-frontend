@@ -37,15 +37,12 @@ const CardLayout = styled(FlexLayout)`
 const NUMBER_OF_POOLS_VISIBLE = 12
 
 const Pools: React.FC = () => {
-  const router = useRouter()
   const { t } = useTranslation()
   const { account } = useWeb3React()
   const { observerRef, isIntersecting } = useIntersectionObserver()
 
 
   const claimData  = useClaimInfo()
-  console.log("claimsData")
-  console.log(claimData)
 
   const cardLayout = (
     <CardLayout>

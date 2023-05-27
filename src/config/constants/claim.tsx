@@ -8,7 +8,7 @@ const claims: any[] = [
     imageLink: 'https://lotshare.netlify.app/images/artwork/07.jpg',
     rewardToken: 'Collect',
     requiredToken: 'Collect NFT', 
-    baseAmount: 10,
+    baseAmount: 50,
     isFinished: false,
   },
   {
