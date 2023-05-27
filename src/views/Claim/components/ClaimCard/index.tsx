@@ -6,6 +6,7 @@ import ClaimCardHeader, { ClaimCardHeaderTitle } from './ClaimCardHeader'
 import styled from 'styled-components'
 import ClaimAction from './CardActions/ClaimAction'
 import { NotEligibleWarning } from '../NotEligibleWarning'
+import CardFooter from './CardFooter'
 
 export const RoundedImage = styled(Image)`
   border-radius: ${({ theme }) => theme.radii.default};
@@ -52,6 +53,7 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
           )}
         </Flex>
       </CardBody>
+      <CardFooter claim={claim} account={account} />
     </StyledCard>
   )
 }
