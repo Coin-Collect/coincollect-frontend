@@ -67,17 +67,22 @@ const drawerLinks: MenuItemsType[] = [
         initialOpenState: false,
         items: [
             {
+                label: 'CoinMarketCap',
+                href: 'https://coinmarketcap.com/currencies/coincollect/',
+            },
+
+            {
                 label: 'OpenSea',
                 href: 'https://opensea.io/collection/coincollect-nfts',
             },
             {
-                label: 'NFTrade',
-                href: 'https://nftrade.com/assets/polygon/0x569b70fc565afba702d9e77e75fd3e3c78f57eed',
+                label: 'DappRadar',
+                href: 'https://dappradar.com/dapp/coincollect',
             },
             {
-                label: 'DappRadar',
-                href: 'https://dappradar.com/polygon/collectibles/coin-collect-nfts',
-            },
+                label: 'NFTrade',
+                href: 'https://nftrade.com/assets/polygon/0x569b70fc565afba702d9e77e75fd3e3c78f57eed',
+            }, 
             {
                 label: 'Docs & Guides',
                 href: 'https://docs.coincollect.org/',
