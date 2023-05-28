@@ -59,13 +59,10 @@ const Pools: React.FC = () => {
         <Flex justifyContent="space-between" flexDirection={['column', null, null, 'row']}>
           <Flex flex="1" flexDirection="column" mr={['8px', 0]}>
             <Heading as="h1" scale="xxl" color="secondary" mb="24px">
-              {t('Claim')}
+              {t('Claim Rewards')}
             </Heading>
-            <Heading scale="md" color="text">
-              {t('Join CoinCollect activities and')}
-            </Heading>
-            <Heading scale="md" color="text">
-              {t('Claim Your Rewards!')}
+            <Heading scale="md" color="text" mb="24px">
+              {t('As a CoinCollect NFT owner, unlock a cascade of curated airdrops, gifts, giveaways, and surprises.')}
             </Heading>
           </Flex>
           <Flex flex="1" height="fit-content" justifyContent="center" alignItems="center" mt={['24px', null, '0']}>

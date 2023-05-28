@@ -3,9 +3,9 @@ import Trans from 'components/Trans'
 
 const claims: any[] = [
   {
-    name: 'Collect Hunter',
-    description: <Trans>Big Adventure started</Trans>,
-    imageLink: 'https://lotshare.netlify.app/images/artwork/07.jpg',
+    name: '$COLLECT Rewards',
+    description: <Trans>CoinCollect NFT holders, your share of the reward pool awaits! Step into the realm of exclusive benefits and claim your deserving share. CoinCollect - where ownership translates into rewards!</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/claim/CoinCollectClaim.png',
     rewardToken: 'Collect',
     requiredToken: 'Collect NFT', 
     baseAmount: 50,

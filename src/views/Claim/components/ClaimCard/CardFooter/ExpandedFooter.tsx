@@ -62,18 +62,35 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
     targetRef: totalStakedTargetRef,
     tooltip: totalStakedTooltip,
     tooltipVisible: totalStakedTooltipVisible,
-  } = useTooltip(t('Total amount of %symbol% staked in this pool', { symbol: `Collect` }), {
+  } = useTooltip(t('this is the maximum number of NFTs that can be utilized to claim rewards.', { symbol: `Collect` }), {
     placement: 'bottom',
   })
 
   return (
     <ExpandedWrapper flexDirection="column">
       <Flex mb="2px" justifyContent="space-between" alignItems="center">
-        <Text small>{t('Total staked')}:</Text>
+        <Text small>{t('Reward per NFT')}:</Text>
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance small value={100} decimals={0} unit={`Collect`} />
+              <Balance small value={100} decimals={0} unit={` Collect`} />
+              <span ref={totalStakedTargetRef}>
+                <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
+              </span>
+            </>
+          ) : (
+            <Skeleton width="90px" height="21px" />
+          )}
+          {totalStakedTooltipVisible && totalStakedTooltip}
+        </Flex>
+      </Flex>
+
+      <Flex mb="2px" justifyContent="space-between" alignItems="center">
+        <Text small>{t('Total Reward Pool')}:</Text>
+        <Flex alignItems="flex-start">
+          {true ? (
+            <>
+              <Balance small value={100000} decimals={0} unit={` Collect`} />
               <span ref={totalStakedTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
@@ -86,12 +103,13 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
       </Flex>
 
 
+
       <Flex mb="2px" justifyContent="space-between" alignItems="center">
-        <Text small>{t('Balance')}:</Text>
+        <Text small>{t('Max NFT')}:</Text>
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance small value={100} decimals={0} unit={`Collect`} />
+              <Balance small value={5} decimals={0} unit={` NFT`} />
               <span ref={totalStakedTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>

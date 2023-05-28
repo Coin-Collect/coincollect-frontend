@@ -70,12 +70,29 @@ const ManualPoolTag: React.FC<TagProps> = (props) => {
     </Tag>
   )
 }
+const ManualPoolTag2: React.FC<TagProps> = (props) => {
+  const { t } = useTranslation()
+  return (
+    <Tag variant="secondary" outline startIcon={<RefreshIcon width="18px" color="secondary" mr="4px" />} {...props}>
+      {t('Static')}
+    </Tag>
+  )
+}
 
 const CompoundingPoolTag: React.FC<TagProps> = (props) => {
   const { t } = useTranslation()
   return (
     <Tag variant="success" outline startIcon={<AutoRenewIcon width="18px" color="success" mr="4px" />} {...props}>
       {t('Auto')}
+    </Tag>
+  )
+}
+
+const CompoundingPoolTag2: React.FC<TagProps> = (props) => {
+  const { t } = useTranslation()
+  return (
+    <Tag variant="success" outline startIcon={<AutoRenewIcon width="18px" color="success" mr="4px" />} {...props}>
+      {t('Dynamic')}
     </Tag>
   )
 }
@@ -112,7 +129,9 @@ export {
   FarmAuctionTag,
   DualTag,
   ManualPoolTag,
+  ManualPoolTag2,
   CompoundingPoolTag,
+  CompoundingPoolTag2,
   VoteNowTag,
   SoonTag,
   ClosedTag,

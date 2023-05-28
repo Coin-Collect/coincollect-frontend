@@ -34,7 +34,7 @@ const drawerLinks: MenuItemsType[] = [
                 href: '/nftpools',
             },
             {
-                label: 'Claim',
+                label: 'Claim Rewards',
                 href: '/claim',
             },
 

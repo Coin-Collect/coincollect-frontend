@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 import { Flex, CardFooter, ExpandableLabel, HelpIcon, useTooltip } from '@pancakeswap/uikit'
 import { DeserializedPool } from 'state/types'
-import { CompoundingPoolTag, ManualPoolTag } from 'components/Tags'
+import { CompoundingPoolTag2, ManualPoolTag2 } from 'components/Tags'
 import ExpandedFooter from './ExpandedFooter'
 
 interface FooterProps {
@@ -26,9 +26,9 @@ const Footer: React.FC<FooterProps> = ({ claim, account, defaultExpanded }) => {
   const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || false)
 
-  const manualTooltipText = t('You must harvest and compound your earnings from this pool manually.')
+  const manualTooltipText = t('This reward pool operates on a fixed structure, maintaining consistent rewards and steadfast rules. Enjoy reliable benefits with each claim you make.')
   const autoTooltipText = t(
-    'Any funds you stake in this pool will be automagically harvested and restaked (compounded) for you.',
+    'This reward pool is a dynamic entity, subject to periodic changes in rewards and governing rules. Please stay updated to maximize your benefits.',
   )
 
   const { targetRef, tooltip, tooltipVisible } = useTooltip(true ? autoTooltipText : manualTooltipText, {
@@ -39,7 +39,7 @@ const Footer: React.FC<FooterProps> = ({ claim, account, defaultExpanded }) => {
     <CardFooter>
       <ExpandableButtonWrapper>
         <Flex alignItems="center">
-          {true ? <CompoundingPoolTag /> : <ManualPoolTag />}
+          {true ? <CompoundingPoolTag2 /> : <ManualPoolTag2 />}
           {tooltipVisible && tooltip}
           <Flex ref={targetRef}>
             <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
