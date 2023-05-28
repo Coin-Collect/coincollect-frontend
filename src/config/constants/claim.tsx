@@ -3,7 +3,7 @@ import Trans from 'components/Trans'
 
 const claims: any[] = [
   {
-    name: '$COLLECT Rewards',
+    name: 'CoinCollect OG Believers',
     description: <Trans>CoinCollect NFT holders, your share of the reward pool awaits! Step into the realm of exclusive benefits and claim your deserving share. CoinCollect - where ownership translates into rewards!</Trans>,
     imageLink: 'https://coincollect.org/assets/images/claim/CoinCollectClaim.png',
     rewardToken: 'Collect',
