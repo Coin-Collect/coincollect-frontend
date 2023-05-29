@@ -26,8 +26,8 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
       </ClaimCardHeader>
 
       <CardBody p={24} pt={10}>
-      {claimData.data !== undefined && (claimData.data[claimId].userWeight || 0) === 0 && (<NotEligibleWarning requiredToken={claim.requiredToken} nftCount={claimData.data[claimId].nftsToClaim[1].length
- || 0} />)}
+      {claimData.data !== undefined && (claimData.data[claimId].userWeight || 0) === 0 && 
+                                      (<NotEligibleWarning requiredToken={claim.requiredToken} nftCount={claimData.data[claimId].nftsToClaim[1].length || 0} remainingClaims={claimData.data[claimId].remainingClaims || 0}  />)}
       <ClaimCardHeaderTitle
           title={claim.name}
           subTitle={claim.description}
@@ -40,6 +40,8 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
                 <Skeleton width="100%" height="52px" />
               ) : claim.isFinished ? (
                 <Button disabled>{t('Claim Closed')}</Button>
+              ) : claimData.data[claimId].remainingClaims <= 0 ? (
+                <Button disabled>{t('Claim Limit Reached')}</Button>
               ) : (claimData.data[claimId].userWeight || 0) === 0 ? (
                 <Button disabled>{t(`${claim.requiredToken} required!`)}</Button>
               ) : (claimData.data[claimId].rewardBalance ?? 0) < (claim.baseAmount * (claimData.data[claimId].userWeight || 1)) * 10**18 ? (

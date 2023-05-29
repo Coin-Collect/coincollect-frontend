@@ -52,17 +52,25 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
 
   
 
-  const { targetRef, tooltip, tooltipVisible } = useTooltip(
+  const { targetRef: rewardPerNftTargetRef, tooltip: rewardPerNftTooltip, tooltipVisible: rewardPerNftTooltipVisible } = useTooltip(
     t('Subtracted automatically from each yield harvest and burned.'),
-    { placement: 'bottom-start' },
+    { placement: 'top-start' },
   )
 
 
   const {
-    targetRef: totalStakedTargetRef,
-    tooltip: totalStakedTooltip,
-    tooltipVisible: totalStakedTooltipVisible,
-  } = useTooltip(t('this is the maximum number of NFTs that can be utilized to claim rewards.', { symbol: `Collect` }), {
+    targetRef: totalRewardTargetRef,
+    tooltip: totalRewardTooltip,
+    tooltipVisible: totalRewardTooltipVisible,
+  } = useTooltip(t('The total amount of %symbol% distributed in this claim pool', { symbol: claim.rewardToken }), {
+    placement: 'right-start',
+  })
+
+  const {
+    targetRef: nftLimitTargetRef,
+    tooltip: nftLimitTooltip,
+    tooltipVisible: nftLimitTooltipVisible,
+  } = useTooltip(t('This is the maximum number of NFTs that can be utilized to claim rewards.'), {
     placement: 'bottom',
   })
 
@@ -74,14 +82,14 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
           {true ? (
             <>
               <Balance small value={100} decimals={0} unit={` Collect`} />
-              <span ref={totalStakedTargetRef}>
+              <span ref={rewardPerNftTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
             </>
           ) : (
             <Skeleton width="90px" height="21px" />
           )}
-          {totalStakedTooltipVisible && totalStakedTooltip}
+          {rewardPerNftTooltipVisible && rewardPerNftTooltip}
         </Flex>
       </Flex>
 
@@ -90,15 +98,15 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance small value={100000} decimals={0} unit={` Collect`} />
-              <span ref={totalStakedTargetRef}>
+              <Balance small value={claim.totalReward} decimals={0} unit={` Collect`} />
+              <span ref={totalRewardTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
             </>
           ) : (
             <Skeleton width="90px" height="21px" />
           )}
-          {totalStakedTooltipVisible && totalStakedTooltip}
+          {totalRewardTooltipVisible && totalRewardTooltip}
         </Flex>
       </Flex>
 
@@ -109,15 +117,15 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance small value={5} decimals={0} unit={` NFT`} />
-              <span ref={totalStakedTargetRef}>
+              <Balance small value={claim.nftLimit} decimals={0} unit={` NFT`} />
+              <span ref={nftLimitTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
             </>
           ) : (
             <Skeleton width="90px" height="21px" />
           )}
-          {totalStakedTooltipVisible && totalStakedTooltip}
+          {nftLimitTooltipVisible && nftLimitTooltip}
         </Flex>
       </Flex>
       

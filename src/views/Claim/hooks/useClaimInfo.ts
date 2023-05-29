@@ -24,14 +24,15 @@ const getClaimInfo = async (account, claimRewardContract) => {
       targetNftsForClaimIndex.push([addressList, nftList])
     }
 
-    const totalWeights = claimInfo[2]
+    const userClaimInfo = claimInfo[2]
     const rewardBalances = claimInfo[3]
 
   try {
     
     const claimDetails = claimConfig.map((claim, claimIndex) => ({
       ...claim,
-      userWeight: new BigNumber(totalWeights[claimIndex]?._hex).toNumber(),
+      userWeight: new BigNumber(userClaimInfo[claimIndex]?.totalWeights?._hex).toNumber(),
+      remainingClaims: new BigNumber(userClaimInfo[claimIndex]?.remainingClaims?._hex).toNumber(),
       rewardBalance: new BigNumber(rewardBalances[claimIndex]?._hex).toNumber(),
       nftsToClaim: [[...communityNfts[0], ...targetNftsForClaimIndex[claimIndex]?.[0] ?? []], [...communityNfts[1], ...targetNftsForClaimIndex[claimIndex]?.[1] ?? []]],
     }))

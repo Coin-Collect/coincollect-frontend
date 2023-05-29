@@ -9,6 +9,8 @@ const claims: any[] = [
     rewardToken: 'Collect',
     requiredToken: 'Collect NFT', 
     baseAmount: 50,
+    nftLimit: 6,
+    totalReward: 500000,
     isFinished: false,
   },
   /*
