@@ -20,7 +20,7 @@ export default {
   },
   coinCollectClaimReward: {
     137: '',
-    80001: '0x6a11a9f00b9fb4Fd52F74F199780705D61923fE3', // CHANGE_ADDRESS:CoinCollectClaimReward (test)
+    80001: '0x6356dfb4de6344B07b5a8570a35F3Da2D85ae5f3', // CHANGE_ADDRESS:CoinCollectClaimReward (test)
   },
   sousChef: {
     97: '0xd3af5fe61dbaf8f73149bfcfa9fb653ff096029a',

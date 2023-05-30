@@ -8,7 +8,7 @@ const claims: any[] = [
     imageLink: 'https://coincollect.org/assets/images/claim/CoinCollectClaim.png',
     rewardToken: 'Collect',
     requiredToken: 'Collect NFT', 
-    baseAmount: 50,
+    baseAmount: 60,
     nftLimit: 6,
     totalReward: 500000,
     isFinished: false,
