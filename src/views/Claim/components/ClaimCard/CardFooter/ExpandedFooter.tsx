@@ -53,7 +53,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
   
 
   const { targetRef: rewardPerNftTargetRef, tooltip: rewardPerNftTooltip, tooltipVisible: rewardPerNftTooltipVisible } = useTooltip(
-    t('Subtracted automatically from each yield harvest and burned.'),
+    t('Each NFT collection has a different power level. The amount of reward you will receive is determined by multiplying the total power of the NFTs you own by a unit amount.'),
     { placement: 'top-start' },
   )
 
@@ -81,7 +81,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance small value={100} decimals={0} unit={` Collect`} />
+              <Balance prefix='NFT Power x ' small value={claim.baseAmount} decimals={0} />
               <span ref={rewardPerNftTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
