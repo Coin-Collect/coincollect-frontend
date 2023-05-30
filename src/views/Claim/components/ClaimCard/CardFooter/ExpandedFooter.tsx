@@ -130,23 +130,15 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
       </Flex>
       
 
-      {
       <Flex mb="2px" justifyContent="flex-end">
-        <LinkExternal href={`/info/token/a`} bold={false} small>
-          {t('See Token Info')}
-        </LinkExternal>
-      </Flex>
-      }
-
-      <Flex mb="2px" justifyContent="flex-end">
-        <LinkExternal href={`/info/token/a`} bold={false} small>
+        <LinkExternal href={claim.projectSite} bold={false} small>
           {t('View Project Site')}
         </LinkExternal>
       </Flex>
       {true && (
         <Flex mb="2px" justifyContent="flex-end">
           <LinkExternal
-            href={`${BASE_POLYGON_SCAN_URL}/address/`}
+            href={`${BASE_POLYGON_SCAN_URL}/address/${claim.rewardTokenAddress}`}
             bold={false}
             small
           >
@@ -160,7 +152,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
             variant="text"
             p="0"
             height="auto"
-            onClick={() => registerToken(`/info/token/a`, `TokenSymbol`, 18)} // Put decimal var instead 18
+            onClick={() => registerToken(claim.rewardTokenAddress, claim.rewardToken, 18)} // Put decimal var instead 18
           >
             <Text color="primary" fontSize="14px">
               {t('Add to Metamask')}
