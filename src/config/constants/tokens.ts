@@ -44,7 +44,7 @@ export const mainnetTokens = defineTokens({
     '0x877dF062E88C8AB14FA60c945474641194203BFb',
     18,
     'LOT',
-    'LOTSHARE Test Token',
+    'LOTSHARE Token',
     'https://lotshare.netlify.app/',
   ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
