@@ -39,6 +39,14 @@ export const mainnetTokens = defineTokens({
     'CoinCollect Token',
     'https://www.coincollect.org/',
   ),
+  lot: new Token(
+    POLYGON_MAINNET,
+    '0x877dF062E88C8AB14FA60c945474641194203BFb',
+    18,
+    'LOT',
+    'LOTSHARE Test Token',
+    'https://lotshare.netlify.app/',
+  ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(
@@ -2078,6 +2086,14 @@ export const testnetTokens = defineTokens({
     'COLLECT',
     'CoinCollect Test Token',
     'https://www.coincollect.org/',
+  ),
+  lot: new Token(
+    MUMBAI_TESTNET,
+    '0x877dF062E88C8AB14FA60c945474641194203BFb',
+    18,
+    'LOT',
+    'LOTSHARE Test Token',
+    'https://lotshare.netlify.app/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,

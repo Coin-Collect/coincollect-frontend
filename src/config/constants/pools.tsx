@@ -48,24 +48,38 @@ const pools: SerializedPoolConfig[] = [
     sortOrder: 1,
     isFinished: false,
   },
-  /*
   {
-    sousId: 267,
-    stakingToken: serializedTokens.cake,
-    earningToken: serializedTokens.high,
+    sousId: 1,
+    stakingToken: serializedTokens.collect,
+    earningToken: serializedTokens.lot,
     contractAddress: {
-      97: '',
-      56: '0x60c4998C058BaC8042712B54E7e43b892Ab0B0c4',
+      137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
+      80001: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
     },
     poolCategory: PoolCategory.CORE,
     harvest: true,
-    sortOrder: 999,
-    tokenPerBlock: '0.09756',
-    deployedBlockNumber: 15556925,
+    sortOrder: 1,
+    tokenPerBlock: '5',
+    deployedBlockNumber: 36329377,
     version: 3,
   },
-  */
-].filter((p) => !!p.contractAddress[ChainId.MAINNET])
+  {
+    sousId: 2,
+    stakingToken: serializedTokens.lot,
+    earningToken: serializedTokens.collect,
+    contractAddress: {
+      137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
+      80001: '0x2CC6E6F5b7472F0eD81543e39d0F93e244aDAEb5',
+    },
+    poolCategory: PoolCategory.CORE,
+    harvest: true,
+    sortOrder: 2,
+    tokenPerBlock: '100',
+    deployedBlockNumber: 36359853,
+    version: 3,
+  },
+  
+].filter((p) => !!p.contractAddress[ChainId.POLYGON])
 
 
 
