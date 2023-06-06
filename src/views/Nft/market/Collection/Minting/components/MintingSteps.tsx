@@ -173,11 +173,10 @@ const Step2 = ({ hasProfile, isLive, isCommitted }: { hasProfile: boolean; isLiv
       <Text color="textSubtle" small>
         {t('When the IFO sales are live, you can “commit” your CAKE to buy the tokens being sold.')} <br />
       </Text>
-      {hasProfile && isLive && !isCommitted && (
-        <Button as="a" href="#current-ifo" mt="16px">
-          {t('Commit CAKE')}
+        <Button external={true} as="a" href="/claim" mt="16px">
+          {t('Claim Now')}
         </Button>
-      )}
+      
     </CardBody>
   )
 }
@@ -259,6 +258,9 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
                 'After the IFO sales finish, you can claim any IFO tokens that you bought, and any unspent CAKE tokens will be returned to your wallet.',
               )}
             </Text>
+            <Button external={true} as="a" href="/nftpools" mt="16px">
+              {t('Stake Nft')}
+            </Button>
           </CardBody>
         )
       default:
