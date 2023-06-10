@@ -44,7 +44,7 @@ export const setupNetwork = async () => {
  * @returns {boolean} true if the setup succeeded, false otherwise
  */
  export const setupNetworkforPolygon = async (connector) => {
-  const provider = connector == "okx" ? window.okxwallet : window.ethereum
+  const provider = connector === "okx" ? window.okxwallet : connector === "bitkeep" ? window.bitkeep.ethereum : window.ethereum;
   if (provider) {
     const chainId = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID, 10)
     try {
