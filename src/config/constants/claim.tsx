@@ -10,7 +10,7 @@ const claims: any[] = [
     requiredToken: 'Collect NFT', 
     baseAmount: 50,
     nftLimit: 5,
-    totalReward: 500000,
+    totalReward: 100000,
     isFinished: false,
     rewardTokenAddress: '0xadF053697C602C76feB56d4E4C7d28c3E1Bd1075',
     projectSite: 'https://app.coincollect.org'
