@@ -48,7 +48,6 @@ const pools: SerializedPoolConfig[] = [
     sortOrder: 1,
     isFinished: false,
   },
-  /*
   {
     sousId: 1,
     stakingToken: serializedTokens.collect,
@@ -79,7 +78,6 @@ const pools: SerializedPoolConfig[] = [
     deployedBlockNumber: 36359853,
     version: 3,
   },
-  */
 ].filter((p) => !!p.contractAddress[ChainId.POLYGON])
 
 

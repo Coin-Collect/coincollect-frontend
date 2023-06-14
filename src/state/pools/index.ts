@@ -138,9 +138,9 @@ export const fetchCakePoolUserDataAsync = (account: string) => async (dispatch) 
 // This func trigger for calculation APR/APY
 export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (dispatch, getState) => {
   try {
-    const blockLimits = await fetchPoolsBlockLimits() // TODO: Need to update to polygon
+    const blockLimits = await fetchPoolsBlockLimits()
     const totalStakings = await fetchPoolsTotalStaking()
-    const profileRequirements = await fetchPoolsProfileRequirement()
+    //const profileRequirements = await fetchPoolsProfileRequirement()
     let currentBlock = currentBlockNumber
     if (!currentBlock) {
       currentBlock = await simplePolygonRpcProvider.getBlockNumber()
@@ -173,7 +173,9 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
           )
         : 0
 
-      const profileRequirement = profileRequirements[pool.sousId] ? profileRequirements[pool.sousId] : undefined
+      //const profileRequirement = profileRequirements[pool.sousId] ? profileRequirements[pool.sousId] : undefined
+      const profileRequirement = undefined
+
 
       return {
         ...blockLimit,

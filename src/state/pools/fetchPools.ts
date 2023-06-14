@@ -26,7 +26,7 @@ const startEndBlockCalls = poolsWithEnd.flatMap((poolConfig) => {
 })
 
 export const fetchPoolsBlockLimits = async () => {
-  const startEndBlockRaw = await multicall(sousChefABI, startEndBlockCalls)
+  const startEndBlockRaw = await multicallPolygonv1(sousChefABI, startEndBlockCalls)
 
   const startEndBlockResult = startEndBlockRaw.reduce((resultArray, item, index) => {
     const chunkIndex = Math.floor(index / 2)
