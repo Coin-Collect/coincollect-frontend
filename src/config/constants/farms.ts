@@ -30,7 +30,7 @@ const farms: SerializedFarmConfig[] = [
       97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
       56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
       137: '0x0cCc84b6506003487AEC687085e82C2f912E607B',
-      80001: '0x9472B107edb58f05d14299898B69A41729710959' // CHANGE_ADDRESS:Pair
+      80001: '0x4e19486d301a37d237813F4A13612C0c350d1f9A' // CHANGE_ADDRESS:Pair
     },
     token: serializedTokens.collect,
     quoteToken: serializedTokens.usdt,
