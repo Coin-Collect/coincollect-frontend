@@ -56,8 +56,8 @@ const farms: SerializedFarmConfig[] = [
       137: '0xFb09801B10298dB9663D2790F5D5Bc6aFa354497',
       80001: '0x1B36EEDFC18d4E09d9bdBdbC6bcc14C8943539f5' // CHANGE_ADDRESS:Pair
     },
-    token: serializedTokens.collect,
-    quoteToken: serializedTokens.lot,
+    token: serializedTokens.lot,
+    quoteToken: serializedTokens.collect,
   },
   
 ].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
