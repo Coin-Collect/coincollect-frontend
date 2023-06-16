@@ -54,13 +54,13 @@ const pools: SerializedPoolConfig[] = [
     earningToken: serializedTokens.lot,
     contractAddress: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
-      80001: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
+      80001: '0xf326c24C076709a3c650dBF222a0dB75CABe00D5',
     },
     poolCategory: PoolCategory.CORE,
     harvest: true,
     sortOrder: 1,
-    tokenPerBlock: '5',
-    deployedBlockNumber: 36329377,
+    tokenPerBlock: '2',
+    deployedBlockNumber: 36933886,
     version: 3,
   },
   {
@@ -69,13 +69,13 @@ const pools: SerializedPoolConfig[] = [
     earningToken: serializedTokens.collect,
     contractAddress: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
-      80001: '0x2CC6E6F5b7472F0eD81543e39d0F93e244aDAEb5',
+      80001: '0x5b3BF9cA14C448dbeB6DA0AB73772f1DF082A4D2',
     },
     poolCategory: PoolCategory.CORE,
     harvest: true,
     sortOrder: 2,
-    tokenPerBlock: '100',
-    deployedBlockNumber: 36359853,
+    tokenPerBlock: '3',
+    deployedBlockNumber: 36933963,
     version: 3,
   },
 ].filter((p) => !!p.contractAddress[ChainId.POLYGON])
