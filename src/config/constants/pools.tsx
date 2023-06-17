@@ -62,6 +62,7 @@ const pools: SerializedPoolConfig[] = [
     tokenPerBlock: '2',
     deployedBlockNumber: 36933886,
     version: 3,
+    participantThreshold: 226000,
   },
   {
     sousId: 2,
@@ -77,6 +78,7 @@ const pools: SerializedPoolConfig[] = [
     tokenPerBlock: '3',
     deployedBlockNumber: 36933963,
     version: 3,
+    participantThreshold: 22600000,
   },
 ].filter((p) => !!p.contractAddress[ChainId.POLYGON])
 

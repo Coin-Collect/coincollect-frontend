@@ -158,6 +158,7 @@ interface PoolConfigBaseProps {
   isFinished?: boolean
   enableEmergencyWithdraw?: boolean
   deployedBlockNumber?: number
+  participantThreshold?: number
   version?: number
 }
 
