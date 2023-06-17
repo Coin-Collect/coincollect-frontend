@@ -168,7 +168,7 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
         ? getPoolApr(
             stakingTokenPrice,
             earningTokenPrice,
-            Math.max(pool.participantThreshold, getBalanceNumber(new BigNumber(totalStaking.totalStaked), pool.stakingToken.decimals)),
+            Math.max(pool.participantThreshold ?? 0, getBalanceNumber(new BigNumber(totalStaking.totalStaked), pool.stakingToken.decimals)),
             parseFloat(pool.tokenPerBlock),
           )
         : 0
