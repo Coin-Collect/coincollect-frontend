@@ -162,8 +162,9 @@ const Farms: React.FC = ({ children }) => {
           return farm
         }
         const totalLiquidity = farm.totalStaked
+        const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, totalLiquidity.toNumber()))
         const { cakeRewardsApr, lpRewardsApr } = isActive
-          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidity)
+          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold)
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
       })

@@ -129,6 +129,7 @@ interface NftFarmConfigBaseProps {
   contractAddresses?: Address
   multiplier?: string
   tokenPerBlock?: string
+  participantThreshold?: number
   isFinished?: boolean
   dual?: {
     rewardPerBlock: number

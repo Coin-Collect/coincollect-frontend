@@ -21,7 +21,7 @@ const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFar
 }
 
 const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
-  const { lpAddresses, nftAddresses, contractAddresses, lpSymbol, pid, dual, multiplier, tokenPerBlock, startBlock, endBlock, isFinished } = farm
+  const { lpAddresses, nftAddresses, contractAddresses, lpSymbol, pid, dual, multiplier, tokenPerBlock, startBlock, endBlock, participantThreshold, isFinished } = farm
   return {
     lpAddresses,
     nftAddresses,
@@ -33,6 +33,7 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     tokenPerBlock,
     startBlock,
     endBlock,
+    participantThreshold,
     isFinished,
     userData: deserializeNftFarmUserData(farm),
     tokenAmountTotal: farm.tokenAmountTotal ? new BigNumber(farm.tokenAmountTotal) : BIG_ZERO,

@@ -82,6 +82,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     token: serializedTokens.collect,
     quoteToken: serializedTokens.wmatic,
     tokenPerBlock: '2',
+    participantThreshold: 200,
     isFinished: false,
   },
 ].filter((f) => !!f.lpAddresses[ChainId.POLYGON])
