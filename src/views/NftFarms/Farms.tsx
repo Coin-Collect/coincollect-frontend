@@ -114,7 +114,7 @@ export const getDisplayApr = (cakeRewardsApr?: number) => {
 const Farms: React.FC = ({ children }) => {
   const { pathname } = useRouter()
   const { t } = useTranslation()
-  const { data: farmsLP, userDataLoaded, poolLength } = useFarms()
+  const { data: farmsLP, userDataLoaded } = useFarms()
   const cakePrice = usePriceCakeBusd()
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useUserFarmsViewMode()
@@ -137,9 +137,10 @@ const Farms: React.FC = ({ children }) => {
 
   const activeFarms = farmsLP.filter(
     (farm) =>
-      farm.pid !== 0 && farm.multiplier !== '0X' && !isArchivedPid(farm.pid) && (!poolLength || poolLength > farm.pid),
+      farm.pid !== 0 && (farm.tokenPerBlock || farm.multiplier !== '0X') && !isArchivedPid(farm.pid) && !farm.isFinished,
   )
-  const inactiveFarms = farmsLP.filter((farm) => farm.pid !== 0 && farm.multiplier === '0X' && !isArchivedPid(farm.pid))
+
+  const inactiveFarms = farmsLP.filter((farm) => farm.pid !== 0 && ((!farm.tokenPerBlock && farm.multiplier === '0X') || farm.isFinished) && !isArchivedPid(farm.pid))
   const archivedFarms = farmsLP.filter((farm) => isArchivedPid(farm.pid))
 
   const stakedOnlyFarms = activeFarms.filter(
@@ -162,7 +163,7 @@ const Farms: React.FC = ({ children }) => {
         }
         const totalLiquidity = farm.totalStaked
         const { cakeRewardsApr, lpRewardsApr } = isActive
-          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.userData.tokenBalance, totalLiquidity)
+          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidity)
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
       })

@@ -21,22 +21,23 @@ const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFar
 }
 
 const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
-  const { lpAddresses, nftAddresses, lpSymbol, pid, dual, multiplier, quoteTokenPriceBusd, tokenPriceBusd } = farm
-
+  const { lpAddresses, nftAddresses, contractAddresses, lpSymbol, pid, dual, multiplier, tokenPerBlock, startBlock, endBlock, isFinished } = farm
   return {
     lpAddresses,
     nftAddresses,
+    contractAddresses,
     lpSymbol,
     pid,
     dual,
     multiplier,
-    quoteTokenPriceBusd,
-    tokenPriceBusd,
+    tokenPerBlock,
+    startBlock,
+    endBlock,
+    isFinished,
     userData: deserializeNftFarmUserData(farm),
     tokenAmountTotal: farm.tokenAmountTotal ? new BigNumber(farm.tokenAmountTotal) : BIG_ZERO,
     lpTotalInQuoteToken: farm.lpTotalInQuoteToken ? new BigNumber(farm.lpTotalInQuoteToken) : BIG_ZERO,
     lpTotalSupply: farm.lpTotalSupply ? new BigNumber(farm.lpTotalSupply) : BIG_ZERO,
-    tokenPriceVsQuote: farm.tokenPriceVsQuote ? new BigNumber(farm.tokenPriceVsQuote) : BIG_ZERO,
     totalStaked: farm.totalStaked ? new BigNumber(farm.totalStaked) : BIG_ZERO,
     poolWeight: farm.poolWeight ? new BigNumber(farm.poolWeight) : BIG_ZERO,
   }
@@ -46,11 +47,11 @@ export const usePollFarmsWithUserData = (includeArchive = false) => {
   const dispatch = useAppDispatch()
   const { account } = useWeb3React()
 
-  useSlowRefreshEffect(() => {
+  useSlowRefreshEffect((currentBlock) => {
     const farmsToFetch = includeArchive ? nftFarmsConfig : nonArchivedFarms
     const pids = farmsToFetch.map((farmToFetch) => farmToFetch.pid)
 
-    dispatch(fetchFarmsPublicDataAsync(pids))
+    dispatch(fetchFarmsPublicDataAsync({pids, currentBlock}))
 
     if (account) {
       dispatch(fetchFarmUserDataAsync({ account, pids }))
@@ -66,8 +67,8 @@ export const usePollFarmsWithUserData = (includeArchive = false) => {
 export const usePollCoreFarmData = () => {
   const dispatch = useAppDispatch()
 
-  useFastRefreshEffect(() => {
-    dispatch(fetchFarmsPublicDataAsync([1, 2]))
+  useFastRefreshEffect((currentBlock) => {
+    dispatch(fetchFarmsPublicDataAsync({ pids: [1, 2], currentBlock }))
   }, [dispatch])
 }
 

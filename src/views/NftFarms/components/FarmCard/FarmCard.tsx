@@ -100,6 +100,8 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
             bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
             infoAddress={`/info/pool/${lpAddress}`}
             totalStaked={farm.liquidity}
+            startBlock={farm.startBlock}
+            endBlock={farm.endBlock}
             lpLabel={lpLabel}
             addLiquidityUrl={apyModalLink}
           />

@@ -2,53 +2,32 @@ import erc20 from 'config/abi/erc20.json'
 import chunk from 'lodash/chunk'
 import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
 import { multicallPolygonv2 } from 'utils/multicall'
-import { SerializedFarm } from '../types'
-import { SerializedFarmConfig } from '../../config/constants/types'
+import { SerializedNftFarm } from '../types'
+import { SerializedNftFarmConfig } from '../../config/constants/types'
 
-const fetchFarmCalls = (farm: SerializedFarm) => {
-  const { lpAddresses, token, quoteToken } = farm
+const fetchFarmCalls = (farm: SerializedNftFarm) => {
+  const { contractAddresses, nftAddresses } = farm
   
   // Stake Pool Address
-  const lpAddress = getAddress(lpAddresses)
+  const nftAddress = getAddress(nftAddresses)
+  const contractAddress = contractAddresses ? getAddress(contractAddresses) : getCoinCollectNftStakeAddress()
   
   return [
-    // Balance of token in the LP contract
-    {
-      address: token.address,
-      name: 'balanceOf',
-      params: [lpAddress],
-    },
-    // Balance of quote token on LP contract
-    {
-      address: quoteToken.address,
-      name: 'balanceOf',
-      params: [lpAddress],
-    },
     // Balance of LP tokens in the master chef contract
     {
-      address: lpAddress,
+      address: nftAddress,
       name: 'balanceOf',
-      params: [getCoinCollectNftStakeAddress()],
+      params: [contractAddress],
     },
     // Total supply of LP tokens
     {
-      address: lpAddress,
+      address: nftAddress,
       name: 'totalSupply',
-    },
-    // Token decimals
-    {
-      address: token.address,
-      name: 'decimals',
-    },
-    // Quote token decimals
-    {
-      address: quoteToken.address,
-      name: 'decimals',
     },
   ]
 }
 
-export const fetchPublicFarmsData = async (farms: SerializedFarmConfig[]): Promise<any[]> => {
+export const fetchPublicFarmsData = async (farms: SerializedNftFarmConfig[]): Promise<any[]> => {
   const farmCalls = farms.flatMap((farm) => fetchFarmCalls(farm))
   const chunkSize = farmCalls.length / farms.length
   const farmMultiCallResult = await multicallPolygonv2(erc20, farmCalls)

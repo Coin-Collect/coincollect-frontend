@@ -1,10 +1,10 @@
 import styled, { keyframes, css } from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
-import { LinkExternal, Text } from '@pancakeswap/uikit'
+import { Flex, Link, LinkExternal, Skeleton, Text, TimerIcon } from '@pancakeswap/uikit'
 import { NftFarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
 import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import { getAddress } from 'utils/addressHelpers'
-import { getPolygonScanLink } from 'utils'
+import { getBscScanLink, getPolygonScanLink } from 'utils'
 import { FarmAuctionTag, CoreTag, DualTag } from 'components/Tags'
 
 import HarvestAction from './HarvestAction'
@@ -12,6 +12,9 @@ import StakedAction from './StakedAction'
 import Apr, { AprProps } from '../Apr'
 import Multiplier, { MultiplierProps } from '../Multiplier'
 import Liquidity, { LiquidityProps } from '../Liquidity'
+import { useCurrentBlock } from 'state/block/hooks'
+import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
+import Balance from 'components/Balance'
 
 export interface ActionPanelProps {
   apr: AprProps
@@ -140,6 +143,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   const farm = details
 
   const { t } = useTranslation()
+  const currentBlock = useCurrentBlock()
   const isActive = farm.multiplier !== '0X'
   const { dual } = farm
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
@@ -148,9 +152,31 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   const nftAddress = getAddress(farm.nftAddresses)
   const bsc = getPolygonScanLink(nftAddress, 'address')
 
+  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
+    getNftFarmBlockInfo(farm.startBlock, farm.endBlock, farm.isFinished, currentBlock)
+
   return (
     <Container expanded={expanded}>
       <InfoContainer>
+      {shouldShowBlockCountdown && (
+        <Flex mb="2px" justifyContent="space-between" alignItems="center">
+          <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
+          {blocksRemaining || blocksUntilStart ? (
+            <Flex alignItems="center">
+              <Link external href={getBscScanLink(hasPoolStarted ? farm.endBlock : farm.startBlock, 'countdown')}>
+                <Balance small value={blocksToDisplay} decimals={0} color="primary" />
+                <Text small ml="4px" color="primary" textTransform="lowercase">
+                  {t('Blocks')}
+                </Text>
+                <TimerIcon ml="4px" color="primary" />
+              </Link>
+            </Flex>
+          ) : (
+            <Skeleton width="54px" height="21px" />
+          )}
+        </Flex>
+      )}
+      
         {isActive && (
           <StakeContainer>
             <StyledLinkExternal href={apyModalLink}>

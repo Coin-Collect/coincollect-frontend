@@ -47,6 +47,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     token: serializedTokens.collect,
     quoteToken: serializedTokens.wmatic,
+    isFinished: true,
   },
   {
     pid: 4,
@@ -61,6 +62,27 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     token: serializedTokens.collect,
     quoteToken: serializedTokens.wmatic,
+    isFinished: true,
+  },
+  {
+    pid: 5,
+    lpSymbol: 'Lot NFT',
+    lpAddresses: {
+      137: '0xDaD558FD416772A2a125aD6a4004fCe0076CaD98',
+      80001: '0xE564106bacd4D3b74a79e0fbDabF0c43828a1DBB' // CHANGE_ADDRESS:ERC20PegForNFT
+    },
+    nftAddresses: {
+      137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
+      80001: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e'
+    },
+    contractAddresses: {
+      137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
+      80001: '0xa366daC682d414F4825332B4354FfF1C093E5804',
+    },
+    token: serializedTokens.collect,
+    quoteToken: serializedTokens.wmatic,
+    tokenPerBlock: '2',
+    isFinished: false,
   },
 ].filter((f) => !!f.lpAddresses[ChainId.POLYGON])
 

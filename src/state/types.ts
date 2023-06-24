@@ -87,6 +87,8 @@ export interface SerializedNftFarm extends SerializedNftFarmConfig {
   totalStaked?: SerializedBigNumber
   tokenPriceVsQuote?: SerializedBigNumber
   poolWeight?: SerializedBigNumber
+  startBlock?: number
+  endBlock?: number
   userData?: SerializedNftFarmUserData
 }
 // Types for NFT Stake
@@ -99,6 +101,8 @@ export interface DeserializedNftFarm extends DeserializedNftFarmConfig {
   totalStaked?: BigNumber
   tokenPriceVsQuote?: BigNumber
   poolWeight?: BigNumber
+  startBlock?: number
+  endBlock?: number
   userData?: DeserializedNftFarmUserData
 }
 

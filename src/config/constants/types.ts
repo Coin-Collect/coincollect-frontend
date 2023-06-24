@@ -126,7 +126,10 @@ interface NftFarmConfigBaseProps {
   lpSymbol: string
   lpAddresses: Address
   nftAddresses: Address
+  contractAddresses?: Address
   multiplier?: string
+  tokenPerBlock?: string
+  isFinished?: boolean
   dual?: {
     rewardPerBlock: number
     earnLabel: string

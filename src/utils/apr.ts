@@ -57,18 +57,28 @@ export const getFarmApr = (
  */
  export const getNftFarmApr = (
   poolWeight: BigNumber,
-  tokenBalance: BigNumber,
+  tokenPerBlock: number,
   totalLiquidity: BigNumber,
 ): { cakeRewardsApr: number; lpRewardsApr: number } => {
   
-  const liquidity = getBalanceNumber(totalLiquidity, 18)
+  const liquidity = totalLiquidity.toNumber()
+  const isSmartNftStake = tokenPerBlock
 
+  
   const yearlyCakeRewardAllocation = poolWeight ? poolWeight.times(COLLECT_PER_YEAR_NFTFARM) : new BigNumber(NaN)
   const cakeRewardsApr = yearlyCakeRewardAllocation.div(liquidity)
+
+  const yearlyCakeRewardAllocationForSmartNft = isSmartNftStake ? tokenPerBlock * BLOCKS_PER_YEAR : null
+
+  const cakeRewardsAprSmartNft = yearlyCakeRewardAllocationForSmartNft / liquidity
 
   let cakeRewardsAprAsNumber = null
   if (!cakeRewardsApr.isNaN() && cakeRewardsApr.isFinite()) {
     cakeRewardsAprAsNumber = cakeRewardsApr.toNumber()
+  }
+
+  if (isSmartNftStake) {
+    cakeRewardsAprAsNumber = cakeRewardsAprSmartNft
   }
 
   return { cakeRewardsApr: cakeRewardsAprAsNumber / 365, lpRewardsApr: 0 }

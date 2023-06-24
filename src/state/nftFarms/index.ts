@@ -11,7 +11,7 @@ import farmsConfig from 'config/constants/nftFarms'
 import isArchivedPid from 'utils/farmHelpers'
 import type { AppState } from 'state'
 import priceHelperLpsConfig from 'config/constants/priceHelperLps'
-import fetchFarms from './fetchFarms'
+import fetchFarms, { fetchNftFarmsBlockLimits } from './fetchFarms'
 import getFarmsPrices from './getFarmsPrices'
 import {
   fetchFarmUserEarnings,
@@ -45,21 +45,17 @@ export const nonArchivedFarms = farmsConfig.filter(({ pid }) => !isArchivedPid(p
 // Main Function for Farm Data and Price Calculation
 export const fetchFarmsPublicDataAsync = createAsyncThunk<
   [SerializedNftFarm[], number],
-  number[],
+  {pids: number[]; currentBlock: number},
   {
     state: AppState
   }
 >(
   'nftFarms/fetchFarmsPublicDataAsync',
-  async (pids) => {
-    
-    const poolLength = await fetchMasterChefFarmPoolLength()
-    const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
-    const farmsCanFetch = farmsToFetch.filter((f) => poolLength.gt(f.pid))
-    // Add price helper farms
-    const farmsWithPriceHelpers = farmsCanFetch.concat(priceHelperLpsConfig)
+  async ({pids, currentBlock}) => {
 
-    const farms = await fetchFarms(farmsWithPriceHelpers)
+    const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
+
+    const farms = await fetchFarms(farmsToFetch, currentBlock)
 
     // const farmsWithPrices = getFarmsPrices(farms) TODO: Remove related file
     
@@ -68,7 +64,8 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
       return farm.pid || farm.pid === 0
     })
 
-    return [farmsWithoutHelperLps, poolLength.toNumber()]
+
+    return [farmsWithoutHelperLps, farmsToFetch.length]
   },
   {
     condition: (arg, { getState }) => {

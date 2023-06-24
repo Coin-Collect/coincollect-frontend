@@ -2,8 +2,8 @@ import masterchefABI from 'config/abi/masterchef.json'
 import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
 import chunk from 'lodash/chunk'
 import { multicallPolygonv2 } from 'utils/multicall'
-import { SerializedFarmConfig } from '../../config/constants/types'
-import { SerializedFarm } from '../types'
+import { SerializedNftFarmConfig } from '../../config/constants/types'
+import { SerializedNftFarm } from '../types'
 import { getCoinCollectNftStakeAddress } from '../../utils/addressHelpers'
 import { getCoinCollectNftStakeContract } from '../../utils/contractHelpers'
 
@@ -15,7 +15,7 @@ export const fetchMasterChefFarmPoolLength = async () => {
   return poolLength
 }
 
-const masterChefFarmCalls = (farm: SerializedFarm) => {
+const masterChefFarmCalls = (farm: SerializedNftFarm) => {
   const { pid } = farm
   return pid || pid === 0
     ? [
@@ -32,7 +32,7 @@ const masterChefFarmCalls = (farm: SerializedFarm) => {
     : [null, null]
 }
 
-export const fetchMasterChefData = async (farms: SerializedFarmConfig[]): Promise<any[]> => {
+export const fetchMasterChefData = async (farms: SerializedNftFarmConfig[]): Promise<any[]> => {
   const masterChefCalls = farms.map((farm) => masterChefFarmCalls(farm))
   const chunkSize = masterChefCalls.flat().length / farms.length
   const masterChefAggregatedCalls = masterChefCalls

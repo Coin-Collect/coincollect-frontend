@@ -1,9 +1,12 @@
 import { useTranslation } from 'contexts/Localization'
 import styled from 'styled-components'
-import { Text, Flex, LinkExternal, Skeleton, HelpIcon, useTooltip } from '@pancakeswap/uikit'
+import { Text, Flex, LinkExternal, Skeleton, HelpIcon, useTooltip, Link, TimerIcon } from '@pancakeswap/uikit'
 import Balance from 'components/Balance'
 import BigNumber from 'bignumber.js'
 import { getBalanceNumber } from 'utils/formatBalance'
+import { useCurrentBlock } from 'state/block/hooks'
+import { getBscScanLink } from 'utils'
+import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
@@ -13,6 +16,9 @@ export interface ExpandableSectionProps {
   lpLabel?: string
   addLiquidityUrl?: string
   totalStaked?: BigNumber
+  startBlock?: number
+  endBlock?: number
+  isFinished?: boolean
 }
 
 const Wrapper = styled.div`
@@ -35,8 +41,13 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   totalStaked,
   lpLabel,
   addLiquidityUrl,
+  startBlock,
+  endBlock,
+  isFinished,
 }) => {
+
   const { t } = useTranslation()
+  const currentBlock = useCurrentBlock()
   const {
     targetRef: totalStakedTargetRef,
     tooltip: totalStakedTooltip,
@@ -45,6 +56,9 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
     placement: 'bottom',
   })
 
+  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
+    getNftFarmBlockInfo(startBlock, endBlock, isFinished, currentBlock)
+
   return (
     <Wrapper>
       <Flex mb="2px" justifyContent="space-between" alignItems="center">
@@ -52,7 +66,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
       <Flex alignItems="flex-start">
           {totalStaked && totalStaked.gte(0) ? (
             <>
-              <Balance small value={getBalanceNumber(totalStaked, 18)} decimals={0} />
+              <Balance small value={totalStaked.toNumber()} decimals={0} />
               <span ref={totalStakedTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
@@ -63,6 +77,24 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           {totalStakedTooltipVisible && totalStakedTooltip}
         </Flex>
       </Flex>
+      {shouldShowBlockCountdown && (
+        <Flex mb="2px" justifyContent="space-between" alignItems="center">
+          <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
+          {blocksRemaining || blocksUntilStart ? (
+            <Flex alignItems="center">
+              <Link external href={getBscScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
+                <Balance small value={blocksToDisplay} decimals={0} color="primary" />
+                <Text small ml="4px" color="primary" textTransform="lowercase">
+                  {t('Blocks')}
+                </Text>
+                <TimerIcon ml="4px" color="primary" />
+              </Link>
+            </Flex>
+          ) : (
+            <Skeleton width="54px" height="21px" />
+          )}
+        </Flex>
+      )}
       {!removed && (
         <StyledLinkExternal href={addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel })}</StyledLinkExternal>
       )}
