@@ -3,10 +3,10 @@ import styled from 'styled-components'
 import { Text, Flex, LinkExternal, Skeleton, HelpIcon, useTooltip, Link, TimerIcon } from '@pancakeswap/uikit'
 import Balance from 'components/Balance'
 import BigNumber from 'bignumber.js'
-import { getBalanceNumber } from 'utils/formatBalance'
 import { useCurrentBlock } from 'state/block/hooks'
-import { getBscScanLink } from 'utils'
+import { getPolygonScanLink } from 'utils'
 import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
+import MaxStakeRow from 'views/NftFarms/components/MaxStakeRow'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
@@ -18,6 +18,8 @@ export interface ExpandableSectionProps {
   totalStaked?: BigNumber
   startBlock?: number
   endBlock?: number
+  stakingLimit?: BigNumber
+  stakingLimitEndBlock?: number
   isFinished?: boolean
 }
 
@@ -43,6 +45,8 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   addLiquidityUrl,
   startBlock,
   endBlock,
+  stakingLimit,
+  stakingLimitEndBlock,
   isFinished,
 }) => {
 
@@ -77,12 +81,22 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           {totalStakedTooltipVisible && totalStakedTooltip}
         </Flex>
       </Flex>
+      {stakingLimit && stakingLimit.gt(0) && (
+        <MaxStakeRow
+          small
+          currentBlock={currentBlock}
+          hasPoolStarted={hasPoolStarted}
+          stakingLimit={stakingLimit}
+          stakingLimitEndBlock={stakingLimitEndBlock}
+          stakingTokenSymbol={lpLabel}
+        />
+      )}
       {shouldShowBlockCountdown && (
         <Flex mb="2px" justifyContent="space-between" alignItems="center">
           <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
           {blocksRemaining || blocksUntilStart ? (
             <Flex alignItems="center">
-              <Link external href={getBscScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
+              <Link external href={getPolygonScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
                 <Balance small value={blocksToDisplay} decimals={0} color="primary" />
                 <Text small ml="4px" color="primary" textTransform="lowercase">
                   {t('Blocks')}

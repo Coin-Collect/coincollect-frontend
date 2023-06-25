@@ -1,12 +1,15 @@
 import { SerializedNftFarmConfig } from 'config/constants/types'
 import BigNumber from 'bignumber.js'
+import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
 import { BIG_TEN, BIG_ZERO } from '../../utils/bigNumber'
 import { fetchPublicFarmsData } from './fetchPublicFarmData'
 import { fetchMasterChefData } from './fetchMasterChefData'
 import farmsConfig from 'config/constants/nftFarms'
 import { getAddress } from 'utils/addressHelpers'
-import { multicallPolygonv1 } from 'utils/multicall'
+import { multicallPolygonv1, multicallPolygonv2 } from 'utils/multicall'
 import sousChefABI from 'config/abi/sousChef.json'
+import sousChefV2 from '../../config/abi/sousChefV2.json'
+import chunk from 'lodash/chunk'
 
 const smartNftStakeFarms = farmsConfig.filter((f) => f.contractAddresses)
 const startEndBlockCalls = smartNftStakeFarms.flatMap((nftFarmConfig) => {
@@ -46,6 +49,38 @@ export const fetchNftFarmsBlockLimits = async () => {
       endBlock: endBlock.toNumber(),
     }
   })
+}
+
+export const fetchNftPoolsStakingLimits = async (
+  poolsWithStakingLimit: number[],
+): Promise<{ [key: string]: { stakingLimit: BigNumber; numberBlocksForUserLimit: number } }> => {
+  const validPools = smartNftStakeFarms
+    .filter((p) => !p.isFinished)
+    .filter((p) => !poolsWithStakingLimit.includes(p.pid))
+
+  // Get the staking limit for each valid pool
+  const poolStakingCalls = validPools
+    .map((validPool) => {
+      const contractAddress = getAddress(validPool.contractAddresses)
+      return ['hasUserLimit', 'poolLimitPerUser', 'numberBlocksForUserLimit'].map((method) => ({
+        address: contractAddress,
+        name: method,
+      }))
+    })
+    .flat()
+
+  const poolStakingResultRaw = await multicallPolygonv2(sousChefV2, poolStakingCalls, { requireSuccess: false })
+  const chunkSize = poolStakingCalls.length / validPools.length
+  const poolStakingChunkedResultRaw = chunk(poolStakingResultRaw.flat(), chunkSize)
+  return poolStakingChunkedResultRaw.reduce((accum, stakingLimitRaw, index) => {
+    const hasUserLimit = stakingLimitRaw[0]
+    const stakingLimit = hasUserLimit && stakingLimitRaw[1] ? new BigNumber(stakingLimitRaw[1].toString()) : BIG_ZERO
+    const numberBlocksForUserLimit = stakingLimitRaw[2] ? (stakingLimitRaw[2] as EthersBigNumber).toNumber() : 0
+    return {
+      ...accum,
+      [validPools[index].pid]: { stakingLimit, numberBlocksForUserLimit },
+    }
+  }, {})
 }
 
 const fetchFarms = async (farmsToFetch: SerializedNftFarmConfig[], currentBlock: number) => {

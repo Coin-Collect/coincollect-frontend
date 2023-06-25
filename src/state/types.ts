@@ -89,6 +89,8 @@ export interface SerializedNftFarm extends SerializedNftFarmConfig {
   poolWeight?: SerializedBigNumber
   startBlock?: number
   endBlock?: number
+  numberBlocksForUserLimit?: number
+  stakingLimit?: string
   userData?: SerializedNftFarmUserData
 }
 // Types for NFT Stake
@@ -103,6 +105,8 @@ export interface DeserializedNftFarm extends DeserializedNftFarmConfig {
   poolWeight?: BigNumber
   startBlock?: number
   endBlock?: number
+  stakingLimitEndBlock?: number
+  stakingLimit?: BigNumber
   userData?: DeserializedNftFarmUserData
 }
 

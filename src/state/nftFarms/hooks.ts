@@ -3,12 +3,12 @@ import BigNumber from 'bignumber.js'
 import { nftFarmsConfig } from 'config/constants'
 import { useFastRefreshEffect, useSlowRefreshEffect } from 'hooks/useRefreshEffect'
 import { useMemo } from 'react'
-import { useSelector } from 'react-redux'
+import { batch, useSelector } from 'react-redux'
 import { useAppDispatch } from 'state'
 import { deserializeToken } from 'state/user/hooks/helpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceAmount } from 'utils/formatBalance'
-import { fetchFarmsPublicDataAsync, fetchFarmUserDataAsync, nonArchivedFarms } from '.'
+import { fetchFarmsPublicDataAsync, fetchFarmUserDataAsync, fetchNftPoolsStakingLimitsAsync, nonArchivedFarms } from '.'
 import { DeserializedNftFarm, DeserializedNftFarmsState, DeserializedNftFarmUserData, SerializedNftFarm, State } from '../types'
 
 const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFarmUserData => {
@@ -21,7 +21,7 @@ const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFar
 }
 
 const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
-  const { lpAddresses, nftAddresses, contractAddresses, lpSymbol, pid, dual, multiplier, tokenPerBlock, startBlock, endBlock, participantThreshold, isFinished } = farm
+  const { lpAddresses, nftAddresses, contractAddresses, lpSymbol, pid, dual, multiplier, tokenPerBlock, startBlock, endBlock, participantThreshold, isFinished, numberBlocksForUserLimit, stakingLimit } = farm
   return {
     lpAddresses,
     nftAddresses,
@@ -35,6 +35,8 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     endBlock,
     participantThreshold,
     isFinished,
+    stakingLimitEndBlock: numberBlocksForUserLimit + startBlock,
+    stakingLimit: new BigNumber(stakingLimit),
     userData: deserializeNftFarmUserData(farm),
     tokenAmountTotal: farm.tokenAmountTotal ? new BigNumber(farm.tokenAmountTotal) : BIG_ZERO,
     lpTotalInQuoteToken: farm.lpTotalInQuoteToken ? new BigNumber(farm.lpTotalInQuoteToken) : BIG_ZERO,
@@ -52,7 +54,10 @@ export const usePollFarmsWithUserData = (includeArchive = false) => {
     const farmsToFetch = includeArchive ? nftFarmsConfig : nonArchivedFarms
     const pids = farmsToFetch.map((farmToFetch) => farmToFetch.pid)
 
-    dispatch(fetchFarmsPublicDataAsync({pids, currentBlock}))
+    batch(() => {
+      dispatch(fetchFarmsPublicDataAsync({pids, currentBlock}))
+      dispatch(fetchNftPoolsStakingLimitsAsync())
+    })
 
     if (account) {
       dispatch(fetchFarmUserDataAsync({ account, pids }))

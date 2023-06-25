@@ -15,6 +15,7 @@ import Liquidity, { LiquidityProps } from '../Liquidity'
 import { useCurrentBlock } from 'state/block/hooks'
 import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
 import Balance from 'components/Balance'
+import MaxStakeRow from '../../MaxStakeRow'
 
 export interface ActionPanelProps {
   apr: AprProps
@@ -158,6 +159,16 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   return (
     <Container expanded={expanded}>
       <InfoContainer>
+      {farm.stakingLimit && farm.stakingLimit.gt(0) && (
+        <MaxStakeRow
+          small
+          currentBlock={currentBlock}
+          hasPoolStarted={hasPoolStarted}
+          stakingLimit={farm.stakingLimit}
+          stakingLimitEndBlock={farm.stakingLimitEndBlock}
+          stakingTokenSymbol={lpLabel}
+        />
+      )}
       {shouldShowBlockCountdown && (
         <Flex mb="2px" justifyContent="space-between" alignItems="center">
           <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
@@ -176,7 +187,6 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
           )}
         </Flex>
       )}
-      
         {isActive && (
           <StakeContainer>
             <StyledLinkExternal href={apyModalLink}>

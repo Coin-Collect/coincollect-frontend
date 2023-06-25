@@ -52,7 +52,6 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT')
 
   const apyModalLink = "/nfts/collections"
-  const lpAddress = getAddress(farm.lpAddresses)
   const nftAddress = getAddress(farm.nftAddresses)
   const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
 
@@ -98,10 +97,12 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
           <DetailsSection
             removed={removed}
             bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
-            infoAddress={`/info/pool/${lpAddress}`}
+            infoAddress={`/info/pool/`}
             totalStaked={farm.liquidity}
             startBlock={farm.startBlock}
             endBlock={farm.endBlock}
+            stakingLimit={farm.stakingLimit}
+            stakingLimitEndBlock={farm.stakingLimitEndBlock}
             lpLabel={lpLabel}
             addLiquidityUrl={apyModalLink}
           />

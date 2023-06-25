@@ -11,7 +11,7 @@ import farmsConfig from 'config/constants/nftFarms'
 import isArchivedPid from 'utils/farmHelpers'
 import type { AppState } from 'state'
 import priceHelperLpsConfig from 'config/constants/priceHelperLps'
-import fetchFarms, { fetchNftFarmsBlockLimits } from './fetchFarms'
+import fetchFarms, { fetchNftFarmsBlockLimits, fetchNftPoolsStakingLimits } from './fetchFarms'
 import getFarmsPrices from './getFarmsPrices'
 import {
   fetchFarmUserEarnings,
@@ -21,6 +21,8 @@ import {
 } from './fetchFarmUser'
 import { SerializedNftFarmsState, SerializedNftFarm } from '../types'
 import { fetchMasterChefFarmPoolLength } from './fetchMasterChefData'
+import { BIG_ZERO } from 'utils/bigNumber'
+import { setPoolsPublicData } from 'state/pools'
 
 const noAccountFarmConfig = farmsConfig.map((farm) => ({
   ...farm,
@@ -142,10 +144,48 @@ const serializeLoadingKey = (
   })
 }
 
+// Copied from pool state
+export const fetchNftPoolsStakingLimitsAsync = () => async (dispatch, getState) => {
+  const poolsWithStakingLimit = getState()
+    .nftFarms.data.filter(({ stakingLimit }) => stakingLimit !== null && stakingLimit !== undefined)
+    .map((pool) => pool.pid)
+
+  try {
+    const stakingLimits = await fetchNftPoolsStakingLimits(poolsWithStakingLimit)
+
+    const stakingLimitData = farmsConfig.map((pool) => {
+      if (poolsWithStakingLimit.includes(pool.pid)) {
+        return { pid: pool.pid }
+      }
+      const { stakingLimit, numberBlocksForUserLimit } = stakingLimits[pool.pid] || {
+        stakingLimit: BIG_ZERO,
+        numberBlocksForUserLimit: 0,
+      }
+      return {
+        pid: pool.pid,
+        stakingLimit: stakingLimit.toJSON(),
+        numberBlocksForUserLimit,
+      }
+    })
+
+    dispatch(setPoolsPublicData(stakingLimitData))
+  } catch (error) {
+    console.error('[Pools Action] error when getting staking limits', error)
+  }
+}
+
 export const farmsSlice = createSlice({
   name: 'NFTFarms',
   initialState,
-  reducers: {},
+  reducers: {
+    setPoolsPublicData: (state, action) => {
+      const livePoolsData: SerializedPool[] = action.payload
+      state.data = state.data.map((pool) => {
+        const livePoolData = livePoolsData.find((entry) => entry.pid === pool.pid)
+        return { ...pool, ...livePoolData }
+      })
+    },
+  },
   extraReducers: (builder) => {
     // Update farms with live data
     builder.addCase(fetchFarmsPublicDataAsync.fulfilled, (state, action) => {
@@ -185,4 +225,7 @@ export const farmsSlice = createSlice({
   },
 })
 
+// Actions
+export const { setPoolsPublicData } =
+farmsSlice.actions
 export default farmsSlice.reducer

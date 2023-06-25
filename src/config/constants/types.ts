@@ -124,7 +124,6 @@ export interface DeserializedFarmConfig extends FarmConfigBaseProps {
 interface NftFarmConfigBaseProps {
   pid: number
   lpSymbol: string
-  lpAddresses: Address
   nftAddresses: Address
   contractAddresses?: Address
   multiplier?: string
