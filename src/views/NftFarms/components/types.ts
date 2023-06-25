@@ -79,12 +79,14 @@ export const DesktopColumnSchema: ColumnsDefTypes[] = [
     sortable: true,
     label: 'Total Staked',
   },
+  /*
   {
     id: 5,
     name: 'multiplier',
     sortable: true,
     label: 'Multiplier',
   },
+  */
   {
     id: 6,
     name: 'details',

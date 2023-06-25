@@ -27,6 +27,7 @@ const CardHeading: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nf
       <TokenImage src={`/images/tokens/${nftToken}.svg`} width={64} height={64} />
       <Flex flexDirection="column" alignItems="flex-end">
         <Heading mb="4px">{lpLabel.split(' ')[0]}</Heading>
+        {/*
         <Flex justifyContent="center">
           {multiplier ? (
             <MultiplierTag variant="secondary">{multiplier}</MultiplierTag>
@@ -34,6 +35,7 @@ const CardHeading: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nf
             <Skeleton ml="4px" width={42} height={28} />
           )}
         </Flex>
+       */}
       </Flex>
     </Wrapper>
   )
