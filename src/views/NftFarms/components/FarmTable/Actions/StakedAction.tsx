@@ -6,7 +6,7 @@ import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { BASE_ADD_LIQUIDITY_URL } from 'config'
 import { useTranslation } from 'contexts/Localization'
-import { useERC20 } from 'hooks/useContract'
+import { useERC20, useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useRouter } from 'next/router'
@@ -19,7 +19,7 @@ import { getAddress } from 'utils/addressHelpers'
 import { getBalanceAmount, getBalanceNumber, getFullDisplayBalance } from 'utils/formatBalance'
 import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import { NftFarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
-import useApproveFarm from '../../../hooks/useApproveFarm'
+import useApproveNftFarm from '../../../hooks/useApproveFarm'
 import useStakeFarms from '../../../hooks/useStakeFarms'
 import useUnstakeFarms from '../../../hooks/useUnstakeFarms'
 import DepositModal from '../../DepositModal'
@@ -42,7 +42,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   multiplier,
   lpSymbol,
   lpLabel,
-  lpAddresses,
+  nftAddresses,
   userDataReady,
   displayApr,
 }) => {
@@ -59,7 +59,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
 
   const isApproved = account && allowance
 
-  const lpAddress = getAddress(lpAddresses)
+  const nftAddress = getAddress(nftAddresses)
   
   const apyModalLink = "/nfts/collections"
 
@@ -113,9 +113,9 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   const [onPresentWithdraw] = useModal(
     <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} pid={pid} />,
   )
-  const lpContract = useERC20(lpAddress)
+  const nftContract = useErc721CollectionContract(nftAddress)
   const dispatch = useAppDispatch()
-  const { onApprove } = useApproveFarm(lpContract)
+  const { onApprove } = useApproveNftFarm(nftContract)
 
   const handleApprove = useCallback(async () => {
     const receipt = await fetchWithCatchTxError(() => {
