@@ -54,6 +54,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
   const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
+  const sideRewards = farm.sideRewards ? farm.sideRewards : []
 
   return (
     <StyledCard isActive={isPromotedFarm}>
@@ -61,24 +62,42 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         <CardHeading
           lpLabel={lpLabel}
           multiplier={farm.multiplier}
-          nftToken= {nftAddress}
+          nftToken={nftAddress}
         />
-        {!removed && (
-          <Flex justifyContent="space-between" alignItems="center">
-            <Text>{t('Daily Reward')}:</Text>
-            <Text bold style={{ display: 'flex', alignItems: 'center' }}>
-              {farm.apr ? (
-                displayApr
-              ) : (
-                <Skeleton height={24} width={80} />
-              )}
-            </Text>
-          </Flex>
-        )}
-        <Flex justifyContent="space-between">
-          <Text>{t('Earn')}:</Text>
-          <Text bold>{earnLabel}</Text>
+
+{!removed && (
+  <>
+    {sideRewards.length === 0 ? (
+      <Flex justifyContent="space-between" alignItems="center">
+        <Text>{t('Daily Reward')}:</Text>
+        <Text bold style={{ display: 'flex', alignItems: 'center' }}>
+          {farm.apr ? displayApr : <Skeleton height={24} width={80} />}
+        </Text>
+      </Flex>
+    ) : (
+      <>
+        <Flex justifyContent="center" alignItems="center">
+          <Text>{t('Daily Rewards')}</Text>
         </Flex>
+        {sideRewards.map((reward, index) => (
+          <Flex key={index} justifyContent="space-between">
+            <Text>{reward.token}</Text>
+            <Text bold>{Number(displayApr) * (reward.percentage / 100)}</Text>
+          </Flex>
+        ))}
+      </>
+    )}
+  </>
+)}
+
+{sideRewards.length === 0 && (
+  <Flex justifyContent="space-between">
+    <Text>{t('Earn')}:</Text>
+    <Text bold>{earnLabel}</Text>
+  </Flex>
+)}
+
+
         <CardActionsContainer
           farm={farm}
           lpLabel={lpLabel}

@@ -54,6 +54,10 @@ const nftFarms: SerializedNftFarmConfig[] = [
     tokenPerBlock: '2',
     participantThreshold: 200,
     isFinished: false,
+    sideRewards: [
+      {token: 'Shiba', percentage: 20},
+      {token: 'Aptos', percentage: 35},
+    ]
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
