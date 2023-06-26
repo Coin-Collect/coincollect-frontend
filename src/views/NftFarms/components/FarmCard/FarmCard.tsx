@@ -49,7 +49,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
 
 
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
-  const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT')
+  const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
 
   const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
@@ -78,6 +78,10 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
       <>
         <Flex justifyContent="center" alignItems="center">
           <Text>{t('Daily Rewards')}</Text>
+        </Flex>
+        <Flex justifyContent="space-between">
+            <Text>{earnLabel}</Text>
+            <Text bold>{farm.apr ? displayApr : <Skeleton height={24} width={80} />}</Text>
         </Flex>
         {sideRewards.map((reward, index) => (
           <Flex key={index} justifyContent="space-between">

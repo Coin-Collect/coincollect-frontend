@@ -139,12 +139,12 @@ interface NftFarmConfigBaseProps {
 
 // New type for NFT Stake config
 export interface SerializedNftFarmConfig extends NftFarmConfigBaseProps {
-  
+  earningToken?: SerializedToken
 }
 
 // New type for NFT Stake config
 export interface DeserializedNftFarmConfig extends NftFarmConfigBaseProps {
-  
+  earningToken: Token
 }
 
 export interface PoolDeployedBlockNumber {

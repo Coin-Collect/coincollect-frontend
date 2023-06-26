@@ -54,6 +54,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     tokenPerBlock: '2',
     participantThreshold: 200,
     isFinished: false,
+    earningToken: serializedTokens.collect,
     sideRewards: [
       {token: 'Shiba', percentage: 20},
       {token: 'Aptos', percentage: 35},
