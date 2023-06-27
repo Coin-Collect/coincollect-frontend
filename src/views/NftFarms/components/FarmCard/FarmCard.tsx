@@ -53,7 +53,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
 
   const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
-  const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
+  const isPromotedFarm = false //farm.token.symbol === 'COLLECT' Caution: Fix
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
 
   return (
