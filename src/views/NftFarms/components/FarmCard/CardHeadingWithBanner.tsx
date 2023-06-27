@@ -24,7 +24,7 @@ const MultiplierTag = styled(Tag)`
 `
 
 const StyledImage = styled(Image)`
-  border-radius: 4px;
+  border-radius: 8px;
 `
 
 export const CollectionAvatar = styled(ProfileAvatar)`
