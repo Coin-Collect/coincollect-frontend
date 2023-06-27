@@ -115,6 +115,32 @@ const ifos: Minting[] = [
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
+  {
+    id: 'lotnfts',
+    name: 'Lot NFT',
+    description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
+    address: getCoinCollectGoldNftAddress(),
+    symbol: 'LOT',
+    totalSupply: 1100,
+    isActive: true,
+    status: 'liveprivate', /// Options: livepublic, liveprivate
+    avatar: "https://cdn.pixabay.com/photo/2023/06/13/15/05/astronaut-8061095_1280.png",
+    banner: {
+      large: "https://cdn.pixabay.com/photo/2017/03/30/18/38/tulip-2189317_1280.jpg",
+      small: "https://cdn.pixabay.com/photo/2017/03/30/18/38/tulip-2189317_1280.jpg",
+    },
+    poolUnlimited: {
+      saleAmount: '1100 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://coincollect.org',
+    version: 3.1,
+    telegramUrl: 'https://t.me/CoinCollectOrg',
+    twitterUrl: 'https://twitter.com/CoinCollectOrg',
+  },
 ]
 
 export default ifos

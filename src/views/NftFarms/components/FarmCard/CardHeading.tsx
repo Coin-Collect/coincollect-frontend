@@ -1,15 +1,14 @@
 import styled from 'styled-components'
-import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody } from '@pancakeswap/uikit'
+import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CoreTag } from 'components/Tags'
-import Image from 'next/image'
+import { mintingConfig } from 'config/constants'
 
 
 export interface ExpandableSectionProps {
   lpLabel?: string
   multiplier?: string
   nftToken?: string
-  disabled?: boolean
 }
 
 const Wrapper = styled(Flex)`
@@ -22,35 +21,15 @@ const MultiplierTag = styled(Tag)`
   margin-left: 4px;
 `
 
-const StyledImage = styled(Image)`
-  border-radius: 4px;
-`
-
-export const CollectionAvatar = styled(ProfileAvatar)`
-  left: 0;
-  position: absolute;
-  top: -32px;
-  border: 4px white solid;
-`
-
-const CardHeading: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken, disabled= false }) => {
+const CardHeading: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken }) => {
+  const collectionData = mintingConfig.find((collection) => collection.name.replace('CoinCollect', '') === lpLabel)
   return (
-    <CardBody p="0px">
-      <StyledImage src={"https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png"} height={125} width={375} />
-      <Flex
-        position="relative"
-        height="65px"
-        justifyContent="center"
-        alignItems="flex-end"
-        py="8px"
-        flexDirection="column"
-      >
-        <CollectionAvatar src={"https://coincollect.org/assets/images/clone/nft350.png"} width={96} height={96} />
-        <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
-          {/*lpLabel.split(' ')[0]*/ "CoinCollect Starter NFT"}
-        </Heading>
+    <Wrapper justifyContent="space-between" alignItems="center" mb="12px">
+      <ProfileAvatar src={collectionData ? collectionData.avatar : ""} width={64} height={64} />
+      <Flex flexDirection="column" alignItems="flex-end">
+        <Heading mb="4px">{lpLabel}</Heading>
       </Flex>
-    </CardBody>
+    </Wrapper>
   )
 }
 

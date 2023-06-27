@@ -8,7 +8,7 @@ import { useTranslation } from 'contexts/Localization'
 import ExpandableSectionButton from 'components/ExpandableSectionButton'
 import { getAddress } from 'utils/addressHelpers'
 import DetailsSection from './DetailsSection'
-import CardHeading from './CardHeading'
+import CardHeadingWithBanner from './CardHeadingWithBanner'
 import CardActionsContainer from './CardActionsContainer'
 import ApyButton from './ApyButton'
 
@@ -48,7 +48,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const [showExpandableSection, setShowExpandableSection] = useState(false)
 
 
-  const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
+  const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
   const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
 
   const apyModalLink = "/nfts/collections"
@@ -59,10 +59,11 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   return (
     <StyledCard isActive={isPromotedFarm}>
       <FarmCardInnerContainer>
-        <CardHeading
+        <CardHeadingWithBanner
           lpLabel={lpLabel}
           multiplier={farm.multiplier}
           nftToken={nftAddress}
+          disabled={farm.isFinished}
         />
 
 {!removed && (

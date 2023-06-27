@@ -73,16 +73,17 @@ const ExpandingWrapper = styled.div`
 const NftStakeCardBody= ({farm, account}) => {
   const { t } = useTranslation()
   const [showExpandableSection, setShowExpandableSection] = useState(false)
-  const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('CoinCollect', '')
+  const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
   const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT')
   const apyModalLink = "/nfts/collections"
-  const lpAddress = getAddress(farm.lpAddresses)
   const nftAddress = getAddress(farm.nftAddresses)
   const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
   const cakePrice = usePriceCakeBusd()
   const removed = false
 
-  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.userData.tokenBalance, farm.totalStaked)
+  const totalLiquidity = farm.totalStaked
+  const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, totalLiquidity.toNumber()))
+  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold)
 
   return (
     <>
@@ -123,8 +124,8 @@ const NftStakeCardBody= ({farm, account}) => {
           <DetailsSection
             removed={removed}
             bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
-            infoAddress={`/info/pool/${lpAddress}`}
-            totalStaked={farm.liquidity}
+            infoAddress={`/info/pool/`}
+            totalStaked={farm.totalStaked}
             lpLabel={lpLabel}
             addLiquidityUrl={apyModalLink}
           />
