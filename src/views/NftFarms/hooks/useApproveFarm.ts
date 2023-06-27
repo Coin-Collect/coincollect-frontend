@@ -4,11 +4,11 @@ import { Contract } from '@ethersproject/contracts'
 import { useCoinCollectNftStake } from 'hooks/useContract'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 
-const useApproveNftFarm = (nftContract: Contract) => { 
+const useApproveNftFarm = (nftContract: Contract, smartNftPoolAddress?: string) => { 
   const masterChefContract = useCoinCollectNftStake() //useMasterchef()
   const { callWithGasPrice } = useCallWithGasPrice()
   const handleApprove = useCallback(async () => {
-    return callWithGasPrice(nftContract, 'setApprovalForAll', [masterChefContract.address, true])
+    return callWithGasPrice(nftContract, 'setApprovalForAll', [smartNftPoolAddress ?? masterChefContract.address, true])
   }, [nftContract, masterChefContract, callWithGasPrice])
 
   return { onApprove: handleApprove }

@@ -38,12 +38,13 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { pid, nftAddresses } = farm
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
   const nftAddress = getAddress(nftAddresses)
+  const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
   const isApproved = account && allowance
   const dispatch = useAppDispatch()
 
   const nftContract = useErc721CollectionContract(nftAddress)
 
-  const { onApprove } = useApproveNftFarm(nftContract)
+  const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress)
 
   const handleApprove = useCallback(async () => {
     const receipt = await fetchWithCatchTxError(() => {
