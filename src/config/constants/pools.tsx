@@ -62,7 +62,7 @@ const pools: SerializedPoolConfig[] = [
     tokenPerBlock: '2',
     deployedBlockNumber: 36993729,
     version: 3,
-    //participantThreshold: 226000,
+    participantThreshold: 5000000,
   },
   {
     sousId: 2,
