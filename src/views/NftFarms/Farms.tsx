@@ -333,7 +333,7 @@ const Farms: React.FC = ({ children }) => {
           {t('NFT Stake')}
         </Heading>
         <Heading scale="lg" color="text">
-          {t('Stake NFT to earn COLLECT.')}
+          {t('Stake NFT to earn Rewards.')}
         </Heading>
         {/*<NextLinkFromReactRouter to="/farms/auction" id="lottery-pot-banner">
           <Button p="0" variant="text">
