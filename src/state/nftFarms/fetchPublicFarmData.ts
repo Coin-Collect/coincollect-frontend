@@ -19,11 +19,6 @@ const fetchFarmCalls = (farm: SerializedNftFarm) => {
       name: 'balanceOf',
       params: [contractAddress],
     },
-    // Total supply of LP tokens
-    {
-      address: nftAddress,
-      name: 'totalSupply',
-    },
   ]
 }
 

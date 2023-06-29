@@ -103,7 +103,7 @@ const fetchFarms = async (farmsToFetch: SerializedNftFarmConfig[], currentBlock:
     const isPoolFinished = farm.isFinished || isPoolEndBlockExceeded
 
     // LP Token Contract(Pair) datas
-    const [lpTokenBalanceMC, lpTotalSupply] = farmResult[index]
+    const [lpTokenBalanceMC] = farmResult[index]
       
     // Farming Pools on Masterchef
     const [info, totalAllocPoint] = coinCollectFarms.includes(farm) ? masterChefResult[index] : [null,null]
@@ -113,7 +113,6 @@ const fetchFarms = async (farmsToFetch: SerializedNftFarmConfig[], currentBlock:
     return {
       ...farm,
       ...blockLimit,
-      lpTotalSupply: new BigNumber(lpTotalSupply).toJSON(),
       totalStaked: new BigNumber(lpTokenBalanceMC).toJSON(),
       poolWeight: poolWeight.toJSON(),
       multiplier: `${allocPoint.div(100).toString()}X`,

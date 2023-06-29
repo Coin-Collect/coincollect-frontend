@@ -41,7 +41,7 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     userData: deserializeNftFarmUserData(farm),
     tokenAmountTotal: farm.tokenAmountTotal ? new BigNumber(farm.tokenAmountTotal) : BIG_ZERO,
     lpTotalInQuoteToken: farm.lpTotalInQuoteToken ? new BigNumber(farm.lpTotalInQuoteToken) : BIG_ZERO,
-    lpTotalSupply: farm.lpTotalSupply ? new BigNumber(farm.lpTotalSupply) : BIG_ZERO,
+    lpTotalSupply: BIG_ZERO,
     totalStaked: farm.totalStaked ? new BigNumber(farm.totalStaked) : BIG_ZERO,
     poolWeight: farm.poolWeight ? new BigNumber(farm.poolWeight) : BIG_ZERO,
   }
