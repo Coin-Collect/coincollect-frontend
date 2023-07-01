@@ -45,11 +45,11 @@ const nftFarms: SerializedNftFarmConfig[] = [
     lpSymbol: 'Lot NFT',
     nftAddresses: {
       137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
-      80001: '0x1F2b1bCF6c7637e4B7047373E250f52c0C0952b8'
+      80001: '0x1771Bf8f153De28B86977AC38BF3b6bB95D6e8fa'
     },
     contractAddresses: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
-      80001: '0xc278DDC2a206c413262d39Db8F63AedD88132132',
+      80001: '0xf6976c3Eca3EA85f698f1bBD21C54bFa64E31649',
     },
     tokenPerBlock: '2',
     participantThreshold: 200,

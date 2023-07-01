@@ -61,6 +61,7 @@ import masterChef from 'config/abi/masterchef.json'
 import coinCollectPool from 'config/abi/coinCollectPool.json'
 import coinCollectFarm from 'config/abi/coinCollectFarm.json'
 import coinCollectNftStake from 'config/abi/coinCollectNftStake.json'
+import smartNftStake from 'config/abi/smartNftStake.json'
 import coinCollectClaimReward from 'config/abi/coinCollectClaimReward.json'
 import sousChef from 'config/abi/sousChef.json'
 import sousChefV2 from 'config/abi/sousChefV2.json'
@@ -106,6 +107,7 @@ import type {
   CoinCollectPool,
   SousChef,
   SousChefV2,
+  SmartNftStake,
   BunnySpecial,
   LpToken,
   ClaimRefund,
@@ -128,6 +130,7 @@ import type {
   CoinCollectNft,
 } from 'config/abi/types'
 import { CoinCollectAutoPoolVault } from 'config/abi/types/CoinCollectAutoPoolVault'
+import { nftFarmsConfig } from 'config/constants'
 
 // No need for polygon
 const getContract = (abi: any, address: string, signer?: Signer | Provider) => {
@@ -166,6 +169,12 @@ export const getSouschefContract = (id: number, signer?: Signer | Provider) => {
 export const getSouschefV2Contract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)
   return getContract(sousChefV2, getAddress(config.contractAddress), signer) as SousChefV2
+}
+
+// -----
+export const getSmartNftStakeContract = (id: number, signer?: Signer | Provider) => {
+  const config = nftFarmsConfig.find((farm) => farm.pid === id)
+  return getContract(smartNftStake, getAddress(config.contractAddresses), signer) as SmartNftStake
 }
 
 export const getPointCenterIfoContract = (signer?: Signer | Provider) => {

@@ -6,18 +6,18 @@ const options = {
   gasLimit: DEFAULT_GAS_LIMIT,
 }
 
-export const stakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice) => {
-  return callWithEstimateGas(masterChefContract, 'stakeAll', [pid, tokenIds], {
+export const stakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool) => {
+  return callWithEstimateGas(masterChefContract, 'stakeAll', isSmartNftPool ? [tokenIds] : [pid, tokenIds], {
     gasPrice,
   })
 }
 
-export const unstakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice) => {
-  return callWithEstimateGas(masterChefContract, 'unstakeAll', [pid, tokenIds], {
+export const unstakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool) => {
+  return callWithEstimateGas(masterChefContract, 'unstakeAll', isSmartNftPool ? [tokenIds] : [pid, tokenIds], {
     gasPrice,
   })
 }
 
-export const harvestNftFarm = async (masterChefContract, pid, gasPrice) => {
-  return masterChefContract.harvest(pid, { ...options, gasPrice })
+export const harvestNftFarm = async (masterChefContract, pid, gasPrice, isSmartNftPool) => {
+  return isSmartNftPool ? masterChefContract.harvest({ ...options, gasPrice }) : masterChefContract.harvest(pid, { ...options, gasPrice })
 }

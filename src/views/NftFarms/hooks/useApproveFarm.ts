@@ -9,7 +9,7 @@ const useApproveNftFarm = (nftContract: Contract, smartNftPoolAddress?: string) 
   const { callWithGasPrice } = useCallWithGasPrice()
   const handleApprove = useCallback(async () => {
     return callWithGasPrice(nftContract, 'setApprovalForAll', [smartNftPoolAddress ?? masterChefContract.address, true])
-  }, [nftContract, masterChefContract, callWithGasPrice])
+  }, [nftContract, smartNftPoolAddress ?? masterChefContract, callWithGasPrice])
 
   return { onApprove: handleApprove }
 }

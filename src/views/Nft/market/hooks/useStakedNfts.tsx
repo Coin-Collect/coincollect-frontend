@@ -7,6 +7,7 @@ import { useFarmUser } from 'state/nftFarms/hooks'
 import { range } from 'lodash'
 import { multicallPolygonv1 } from 'utils/multicall'
 import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
+import smartNftStakeABI from 'config/abi/smartNftStake.json'
 import BigNumber from 'bignumber.js'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { getAddress } from 'utils/addressHelpers'
@@ -24,20 +25,20 @@ export const useStakedNfts = (selectedPid: number) => {
     const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
     const collectionAddress = getAddress(nftPool.nftAddresses)
     const collectionContract = useCoinCollectNFTContract(collectionAddress)
-
+    const smartNftStakeAddress = nftPool.contractAddresses ? getAddress(nftPool.contractAddresses) : null
     
      
         const getNfts = async () => {
 
               const calls = range(tokenBalance.toNumber()).map((i) => {
                 return {
-                  address: nftStakeContractAddress,
+                  address: smartNftStakeAddress ?? nftStakeContractAddress,
                   name: 'tokenOfOwnerByIndex',
-                  params: [selectedPid, account, i],
+                  params: smartNftStakeAddress ? [account, i] : [selectedPid, account, i],
                 }
               })
               
-              const rawTokenIds = await multicallPolygonv1(coinCollectNftStakeABI, calls)
+              const rawTokenIds = await multicallPolygonv1(smartNftStakeAddress ? smartNftStakeABI : coinCollectNftStakeABI, calls)
           
               const parsedTokenIds = rawTokenIds.map((tokenId) => {
                 return new BigNumber(tokenId).toJSON()

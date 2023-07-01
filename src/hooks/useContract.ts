@@ -40,6 +40,7 @@ import {
   getCoinCollectFarmContract,
   getCoinCollectNftStakeContract,
   getCoinCollectClaimRewardContract,
+  getSmartNftStakeContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress, getMulticallPolygonAddress } from 'utils/addressHelpers'
 import { VaultKey } from 'state/types'
@@ -174,6 +175,12 @@ export const useCoinCollectNftStake = () => {
 export const useSousChef = (id) => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getSouschefContract(id, library.getSigner()), [id, library])
+}
+
+// -----
+export const useSmartNftStakeContract = (id) => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getSmartNftStakeContract(id, library.getSigner()), [id, library])
 }
 
 export const usePointCenterIfoContract = () => {
