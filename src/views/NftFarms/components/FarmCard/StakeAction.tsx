@@ -21,6 +21,7 @@ import useStakeFarms from '../../hooks/useStakeFarms'
 interface FarmCardActionsProps {
   stakedBalance?: BigNumber
   tokenBalance?: BigNumber
+  stakingLimit?: BigNumber
   tokenName?: string
   pid?: number
   multiplier?: string
@@ -41,6 +42,7 @@ const IconButtonWrapper = styled.div`
 const StakeAction: React.FC<FarmCardActionsProps> = ({
   stakedBalance,
   tokenBalance,
+  stakingLimit,
   tokenName,
   pid,
   multiplier,
@@ -94,6 +96,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   const [onPresentDeposit] = useModal(
     <DepositModal
       max={tokenBalance}
+      stakingLimit={stakingLimit}
       stakedBalance={stakedBalance}
       onConfirm={handleStake}
       tokenName={tokenName}

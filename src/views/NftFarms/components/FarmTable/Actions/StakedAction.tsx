@@ -33,6 +33,7 @@ interface StackedActionProps extends NftFarmWithStakedValue {
 
 const Staked: React.FunctionComponent<StackedActionProps> = ({
   pid,
+  stakingLimit,
   apr,
   multiplier,
   lpSymbol,
@@ -92,6 +93,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   const [onPresentDeposit] = useModal(
     <DepositModal
       max={tokenBalance}
+      stakingLimit={stakingLimit}
       lpPrice={lpPrice}
       lpLabel={lpLabel}
       apr={apr}

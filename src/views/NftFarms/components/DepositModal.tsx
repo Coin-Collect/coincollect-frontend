@@ -35,6 +35,7 @@ const SelectedNftBox = styled(RoundedImage)`
 
 interface DepositModalProps {
   max: BigNumber
+  stakingLimit: BigNumber
   stakedBalance: BigNumber
   multiplier?: string
   lpPrice: BigNumber
@@ -51,6 +52,7 @@ interface DepositModalProps {
 
 const DepositModal: React.FC<DepositModalProps> = ({
   max,
+  stakingLimit,
   stakedBalance,
   onConfirm,
   onDismiss,
@@ -73,8 +75,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
     return getFullDisplayBalance(max)
   }, [max])
 
+  const isStakeLimitReached = stakedBalance.toNumber() + selectedNftList.length > stakingLimit.toNumber()
+
   const lpTokensToStake = new BigNumber(val)
   const fullBalanceNumber = new BigNumber(fullBalance)
+  
 
   const usdToStake = lpTokensToStake.times(lpPrice)
 
@@ -123,6 +128,21 @@ const DepositModal: React.FC<DepositModalProps> = ({
   return (
     <Modal title={t('Stake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
 
+    {stakingLimit.gt(0) && (
+        <Text color="secondary" bold mb="5px" style={{ textAlign: 'center' }} fontSize="16px">
+          {t('Max stake for this pool: %amount% %token%', {
+            amount: stakingLimit.toNumber(),
+            token: lpLabel,
+          })}
+        </Text>
+    )}
+
+    {isStakeLimitReached && (
+        <Text color="failure" fontSize="12px" style={{ textAlign: 'right' }} mb="10px">
+          {t('Stake limit reached. Please unstake some selected NFTs!')}
+        </Text>
+      )}
+
     {nftList.length === 0 && !isLoading && !error ? (
       <Flex p="24px" flexDirection="column" alignItems="center">
         <NoNftsImage />
@@ -157,7 +177,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         <Button
           width="100%"
           disabled={
-            pendingTx || selectedNftList.length == 0
+            pendingTx || selectedNftList.length == 0 || isStakeLimitReached
           }
           onClick={async () => {
             setPendingTx(true)

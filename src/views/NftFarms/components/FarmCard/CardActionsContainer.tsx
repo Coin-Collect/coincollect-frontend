@@ -61,6 +61,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       <StakeAction
         stakedBalance={stakedBalance}
         tokenBalance={tokenBalance}
+        stakingLimit={farm.stakingLimit}
         tokenName={farm.lpSymbol}
         pid={pid}
         apr={farm.apr}
