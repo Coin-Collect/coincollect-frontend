@@ -129,8 +129,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
     <Modal title={t('Stake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
 
     {stakingLimit.gt(0) && (
-        <Text color="secondary" bold mb="5px" style={{ textAlign: 'center' }} fontSize="16px">
-          {t('Max stake for this pool: %amount% %token%', {
+        <Text color="secondary" bold mb="5px" style={{ textAlign: 'center' }} fontSize="20px">
+          {t('Max stake: %amount% NFT', {
             amount: stakingLimit.toNumber(),
             token: lpLabel,
           })}
@@ -138,8 +138,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
     )}
 
     {isStakeLimitReached && (
-        <Text color="failure" fontSize="12px" style={{ textAlign: 'right' }} mb="10px">
-          {t('Stake limit reached. Please unstake some selected NFTs!')}
+        <Text color="warning" fontSize="20px" style={{ textAlign: 'center' }} mb="10px">
+          {t('Max Stake Limit Reached!')}
         </Text>
       )}
 
