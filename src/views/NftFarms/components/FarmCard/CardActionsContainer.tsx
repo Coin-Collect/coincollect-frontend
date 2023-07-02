@@ -39,10 +39,13 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
   const nftAddress = getAddress(nftAddresses)
   const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
+  const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
+  const sideRewards = farm.sideRewards ? farm.sideRewards : []
   const isApproved = account && allowance
   const dispatch = useAppDispatch()
 
   const nftContract = useErc721CollectionContract(nftAddress)
+  
 
   const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress)
 
@@ -80,13 +83,13 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     <Action>
       <Flex>
         <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-          COLLECT
+          {sideRewards.length == 0 ? "COLLECT" : "REWARDS"}
         </Text>
         <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
           {t('Earned')}
         </Text>
       </Flex>
-      <HarvestAction earnings={earnings} pid={pid} />
+      <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} />
       <Flex>
         <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
           {farm.lpSymbol.replace('CoinCollect', '')}

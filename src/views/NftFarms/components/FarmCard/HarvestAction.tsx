@@ -1,4 +1,4 @@
-import { Button, Flex, Heading } from '@pancakeswap/uikit'
+import { Button, Flex, Heading, Text } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
 import BigNumber from 'bignumber.js'
 import Balance from 'components/Balance'
@@ -17,9 +17,11 @@ import useHarvestFarm from '../../hooks/useHarvestFarm'
 interface FarmCardActionsProps {
   earnings?: BigNumber
   pid?: number
+  earnLabel?: string
+  sideRewards?: any
 }
 
-const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
+const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabel, sideRewards }) => {
   const { account } = useWeb3React()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
@@ -34,10 +36,25 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
   return (
     <Flex mb="8px" justifyContent="space-between" alignItems="center">
       <Flex flexDirection="column" alignItems="flex-start">
-        <Heading color={rawEarningsBalance.eq(0) ? 'textDisabled' : 'text'}>{displayBalance}</Heading>
+      {sideRewards.length > 0 ? (
+        <Flex justifyContent="space-between">
+          <Text mr={10}>{earnLabel}:</Text>
+          <Text bold>{displayBalance}</Text>
+        </Flex>
+      ) : (
+        <Heading color={rawEarningsBalance.eq(0) ? 'textDisabled' : 'text'}>
+          {displayBalance}
+        </Heading>
+      )}
         {earningsBusd > 0 && (
           <Balance fontSize="12px" color="textSubtle" decimals={2} value={earningsBusd} unit=" USD" prefix="~" />
         )}
+        {sideRewards.map((reward, index) => (
+          <Flex key={index} justifyContent="space-between">
+            <Text mr={10}>{reward.token}:</Text>
+            <Text bold>{Number(displayBalance) * (reward.percentage / 100)}</Text>
+          </Flex>
+        ))}
       </Flex>
       <Button
         disabled={rawEarningsBalance.eq(0) || pendingTx}
