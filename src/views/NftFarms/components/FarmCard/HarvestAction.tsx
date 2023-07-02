@@ -52,7 +52,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
         {sideRewards.map((reward, index) => (
           <Flex key={index} justifyContent="space-between">
             <Text mr={10}>{reward.token}:</Text>
-            <Text bold>{Number(displayBalance) * (reward.percentage / 100)}</Text>
+            <Text bold>{(Number(displayBalance) * (reward.percentage / 100)).toFixed(4)}</Text>
           </Flex>
         ))}
       </Flex>
