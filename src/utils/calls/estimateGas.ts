@@ -1,4 +1,4 @@
-import { Contract, Overrides } from '@ethersproject/contracts'
+import { Contract, Overrides, PayableOverrides } from '@ethersproject/contracts'
 import { BigNumber } from '@ethersproject/bignumber'
 import { TransactionResponse } from '@ethersproject/providers'
 
@@ -14,12 +14,13 @@ export const estimateGas = async (
   contract: Contract,
   methodName: string,
   methodArgs: any[],
+  overrides: PayableOverrides = {},
   gasMarginPer10000: number,
 ) => {
   if (!contract[methodName]) {
     throw new Error(`Method ${methodName} doesn't exist on ${contract.address}`)
   }
-  const rawGasEstimation = await contract.estimateGas[methodName](...methodArgs)
+  const rawGasEstimation = await contract.estimateGas[methodName](...methodArgs, {...overrides,})
   // By convention, BigNumber values are multiplied by 1000 to avoid dealing with real numbers
   const gasEstimation = rawGasEstimation
     .mul(BigNumber.from(10000).add(BigNumber.from(gasMarginPer10000)))
@@ -39,10 +40,10 @@ export const callWithEstimateGas = async (
   contract: Contract,
   methodName: string,
   methodArgs: any[] = [],
-  overrides: Overrides = {},
+  overrides: PayableOverrides = {},
   gasMarginPer10000 = 1000,
 ): Promise<TransactionResponse> => {
-  const gasEstimation = estimateGas(contract, methodName, methodArgs, gasMarginPer10000)
+  const gasEstimation = estimateGas(contract, methodName, methodArgs, overrides, gasMarginPer10000)
   const tx = await contract[methodName](...methodArgs, {
     gasLimit: gasEstimation,
     ...overrides,

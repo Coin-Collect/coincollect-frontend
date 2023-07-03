@@ -130,6 +130,7 @@ interface NftFarmConfigBaseProps {
   tokenPerBlock?: string
   participantThreshold?: number
   isFinished?: boolean
+  performanceFee?: string
   dual?: {
     rewardPerBlock: number
     earnLabel: string

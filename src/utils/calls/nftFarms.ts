@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js'
+import { parseUnits } from '@ethersproject/units'
 import { DEFAULT_GAS_LIMIT, DEFAULT_TOKEN_DECIMAL } from 'config'
 import { callWithEstimateGas } from 'utils/calls'
 
@@ -6,8 +6,10 @@ const options = {
   gasLimit: DEFAULT_GAS_LIMIT,
 }
 
-export const stakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool) => {
+export const stakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool, performanceFee) => {
+  const stakePriceWei = performanceFee ? parseUnits(performanceFee, 'ether') : 0
   return callWithEstimateGas(masterChefContract, 'stakeAll', isSmartNftPool ? [tokenIds] : [pid, tokenIds], {
+    value: stakePriceWei,
     gasPrice,
   })
 }

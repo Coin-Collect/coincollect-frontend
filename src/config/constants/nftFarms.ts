@@ -49,7 +49,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
-      80001: '0xcd0d2b8BBE07e6c613270B9A84387400c2A5101d',
+      80001: '0x71a354E5Eb805f68Ff31421973b71D4D69d2145d',
     },
     tokenPerBlock: '2',
     participantThreshold: 200,
@@ -58,7 +58,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     sideRewards: [
       {token: 'Shiba', percentage: 20},
       {token: 'Aptos', percentage: 35},
-    ]
+    ],
+    performanceFee: '0.1',
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
