@@ -250,6 +250,44 @@
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "collectionWeights",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "communityCollections",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint256",
 				"name": "_amount",
 				"type": "uint256"
@@ -261,7 +299,13 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_collectionAddress",
+				"type": "address"
+			}
+		],
 		"name": "emergencyWithdraw",
 		"outputs": [],
 		"stateMutability": "nonpayable",
@@ -579,6 +623,29 @@
 	{
 		"inputs": [
 			{
+				"internalType": "address[]",
+				"name": "_communityNftAddresses",
+				"type": "address[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "_weight",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_stakedTokenWeight",
+				"type": "uint256"
+			}
+		],
+		"name": "setCollectionWeights",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_feeTo",
 				"type": "address"
@@ -634,6 +701,11 @@
 	},
 	{
 		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "_collectionAddresses",
+				"type": "address[]"
+			},
 			{
 				"internalType": "uint256[]",
 				"name": "_tokenIds",
@@ -694,6 +766,11 @@
 		"name": "tokenOfOwnerByIndex",
 		"outputs": [
 			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
@@ -717,6 +794,11 @@
 	},
 	{
 		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "_collectionAddresses",
+				"type": "address[]"
+			},
 			{
 				"internalType": "uint256[]",
 				"name": "_tokenIds",
@@ -842,6 +924,11 @@
 	},
 	{
 		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_collectionAddress",
+				"type": "address"
+			},
 			{
 				"internalType": "uint256",
 				"name": "_tokenId",

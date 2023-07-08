@@ -40,7 +40,7 @@ interface DepositModalProps {
   multiplier?: string
   lpPrice: BigNumber
   lpLabel?: string
-  onConfirm: (tokenIds: number[]) => void
+  onConfirm: (selectedNftList: { collectionAddress: string; tokenId: number }[]) => void
   onDismiss?: () => void
   tokenName?: string
   apr?: number
@@ -69,7 +69,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const [val, setVal] = useState('')
   const [pendingTx, setPendingTx] = useState(false)
   const [showRoiCalculator, setShowRoiCalculator] = useState(false)
-  const [selectedNftList, setSelectedNftList] = useState<number[]>([])
+  const [selectedNftList, setSelectedNftList] = useState<{ collectionAddress: string; tokenId: number }[]>([]);
   const { t } = useTranslation()
   const fullBalance = useMemo(() => {
     return getFullDisplayBalance(max)
@@ -95,14 +95,53 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
   const {nfts, isLoading, error} = useNftsForCollectionAndAddress(pid)
 
+  const nftList = nfts.map((nft) => {
+    const isSelected = selectedNftList.some(
+      (selectedNft) =>
+        selectedNft.collectionAddress === nft.collectionAddress &&
+        selectedNft.tokenId === nft.tokenId
+    );
+  
+    return isSelected ? (
+      <SelectedNftBox
+        key={nft.tokenId}
+        onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
+        src={nft.image}
+        height={90}
+        width={68}
+        m="8px"
+      />
+    ) : (
+      <NftBox
+        key={nft.tokenId}
+        onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
+        src={nft.image}
+        height={90}
+        width={68}
+        m="8px"
+      />
+    );
+  });
+  
 
-  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
-                                                                  <NftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
-
-  const handleSelectNft = useCallback((id:number) => {
-     const newSelectedNftList = selectedNftList.includes(id) ? selectedNftList.filter(i => i !== id) : [...selectedNftList, id];
-     setSelectedNftList(newSelectedNftList)
-  }, [selectedNftList, setSelectedNftList])
+  const handleSelectNft = useCallback((collectionAddress: string, tokenId: number) => {
+    const isSelected = selectedNftList.some(
+      (selectedNft) =>
+        selectedNft.collectionAddress === collectionAddress && selectedNft.tokenId === tokenId
+    );
+  
+    if (isSelected) {
+      setSelectedNftList((prevList) =>
+        prevList.filter(
+          (selectedNft) =>
+            selectedNft.collectionAddress !== collectionAddress || selectedNft.tokenId !== tokenId
+        )
+      );
+    } else {
+      setSelectedNftList((prevList) => [...prevList, { collectionAddress, tokenId }]);
+    }
+  }, [selectedNftList, setSelectedNftList]);
+  
   
 
 
@@ -177,7 +216,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         <Button
           width="100%"
           disabled={
-            pendingTx || selectedNftList.length == 0 || isStakeLimitReached
+            pendingTx || selectedNftList.length === 0 || isStakeLimitReached
           }
           onClick={async () => {
             setPendingTx(true)

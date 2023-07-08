@@ -6,7 +6,7 @@ import { useTranslation } from 'contexts/Localization'
 import { useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
 import { DeserializedNftFarm } from 'state/types'
@@ -15,6 +15,9 @@ import { getAddress } from 'utils/addressHelpers'
 import useApproveNftFarm from '../../hooks/useApproveFarm'
 import HarvestAction from './HarvestAction'
 import StakeAction from './StakeAction'
+import Select from 'components/Select/Select'
+import { useFarmFromPid } from 'state/nftFarms/hooks'
+import nftFarmsConfig from 'config/constants/nftFarms'
 
 const Action = styled.div`
   padding-top: 16px;
@@ -35,17 +38,20 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
+  const [collectionOption, setCollectionOption] = useState(0)
   const { pid, nftAddresses } = farm
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
-  const nftAddress = getAddress(nftAddresses)
   const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
   const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
-  const isApproved = account && allowance
+  const isApproved = account && allowance[collectionOption]
   const dispatch = useAppDispatch()
 
-  const nftContract = useErc721CollectionContract(nftAddress)
   
+  const alternativeCollectionPool = collectionOption > 0 ? nftFarmsConfig.find(farm => farm.pid === collectionOption) : null
+  const nftAddress = getAddress(alternativeCollectionPool ? alternativeCollectionPool.nftAddresses : nftAddresses)
+  const nftContract = useErc721CollectionContract(nftAddress)
+
 
   const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress)
 
@@ -66,7 +72,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         tokenBalance={tokenBalance}
         stakingLimit={farm.stakingLimit}
         tokenName={farm.lpSymbol}
-        pid={pid}
+        pid={collectionOption > 0 ? collectionOption : pid}
         apr={farm.apr}
         lpLabel={lpLabel}
         cakePrice={cakePrice}
@@ -79,8 +85,32 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     )
   }
 
+  // TODO: Get data from nftFarms.ts constants
+  const dummyCollectionNames = [
+                                { name: 'Starter', value: 1 },
+                                { name: 'Bronze', value: 2 },
+                                { name: 'Silver', value: 3 },
+                                { name: 'Gold', value: 4 },
+                                { name: 'Use Original NFT', value: 0 },
+                              ];
+
+  const handleCollectionOptionChange = (option): void => {
+    setCollectionOption(option.value)
+  }
+
   return (
     <Action>
+      {smartNftPoolAddress && !farm.isFinished && (
+        <Select
+          mb={15}
+          placeHolderText="Use Coincollect Nfts"
+          options={dummyCollectionNames.map((collection) => ({
+            label: collection.name,
+            value: collection.value,
+          }))}
+          onOptionChange={handleCollectionOptionChange}
+        />
+      )}
       <Flex>
         <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
           {sideRewards.length == 0 ? "COLLECT" : "REWARDS"}

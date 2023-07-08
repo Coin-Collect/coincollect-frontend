@@ -8,16 +8,46 @@ import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
 import { SerializedNftFarmConfig } from 'config/constants/types'
 
 export const fetchFarmUserAllowances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
-  const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
-  const calls = farmsToFetch.map((farm) => {
-    const nftContractAddress = getAddress(farm.nftAddresses)
-    const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
-    return { address: nftContractAddress, name: 'isApprovedForAll', params: [account, smartNftPoolAddress ?? masterChefAddress] }
-  })
-  const rawNftAllowances = await multicallPolygonv1<boolean[]>(erc721ABI, calls)
-  const parsedNftAllowances = rawNftAllowances.map((approved) => {
-    return approved?.[0]
-  })
+  const masterChefAddress = getCoinCollectNftStakeAddress()
+
+  const calls: { address: string, name: string, params: any[] }[] = []
+
+  for (const farm of farmsToFetch) {
+    
+      const nftContractAddress = getAddress(farm.nftAddresses)
+      const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
+      calls.push({ address: nftContractAddress, name: 'isApprovedForAll', params: [account, smartNftPoolAddress ?? masterChefAddress] })
+
+      if(farm?.supportedCollectionPids && farm.supportedCollectionPids.length > 0) {
+        for (const pid of farm.supportedCollectionPids) {
+          const supportedPool = farmsToFetch.find(farm => farm.pid === pid);
+          const supportedNftContractAddress = getAddress(supportedPool.nftAddresses)
+          calls.push({ address: supportedNftContractAddress, name: 'isApprovedForAll', params: [account, smartNftPoolAddress] })
+        }
+      }
+    
+  }
+
+  const rawAllowances = await multicallPolygonv1<boolean[]>(erc721ABI, calls)
+  const parsedNftAllowances: boolean[][] = []
+  let currentIndex = 0
+  for (const farm of farmsToFetch) {
+
+    const allowancesForPool: boolean[] = []
+
+    // Allowance of main collection
+    allowancesForPool.push(rawAllowances[currentIndex]?.[0] ?? false)
+    currentIndex++
+    if (farm?.supportedCollectionPids && farm.supportedCollectionPids.length > 0) {
+      // Allowances for supported collections
+      for (const pid of farm.supportedCollectionPids) {
+        allowancesForPool.push(rawAllowances[currentIndex]?.[0] ?? false)
+        currentIndex++
+      }
+    }
+    parsedNftAllowances.push(allowancesForPool)
+  }
+  
   return parsedNftAllowances
 }
 // Staked Nft Balance

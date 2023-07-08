@@ -13,11 +13,12 @@ const useStakeFarms = (pid: number) => {
   const gasPrice = useGasPrice()
 
   const handleStake = useCallback(
-    async (tokenIds: number[]) => {
-      return stakeNftFarm(masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool, farm.performanceFee)
+    async (collectionAddresses: string[], tokenIds: number[]) => {
+      return stakeNftFarm(masterChefContract, pid, collectionAddresses, tokenIds, gasPrice, isSmartNftPool, farm.performanceFee);
     },
-    [masterChefContract, pid, gasPrice],
-  )
+    [masterChefContract, pid, gasPrice, isSmartNftPool, farm.performanceFee]
+  );
+  
 
 
   return { onStake: handleStake }

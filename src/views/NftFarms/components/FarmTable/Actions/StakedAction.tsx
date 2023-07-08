@@ -59,20 +59,22 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   
   const apyModalLink = "/nfts/collections"
 
-  const handleStake = async (tokenIds: number[]) => {
+  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
-      return onStake(tokenIds)
-    })
+      const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
+      const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);
+      return onStake(collectionAddresses, tokenIds);
+    });
     if (receipt?.status) {
       toastSuccess(
         `${t('Staked')}!`,
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
           {t('Your tokens have been staked in the pool')}
-        </ToastDescriptionWithTx>,
-      )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+        </ToastDescriptionWithTx>
+      );
+      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
     }
-  }
+  };
 
   const handleUnstake = async (tokenIds: number[]) => {
     const receipt = await fetchWithCatchTxError(() => {

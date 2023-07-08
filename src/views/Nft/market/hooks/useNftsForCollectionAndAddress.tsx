@@ -29,10 +29,10 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
                   //@ts-ignore
                   const tokenURI = await collectionContract.tokenURI(id.toNumber())
                   meta = await axios.get(tokenURI)
-                  return {tokenId: id.toNumber(), image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
+                  return {tokenId: id.toNumber(), collectionAddress, image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
                 } catch (error) {
                   console.log('IPFS link is broken!', error);
-                  return {tokenId: id.toNumber(), image: 'images/nfts/no-profile-md.png'}
+                  return {tokenId: id.toNumber(), collectionAddress, image: 'images/nfts/no-profile-md.png'}
                 }
                 
               }))

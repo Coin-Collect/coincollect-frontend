@@ -6,13 +6,23 @@ const options = {
   gasLimit: DEFAULT_GAS_LIMIT,
 }
 
-export const stakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool, performanceFee) => {
-  const stakePriceWei = performanceFee ? parseUnits(performanceFee, 'ether') : 0
-  return callWithEstimateGas(masterChefContract, 'stakeAll', isSmartNftPool ? [tokenIds] : [pid, tokenIds], {
+export const stakeNftFarm = async (
+  masterChefContract,
+  pid,
+  collectionAddresses,
+  tokenIds,
+  gasPrice,
+  isSmartNftPool,
+  performanceFee
+) => {
+  const stakePriceWei = performanceFee ? parseUnits(performanceFee, 'ether') : 0;
+  const stakeParams = isSmartNftPool ? [collectionAddresses, tokenIds] : [pid, tokenIds];
+  return callWithEstimateGas(masterChefContract, 'stakeAll', stakeParams, {
     value: stakePriceWei,
     gasPrice,
-  })
-}
+  });
+};
+
 
 export const unstakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool) => {
   return callWithEstimateGas(masterChefContract, 'unstakeAll', isSmartNftPool ? [tokenIds] : [pid, tokenIds], {
