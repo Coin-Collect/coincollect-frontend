@@ -73,6 +73,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         stakingLimit={farm.stakingLimit}
         tokenName={farm.lpSymbol}
         pid={collectionOption > 0 ? collectionOption : pid}
+        mainPid={pid}
         apr={farm.apr}
         lpLabel={lpLabel}
         cakePrice={cakePrice}

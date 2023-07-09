@@ -23,7 +23,8 @@ interface FarmCardActionsProps {
   tokenBalance?: BigNumber
   stakingLimit?: BigNumber
   tokenName?: string
-  pid?: number
+  pid?: number // pid can be id of pool of alternative collections
+  mainPid?: number // mainPid only keeps id of staking pool
   multiplier?: string
   apr?: number
   displayApr?: string
@@ -45,6 +46,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   stakingLimit,
   tokenName,
   pid,
+  mainPid,
   multiplier,
   apr,
   displayApr,
@@ -53,8 +55,8 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   lpLabel,
 }) => {
   const { t } = useTranslation()
-  const { onStake } = useStakeFarms(pid)
-  const { onUnstake } = useUnstakeFarms(pid)
+  const { onStake } = useStakeFarms(mainPid)
+  const { onUnstake } = useUnstakeFarms(mainPid)
   const router = useRouter()
   const dispatch = useAppDispatch()
   const { account } = useWeb3React()

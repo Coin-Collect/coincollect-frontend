@@ -60,7 +60,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       {token: 'Aptos', percentage: 35},
     ],
     supportedCollectionPids: [1,2,3,4],
-    performanceFee: '0.1',
+    performanceFee: '0',
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
