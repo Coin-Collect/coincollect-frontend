@@ -12,11 +12,11 @@ import { multicallPolygonv1 } from 'utils/multicall'
 import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import erc721Abi from 'config/abi/erc721.json'
 import { attachMarketDataToWalletNfts, combineNftMarketAndMetadata, getNftsMarketData } from 'state/nftMarket/helpers'
-import { API_NFT } from 'config/constants/endpoints'
 import { getCoinCollectNFTContract } from 'utils/contractHelpers'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import axios from 'axios'
 import { IPFS_GATEWAY } from 'config'
+import erc721ABI from 'config/abi/erc721.json'
 
 const useNftsForAddress = (account: string, profile: Profile, isProfileFetching: boolean) => {
   const { data: collections } = useGetCollections()
@@ -151,15 +151,23 @@ export const fetchWalletTokenIdsForCollections = async (
 export const getNftsFromDifferentCollectionsApi = async (
   from: { collectionAddress: string; tokenId: string }[],
 ): Promise<NftToken[]> => {
-  
-  const items = await Promise.all(from.map(async (token) => {
 
-    const contract = getCoinCollectNFTContract(token.collectionAddress, simplePolygonRpcProvider)
+  const imageCalls = from.map((token) => {
+    return {
+      address: token.collectionAddress,
+      name: 'tokenURI',
+      params: [token.tokenId],
+    }
+  })
+
+  const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls)
+  
+  const items = await Promise.all(from.map(async (token, index) => {
 
     let meta = null;
     try {
       //@ts-ignore
-      const tokenURI = await contract.tokenURI(token.tokenId)
+      const tokenURI = rawTokenURIs[index][0];
       meta = await axios.get(tokenURI)
       return {
         tokenId: token.tokenId,
