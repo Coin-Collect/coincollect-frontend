@@ -24,8 +24,16 @@ export const stakeNftFarm = async (
 };
 
 
-export const unstakeNftFarm = async (masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool) => {
-  return callWithEstimateGas(masterChefContract, 'unstakeAll', isSmartNftPool ? [tokenIds] : [pid, tokenIds], {
+export const unstakeNftFarm = async (
+  masterChefContract,
+  pid,
+  collectionAddresses,
+  tokenIds,
+  gasPrice,
+  isSmartNftPool
+) => {
+  const stakeParams = isSmartNftPool ? [collectionAddresses, tokenIds] : [pid, tokenIds];
+  return callWithEstimateGas(masterChefContract, 'unstakeAll', stakeParams, {
     gasPrice,
   })
 }

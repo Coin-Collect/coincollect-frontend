@@ -82,9 +82,11 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   };
   
 
-  const handleUnstake = async (tokenIds: number[]) => {
+  const handleUnstake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
-      return onUnstake(tokenIds)
+      const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
+      const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);
+      return onUnstake(collectionAddresses, tokenIds)
     })
     if (receipt?.status) {
       toastSuccess(
@@ -116,7 +118,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
     />,
   )
   const [onPresentWithdraw] = useModal(
-    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={tokenName} pid={pid} />,
+    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={tokenName} pid={mainPid} />,
   )
 
   const renderStakingButtons = () => {

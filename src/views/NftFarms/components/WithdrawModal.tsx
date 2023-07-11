@@ -21,7 +21,7 @@ const SelectedNftBox = styled(RoundedImage)`
 
 interface WithdrawModalProps {
   max: BigNumber
-  onConfirm: (tokenIds: number[]) => void
+  onConfirm: (selectedNftList: { collectionAddress: string; tokenId: number }[]) => void
   onDismiss?: () => void
   tokenName?: string
   pid?: number
@@ -29,7 +29,7 @@ interface WithdrawModalProps {
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max, tokenName = '', pid }) => {
   const [pendingTx, setPendingTx] = useState(false)
-  const [selectedNftList, setSelectedNftList] = useState<number[]>([])
+  const [selectedNftList, setSelectedNftList] = useState<{ collectionAddress: string; tokenId: number }[]>([]);
   const { t } = useTranslation()
   const fullBalance = useMemo(() => {
     return getFullDisplayBalance(max)
@@ -37,13 +37,51 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
 
   const {nfts, isLoading, error} = useStakedNfts(pid)
 
-  const nftList = nfts.map((nft)=>selectedNftList.includes(nft.tokenId) ? <SelectedNftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" /> :
-                                                                          <NftBox key={nft.tokenId} onClick={()=>handleSelectNft(nft.tokenId)} src={nft.image} height={90} width={68} m="8px" />)
+  const nftList = nfts.map((nft) => {
+    const isSelected = selectedNftList.some(
+      (selectedNft) =>
+        selectedNft.collectionAddress === nft.collectionAddress &&
+        selectedNft.tokenId === nft.tokenId
+    );
+  
+    return isSelected ? (
+      <SelectedNftBox
+        key={nft.tokenId}
+        onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
+        src={nft.image}
+        height={90}
+        width={68}
+        m="8px"
+      />
+    ) : (
+      <NftBox
+        key={nft.tokenId}
+        onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
+        src={nft.image}
+        height={90}
+        width={68}
+        m="8px"
+      />
+    );
+  });
 
-  const handleSelectNft = useCallback((id:number) => {
-    const newSelectedNftList = selectedNftList.includes(id) ? selectedNftList.filter(i => i !== id) : [...selectedNftList, id];
-    setSelectedNftList(newSelectedNftList)
- }, [selectedNftList, setSelectedNftList])
+  const handleSelectNft = useCallback((collectionAddress: string, tokenId: number) => {
+    const isSelected = selectedNftList.some(
+      (selectedNft) =>
+        selectedNft.collectionAddress === collectionAddress && selectedNft.tokenId === tokenId
+    );
+  
+    if (isSelected) {
+      setSelectedNftList((prevList) =>
+        prevList.filter(
+          (selectedNft) =>
+            selectedNft.collectionAddress !== collectionAddress || selectedNft.tokenId !== tokenId
+        )
+      );
+    } else {
+      setSelectedNftList((prevList) => [...prevList, { collectionAddress, tokenId }]);
+    }
+  }, [selectedNftList, setSelectedNftList]);
 
 
   return (

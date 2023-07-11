@@ -12,10 +12,10 @@ const useUnstakeFarms = (pid: number) => {
   const gasPrice = useGasPrice()
 
   const handleUnstake = useCallback(
-    async (tokenIds: number[]) => {
-      return unstakeNftFarm(masterChefContract, pid, tokenIds, gasPrice, isSmartNftPool)
+    async (collectionAddresses: string[], tokenIds: number[]) => {
+      return unstakeNftFarm(masterChefContract, pid, collectionAddresses, tokenIds, gasPrice, isSmartNftPool)
     },
-    [masterChefContract, pid, gasPrice],
+    [masterChefContract, pid, gasPrice, isSmartNftPool],
   )
 
   return { onUnstake: handleUnstake }

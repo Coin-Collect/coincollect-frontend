@@ -18,52 +18,68 @@ import { useCoinCollectNFTContract } from 'hooks/useContract'
 
 
 export const useStakedNfts = (selectedPid: number) => {
-    const { account } = useWeb3React()
-    const { tokenBalance } = useFarmUser(selectedPid)
-    const nftStakeContractAddress = getCoinCollectNftStakeAddress()
+  const { account } = useWeb3React()
+  const { tokenBalance } = useFarmUser(selectedPid)
+  const nftStakeContractAddress = getCoinCollectNftStakeAddress()
+
+  const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
+  const collectionAddress = getAddress(nftPool.nftAddresses)
+  const collectionContract = useCoinCollectNFTContract(collectionAddress)
+  const smartNftStakeAddress = nftPool.contractAddresses ? getAddress(nftPool.contractAddresses) : null
+
+
+  const getNfts = async () => {
+
+    const calls = range(tokenBalance.toNumber()).map((i) => {
+      return {
+        address: smartNftStakeAddress ?? nftStakeContractAddress,
+        name: 'tokenOfOwnerByIndex',
+        params: smartNftStakeAddress ? [account, i] : [selectedPid, account, i],
+      }
+    })
+
+    const rawTokenIds = await multicallPolygonv1(smartNftStakeAddress ? smartNftStakeABI : coinCollectNftStakeABI, calls)
+
+    const parsedTokenIds = rawTokenIds.map((token) => {
+      if (!smartNftStakeAddress) {
+        return new BigNumber(token).toJSON();
+      } else {
+        const [tokenAddress, tokenId] = token;
+        return {
+          tokenId: new BigNumber(tokenId._hex).toJSON(),
+          tokenAddress: tokenAddress
+        };
+      }
+    });
     
-    const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
-    const collectionAddress = getAddress(nftPool.nftAddresses)
-    const collectionContract = useCoinCollectNFTContract(collectionAddress)
-    const smartNftStakeAddress = nftPool.contractAddresses ? getAddress(nftPool.contractAddresses) : null
+
+    const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (token) => {
+      const { tokenId, tokenAddress } = token;
     
-     
-        const getNfts = async () => {
+      let meta = null;
+      try {
+        //@ts-ignore
+        const tokenContract = useCoinCollectNFTContract(tokenAddress);
+        const tokenURI = await collectionContract.tokenURI(tokenId);
+        meta = await axios(tokenURI);
+      } catch (error) {
+        console.log('IPFS link is broken!', error);
+      }
+    
+      return {
+        tokenId: tokenId,
+        collectionAddress: smartNftStakeAddress ? tokenAddress : collectionAddress,
+        image: meta ? meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`) : 'images/nfts/no-profile-md.png'
+      };
+    }));
+    
 
-              const calls = range(tokenBalance.toNumber()).map((i) => {
-                return {
-                  address: smartNftStakeAddress ?? nftStakeContractAddress,
-                  name: 'tokenOfOwnerByIndex',
-                  params: smartNftStakeAddress ? [account, i] : [selectedPid, account, i],
-                }
-              })
-              
-              const rawTokenIds = await multicallPolygonv1(smartNftStakeAddress ? smartNftStakeABI : coinCollectNftStakeABI, calls)
-          
-              const parsedTokenIds = rawTokenIds.map((tokenId) => {
-                return new BigNumber(tokenId).toJSON()
-              })
-              
-              const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (id) => {
-                
-                let meta = null;
-                try {
-                  //@ts-ignore
-                  const tokenURI = await collectionContract.tokenURI(id)
-                  meta = await axios(tokenURI)
-                  return {tokenId: id, image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
-                } catch (error) {
-                  console.log('IPFS link is broken!', error);
-                  return {tokenId: id, image: 'images/nfts/no-profile-md.png'}
-                }
 
-              }))
+    return tokenIdsNumber
+  }
 
-              return tokenIdsNumber
-        }
+  const { data, status, error } = useSWR(isAddress(account) ? [account, selectedPid, 'stakedNftList'] : null, async () => getNfts())
 
-        const { data, status, error } = useSWR(isAddress(account) ? [account, selectedPid, 'stakedNftList'] : null, async () => getNfts())
-
-        return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, error }
+  return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, error }
 }
 
