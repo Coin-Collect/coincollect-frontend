@@ -59,7 +59,6 @@ export const useStakedNfts = (selectedPid: number) => {
       let meta = null;
       try {
         //@ts-ignore
-        const tokenContract = useCoinCollectNFTContract(tokenAddress);
         const tokenURI = await collectionContract.tokenURI(tokenId);
         meta = await axios(tokenURI);
       } catch (error) {
