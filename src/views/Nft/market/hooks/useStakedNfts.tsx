@@ -8,13 +8,13 @@ import { range } from 'lodash'
 import { multicallPolygonv1 } from 'utils/multicall'
 import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
 import smartNftStakeABI from 'config/abi/smartNftStake.json'
+import erc721ABI from 'config/abi/erc721.json'
 import BigNumber from 'bignumber.js'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { getAddress } from 'utils/addressHelpers'
 import useSWR from 'swr'
 import { isAddress } from 'utils'
 import { FetchStatus } from 'config/constants/types'
-import { useCoinCollectNFTContract } from 'hooks/useContract'
 
 
 export const useStakedNfts = (selectedPid: number) => {
@@ -24,7 +24,6 @@ export const useStakedNfts = (selectedPid: number) => {
 
   const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
   const collectionAddress = getAddress(nftPool.nftAddresses)
-  const collectionContract = useCoinCollectNFTContract(collectionAddress)
   const smartNftStakeAddress = nftPool.contractAddresses ? getAddress(nftPool.contractAddresses) : null
 
 
@@ -38,11 +37,11 @@ export const useStakedNfts = (selectedPid: number) => {
       }
     })
 
-    const rawTokenIds = await multicallPolygonv1(smartNftStakeAddress ? smartNftStakeABI : coinCollectNftStakeABI, calls)
+    const rawTokens = await multicallPolygonv1(smartNftStakeAddress ? smartNftStakeABI : coinCollectNftStakeABI, calls)
 
-    const parsedTokenIds = rawTokenIds.map((token) => {
+    const parsedTokenIds = rawTokens.map((token) => {
       if (!smartNftStakeAddress) {
-        return new BigNumber(token).toJSON();
+        return { tokenId: new BigNumber(token).toJSON() };
       } else {
         const [tokenAddress, tokenId] = token;
         return {
@@ -51,15 +50,24 @@ export const useStakedNfts = (selectedPid: number) => {
         };
       }
     });
-    
 
-    const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (token) => {
+    const imageCalls = parsedTokenIds.map((token) => {
       const { tokenId, tokenAddress } = token;
-    
+      return {
+        address: smartNftStakeAddress ? tokenAddress : collectionAddress,
+        name: 'tokenURI',
+        params: [tokenId],
+      }
+    })
+    const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls)
+
+    const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (token, index) => {
+      const { tokenId, tokenAddress } = token;
+      
       let meta = null;
       try {
         //@ts-ignore
-        const tokenURI = await collectionContract.tokenURI(tokenId);
+        const tokenURI = rawTokenURIs[index][0];
         meta = await axios(tokenURI);
       } catch (error) {
         console.log('IPFS link is broken!', error);

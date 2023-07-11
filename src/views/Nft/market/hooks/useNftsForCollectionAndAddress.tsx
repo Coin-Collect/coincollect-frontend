@@ -2,12 +2,13 @@ import { useWeb3React } from '@web3-react/core'
 import axios from 'axios'
 import { IPFS_GATEWAY } from 'config'
 import { useCoinCollectNFTContract } from "hooks/useContract"
-import { useEffect, useState } from "react"
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { getAddress } from 'utils/addressHelpers'
 import useSWR from 'swr'
 import { isAddress } from 'utils'
 import { FetchStatus } from 'config/constants/types'
+import { multicallPolygonv1 } from 'utils/multicall'
+import erc721ABI from 'config/abi/erc721.json'
 
 
 export const useNftsForCollectionAndAddress = (selectedPid: number) => {
@@ -22,12 +23,21 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             
               const tokenIds = await collectionContract.walletOfOwner(account)
 
-              const tokenIdsNumber = await Promise.all(tokenIds.map(async (id) => {
+              const imageCalls = tokenIds.map((id) => {
+                return {
+                  address: collectionAddress,
+                  name: 'tokenURI',
+                  params: [id.toNumber()],
+                }
+              })
+              const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls)
+
+              const tokenIdsNumber = await Promise.all(tokenIds.map(async (id, index) => {
 
                 let meta = null;
                 try {
                   //@ts-ignore
-                  const tokenURI = await collectionContract.tokenURI(id.toNumber())
+                  const tokenURI = rawTokenURIs[index][0];
                   meta = await axios.get(tokenURI)
                   return {tokenId: id.toNumber(), collectionAddress, image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
                 } catch (error) {
