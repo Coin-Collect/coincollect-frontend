@@ -6,6 +6,7 @@ import smartNftStakeABI from '../../config/abi/smartNftStake.json'
 import { multicallPolygonv1 } from 'utils/multicall'
 import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
 import { SerializedNftFarmConfig } from 'config/constants/types'
+import nftFarmsConfig from 'config/constants/nftFarms'
 
 export const fetchFarmUserAllowances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
   const masterChefAddress = getCoinCollectNftStakeAddress()
@@ -20,7 +21,7 @@ export const fetchFarmUserAllowances = async (account: string, farmsToFetch: Ser
 
       if(farm?.supportedCollectionPids && farm.supportedCollectionPids.length > 0) {
         for (const pid of farm.supportedCollectionPids) {
-          const supportedPool = farmsToFetch.find(farm => farm.pid === pid);
+          const supportedPool = nftFarmsConfig.find(farm => farm.pid === pid);
           const supportedNftContractAddress = getAddress(supportedPool.nftAddresses)
           calls.push({ address: supportedNftContractAddress, name: 'isApprovedForAll', params: [account, smartNftPoolAddress] })
         }

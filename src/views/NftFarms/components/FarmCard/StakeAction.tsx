@@ -77,7 +77,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
           {t('Your tokens have been staked in the pool')}
         </ToastDescriptionWithTx>
       );
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
+      dispatch(fetchFarmUserDataAsync({ account, pids: [mainPid] }));
     }
   };
   
@@ -95,7 +95,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
           {t('Your earnings have also been harvested to your wallet')}
         </ToastDescriptionWithTx>,
       )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      dispatch(fetchFarmUserDataAsync({ account, pids: [mainPid] }))
     }
   }
 
