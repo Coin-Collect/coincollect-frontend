@@ -75,7 +75,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
     return getFullDisplayBalance(max)
   }, [max])
 
-  const isStakeLimitReached = max.toNumber() + selectedNftList.length > stakingLimit.toNumber()
+  const isStakeLimitReached = stakingLimit.toNumber() > 0 && max.toNumber() + selectedNftList.length > stakingLimit.toNumber()
 
   const lpTokensToStake = new BigNumber(val)
   const fullBalanceNumber = new BigNumber(fullBalance)

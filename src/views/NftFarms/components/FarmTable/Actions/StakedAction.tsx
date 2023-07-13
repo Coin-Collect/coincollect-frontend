@@ -76,9 +76,11 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     }
   };
 
-  const handleUnstake = async (tokenIds: number[]) => {
+  const handleUnstake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
-      return onUnstake(tokenIds)
+      const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
+      const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);
+      return onUnstake(collectionAddresses, tokenIds)
     })
     if (receipt?.status) {
       toastSuccess(
