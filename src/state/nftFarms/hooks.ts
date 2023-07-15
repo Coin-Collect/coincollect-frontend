@@ -13,7 +13,7 @@ import { DeserializedNftFarm, DeserializedNftFarmsState, DeserializedNftFarmUser
 
 const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFarmUserData => {
   return {
-    allowance: farm.userData ? farm.userData.allowance : false,
+    allowance: farm.userData ? farm.userData.allowance : [],
     tokenBalance: farm.userData ? new BigNumber(farm.userData.tokenBalance) : BIG_ZERO,
     stakedBalance: farm.userData ? new BigNumber(farm.userData.stakedBalance) : BIG_ZERO,
     earnings: farm.userData ? new BigNumber(farm.userData.earnings) : BIG_ZERO,

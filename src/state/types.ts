@@ -65,14 +65,14 @@ export interface DeserializedFarm extends DeserializedFarmConfig {
 
 // Types for NFT Stake
 interface SerializedNftFarmUserData {
-  allowance: boolean
+  allowance: boolean[]
   tokenBalance: string
   stakedBalance: string
   earnings: string
 }
 // Types for NFT Stake
 export interface DeserializedNftFarmUserData {
-  allowance: boolean
+  allowance: boolean[]
   tokenBalance: BigNumber
   stakedBalance: BigNumber
   earnings: BigNumber

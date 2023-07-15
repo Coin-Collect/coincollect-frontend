@@ -47,7 +47,8 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
   const earnLabel = farm.earningToken ? farm.earningToken.symbol : t('COLLECT')
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
-  const isApproved = account && allowance[collectionOption ?? 0] || smartNftPoolAddress
+  const atLeastOneApproved = allowance.some((allowance) => allowance)
+  const isApproved = account && atLeastOneApproved
   const dispatch = useAppDispatch()
 
   const useDidMountEffect = (func, deps) => {
@@ -164,7 +165,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       />
     ) : (
       <Button mt="8px" width="100%" disabled={pendingTx} onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}>
-        {t('Enable Contract')}
+        {smartNftPoolAddress ? t('Click to Stake Now') : t('Enable Contract')}
       </Button>
     )
   }

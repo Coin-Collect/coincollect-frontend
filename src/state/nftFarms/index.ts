@@ -27,7 +27,7 @@ import { setPoolsPublicData } from 'state/pools'
 const noAccountFarmConfig = farmsConfig.map((farm) => ({
   ...farm,
   userData: {
-    allowance: false,
+    allowance: [false],
     tokenBalance: '0',
     stakedBalance: '0',
     earnings: '0',
