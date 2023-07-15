@@ -31,6 +31,7 @@ interface FarmCardActionsProps {
   addLiquidityUrl?: string
   cakePrice?: BigNumber
   lpLabel?: string
+  onClickStake?: any
 }
 
 const IconButtonWrapper = styled.div`
@@ -53,6 +54,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   addLiquidityUrl,
   cakePrice,
   lpLabel,
+  onClickStake,
 }) => {
   const { t } = useTranslation()
   const { onStake } = useStakeFarms(mainPid)
@@ -124,7 +126,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   const renderStakingButtons = () => {
     return stakedBalance.eq(0) ? (
       <Button
-        onClick={onPresentDeposit}
+        onClick={onClickStake ?? onPresentDeposit}
         disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
       >
         {t('Stake NFT')}
@@ -148,7 +150,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   return (
     <Flex justifyContent="space-between" alignItems="center">
       <Flex flexDirection="column" alignItems="flex-start">
-        <Heading color={tokenBalance.eq(0) ? 'textDisabled' : 'text'}>{tokenBalance.toNumber()}</Heading>
+        <Heading color={stakedBalance.eq(0) ? 'textDisabled' : 'text'}>{stakedBalance.toNumber()}</Heading>
       </Flex>
       {renderStakingButtons()}
     </Flex>

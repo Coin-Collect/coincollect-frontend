@@ -19,7 +19,7 @@ import { FetchStatus } from 'config/constants/types'
 
 export const useStakedNfts = (selectedPid: number) => {
   const { account } = useWeb3React()
-  const { tokenBalance } = useFarmUser(selectedPid)
+  const { stakedBalance } = useFarmUser(selectedPid)
   const nftStakeContractAddress = getCoinCollectNftStakeAddress()
 
   const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
@@ -29,7 +29,7 @@ export const useStakedNfts = (selectedPid: number) => {
 
   const getNfts = async () => {
 
-    const calls = range(tokenBalance.toNumber()).map((i) => {
+    const calls = range(stakedBalance.toNumber()).map((i) => {
       return {
         address: smartNftStakeAddress ?? nftStakeContractAddress,
         name: 'tokenOfOwnerByIndex',
