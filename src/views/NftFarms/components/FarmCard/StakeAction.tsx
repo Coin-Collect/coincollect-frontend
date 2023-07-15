@@ -138,7 +138,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
         </IconButton>
         <IconButton
           variant="tertiary"
-          onClick={onPresentDeposit}
+          onClick={onClickStake ?? onPresentDeposit}
           disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
         >
           <AddIcon color="primary" width="14px" />
