@@ -141,7 +141,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       apr={farm.apr}
       addLiquidityUrl={addLiquidityUrl}
       cakePrice={cakePrice}
-      pid={collectionOption}
+      pid={collectionOption !== 0 ? collectionOption : pid}
     />,
   )
 
