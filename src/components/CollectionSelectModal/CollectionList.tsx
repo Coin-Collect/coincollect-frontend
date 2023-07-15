@@ -101,7 +101,7 @@ export default function CollectionList({
   collections: DeserializedNftFarm[]
   selectedCollection?: DeserializedNftFarm | null
   onCurrencySelect: (collection: number, task: string) => void
-  allowance: boolean
+  allowance: boolean[]
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
 }) {
 

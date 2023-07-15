@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 import BigNumber from 'bignumber.js'
-import { Button, Flex, Heading, IconButton, AddIcon, MinusIcon, useModal } from '@pancakeswap/uikit'
+import { Button, Flex, Heading, IconButton, AddIcon, MinusIcon, useModal, AutoRenewIcon } from '@pancakeswap/uikit'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import Balance from 'components/Balance'
@@ -32,6 +32,7 @@ interface FarmCardActionsProps {
   cakePrice?: BigNumber
   lpLabel?: string
   onClickStake?: any
+  pendingTx?: boolean
 }
 
 const IconButtonWrapper = styled.div`
@@ -55,6 +56,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   cakePrice,
   lpLabel,
   onClickStake,
+  pendingTx,
 }) => {
   const { t } = useTranslation()
   const { onStake } = useStakeFarms(mainPid)
@@ -127,9 +129,11 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
     return stakedBalance.eq(0) ? (
       <Button
         onClick={onClickStake ?? onPresentDeposit}
+        endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+        isLoading={pendingTx}
         disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
       >
-        {t('Stake NFT')}
+        {pendingTx ? t('Confirming') : t('Stake NFT')}
       </Button>
     ) : (
       <IconButtonWrapper>

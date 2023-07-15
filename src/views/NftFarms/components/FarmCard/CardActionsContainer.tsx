@@ -1,4 +1,4 @@
-import { Button, Flex, Text, useModal } from '@pancakeswap/uikit'
+import { AutoRenewIcon, Button, Flex, Text, useModal } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ToastDescriptionWithTx } from 'components/Toast'
@@ -76,8 +76,12 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     if (receipt?.status) {
       toastSuccess(t('Contract Enabled'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
-      // Open stake panel automatically
-      onPresentDeposit()
+      
+      if (smartNftPoolAddress) {
+        // Open stake panel automatically
+        onPresentDeposit()
+      }
+      
     }
   }, [onApprove, dispatch, account, pid, t, toastSuccess, fetchWithCatchTxError])
 
@@ -124,7 +128,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       toastSuccess(
         `${t('Staked')}!`,
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('Your tokens have been staked in the pool')}
+          {t('Your NFTs have been staked in the pool')}
         </ToastDescriptionWithTx>
       );
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
@@ -142,9 +146,10 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       apr={farm.apr}
       addLiquidityUrl={addLiquidityUrl}
       cakePrice={cakePrice}
-      pid={collectionOption !== 0 ? collectionOption : pid}
+      pid={collectionOption ? collectionOption : pid}
     />,
   )
+  
 
   // =====/Duplicate Use Codes=====
 
@@ -162,10 +167,15 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         cakePrice={cakePrice}
         addLiquidityUrl={addLiquidityUrl}
         onClickStake={smartNftPoolAddress ? onPresentCollectionModal : null}
+        pendingTx={pendingTx}
       />
     ) : (
-      <Button mt="8px" width="100%" disabled={pendingTx} onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}>
-        {smartNftPoolAddress ? t('Click to Stake Now') : t('Enable Contract')}
+      <Button mt="8px" 
+              width="100%" 
+              isLoading={pendingTx} 
+              endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+              onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}>
+        {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
       </Button>
     )
   }

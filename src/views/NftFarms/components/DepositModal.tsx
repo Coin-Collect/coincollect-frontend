@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { Flex, Text, Button, Modal, LinkExternal, CalculateIcon, IconButton, Skeleton } from '@pancakeswap/uikit'
+import { Flex, Text, Button, Modal, LinkExternal, CalculateIcon, IconButton, Skeleton, AutoRenewIcon } from '@pancakeswap/uikit'
 import { ModalActions, ModalInput } from 'components/Modal'
 import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { useTranslation } from 'contexts/Localization'
@@ -78,7 +78,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const isStakeLimitReached = stakingLimit.toNumber() > 0 && stakedBalance.toNumber() + selectedNftList.length > stakingLimit.toNumber()
 
   const lpTokensToStake = new BigNumber(val)
-  
+
 
   const usdToStake = lpTokensToStake.times(lpPrice)
 
@@ -92,7 +92,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const annualRoiAsNumber = annualRoi.toNumber()
   const formattedAnnualRoi = formatNumber(annualRoiAsNumber, annualRoi.gt(10000) ? 0 : 2, annualRoi.gt(10000) ? 0 : 2)
 
-  const {nfts, isLoading, error} = useNftsForCollectionAndAddress(pid)
+  const { nfts, isLoading, error } = useNftsForCollectionAndAddress(pid)
 
   const nftList = nfts.map((nft) => {
     const isSelected = selectedNftList.some(
@@ -100,7 +100,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         selectedNft.collectionAddress === nft.collectionAddress &&
         selectedNft.tokenId === nft.tokenId
     );
-  
+
     return isSelected ? (
       <SelectedNftBox
         key={nft.tokenId}
@@ -121,14 +121,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
       />
     );
   });
-  
+
 
   const handleSelectNft = useCallback((collectionAddress: string, tokenId: number) => {
     const isSelected = selectedNftList.some(
       (selectedNft) =>
         selectedNft.collectionAddress === collectionAddress && selectedNft.tokenId === tokenId
     );
-  
+
     if (isSelected) {
       setSelectedNftList((prevList) =>
         prevList.filter(
@@ -140,8 +140,8 @@ const DepositModal: React.FC<DepositModalProps> = ({
       setSelectedNftList((prevList) => [...prevList, { collectionAddress, tokenId }]);
     }
   }, [selectedNftList, setSelectedNftList]);
-  
-  
+
+
 
 
   if (showRoiCalculator) {
@@ -164,58 +164,61 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }
 
   return (
-    <Modal title={t('Stake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
+    <Modal title={t('Select NFTs')} onDismiss={onDismiss}>
 
-    {stakingLimit.gt(0) && (
+      {stakingLimit.gt(0) && (
         <Text color="secondary" bold mb="5px" style={{ textAlign: 'center' }} fontSize="20px">
           {t('Max stake: %amount% NFT', {
             amount: stakingLimit.toNumber(),
             token: lpLabel,
           })}
         </Text>
-    )}
+      )}
 
-    {isStakeLimitReached && (
+      {isStakeLimitReached && (
         <Text color="warning" fontSize="20px" style={{ textAlign: 'center' }} mb="10px">
           {t('Max Stake Limit Reached!')}
         </Text>
       )}
 
-    {nftList.length === 0 && !isLoading && !error ? (
-      <Flex p="24px" flexDirection="column" alignItems="center">
-        <NoNftsImage />
-        <Text pt="8px" bold>
-          {t('No NFTs found')}
-        </Text>
-      </Flex>
-    ) : nftList.length > 0 ? (
-      <Flex flexWrap="wrap" justifyContent="space-evenly">
-        {nftList}
-      </Flex>
-    ) : error ? (
-      <Flex p="24px" flexDirection="column" alignItems="center">
-        <Button variant="light" onClick={onDismiss} width="100%">
-          {t('Retry')}
-        </Button>
-        <Text pt="8px" bold>
-          {t('Network error!')}
-        </Text>
-      </Flex>
-    ) : (
-      <Flex p="24px" flexDirection="column" alignItems="center">
-        <CircleLoader size="30px" />
-      </Flex>
-    )}
-     
-      
+      {nftList.length === 0 && !isLoading && !error ? (
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <NoNftsImage />
+          <Text pt="8px" bold>
+            {t('No NFTs found')}
+          </Text>
+        </Flex>
+      ) : nftList.length > 0 ? (
+        <Flex flexWrap="wrap" justifyContent="space-evenly">
+          {nftList}
+        </Flex>
+      ) : error ? (
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <Button variant="light" onClick={onDismiss} width="100%">
+            {t('Retry')}
+          </Button>
+          <Text pt="8px" bold>
+            {t('Network error!')}
+          </Text>
+        </Flex>
+      ) : (
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <CircleLoader size="30px" />
+          <Text mt={1}>NFTs will be listed shortly...</Text>
+        </Flex>
+      )}
+
+
       <ModalActions>
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
           {t('Cancel')}
         </Button>
         <Button
           width="100%"
+          isLoading={pendingTx}
+          endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
           disabled={
-            pendingTx || selectedNftList.length === 0 || isStakeLimitReached
+            selectedNftList.length === 0 || isStakeLimitReached
           }
           onClick={async () => {
             setPendingTx(true)
