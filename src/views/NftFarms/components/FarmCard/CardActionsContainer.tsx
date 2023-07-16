@@ -15,7 +15,6 @@ import { getAddress } from 'utils/addressHelpers'
 import useApproveNftFarm from '../../hooks/useApproveFarm'
 import HarvestAction from './HarvestAction'
 import StakeAction from './StakeAction'
-import Select from 'components/Select/Select'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSelectModal'
 import DepositModal from '../DepositModal'
@@ -174,7 +173,8 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
               width="100%" 
               isLoading={pendingTx} 
               endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
-              onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}>
+              onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
+        >
         {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
       </Button>
     )

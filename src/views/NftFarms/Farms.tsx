@@ -255,8 +255,7 @@ const Farms: React.FC = ({ children }) => {
   }, [isIntersecting])
 
   const rowData = chosenFarmsMemoized.map((farm) => {
-    
-    const lpLabel = farm.lpSymbol && farm.lpSymbol.split(' ')[0].toUpperCase().replace('PANCAKE', '')
+    const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('COINCOLLECT', '')
 
     const row: RowProps = {
       apr: {

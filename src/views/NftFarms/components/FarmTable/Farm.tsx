@@ -33,13 +33,12 @@ const TokenWrapper = styled.div`
 const Farm: React.FunctionComponent<FarmProps> = ({label, pid, nftAddress}) => {
   const { stakedBalance } = useFarmUser(pid)
   const { t } = useTranslation()
-  const rawStakedBalance = getBalanceNumber(stakedBalance)
 
   const handleRenderFarming = (): JSX.Element => {
-    if (rawStakedBalance) {
+    if (stakedBalance.toNumber()) {
       return (
         <Text color="secondary" fontSize="12px" bold textTransform="uppercase">
-          {t('Farming')}
+          {t('Staking')}
         </Text>
       )
     }

@@ -1,4 +1,4 @@
-import { AddIcon, Button, Heading, IconButton, MinusIcon, Skeleton, Text, useModal } from '@pancakeswap/uikit'
+import { AddIcon, AutoRenewIcon, Button, Heading, IconButton, MinusIcon, Skeleton, Text, useModal } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ToastDescriptionWithTx } from 'components/Toast'
@@ -7,7 +7,7 @@ import { useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useRouter } from 'next/router'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
 import { useFarmUser, useLpTokenPrice, usePriceCakeBusd } from 'state/nftFarms/hooks'
@@ -20,6 +20,8 @@ import useUnstakeFarms from '../../../hooks/useUnstakeFarms'
 import DepositModal from '../../DepositModal'
 import WithdrawModal from '../../WithdrawModal'
 import { ActionContainer, ActionContent, ActionTitles } from './styles'
+import nftFarmsConfig from 'config/constants/nftFarms'
+import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSelectModal'
 
 const IconButtonWrapper = styled.div`
   display: flex;
@@ -41,23 +43,36 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   nftAddresses,
   userDataReady,
   displayApr,
+  contractAddresses,
 }) => {
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
+  const [collectionOption, setCollectionOption] = useState(null)
+  const [task, setTask] = useState(null)
   const { account } = useWeb3React()
   const { allowance, tokenBalance, stakedBalance } = useFarmUser(pid)
+  const smartNftPoolAddress = contractAddresses ? getAddress(contractAddresses) : null
   const { onStake } = useStakeFarms(pid)
   const { onUnstake } = useUnstakeFarms(pid)
   const router = useRouter()
   const lpPrice = useLpTokenPrice(lpSymbol)
   const cakePrice = usePriceCakeBusd()
 
-  const isApproved = account && allowance
+  const atLeastOneApproved = allowance.some((allowance) => allowance)
+  const isApproved = account && atLeastOneApproved
 
-  const nftAddress = getAddress(nftAddresses)
-  
   const apyModalLink = "/nfts/collections"
+
+  const useDidMountEffect = (func, deps) => {
+    const didMount = useRef(false);
+
+    useEffect(() => {
+      if (didMount.current) func();
+      else didMount.current = true;
+    }, deps)
+
+  }
 
   const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
@@ -69,7 +84,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       toastSuccess(
         `${t('Staked')}!`,
         <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('Your tokens have been staked in the pool')}
+          {t('Your NFTs have been staked in the pool')}
         </ToastDescriptionWithTx>
       );
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
@@ -108,15 +123,19 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       multiplier={multiplier}
       addLiquidityUrl={apyModalLink}
       cakePrice={cakePrice}
-      pid={pid}
+      pid={collectionOption ? collectionOption : pid}
     />,
   )
   const [onPresentWithdraw] = useModal(
     <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} pid={pid} />,
   )
+
+  const alternativeCollectionPool = collectionOption ?? 0 > 0 ? nftFarmsConfig.find(farm => farm.pid === collectionOption) : null
+  const nftAddress = getAddress(alternativeCollectionPool ? alternativeCollectionPool.nftAddresses : nftAddresses)
   const nftContract = useErc721CollectionContract(nftAddress)
+
   const dispatch = useAppDispatch()
-  const { onApprove } = useApproveNftFarm(nftContract)
+  const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress)
 
   const handleApprove = useCallback(async () => {
     const receipt = await fetchWithCatchTxError(() => {
@@ -125,15 +144,49 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     if (receipt?.status) {
       toastSuccess(t('Contract Enabled'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+
+      if (smartNftPoolAddress) {
+        // Open stake panel automatically
+        onPresentDeposit()
+      }
+
     }
   }, [onApprove, dispatch, account, pid, t, toastSuccess, fetchWithCatchTxError])
+
+  useDidMountEffect(() => {
+    if (collectionOption == null)
+      return
+
+    if (task == "approve") {
+      handleApprove()
+    } else {
+      onPresentDeposit()
+    }
+    setCollectionOption(null)
+  }, [collectionOption, task])
+
+  const handleCollectionChange = useCallback(
+    (collectionId: number, task: string) => {
+      const optionId = collectionId > 4 ? 0 : collectionId
+      setTask(task)
+      setCollectionOption(optionId)
+    },
+    [pid, collectionOption],
+  )
+
+  const [onPresentCollectionModal] = useModal(
+    <CollectionSelectModal
+      onCollectionSelect={handleCollectionChange}
+      pid={pid}
+    />,
+  )
 
   if (!account) {
     return (
       <ActionContainer>
         <ActionTitles>
           <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-            {t('Start Farming')}
+            {t('Start Staking')}
           </Text>
         </ActionTitles>
         <ActionContent>
@@ -148,16 +201,26 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       return (
         <ActionContainer>
           <ActionTitles>
-            <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-              {lpSymbol}
-            </Text>
-            <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-              {t('Staked')}
-            </Text>
+
+            {smartNftPoolAddress ? (
+              <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
+                Staked NFT Count
+              </Text>
+            ) : (
+              <>
+                <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
+                  {lpSymbol.replace('CoinCollect', '')}
+                </Text>
+                <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
+                  {t('Staked')}
+                </Text>
+              </>
+            )}
+
           </ActionTitles>
           <ActionContent>
             <div>
-              <Heading>{tokenBalance.toNumber()}</Heading>
+              <Heading>{stakedBalance.toNumber()}</Heading>
             </div>
             <IconButtonWrapper>
               <IconButton variant="secondary" onClick={onPresentWithdraw} mr="6px">
@@ -165,7 +228,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
               </IconButton>
               <IconButton
                 variant="secondary"
-                onClick={onPresentDeposit}
+                onClick={smartNftPoolAddress ? onPresentCollectionModal : onPresentDeposit}
                 disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
               >
                 <AddIcon color="primary" width="14px" />
@@ -189,11 +252,13 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
         <ActionContent>
           <Button
             width="100%"
-            onClick={onPresentDeposit}
+            onClick={smartNftPoolAddress ? onPresentCollectionModal : onPresentDeposit}
             variant="secondary"
+            isLoading={pendingTx}
+            endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
             disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
           >
-            {t('Stake NFT')}
+            {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
           </Button>
         </ActionContent>
       </ActionContainer>
@@ -205,7 +270,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       <ActionContainer>
         <ActionTitles>
           <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-            {t('Start Farming')}
+            {t('Start Staking')}
           </Text>
         </ActionTitles>
         <ActionContent>
@@ -219,12 +284,18 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     <ActionContainer>
       <ActionTitles>
         <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-          {t('Enable Farm')}
+          {t('Enable and Stake')}
         </Text>
       </ActionTitles>
       <ActionContent>
-        <Button width="100%" disabled={pendingTx} onClick={handleApprove} variant="secondary">
-          {t('Enable')}
+        <Button
+          width="100%"
+          isLoading={pendingTx}
+          endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+          onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
+          variant="secondary"
+        >
+          {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
         </Button>
       </ActionContent>
     </ActionContainer>

@@ -142,7 +142,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   expanded,
 }) => {
   const farm = details
-
+  
   const { t } = useTranslation()
   const currentBlock = useCurrentBlock()
   const isActive = farm.multiplier !== '0X'
@@ -190,7 +190,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
         {isActive && (
           <StakeContainer>
             <StyledLinkExternal href={apyModalLink}>
-              {t('Get %symbol%', { symbol: lpLabel })}
+              {t('Get %symbol%', { symbol: lpLabel.replace('COINCOLLECT', '') })}
             </StyledLinkExternal>
           </StakeContainer>
         )}
