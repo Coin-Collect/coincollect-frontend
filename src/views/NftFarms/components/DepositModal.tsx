@@ -92,7 +92,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const annualRoiAsNumber = annualRoi.toNumber()
   const formattedAnnualRoi = formatNumber(annualRoiAsNumber, annualRoi.gt(10000) ? 0 : 2, annualRoi.gt(10000) ? 0 : 2)
 
-  const { nfts, isLoading, error } = useNftsForCollectionAndAddress(pid)
+  const { nfts, isLoading, error, revalidateNfts } = useNftsForCollectionAndAddress(pid)
+  const handleRefresh = () => {
+    // Call the revalidateNfts function to trigger SWR to revalidate the data
+    revalidateNfts();
+  };
 
   const nftList = nfts.map((nft) => {
     const isSelected = selectedNftList.some(
@@ -164,7 +168,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
   }
 
   return (
-    <Modal title={t('Select NFTs')} onDismiss={onDismiss}>
+    <Modal title={t('Select NFTs to Stake')} onDismiss={onDismiss}>
 
       {stakingLimit.gt(0) && (
         <Text color="secondary" bold mb="5px" style={{ textAlign: 'center' }} fontSize="20px">
@@ -194,11 +198,14 @@ const DepositModal: React.FC<DepositModalProps> = ({
         </Flex>
       ) : error ? (
         <Flex p="24px" flexDirection="column" alignItems="center">
-          <Button variant="light" onClick={onDismiss} width="100%">
+          <Button variant="light" onClick={handleRefresh} width="100%">
             {t('Retry')}
           </Button>
-          <Text pt="8px" bold>
-            {t('Network error!')}
+          <Text pt="8px" fontSize='15px'>
+            {t('There was a temporary network issue while fetching NFTs.')}
+          </Text>
+          <Text pt="8px" fontSize='15px'>
+            {t('Please wait a few seconds and press the retry button.')}
           </Text>
         </Flex>
       ) : (

@@ -35,7 +35,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
     return getFullDisplayBalance(max)
   }, [max])
 
-  const {nfts, isLoading, error} = useStakedNfts(pid)
+  const { nfts, isLoading, error, revalidateNfts } = useStakedNfts(pid)
+  const handleRefresh = () => {
+    // Call the revalidateNfts function to trigger SWR to revalidate the data
+    revalidateNfts();
+  };
 
   const nftList = nfts.map((nft) => {
     const isSelected = selectedNftList.some(
@@ -43,7 +47,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
         selectedNft.collectionAddress === nft.collectionAddress &&
         selectedNft.tokenId === nft.tokenId
     );
-  
+
     return isSelected ? (
       <SelectedNftBox
         key={nft.tokenId}
@@ -70,7 +74,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
       (selectedNft) =>
         selectedNft.collectionAddress === collectionAddress && selectedNft.tokenId === tokenId
     );
-  
+
     if (isSelected) {
       setSelectedNftList((prevList) =>
         prevList.filter(
@@ -85,35 +89,39 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
 
 
   return (
-    <Modal title={t('Unstake %nftName%', {nftName: tokenName})} onDismiss={onDismiss}>
-      
+    <Modal title={t('Select NFTs to UnStake')} onDismiss={onDismiss}>
+
       {nftList.length === 0 && !isLoading && !error ? (
-      <Flex p="24px" flexDirection="column" alignItems="center">
-        <NoNftsImage />
-        <Text pt="8px" bold>
-          {t('No NFTs found')}
-        </Text>
-      </Flex>
-    ) : nftList.length > 0 ? (
-      <Flex flexWrap="wrap" justifyContent="space-evenly">
-        {nftList}
-      </Flex>
-    ) : error ? (
-      <Flex p="24px" flexDirection="column" alignItems="center">
-        <Button variant="light" onClick={onDismiss} width="100%">
-          {t('Retry')}
-        </Button>
-        <Text pt="8px" bold>
-          {t('Network error!')}
-        </Text>
-      </Flex>
-    ) : (
-      <Flex p="24px" flexDirection="column" alignItems="center">
-        <CircleLoader size="30px" />
-      </Flex>
-    )}
-     
-      
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <NoNftsImage />
+          <Text pt="8px" bold>
+            {t('No NFTs found')}
+          </Text>
+        </Flex>
+      ) : nftList.length > 0 ? (
+        <Flex flexWrap="wrap" justifyContent="space-evenly">
+          {nftList}
+        </Flex>
+      ) : error ? (
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <Button variant="light" onClick={handleRefresh} width="100%">
+            {t('Retry')}
+          </Button>
+          <Text pt="8px" fontSize='15px'>
+            {t('There was a temporary network issue while fetching NFTs.')}
+          </Text>
+          <Text pt="8px" fontSize='15px'>
+            {t('Please wait a few seconds and press the retry button.')}
+          </Text>
+        </Flex>
+      ) : (
+        <Flex p="24px" flexDirection="column" alignItems="center">
+          <CircleLoader size="30px" />
+          <Text mt={1}>NFTs will be listed shortly...</Text>
+        </Flex>
+      )}
+
+
       <ModalActions>
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
           {t('Cancel')}

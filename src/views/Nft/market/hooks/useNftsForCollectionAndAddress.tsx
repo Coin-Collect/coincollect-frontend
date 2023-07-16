@@ -20,7 +20,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
 
 
         const getNfts = async () => {
-            
+            try {
               const tokenIds = await collectionContract.walletOfOwner(account)
 
               const imageCalls = tokenIds.map((id) => {
@@ -48,13 +48,20 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
               }))
               console.log("promise done")
               return tokenIdsNumber
-            
+            } catch (error) {
+              console.log('Error fetching NFTs:', error);
+              throw error; // Re-throw the error to trigger SWR's error handling
+            }
         }
 
-        const { data, status, error } = useSWR(isAddress(account) ? [account, selectedPid, 'unstakedNftList'] : null, async () => getNfts())
+        const { data, status, error, mutate } = useSWR(isAddress(account) ? [account, selectedPid, 'unstakedNftList'] : null, async () => getNfts(), {
+          onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+            if (retryCount < 3) {
+              // Retry the SWR request up to 3 times on error
+              setTimeout(() => revalidate({ retryCount: retryCount + 1 }), 1000);
+            }
+          },
+        });
 
-    
-
-    return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, error }
+    return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, error, revalidateNfts: mutate }
 }
-
