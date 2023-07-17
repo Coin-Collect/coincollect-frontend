@@ -5,6 +5,7 @@ import {
   CardHeader,
   ExpandableButton,
   Flex,
+  Skeleton,
   Text,
   useMatchBreakpoints,
   useTooltip,
@@ -28,6 +29,8 @@ import { getPolygonScanLink } from 'utils'
 import { getNftFarmApr } from 'utils/apr'
 import BigNumber from 'bignumber.js'
 import { getDisplayApr } from 'views/NftFarms/Farms'
+import nftFarmsConfig from 'config/constants/nftFarms'
+import Balance from 'components/Balance'
 
 
 const StyledCardMobile = styled(Card)`
@@ -70,7 +73,7 @@ const ExpandingWrapper = styled.div`
   overflow: hidden;
 `
 
-const NftStakeCardBody= ({farm, account}) => {
+const NftStakeCardBody = ({ farm, account }) => {
   const { t } = useTranslation()
   const [showExpandableSection, setShowExpandableSection] = useState(false)
   const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
@@ -80,32 +83,62 @@ const NftStakeCardBody= ({farm, account}) => {
   const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
   const cakePrice = usePriceCakeBusd()
   const removed = false
+  const sideRewards = farm.sideRewards ? farm.sideRewards : []
 
-  const totalLiquidity = farm.totalStaked
-  const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, totalLiquidity.toNumber()))
-  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold)
+  // We use staked nft count for regular pools
+  const totalStaked = farm.totalStaked
+  // We use sum of weights for smart pools
+  const totalShares = farm.totalShares
+  const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]["mainCollectionWeight"]
+  const isSmartNftStakePool = Boolean(farm.contractAddresses)
+  const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()))
+  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold, mainCollectionWeight)
 
   return (
     <>
-    <StyledCardBody>
+      <StyledCardBody>
         <FarmCardInnerContainer>
           <CardHeading
             lpLabel={lpLabel}
             multiplier={farm.multiplier}
-            nftToken= {nftAddress}
+            nftToken={nftAddress}
           />
           {!removed && (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Text>{t('Daily Reward')}:</Text>
-              <Text bold style={{ display: 'flex', alignItems: 'center' }}>
-                {getDisplayApr(cakeRewardsApr)}
-              </Text>
+            <>
+              {sideRewards.length === 0 ? (
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Text>{t('Daily Reward')}:</Text>
+                  <Text bold style={{ display: 'flex', alignItems: 'center' }}>
+                    {getDisplayApr(cakeRewardsApr)}
+                  </Text>
+                </Flex>
+              ) : (
+                <>
+                  <Flex justifyContent="center" alignItems="center">
+                    <Text>{t('Daily Rewards')}</Text>
+                  </Flex>
+                  <Flex justifyContent="space-between">
+                    <Text>{earnLabel}</Text>
+                    <Text bold>{getDisplayApr(cakeRewardsApr)}</Text>
+                  </Flex>
+                  {sideRewards.map((reward, index) => (
+                    <Flex key={index} justifyContent="space-between">
+                      <Text>{reward.token}</Text>
+                      <Text bold><Balance value={Number(getDisplayApr(cakeRewardsApr)) * (reward.percentage / 100)} /></Text>
+                    </Flex>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+
+          {sideRewards.length === 0 && (
+            <Flex justifyContent="space-between">
+              <Text>{t('Earn')}:</Text>
+              <Text bold>{earnLabel}</Text>
             </Flex>
           )}
-          <Flex justifyContent="space-between">
-            <Text>{t('Earn')}:</Text>
-            <Text bold>{earnLabel}</Text>
-          </Flex>
+
           <CardActionsContainer
             farm={farm}
             lpLabel={lpLabel}
@@ -131,11 +164,11 @@ const NftStakeCardBody= ({farm, account}) => {
           />
         )}
       </ExpandingWrapper>
-      </>
+    </>
   )
 }
 
-const NftStakeCardMobile= ({farm}) => {
+const NftStakeCardMobile = ({ farm }) => {
   const { account } = useActiveWeb3React()
   const { t } = useTranslation()
   const credit = useIfoPoolCredit()
@@ -145,41 +178,41 @@ const NftStakeCardMobile= ({farm}) => {
     <StyledCardMobile isActive>
       <CardHeader p="16px">
         <Flex justifyContent="space-between" alignItems="center">
-        <PoolCardHeaderTitle
-          title={`Do you have ${farm.lpSymbol}?`}
-          subTitle="Stake now and start earning"
-        />
+          <PoolCardHeaderTitle
+            title={`Do you have ${farm.lpSymbol}?`}
+            subTitle="Stake now and start earning"
+          />
           <ExpandableButton expanded={isExpanded} onClick={() => setIsExpanded((prev) => !prev)} />
         </Flex>
       </CardHeader>
       {isExpanded && (
         <>
-          <NftStakeCardBody farm={farm} account={account}/>
+          <NftStakeCardBody farm={farm} account={account} />
         </>
       )}
     </StyledCardMobile>
   )
 }
 
-const NftStakeCard = ({farm, account}) => {
+const NftStakeCard = ({ farm, account }) => {
   const { isMd, isXs, isSm } = useMatchBreakpoints()
   const isSmallerThanTablet = isMd || isXs || isSm
-  
+
   if (isSmallerThanTablet) {
-    return <NftStakeCardMobile farm={farm}  />
+    return <NftStakeCardMobile farm={farm} />
   }
 
   return (
-  <StyledCard isActive>
-    <PoolCardHeader isStaking={true}>
+    <StyledCard isActive>
+      <PoolCardHeader isStaking={true}>
         <PoolCardHeaderTitle
           title={`Do you have ${farm.lpSymbol}?`}
           subTitle="Stake now and start earning"
         />
         {/*<TokenPairImage {...vaultPoolConfig[pool.vaultKey].tokenImage} width={64} height={64} />*/}
-      </PoolCardHeader>  
-      <NftStakeCardBody farm={farm} account={account}/>
-  </StyledCard>
+      </PoolCardHeader>
+      <NftStakeCardBody farm={farm} account={account} />
+    </StyledCard>
   )
 }
 

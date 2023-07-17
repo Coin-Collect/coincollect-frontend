@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -70,7 +70,7 @@ const ifos: Minting[] = [
     symbol: 'SILVER',
     totalSupply: 2200,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
     banner: {
       large: "https://coincollect.org/assets/images/clone/banners/bannerSilverLg.png",
@@ -97,7 +97,7 @@ const ifos: Minting[] = [
     symbol: 'GOLD',
     totalSupply: 1100,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
     banner: {
       large: "https://coincollect.org/assets/images/clone/banners/bannerGoldLg.png",
@@ -115,11 +115,12 @@ const ifos: Minting[] = [
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
+  //============================LOT NFTS====================================
   {
     id: 'lotnfts',
     name: 'Lot NFT',
     description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
-    address: getCoinCollectGoldNftAddress(),
+    address: getLotNftAddress(),
     symbol: 'LOT',
     totalSupply: 1100,
     isActive: true,
