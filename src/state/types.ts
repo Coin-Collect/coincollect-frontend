@@ -85,6 +85,7 @@ export interface SerializedNftFarm extends SerializedNftFarmConfig {
   lpTotalInQuoteToken?: SerializedBigNumber
   lpTotalSupply?: SerializedBigNumber
   totalStaked?: SerializedBigNumber
+  totalShares?: SerializedBigNumber
   tokenPriceVsQuote?: SerializedBigNumber
   poolWeight?: SerializedBigNumber
   startBlock?: number
@@ -102,6 +103,7 @@ export interface DeserializedNftFarm extends DeserializedNftFarmConfig {
   lpTotalInQuoteToken?: BigNumber
   lpTotalSupply?: BigNumber
   totalStaked?: BigNumber
+  totalShares?: BigNumber
   tokenPriceVsQuote?: BigNumber
   poolWeight?: BigNumber
   startBlock?: number

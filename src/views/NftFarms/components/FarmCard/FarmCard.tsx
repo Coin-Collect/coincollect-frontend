@@ -11,6 +11,7 @@ import DetailsSection from './DetailsSection'
 import CardHeadingWithBanner from './CardHeadingWithBanner'
 import CardActionsContainer from './CardActionsContainer'
 import ApyButton from './ApyButton'
+import Balance from 'components/Balance'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
@@ -87,7 +88,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         {sideRewards.map((reward, index) => (
           <Flex key={index} justifyContent="space-between">
             <Text>{reward.token}</Text>
-            <Text bold>{Number(displayApr) * (reward.percentage / 100)}</Text>
+            <Text bold><Balance value={Number(displayApr) * (reward.percentage / 100)} /></Text>
           </Flex>
         ))}
       </>

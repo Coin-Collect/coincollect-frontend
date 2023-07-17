@@ -29,6 +29,8 @@ import { RowProps } from './components/FarmTable/Row'
 import ToggleView from './components/ToggleView/ToggleView'
 import { DesktopColumnSchema } from './components/types'
 import { getAddress } from 'utils/addressHelpers'
+import nftFarmsConfig from 'config/constants/nftFarms'
+
 
 const ControlContainer = styled.div`
   display: flex;
@@ -161,12 +163,19 @@ const Farms: React.FC = ({ children }) => {
         if (!farm.totalStaked) {
           return farm
         }
-        const totalLiquidity = farm.totalStaked
-        const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, totalLiquidity.toNumber()))
+
+        // We use staked nft count for regular pools
+        const totalStaked = farm.totalStaked
+        // We use sum of weights for smart pools
+        const totalShares = farm.totalShares
+        const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]["mainCollectionWeight"]
+
+        const isSmartNftStakePool = Boolean(farm.contractAddresses)
+        const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()))
         const { cakeRewardsApr, lpRewardsApr } = isActive
-          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold)
+          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold, mainCollectionWeight)
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
-        return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
+        return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
       })
 
       if (query) {
