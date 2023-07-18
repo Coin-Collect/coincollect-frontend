@@ -15,7 +15,7 @@ const NewestForCollection = ({mintingData}) => {
   return (
     <div>
       <Flex justifyContent="space-between" alignItems="center" mb="26px">
-        <Heading data-test="nfts-newest">{t('Some Great Pieces from Collection')}</Heading>
+        <Heading data-test="nfts-newest">{t('Collection at OpenSea')}</Heading>
         <Button
           as={NextLinkFromReactRouter}
           to={`${nftsBaseUrl}/activity/`}
