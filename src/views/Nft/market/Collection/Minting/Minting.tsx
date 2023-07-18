@@ -47,6 +47,7 @@ import { StyledCard } from "../../../../../../packages/uikit/src/components/Card
 import FlexLayout from "components/Layout/Flex";
 import NftStakeCard from "./components/NftStakeCard";
 import PoolCard from "views/Pools/components/PoolCard";
+import NewestForCollection from "../../Home/NewestForCollection";
 
 
 const BackLink = styled(NextLinkFromReactRouter)`
@@ -68,12 +69,12 @@ export default function Minting() {
   const collectionAddress = router.query.collectionAddress as string
   const collection = useGetCollection(collectionAddress)
   const { totalSupply, maxSupply, cost, status, numberTokensListed, banner, avatar, name, description } = collection
-  const activeIfo = mintingConfig.find((ifo) => ifo.name === name)
+  const minting = mintingConfig.find((ifo) => ifo.name === name)
   const { t } = useTranslation()
   const { account, library } = useWeb3React()
   const { toastError } = useToast()
-  const publicIfoData = useGetPublicIfoV2Data(activeIfo)
-  const walletIfoData = useGetWalletIfoV3Data(activeIfo)
+  const publicIfoData = useGetPublicIfoV2Data(minting)
+  const walletIfoData = useGetWalletIfoV3Data(minting)
   const { chosenFarmsMemoized } = useContext(FarmsContext)
   const cakePrice = usePriceCakeBusd()
 
@@ -117,16 +118,18 @@ export default function Minting() {
           
           <NftStakeCard farm={farm} account={account} />
           
-            <MintingCurrentCard ifo={activeIfo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+            <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
           </MintingLayoutWrapper>
 
         </Container>
 
-
+        <Container>
+          <NewestForCollection mintingData={minting}/>
+        </Container>
 
         <IfoStepBackground>
           <Container>
-            <MintingSteps isLive={activeIfo.status === 'live'} ifo={activeIfo} walletIfoData={walletIfoData} />
+            <MintingSteps isLive={minting.status === 'live'} ifo={minting} walletIfoData={walletIfoData} />
           </Container>
         </IfoStepBackground>
 

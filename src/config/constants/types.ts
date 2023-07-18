@@ -78,6 +78,7 @@ export interface Minting {
   totalSupply: number
   avatar: string
   banner: {large: string, small: string}
+  showCase?: any[]
   currency: Token
   token: Token
   releaseBlockNumber: number
