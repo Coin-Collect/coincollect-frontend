@@ -6,6 +6,14 @@ import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCo
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
+const collectionLinks = {
+  'starter': 'https://opensea.io/collection/coincollect-nfts',
+  'bronze': 'https://opensea.io/collection/coincollect-bronze-nft',
+  'silver': 'https://opensea.io/collection/coincollect-silver-nft',
+  'gold': 'https://opensea.io/collection/coincollect-gold-nft',
+  'lot': 'www.lotnft.com'
+}
+
 const ifos: Minting[] = [
   //============================Free Mint NFTS====================================
   {
@@ -23,10 +31,10 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banner-lg.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
+      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
+      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
+      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
+      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
     ],
     poolUnlimited: {
       saleAmount: '5000 NFT',
@@ -37,6 +45,7 @@ const ifos: Minting[] = [
     releaseBlockNumber: 15156634,
     articleUrl: 'https://coincollect.org',
     version: 1.0,
+    openSeaUrl: 'https://opensea.io/collection/coincollect-nfts',
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
@@ -56,10 +65,10 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
+      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
+      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
+      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
+      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
     ],
 
     poolUnlimited: {
@@ -71,6 +80,7 @@ const ifos: Minting[] = [
     releaseBlockNumber: 15156634,
     articleUrl: 'https://coincollect.org',
     version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/coincollect-bronze-nft',
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
@@ -90,10 +100,10 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
+      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
+      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
+      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
+      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
     ],
 
     poolUnlimited: {
@@ -105,6 +115,7 @@ const ifos: Minting[] = [
     releaseBlockNumber: 15156634,
     articleUrl: 'https://coincollect.org',
     version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/coincollect-silver-nft',
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
@@ -124,10 +135,10 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-silver-nft'},
+      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
+      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
+      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
+      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
     ],
     poolUnlimited: {
       saleAmount: '1100 NFT',
@@ -138,6 +149,7 @@ const ifos: Minting[] = [
     releaseBlockNumber: 15156634,
     articleUrl: 'https://coincollect.org',
     version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/coincollect-gold-nft',
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
@@ -172,6 +184,7 @@ const ifos: Minting[] = [
     releaseBlockNumber: 15156634,
     articleUrl: 'https://coincollect.org',
     version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/lotshare-nft',
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },

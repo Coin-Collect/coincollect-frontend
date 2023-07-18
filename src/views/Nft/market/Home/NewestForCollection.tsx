@@ -9,7 +9,7 @@ import CollectibleLinkCard from '../components/CollectibleCard/CollectibleLinkCa
 
 const NewestForCollection = ({mintingData}) => {
   const { t } = useTranslation()
-  let { showCase, address, name } = mintingData
+  let { showCase, address, name, openSeaUrl } = mintingData
   const nfts = showCase ? showCase.map((item, index) => ({ 'tokenId': item.tokenId, 'collectionAddress': address, 'name': `#${item.tokenId}`, 'collectionName': name, 'image': {'thumbnail': item.image} })) : [];
 
   return (
@@ -18,10 +18,11 @@ const NewestForCollection = ({mintingData}) => {
         <Heading data-test="nfts-newest">{t('Buy at OpenSea')}</Heading>
         <Button
           as={NextLinkFromReactRouter}
-          to={`${nftsBaseUrl}/activity/`}
+          to={openSeaUrl}
           variant="secondary"
           scale="sm"
           endIcon={<ChevronRightIcon color="primary" />}
+          external={true}
         >
           {t('View All')}
         </Button>
@@ -38,6 +39,7 @@ const NewestForCollection = ({mintingData}) => {
                 data-test="showcase-nft-card"
                 key={nft.address + index}
                 nft={nft}
+                directLink={openSeaUrl}
               />
             )
           })}
