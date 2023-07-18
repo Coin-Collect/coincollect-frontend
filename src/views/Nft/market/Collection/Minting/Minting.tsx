@@ -124,7 +124,7 @@ export default function Minting() {
         </Container>
 
         <Container>
-          <NewestForCollection mintingData={minting}/>
+          <NewestForCollection mintingData={minting} />
         </Container>
 
         <IfoStepBackground>
@@ -134,7 +134,7 @@ export default function Minting() {
         </IfoStepBackground>
 
         <Container>
-          <MintingQuestions />
+          <MintingQuestions mintingData={minting} />
         </Container>
 
       </MintingLayout>

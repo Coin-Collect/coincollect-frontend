@@ -31,10 +31,24 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banner-lg.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
+      { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
+      { 'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze'] },
+      { 'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver'] },
+      { 'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold'] },
+    ],
+    faq: [
+      {
+        title: "What is an NFT?",
+        description: ["An NFT, or non-fungible token, is a digital asset that is unique and cannot be replaced. NFTs are often used to represent digital art, music, videos, and other collectibles. They can be bought, sold, and traded on NFT marketplaces."]
+      },
+      {
+        title: "How do NFTs work?",
+        description: ["NFTs are stored on a blockchain, which is a digital ledger that records transactions. The blockchain ensures that NFTs are secure and cannot be counterfeited."]
+      },
+      {
+        title: "How do I buy an NFT?",
+        description: ["To buy an NFT, you will need to create a digital wallet and fund it with cryptocurrency. You can then use your digital wallet to buy NFTs on an NFT marketplace."]
+      }
     ],
     poolUnlimited: {
       saleAmount: '5000 NFT',
@@ -65,12 +79,25 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
+      { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
+      { 'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze'] },
+      { 'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver'] },
+      { 'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold'] },
     ],
-
+    faq: [
+      {
+        title: "What is an NFT?",
+        description: ["An NFT, or non-fungible token, is a digital asset that is unique and cannot be replaced. NFTs are often used to represent digital art, music, videos, and other collectibles. They can be bought, sold, and traded on NFT marketplaces."]
+      },
+      {
+        title: "How do NFTs work?",
+        description: ["NFTs are stored on a blockchain, which is a digital ledger that records transactions. The blockchain ensures that NFTs are secure and cannot be counterfeited."]
+      },
+      {
+        title: "How do I buy an NFT?",
+        description: ["To buy an NFT, you will need to create a digital wallet and fund it with cryptocurrency. You can then use your digital wallet to buy NFTs on an NFT marketplace."]
+      }
+    ],
     poolUnlimited: {
       saleAmount: '3300 NFT',
       distributionRatio: 1,
@@ -100,12 +127,25 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
+      { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
+      { 'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze'] },
+      { 'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver'] },
+      { 'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold'] },
     ],
-
+    faq: [
+      {
+        title: "What is an NFT?",
+        description: ["An NFT, or non-fungible token, is a digital asset that is unique and cannot be replaced. NFTs are often used to represent digital art, music, videos, and other collectibles. They can be bought, sold, and traded on NFT marketplaces."]
+      },
+      {
+        title: "How do NFTs work?",
+        description: ["NFTs are stored on a blockchain, which is a digital ledger that records transactions. The blockchain ensures that NFTs are secure and cannot be counterfeited."]
+      },
+      {
+        title: "How do I buy an NFT?",
+        description: ["To buy an NFT, you will need to create a digital wallet and fund it with cryptocurrency. You can then use your digital wallet to buy NFTs on an NFT marketplace."]
+      }
+    ],
     poolUnlimited: {
       saleAmount: '2200 NFT',
       distributionRatio: 1,
@@ -135,10 +175,24 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter']},
-      {'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze']},
-      {'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver']},
-      {'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold']},
+      { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
+      { 'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze'] },
+      { 'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver'] },
+      { 'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold'] },
+    ],
+    faq: [
+      {
+        title: "What is an NFT?",
+        description: ["An NFT, or non-fungible token, is a digital asset that is unique and cannot be replaced. NFTs are often used to represent digital art, music, videos, and other collectibles. They can be bought, sold, and traded on NFT marketplaces."]
+      },
+      {
+        title: "How do NFTs work?",
+        description: ["NFTs are stored on a blockchain, which is a digital ledger that records transactions. The blockchain ensures that NFTs are secure and cannot be counterfeited."]
+      },
+      {
+        title: "How do I buy an NFT?",
+        description: ["To buy an NFT, you will need to create a digital wallet and fund it with cryptocurrency. You can then use your digital wallet to buy NFTs on an NFT marketplace."]
+      }
     ],
     poolUnlimited: {
       saleAmount: '1100 NFT',
@@ -169,12 +223,25 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/clone/banners/bannerLotSm.png",
     },
     showCase: [
-      {'tokenId': 5, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_20.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft'},
-      {'tokenId': 25, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_21.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft'},
-      {'tokenId': 54, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_22.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft'},
-      {'tokenId': 67, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_23.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft'},
+      { 'tokenId': 5, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_20.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 25, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_21.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 54, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_22.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 67, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_23.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
     ],
-
+    faq: [
+      {
+        title: "What is an NFT?",
+        description: ["An NFT, or non-fungible token, is a digital asset that is unique and cannot be replaced. NFTs are often used to represent digital art, music, videos, and other collectibles. They can be bought, sold, and traded on NFT marketplaces."]
+      },
+      {
+        title: "How do NFTs work?",
+        description: ["NFTs are stored on a blockchain, which is a digital ledger that records transactions. The blockchain ensures that NFTs are secure and cannot be counterfeited."]
+      },
+      {
+        title: "How do I buy an NFT?",
+        description: ["To buy an NFT, you will need to create a digital wallet and fund it with cryptocurrency. You can then use your digital wallet to buy NFTs on an NFT marketplace."]
+      }
+    ],
     poolUnlimited: {
       saleAmount: '1100 NFT',
       distributionRatio: 1,

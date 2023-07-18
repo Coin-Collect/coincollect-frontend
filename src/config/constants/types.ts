@@ -79,6 +79,7 @@ export interface Minting {
   avatar: string
   banner: {large: string, small: string}
   showCase?: any[]
+  faq?: {title: string, description: string[]}[]
   currency: Token
   token: Token
   releaseBlockNumber: number

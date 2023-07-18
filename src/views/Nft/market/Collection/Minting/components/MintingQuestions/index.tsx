@@ -27,8 +27,9 @@ const DetailsWrapper = styled.div`
   }
 `
 
-const IfoQuestions = () => {
+const IfoQuestions = ({mintingData}) => {
   const { t } = useTranslation()
+  let { faq } = mintingData
 
   return (
     <Flex alignItems={['center', null, null, 'start']} flexDirection={['column', null, null, 'row']}>
@@ -43,7 +44,7 @@ const IfoQuestions = () => {
             </Heading>
           </CardHeader>
           <CardBody>
-            {config.map(({ title, description }, i, { length }) => {
+            {faq.map(({ title, description }, i, { length }) => {
               return (
                 <FoldableText key={i} mb={i + 1 === length ? '' : '24px'} title={title}>
                   {description.map((desc, index) => {
