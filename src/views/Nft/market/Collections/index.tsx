@@ -87,27 +87,27 @@ const Collectible = () => {
   }, [collections, sortField])
 
   // CC - Filtering
-  const finishedMintings = useMemo(()=> {
+  const finishedMintings = useMemo(() => {
     const collectionValues = collections ? Object.values(collections) : []
     // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'finished')
   }, [collections])
 
   // CC - Filtering
-  const activePublicMintings = useMemo(()=> {
+  const activePublicMintings = useMemo(() => {
     const collectionValues = collections ? Object.values(collections) : []
     // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'livepublic')
   }, [collections])
 
   // CC - Filtering
-  const activePrivateMintings = useMemo(()=> {
+  const activePrivateMintings = useMemo(() => {
     const collectionValues = collections ? Object.values(collections) : []
     // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'liveprivate')
   }, [collections])
 
-  
+
   const handleSortOptionChange = (option: OptionProps): void => {
     setSortField(option.value)
   }
@@ -175,12 +175,6 @@ const Collectible = () => {
               collections={activePrivateMintings}
             />}
 
-            {finishedMintings.length > 0 && <Collections
-              key="finished-mintings"
-              title={t('Finished Mintings')}
-              testId="finished-mintings"
-              collections={finishedMintings}
-            />}
 
             <Collections
               key="coming-soon-collections"
@@ -188,6 +182,13 @@ const Collectible = () => {
               testId="nfts-coming-soon-collections"
               collections={null}
             />
+
+            {finishedMintings.length > 0 && <Collections
+              key="finished-mintings"
+              title={t('Finished Mintings')}
+              testId="finished-mintings"
+              collections={finishedMintings}
+            />}
 
 
             {/*
