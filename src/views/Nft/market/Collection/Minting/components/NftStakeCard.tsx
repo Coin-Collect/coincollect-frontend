@@ -157,7 +157,7 @@ const NftStakeCardBody = ({ farm, account }) => {
           <DetailsSection
             removed={removed}
             bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
-            infoAddress={`/info/pool/`}
+            earningToken={farm.earningToken}
             totalStaked={farm.totalStaked}
             lpLabel={lpLabel}
             addLiquidityUrl={apyModalLink}

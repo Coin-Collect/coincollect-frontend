@@ -114,12 +114,12 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
         <StyledLinkExternal href={addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel })}</StyledLinkExternal>
       )}
       <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>
-      {
-        <>
-          {earningToken?.address && (<StyledLinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
-          {earningToken?.projectLink && (<StyledLinkExternal href={earningToken.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
-        </>
-      }
+
+
+      {earningToken?.address && (<StyledLinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
+      {earningToken?.projectLink && (<StyledLinkExternal href={earningToken.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
+
+
     </Wrapper>
   )
 }

@@ -142,13 +142,13 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   expanded,
 }) => {
   const farm = details
-  
+
   const { t } = useTranslation()
   const currentBlock = useCurrentBlock()
   const isActive = farm.multiplier !== '0X'
   const { dual } = farm
   const lpLabel = farm.lpSymbol && farm.lpSymbol.toUpperCase().replace('PANCAKE', '')
-  
+
   const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
   const bsc = getPolygonScanLink(nftAddress, 'address')
@@ -159,34 +159,34 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   return (
     <Container expanded={expanded}>
       <InfoContainer>
-      {farm.stakingLimit && farm.stakingLimit.gt(0) && (
-        <MaxStakeRow
-          small
-          currentBlock={currentBlock}
-          hasPoolStarted={hasPoolStarted}
-          stakingLimit={farm.stakingLimit}
-          stakingLimitEndBlock={farm.stakingLimitEndBlock}
-          stakingTokenSymbol={lpLabel}
-        />
-      )}
-      {shouldShowBlockCountdown && (
-        <Flex mb="2px" justifyContent="space-between" alignItems="center">
-          <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
-          {blocksRemaining || blocksUntilStart ? (
-            <Flex alignItems="center">
-              <Link external href={getBscScanLink(hasPoolStarted ? farm.endBlock : farm.startBlock, 'countdown')}>
-                <Balance small value={blocksToDisplay} decimals={0} color="primary" />
-                <Text small ml="4px" color="primary" textTransform="lowercase">
-                  {t('Blocks')}
-                </Text>
-                <TimerIcon ml="4px" color="primary" />
-              </Link>
-            </Flex>
-          ) : (
-            <Skeleton width="54px" height="21px" />
-          )}
-        </Flex>
-      )}
+        {farm.stakingLimit && farm.stakingLimit.gt(0) && (
+          <MaxStakeRow
+            small
+            currentBlock={currentBlock}
+            hasPoolStarted={hasPoolStarted}
+            stakingLimit={farm.stakingLimit}
+            stakingLimitEndBlock={farm.stakingLimitEndBlock}
+            stakingTokenSymbol={lpLabel}
+          />
+        )}
+        {shouldShowBlockCountdown && (
+          <Flex mb="2px" justifyContent="space-between" alignItems="center">
+            <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
+            {blocksRemaining || blocksUntilStart ? (
+              <Flex alignItems="center">
+                <Link external href={getBscScanLink(hasPoolStarted ? farm.endBlock : farm.startBlock, 'countdown')}>
+                  <Balance small value={blocksToDisplay} decimals={0} color="primary" />
+                  <Text small ml="4px" color="primary" textTransform="lowercase">
+                    {t('Blocks')}
+                  </Text>
+                  <TimerIcon ml="4px" color="primary" />
+                </Link>
+              </Flex>
+            ) : (
+              <Skeleton width="54px" height="21px" />
+            )}
+          </Flex>
+        )}
         {isActive && (
           <StakeContainer>
             <StyledLinkExternal href={apyModalLink}>
@@ -196,8 +196,9 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
         )}
         <StyledLinkExternal href={bsc}>{t('View Contract')}</StyledLinkExternal>
 
-        {/* <StyledLinkExternal href={info}>{t('See Pair Info')}</StyledLinkExternal> */}
-        
+        {farm.earningToken?.address && (<StyledLinkExternal href={`https://info.uniswap.org/#/polygon/pools/${farm.earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
+        {farm.earningToken?.projectLink && (<StyledLinkExternal href={farm.earningToken.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
+
         <TagsContainer>
           {dual ? <DualTag /> : null}
         </TagsContainer>
