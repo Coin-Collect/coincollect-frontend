@@ -11,6 +11,9 @@ import {
   TwitterIcon,
   Link,
   TelegramIcon,
+  DiscordIcon,
+  OpenSeaIcon,
+  CmcIcon,
 } from '@pancakeswap/uikit'
 import tokens from 'config/constants/tokens'
 import { useTranslation } from 'contexts/Localization'
@@ -118,6 +121,21 @@ const IfoAchievement: React.FC<Props> = ({ ifo, publicIfoData }) => {
             {ifo.telegramUrl && (
               <Link external href={ifo.telegramUrl}>
                 <TelegramIcon color="textSubtle" />
+              </Link>
+            )}
+            {ifo.discordUrl && (
+              <Link external href={ifo.discordUrl}>
+                <DiscordIcon color="textSubtle" />
+              </Link>
+            )}
+            {ifo.cmcUrl && (
+              <Link external href={ifo.cmcUrl}>
+                <CmcIcon color="textSubtle" />
+              </Link>
+            )}
+            {ifo.openSeaUrl && (
+              <Link external href={ifo.openSeaUrl}>
+                <OpenSeaIcon color="textSubtle" />
               </Link>
             )}
           </FlexGap>

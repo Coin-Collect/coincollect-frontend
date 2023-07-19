@@ -88,6 +88,8 @@ export interface Minting {
   twitterUrl?: string
   telegramUrl?: string
   openSeaUrl?: string
+  cmcUrl?: string
+  discordUrl?: string
   version: number
   [PoolIds.poolBasic]?: MintingPoolInfo
   [PoolIds.poolUnlimited]: MintingPoolInfo

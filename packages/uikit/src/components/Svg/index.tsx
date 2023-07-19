@@ -123,6 +123,8 @@ export { default as SyncAltIcon } from "./Icons/SyncAlt";
 export { default as TeamBattleIcon } from "./Icons/TeamBattle";
 export { default as TeamPlayerIcon } from "./Icons/TeamPlayer";
 export { default as TelegramIcon } from "./Icons/Telegram";
+export { default as OpenSeaIcon } from "./Icons/OpenSea";
+export { default as CmcIcon } from "./Icons/Cmc";
 export { default as TestnetIcon } from "./Icons/Testnet";
 export { default as Ticket } from "./Icons/Ticket";
 export { default as TicketFillIcon } from "./Icons/TicketFill";

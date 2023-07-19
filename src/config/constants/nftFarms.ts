@@ -29,7 +29,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       137: '0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9',
       80001: '0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9' 
     },
-    isFinished: true,
+    isFinished: false,
   },
   {
     pid: 4,
@@ -38,7 +38,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
       80001: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e'
     },
-    isFinished: true,
+    isFinished: false,
   },
   {
     pid: 5,

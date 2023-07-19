@@ -295,13 +295,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
         {(isXs || isSm) && aprRow}
         {(isXs || isSm || isMd) && totalStakedRow}
         {shouldShowBlockCountdown && blocksRow}
-        {/*
-        <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
-          <LinkExternal href={`/info/token/${earningToken.address}`} bold={false}>
-            {t('See Token Info')}
-          </LinkExternal>
-        </Flex>
-        */}
+        {
+          <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
+            <LinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`} bold={false}>
+              {t('See Token Info')}
+            </LinkExternal>
+          </Flex>
+        }
         <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
           <LinkExternal href={earningToken.projectLink} bold={false}>
             {t('View Project Site')}

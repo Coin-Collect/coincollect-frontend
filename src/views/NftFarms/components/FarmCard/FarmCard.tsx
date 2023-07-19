@@ -48,7 +48,6 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
 
   const [showExpandableSection, setShowExpandableSection] = useState(false)
 
-
   const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
   const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
 
@@ -122,7 +121,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
           <DetailsSection
             removed={removed}
             bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
-            infoAddress={`/info/pool/`}
+            earningToken={farm.earningToken}
             totalStaked={farm.liquidity}
             startBlock={farm.startBlock}
             endBlock={farm.endBlock}
