@@ -98,7 +98,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance small value={claim.totalReward} decimals={0} unit={` Collect`} />
+              <Balance small value={claim.totalReward} decimals={0} unit={` ${claim.rewardToken}`} />
               <span ref={totalRewardTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
