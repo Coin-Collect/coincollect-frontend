@@ -259,7 +259,7 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
               )}
             </Text>
             <Button external={true} as="a" href="/nftpools" mt="16px">
-              {t('Stake Nft')}
+              {t('Stake NFT')}
             </Button>
           </CardBody>
         )
