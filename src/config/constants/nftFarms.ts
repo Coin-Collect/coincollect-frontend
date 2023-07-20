@@ -62,6 +62,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '2',
     performanceFee: '0',
+    projectLink: 'https://lotshare.app/',
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 

@@ -90,6 +90,7 @@ const NftStakeCardBody = ({ farm, account }) => {
   // We use sum of weights for smart pools
   const totalShares = farm.totalShares
   const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]["mainCollectionWeight"]
+  const projectLink = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]["projectLink"]
   const isSmartNftStakePool = Boolean(farm.contractAddresses)
   const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()))
   const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold, mainCollectionWeight)
@@ -161,6 +162,7 @@ const NftStakeCardBody = ({ farm, account }) => {
             totalStaked={farm.totalStaked}
             lpLabel={lpLabel}
             addLiquidityUrl={apyModalLink}
+            projectLink={projectLink}
           />
         )}
       </ExpandingWrapper>

@@ -22,6 +22,7 @@ export interface ExpandableSectionProps {
   stakingLimit?: BigNumber
   stakingLimitEndBlock?: number
   isFinished?: boolean
+  projectLink?: string
 }
 
 const Wrapper = styled.div`
@@ -49,6 +50,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   stakingLimit,
   stakingLimitEndBlock,
   isFinished,
+  projectLink,
 }) => {
 
   const { t } = useTranslation()
@@ -117,7 +119,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
 
 
       {earningToken?.address && (<StyledLinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
-      {earningToken?.projectLink && (<StyledLinkExternal href={earningToken.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
+      {projectLink && (<StyledLinkExternal href={projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
 
 
     </Wrapper>

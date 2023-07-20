@@ -147,6 +147,7 @@ interface NftFarmConfigBaseProps {
 // New type for NFT Stake config
 export interface SerializedNftFarmConfig extends NftFarmConfigBaseProps {
   earningToken?: SerializedToken
+  projectLink?: string
 }
 
 // New type for NFT Stake config

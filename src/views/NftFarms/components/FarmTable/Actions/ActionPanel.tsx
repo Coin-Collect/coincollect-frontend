@@ -16,6 +16,7 @@ import { useCurrentBlock } from 'state/block/hooks'
 import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
 import Balance from 'components/Balance'
 import MaxStakeRow from '../../MaxStakeRow'
+import nftFarmsConfig from 'config/constants/nftFarms'
 
 export interface ActionPanelProps {
   apr: AprProps
@@ -152,6 +153,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
   const bsc = getPolygonScanLink(nftAddress, 'address')
+  const farmConfig = nftFarmsConfig.filter((farmConfig) => farmConfig.pid == farm.pid)[0]
 
   const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
     getNftFarmBlockInfo(farm.startBlock, farm.endBlock, farm.isFinished, currentBlock)
@@ -197,7 +199,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
         <StyledLinkExternal href={bsc}>{t('View Contract')}</StyledLinkExternal>
 
         {farm.earningToken?.address && (<StyledLinkExternal href={`https://info.uniswap.org/#/polygon/pools/${farm.earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
-        {farm.earningToken?.projectLink && (<StyledLinkExternal href={farm.earningToken.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
+        {farmConfig.projectLink && (<StyledLinkExternal href={farmConfig.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
 
         <TagsContainer>
           {dual ? <DualTag /> : null}
