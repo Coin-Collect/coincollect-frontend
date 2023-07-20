@@ -18,6 +18,7 @@ const ifos: Minting[] = [
   //============================Free Mint NFTS====================================
   {
     id: 'coincollectfreenfts',
+    stake_pid: 1,
     name: 'CoinCollect Starter NFT',
     description: 'CoinCollect Starter NFTs are most valuable FREE utility NFTs on the market. Starter NFT is a gift and a lifetime privilege to our community. Starter NFTs earn new tokens from pools and airdrops. it also has a chance on whitelists',
     address: getCoinCollectNftAddress(),
@@ -88,6 +89,7 @@ const ifos: Minting[] = [
   //============================Bronze NFTS====================================
   {
     id: 'coincollectbronzefts',
+    stake_pid: 2,
     name: 'CoinCollect Bronze NFT',
     description: 'CoinCollect Bronze NFTs are the cheapest valuable utility NFTs that has all the features of Starter NFTs also 5x more powerful than Starter NFTs. Bronze NFTs earn more than Starter NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectBronzeNftAddress(),
@@ -158,6 +160,7 @@ const ifos: Minting[] = [
   //============================Silver NFTS====================================
   {
     id: 'coincollectsilverfts',
+    stake_pid: 3,
     name: 'CoinCollect Silver NFT',
     description: 'CoinCollect Silver NFTs are the medium powerful utility NFTs that has all the features of Bronze NFTs also 15x more powerful than Starter NFTs. Silver NFTs earn more than Bronze NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectSilverNftAddress(),
@@ -228,6 +231,7 @@ const ifos: Minting[] = [
   //============================Gold NFTS====================================
   {
     id: 'coincollectgoldfts',
+    stake_pid: 4,
     name: 'CoinCollect Gold NFT',
     description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectGoldNftAddress(),
@@ -298,7 +302,8 @@ const ifos: Minting[] = [
   //============================LOT NFTS====================================
   {
     id: 'lotnfts',
-    name: 'Lot NFT',
+    stake_pid: 5,
+    name: 'LotShare Prime NFT',
     description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
     address: getLotNftAddress(),
     symbol: 'LOT',

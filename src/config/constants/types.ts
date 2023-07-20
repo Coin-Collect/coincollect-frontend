@@ -70,6 +70,7 @@ interface MintingPoolInfo {
 //CC
 export interface Minting {
   id: string
+  stake_pid?: number
   name: string
   isActive: boolean
   status: string

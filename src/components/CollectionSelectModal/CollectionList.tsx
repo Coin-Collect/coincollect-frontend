@@ -64,7 +64,7 @@ function CollectionRow({
   const { account } = useActiveWeb3React()
   const key = collectionKey(collection)
   const balance = collection.userData.tokenBalance.toNumber()
-  const collectionData = mintingConfig.find((mintCollection) => mintCollection.name === collection.lpSymbol)
+  const collectionData = mintingConfig.find((mintCollection) => mintCollection.stake_pid === collection.pid)
 
   // only show add or remove buttons if not on selected list
   return (

@@ -79,8 +79,7 @@ export default function Minting() {
   const cakePrice = usePriceCakeBusd()
 
   usePollFarmsWithUserData()
-  const lpSymbolFromCollectionName = name.trim()
-  const farm= useFarmFromLpSymbol(lpSymbolFromCollectionName)
+  const farm= useFarmFromPid(minting.stake_pid)
   
   return (
     <>
