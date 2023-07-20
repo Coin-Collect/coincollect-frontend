@@ -19,12 +19,12 @@
       "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
     },
     {
-      "name": "Lot Token",
-      "symbol": "Lot",
+      "name": "LOT Token",
+      "symbol": "LOT",
       "address": "0x877dF062E88C8AB14FA60c945474641194203BFb",
       "chainId": 137,
       "decimals": 18,
-      "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
+      "logoURI": "https://coincollect.org/assets/images/tokens/lotToken.png"
     },
     {
       "name": "WMATIC Token",
@@ -59,12 +59,12 @@
       "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
     },
     {
-      "name": "Lot Token",
-      "symbol": "Lot",
+      "name": "LOT Token",
+      "symbol": "LOT",
       "address": "0x877dF062E88C8AB14FA60c945474641194203BFb",
       "chainId": 80001,
       "decimals": 18,
-      "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
+      "logoURI": "https://coincollect.org/assets/images/tokens/lotToken.png"
     },
     {
       "name": "WMATIC Token",

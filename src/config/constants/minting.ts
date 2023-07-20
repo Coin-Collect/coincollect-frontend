@@ -318,16 +318,36 @@ const ifos: Minting[] = [
     ],
     faq: [
       {
-        title: "What is an NFT?",
-        description: ["An NFT, or non-fungible token, is a digital asset that is unique and cannot be replaced. NFTs are often used to represent digital art, music, videos, and other collectibles. They can be bought, sold, and traded on NFT marketplaces."]
+        title: "What is LotShare?",
+        description: ["LotShare is a revolutionary real estate investment platform. It democratizes land ownership by tokenizing land lots, offering global accessibility, and empowering a new generation of property investors with smart contract power, shared revenue opportunities, and enhanced liquidity."]
       },
       {
-        title: "How do NFTs work?",
-        description: ["NFTs are stored on a blockchain, which is a digital ledger that records transactions. The blockchain ensures that NFTs are secure and cannot be counterfeited."]
+        title: "How does LotShare work?",
+        description: ["LotShare acquires land and divides it into smaller units, represented by NFTs. These NFTs are available for purchase on the LotShare platform and OpenSea. When land sales occur, revenue is distributed among NFT holders, fostering shared success and value creation."]
       },
       {
-        title: "How do I buy an NFT?",
-        description: ["To buy an NFT, you will need to create a digital wallet and fund it with cryptocurrency. You can then use your digital wallet to buy NFTs on an NFT marketplace."]
+        title: "What is the LOT token and what benefits does it offer?",
+        description: ["The LOT token is integral to the LotShare ecosystem. It enables you to buy, sell, or trade land NFTs, provides access to early land lot releases, and allows you to take part in ecosystem governance. Additionally, holding the LOT token can yield transaction fee discounts, staking rewards, and a share of revenue from land sales."]
+      },
+      {
+        title: "What are LotShare Prime NFTs?",
+        description: ["LotShare Prime NFTs are special assets that offer additional benefits to their holders, including insurance, VIP membership, discounts, early access, special offers, priority support, and community participation."]
+      },
+      {
+        title: "How can I earn from LotShare?",
+        description: ["Investors can earn from LotShare through the shared revenue model, which fairly distributes the revenue from land sales among NFT holders. Additionally, holding and staking LOT tokens yield rewards, and LOT token holders can benefit from transaction fee discounts."]
+      },
+      {
+        title: "Is there flexibility in investing with LotShare?",
+        description: ["Yes, LotShare offers unparalleled liquidity and flexibility in land investments. Investors can buy, sell, or trade their NFTs whenever they want or return them at a low cost."]
+      },
+      {
+        title: "How is transparency and reliability ensured with LotShare?",
+        description: ["LotShare leverages smart contract technology to ensure transparent and reliable transactions. All transactions and commissions are recorded openly and are auditable."]
+      },
+      {
+        title: "What future plans does LotShare have for expansion?",
+        description: ["LotShare plans to consistently add new land lots to its portfolio using cost-effective methods, providing new opportunities and potential for value creation for investors."]
       }
     ],
     poolUnlimited: {
