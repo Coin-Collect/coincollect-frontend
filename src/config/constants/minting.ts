@@ -299,7 +299,7 @@ const ifos: Minting[] = [
   {
     id: 'lotnfts',
     name: 'Lot NFT',
-    description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
+    description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
     address: getLotNftAddress(),
     symbol: 'LOT',
     totalSupply: 1100,
