@@ -19,6 +19,14 @@
       "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
     },
     {
+      "name": "Lot Token",
+      "symbol": "Lot",
+      "address": "0x877dF062E88C8AB14FA60c945474641194203BFb",
+      "chainId": 137,
+      "decimals": 18,
+      "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
+    },
+    {
       "name": "WMATIC Token",
       "symbol": "WMATIC",
       "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
@@ -46,6 +54,14 @@
       "name": "COLLECT Token",
       "symbol": "COLLECT",
       "address": "0xE564106bacd4D3b74a79e0fbDabF0c43828a1DBB",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
+    },
+    {
+      "name": "Lot Token",
+      "symbol": "Lot",
+      "address": "0x877dF062E88C8AB14FA60c945474641194203BFb",
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://beta.coincollect.org/images/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png"
