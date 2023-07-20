@@ -17,10 +17,10 @@ const claims: any[] = [
   },
   {
     name: 'LotShare Rewards',
-    description: <Trans>Lotshare NFT holders, your share of the reward pool awaits! Enter the realm of exclusive benefits and claim what you rightfully deserve. Lotshare - where ownership translates into rewards!</Trans>,
+    description: <Trans>LotShare and CoinCollect NFT holders can now claim their LOT tokens, a gift to our vibrant community. At LotShare, ownership equates to rewards, offering exclusive benefits within our ecosystem.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/claim/lotShareClaim.png',
-    rewardToken: 'Lot',
-    requiredToken: 'Lot NFT', 
+    rewardToken: 'LOT',
+    requiredToken: 'LotShare NFT', 
     baseAmount: 50,
     nftLimit: 5,
     totalReward: 100000,
