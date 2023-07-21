@@ -10,6 +10,7 @@ export interface ExpandableSectionProps {
   lpLabel?: string
   multiplier?: string
   nftToken?: string
+  pid?: number
   disabled?: boolean
 }
 
@@ -34,8 +35,8 @@ export const CollectionAvatar = styled(ProfileAvatar)`
   border: 4px white solid;
 `
 
-const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken, disabled= false }) => {
-  const collectionData = mintingConfig.find((collection) => collection.name.replace('CoinCollect', '') === lpLabel)
+const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken, pid, disabled= false }) => {
+  const collectionData = mintingConfig.find((collection) => collection.stake_pid === pid)
   return (
     <CardBody p="0px">
       <StyledImage src={collectionData ? collectionData.banner.small : ""} height={125} width={375} />
