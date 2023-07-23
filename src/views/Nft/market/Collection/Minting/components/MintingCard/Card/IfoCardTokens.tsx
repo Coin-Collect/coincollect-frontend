@@ -35,6 +35,8 @@ import { EnableStatus } from '../types'
 import PercentageOfTotal from './PercentageOfTotal'
 import { SkeletonCardTokens } from './Skeletons'
 import IFORequirements from './IFORequirements'
+import NFTMedia from 'views/Nft/market/components/NFTMedia'
+import PreviewImage from 'views/Nft/market/components/CollectibleCard/PreviewImage'
 
 interface TokenSectionProps extends FlexProps {
   primaryToken?: Token
@@ -165,6 +167,10 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
     />,
   )
 
+  let { showCase, address, name, openSeaUrl } = ifo
+  const nfts = showCase ? showCase.map((item, index) => ({ 'tokenId': item.tokenId, 'collectionAddress': address, 'name': `#${item.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': item.image } })) : [];
+  const nft = nfts[0]
+
   const renderTokenSection = () => {
     if (isLoading) {
       return <SkeletonCardTokens />
@@ -173,6 +179,10 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
       return (
         <>
           <OnSaleInfo token={token} distributionRatio={totalSupply} saleAmount={ifo[poolId].saleAmount} />
+
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mt="8px" borderRadius="8px" />
+          </div>
 
           <Box mt="16px">
 

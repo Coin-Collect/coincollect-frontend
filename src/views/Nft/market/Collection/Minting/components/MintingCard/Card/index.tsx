@@ -11,8 +11,7 @@ import { EnableStatus } from '../types'
 import IfoCardTokens from './IfoCardTokens'
 import IfoCardActions from './IfoCardActions'
 import IfoCardDetails from './IfoCardDetails'
-import NFTMedia from 'views/Nft/market/components/NFTMedia'
-import PreviewImage from 'views/Nft/market/components/CollectibleCard/PreviewImage'
+
 
 const StyledCard = styled(Card)`
   background: none;
@@ -122,9 +121,6 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
     needQualifiedPoints,
   })
 
-  let { showCase, address, name, openSeaUrl } = ifo
-  const nfts = showCase ? showCase.map((item, index) => ({ 'tokenId': item.tokenId, 'collectionAddress': address, 'name': `#${item.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': item.image } })) : [];
-  const nft = nfts[0]
 
   return (
     <>
@@ -154,10 +150,6 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
             onApprove={onApprove}
             enableStatus={enableStatus}
           />
-
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mb="8px" borderRadius="8px" />
-          </div>
 
           <Box mt="24px">
             <IfoCardActions
