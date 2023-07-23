@@ -181,7 +181,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
           <OnSaleInfo token={token} distributionRatio={totalSupply} saleAmount={ifo[poolId].saleAmount} />
 
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mt="8px" borderRadius="8px" />
+            <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mt="10px" borderRadius="8px" />
           </div>
 
           <Box mt="16px">
