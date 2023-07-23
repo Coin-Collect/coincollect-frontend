@@ -105,7 +105,7 @@ const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
 
   
   
-  const discountPercentage = isLastPrice ? 0 : ((nextPrice - cost) / nextPrice) * 100;
+  const discountPercentage = isLastPrice ? 0 : Math.round(((nextPrice - cost) / nextPrice) * 100);
   const messages = [
     `Hurry up! Only ${remainingSupply} left at this price - now ${discountPercentage}% off!`,
     `Don't miss out! Only ${remainingSupply} left at this price with a ${discountPercentage}% discount!`,
