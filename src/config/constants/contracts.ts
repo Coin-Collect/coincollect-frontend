@@ -92,7 +92,7 @@ export default {
   },
   lotNft: {
     137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
-    80001: '0x1771Bf8f153De28B86977AC38BF3b6bB95D6e8fa',
+    80001: '0xD12318C1f8298ac937fA2526Fc548A7ddC6e83d1',
   },
   cakeVault: {
     56: '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC',
