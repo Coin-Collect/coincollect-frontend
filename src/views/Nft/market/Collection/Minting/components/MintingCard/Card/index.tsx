@@ -142,11 +142,6 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
         </CardHeader>
         <CardBody p="12px">
 
-          
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mb="8px" borderRadius="8px" />
-          </div>
-
           <IfoCardTokens
             criterias={criterias}
             isEligible={isEligible}
@@ -159,6 +154,11 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
             onApprove={onApprove}
             enableStatus={enableStatus}
           />
+
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mb="8px" borderRadius="8px" />
+          </div>
+
           <Box mt="24px">
             <IfoCardActions
               isEligible={isEligible}
