@@ -144,7 +144,9 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
 
           
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <a href={openSeaUrl} target="_blank">
             <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mb="8px" borderRadius="8px" />
+          </a>
           </div>
 
           <IfoCardTokens
