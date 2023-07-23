@@ -103,6 +103,7 @@ const NftStakeCardBody = ({ farm, account }) => {
             lpLabel={lpLabel}
             multiplier={farm.multiplier}
             nftToken={nftAddress}
+            pid={farm.pid}
           />
           {!removed && (
             <>
