@@ -98,11 +98,30 @@ const LiveNowHeading = styled(EndInHeading)`
 
 const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
   const { t } = useTranslation()
-  const { status, secondsUntilEnd, totalSupply, partialMaxSupply, isLastPrice, nextPrice } = publicIfoData
+  const { cost, status, secondsUntilEnd, totalSupply, partialMaxSupply, isLastPrice, nextPrice } = publicIfoData
   const remainingSupply = partialMaxSupply - totalSupply
   const timeUntil = getTimePeriods(secondsUntilEnd)
   const isDynamicPrice = (partialMaxSupply && nextPrice);
-  const message =isDynamicPrice ? (!isLastPrice ? `Last ${remainingSupply} mint for this price!` : `Last ${remainingSupply} mint!`) : `LIVE NOW!`
+
+  
+  
+  const discountPercentage = isLastPrice ? 0 : ((nextPrice - cost) / nextPrice) * 100;
+  const messages = [
+    `Hurry up! Only ${remainingSupply} left at this price - now ${discountPercentage}% off!`,
+    `Don't miss out! Only ${remainingSupply} left at this price with a ${discountPercentage}% discount!`,
+    `Amazing deal! Grab the last ${remainingSupply} at a ${discountPercentage}% lower price!`,
+    `Discount alert! Only ${remainingSupply} left with a ${discountPercentage}% markdown!`,
+  ]
+  const currentDate = new Date();
+  const currentMinute = currentDate.getMinutes();
+  const index = currentMinute % messages.length;
+
+
+  const message = isDynamicPrice ? 
+    (!isLastPrice ? messages[index] : 
+    `Final countdown! Only ${remainingSupply} left, grab yours before they're gone!`) : 
+    `LIVE NOW!`;
+
   
 
   return (
@@ -114,7 +133,7 @@ const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
           {Boolean(!isDynamicPrice) && <PocketWatchIcon width="42px" mr="8px" />}
           <FlexGap gap="8px" alignItems="center">
             <LiveNowHeading as="h3">{message}</LiveNowHeading>
-            {!isLastPrice && (<EndInHeading as="h3" scale="lg" color="white">{`Next Price: ${nextPrice}`}</EndInHeading>)}
+            {/*!isLastPrice && (<EndInHeading as="h3" scale="lg" color="white">{`Next Price: ${nextPrice}`}</EndInHeading>)*/}
             {/* TODO: Activate End Timer later
             <EndInHeading as="h3" scale="lg" color="white">
               {t('Ends in')}
