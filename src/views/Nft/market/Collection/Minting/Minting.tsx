@@ -101,7 +101,7 @@ export default function Minting() {
         >
           <StatBox>
             <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
-            <StatBoxItem title={t('Price')} stat={(!isLastPrice ? nextPrice : cost) + ' Matic'} />
+            <StatBoxItem title={t('Price')} stat={(cost) + ' Matic'} />
             <StatBoxItem title={t('Status')} stat={status} />
           </StatBox>
         </MarketPageTitle>
