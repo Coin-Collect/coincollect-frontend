@@ -78,6 +78,8 @@ export default function Minting() {
   const { chosenFarmsMemoized } = useContext(FarmsContext)
   const cakePrice = usePriceCakeBusd()
 
+  const { isLastPrice, nextPrice } = publicIfoData
+
   usePollFarmsWithUserData()
   const farm= useFarmFromPid(minting.stake_pid)
   
@@ -99,7 +101,7 @@ export default function Minting() {
         >
           <StatBox>
             <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
-            <StatBoxItem title={t('Price')} stat={cost} />
+            <StatBoxItem title={t('Price')} stat={(!isLastPrice ? nextPrice : cost) + ' Matic'} />
             <StatBoxItem title={t('Status')} stat={status} />
           </StatBox>
         </MarketPageTitle>
