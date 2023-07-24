@@ -41,7 +41,7 @@ export const mainnetTokens = defineTokens({
   ),
   lot: new Token(
     POLYGON_MAINNET,
-    '0x877dF062E88C8AB14FA60c945474641194203BFb',
+    '0x8c1245BA1714BD7a61A34Cb63b95331Fa3db497C',
     18,
     'LOT',
     'LOTSHARE Token',
