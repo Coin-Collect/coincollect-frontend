@@ -11,7 +11,7 @@ export default {
   // Only Pool Version Masterchef
   coinCollectFarm: {
     137: '0x981930c422c9df6C2b056d62c8e638376596B8C6', 
-    80001: '0x1E3EfeC18926aB87d7f9F706e0a34348d11cffd2', // CHANGE_ADDRESS:CoinCollectFarm (test)
+    80001: '0x54935482f669D6BEBBb78E8e7a8280001F2B563E', // CHANGE_ADDRESS:CoinCollectFarm (test)
   },
   // Only NFT Pool Version Masterchef
   coinCollectNftStake: {
