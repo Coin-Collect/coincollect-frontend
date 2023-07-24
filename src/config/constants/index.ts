@@ -64,8 +64,8 @@ export const SUGGESTED_BASES: ChainTokenList = {
 export const BASES_TO_TRACK_LIQUIDITY_FOR: ChainTokenList = {
   [ChainId.MAINNET]: [mainnetTokens.wbnb, mainnetTokens.dai, mainnetTokens.busd, mainnetTokens.usdt],
   [ChainId.TESTNET]: [testnetTokens.wbnb, testnetTokens.cake, testnetTokens.busd],
-  137: [mainnetTokens.usdc,mainnetTokens.usdt,mainnetTokens.wmatic],
-  80001: [testnetTokens.usdc,testnetTokens.usdt,testnetTokens.wmatic, testnetTokens.lot]
+  137: [mainnetTokens.usdc, mainnetTokens.usdt, mainnetTokens.wmatic, mainnetTokens.lot],
+  80001: [testnetTokens.usdc, testnetTokens.usdt, testnetTokens.wmatic, testnetTokens.lot]
 }
 
 export const PINNED_PAIRS: { readonly [chainId in ChainId]?: [Token, Token][] } = {
