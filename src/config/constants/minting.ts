@@ -307,7 +307,7 @@ const ifos: Minting[] = [
     description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
     address: getLotNftAddress(),
     symbol: 'LOT',
-    totalSupply: 2256,
+    totalSupply: 2556,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
