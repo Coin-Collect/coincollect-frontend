@@ -364,7 +364,7 @@ const ifos: Minting[] = [
     releaseBlockNumber: 15156634,
     articleUrl: 'https://coincollect.org',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/lotshare-nft',
+    openSeaUrl: 'https://opensea.io/collection/lotshare',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
     telegramUrl: 'https://t.me/CoinCollectOrg',
