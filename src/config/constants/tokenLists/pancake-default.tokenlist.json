@@ -61,7 +61,7 @@
     {
       "name": "LOT Token",
       "symbol": "LOT",
-      "address": "0x877dF062E88C8AB14FA60c945474641194203BFb",
+      "address": "0x7d6A9E6Aff7710Cd8B911eA788164Cc9CEe14c44",
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/tokens/lotToken.png"

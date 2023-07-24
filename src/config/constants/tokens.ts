@@ -45,7 +45,7 @@ export const mainnetTokens = defineTokens({
     18,
     'LOT',
     'LOTSHARE Token',
-    'https://lotshare.netlify.app/',
+    'https://lotshare.app/',
   ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
@@ -2089,11 +2089,11 @@ export const testnetTokens = defineTokens({
   ),
   lot: new Token(
     MUMBAI_TESTNET,
-    '0x877dF062E88C8AB14FA60c945474641194203BFb',
+    '0x7d6A9E6Aff7710Cd8B911eA788164Cc9CEe14c44',
     18,
     'LOT',
     'LOTSHARE Test Token',
-    'https://lotshare.netlify.app/',
+    'https://lotshare.app/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,
