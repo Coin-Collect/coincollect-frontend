@@ -54,7 +54,7 @@ const pools: SerializedPoolConfig[] = [
     earningToken: serializedTokens.lot,
     contractAddress: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
-      80001: '0xDe54A0b5054D576E6c6520Bea70E3EB15c19C8cb',
+      80001: '0xBd07Cb8F1Ed06299a0941EA69d6fB4dDaC3F673E',
     },
     poolCategory: PoolCategory.CORE,
     harvest: true,
@@ -62,7 +62,7 @@ const pools: SerializedPoolConfig[] = [
     tokenPerBlock: '0.001',
     deployedBlockNumber: 38289111,
     version: 3,
-    participantThreshold: 1000000,
+    participantThreshold: 400000,
   },
   {
     sousId: 2,
