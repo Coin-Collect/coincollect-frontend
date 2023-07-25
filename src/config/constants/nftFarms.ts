@@ -45,7 +45,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     lpSymbol: 'Lot NFT',
     nftAddresses: {
       137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
-      80001: '0x1771Bf8f153De28B86977AC38BF3b6bB95D6e8fa'
+      80001: '0xDb37c24423F63F0245def80a4904204337F90651'
     },
     contractAddresses: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',

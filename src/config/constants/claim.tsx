@@ -12,7 +12,7 @@ const claims: any[] = [
     nftLimit: 5,
     totalReward: 100000,
     isFinished: false,
-    rewardTokenAddress: '0xadF053697C602C76feB56d4E4C7d28c3E1Bd1075',
+    rewardTokenAddress: '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
     projectSite: 'https://app.coincollect.org'
   },
   {
@@ -25,7 +25,7 @@ const claims: any[] = [
     nftLimit: 5,
     totalReward: 100000,
     isFinished: false,
-    rewardTokenAddress: '0x877dF062E88C8AB14FA60c945474641194203BFb',
+    rewardTokenAddress: '0x8c1245BA1714BD7a61A34Cb63b95331Fa3db497C',
     projectSite: 'https://lotshare.app/'
   },
   /*
