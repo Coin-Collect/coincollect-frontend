@@ -14,7 +14,8 @@ const ClaimAction: React.FC<ClaimActionProps> = ({ claimId, claim, claimData, is
   const { t } = useTranslation()
   const nftAddresses = claimData.data[claimId].nftsToClaim[0]
   const nftIds = claimData.data[claimId].nftsToClaim[1]
-  const { handleClaimReward, pendingTx } = useClaimReward(claimId, nftAddresses, nftIds, claim.rewardToken, claimData.refresh)
+  
+  const { handleClaimReward, pendingTx } = useClaimReward(claim.cid, nftAddresses, nftIds, claim.rewardToken, claimData.data[claimId].version, claimData.refresh)
 
   return (
     <>

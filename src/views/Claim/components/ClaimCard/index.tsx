@@ -44,7 +44,7 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
                 <Button disabled>{t('Claim Limit Reached')}</Button>
               ) : (claimData.data[claimId].userWeight || 0) === 0 ? (
                 <Button disabled>{t(`${claim.requiredToken} required!`)}</Button>
-              ) : (claimData.data[claimId].rewardBalance ?? 0) < (claim.baseAmount * (claimData.data[claimId].userWeight || 1)) * 10**18 ? (
+              ) : (claimData.data[claimId].rewardBalance ?? 0) < (claim.baseAmount * (claimData.data[claimId].userWeight || 1)) * (claimData.data[claimId].version == 2 ? 1 : 10**18) ? (
                 <Button disabled>{t('No Rewards Available')}</Button>
               ) : (
                 <ClaimAction claimId={claimId} claim={claim} claimData={claimData} />

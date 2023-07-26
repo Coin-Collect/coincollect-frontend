@@ -40,6 +40,7 @@ import {
   getCoinCollectFarmContract,
   getCoinCollectNftStakeContract,
   getCoinCollectClaimRewardContract,
+  getCoinCollectClaimRewardV2Contract,
   getSmartNftStakeContract,
 } from 'utils/contractHelpers'
 import { getMulticallAddress, getMulticallPolygonAddress } from 'utils/addressHelpers'
@@ -124,6 +125,11 @@ export const useCoinCollect = (withSignerIfPossible = true) => {
 export const useCoinCollectClaimRewardContract = () => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getCoinCollectClaimRewardContract(library.getSigner()), [library])
+}
+
+export const useCoinCollectClaimRewardV2Contract = () => {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => getCoinCollectClaimRewardV2Contract(library.getSigner()), [library])
 }
 
 export const useBunnyFactory = () => {

@@ -41,6 +41,7 @@ import {
   getCoinCollectFarmAddress,
   getCoinCollectNftStakeAddress,
   getCoinCollectClaimRewardAddress,
+  getCoinCollectClaimRewardV2Address,
 } from 'utils/addressHelpers'
 
 // ABI
@@ -219,6 +220,9 @@ export const getCoinCollectNftStakeContract = (signer?: Signer | Provider) => {
 }
 export const getCoinCollectClaimRewardContract = (signer?: Signer | Provider) => {
   return getContractForPolygon(coinCollectClaimReward, getCoinCollectClaimRewardAddress(), signer) as CoinCollectClaimReward
+}
+export const getCoinCollectClaimRewardV2Contract = (signer?: Signer | Provider) => {
+  return getContractForPolygon(coinCollectClaimReward, getCoinCollectClaimRewardV2Address(), signer) as CoinCollectClaimReward
 }
 export const getClaimRefundContract = (signer?: Signer | Provider) => {
   return getContract(claimRefundAbi, getClaimRefundAddress(), signer) as ClaimRefund

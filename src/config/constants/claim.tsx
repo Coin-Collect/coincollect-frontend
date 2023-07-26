@@ -3,6 +3,7 @@ import Trans from 'components/Trans'
 
 const claims: any[] = [
   {
+    cid: 0, // This one and next are zero but different contracts
     name: 'CoinCollect OG Believers',
     description: <Trans>CoinCollect NFT holders, your share of the reward pool awaits! Step into the realm of exclusive benefits and claim your deserving share. CoinCollect - where ownership translates into rewards!</Trans>,
     imageLink: 'https://coincollect.org/assets/images/claim/CoinCollectClaim.png',
@@ -13,20 +14,23 @@ const claims: any[] = [
     totalReward: 100000,
     isFinished: false,
     rewardTokenAddress: '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
-    projectSite: 'https://app.coincollect.org'
+    projectSite: 'https://app.coincollect.org',
+    version: 1,
   },
   {
+    cid: 0,
     name: 'LotShare Rewards',
     description: <Trans>LotShare and CoinCollect NFT holders can now claim their LOT tokens, a gift to our vibrant community. At LotShare, ownership equates to rewards, offering exclusive benefits within our ecosystem.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/claim/lotShareClaim.png',
     rewardToken: 'LOT',
     requiredToken: 'LotShare NFT', 
-    baseAmount: 50,
+    baseAmount: 0.2,
     nftLimit: 5,
     totalReward: 100000,
     isFinished: false,
     rewardTokenAddress: '0x8c1245BA1714BD7a61A34Cb63b95331Fa3db497C',
-    projectSite: 'https://lotshare.app/'
+    projectSite: 'https://lotshare.app/',
+    version: 2,
   },
   /*
   {

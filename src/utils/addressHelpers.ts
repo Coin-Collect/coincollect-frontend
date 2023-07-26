@@ -26,6 +26,9 @@ export const getCoinCollectNftStakeAddress = () => {
 export const getCoinCollectClaimRewardAddress = () => {
   return getAddress(addresses.coinCollectClaimReward)
 }
+export const getCoinCollectClaimRewardV2Address = () => {
+  return getAddress(addresses.coinCollectClaimRewardV2)
+}
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }
