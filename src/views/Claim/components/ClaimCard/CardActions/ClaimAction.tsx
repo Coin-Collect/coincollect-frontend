@@ -29,7 +29,7 @@ const ClaimAction: React.FC<ClaimActionProps> = ({ claimId, claim, claimData, is
           onClick={handleClaimReward}
           width="100%"
         >
-          {t(`Claim ${round(claim.baseAmount * (claimData.data[claimId].userWeight || 1))} ${claim.rewardToken}`)}
+          {t(`Claim ${Math.round(claim.baseAmount * (claimData.data[claimId].userWeight || 1))} ${claim.rewardToken}`)}
         </Button>
       )}
     </>
