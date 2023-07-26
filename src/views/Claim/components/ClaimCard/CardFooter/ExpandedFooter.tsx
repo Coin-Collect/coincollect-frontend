@@ -81,7 +81,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ claim, account }) => {
         <Flex alignItems="flex-start">
           {true ? (
             <>
-              <Balance prefix='NFT Power x ' small value={claim.baseAmount} decimals={0} />
+              <Balance prefix='NFT Power x ' small value={claim.baseAmount} decimals={1} />
               <span ref={rewardPerNftTargetRef}>
                 <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
               </span>
