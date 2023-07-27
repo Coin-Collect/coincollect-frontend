@@ -30,7 +30,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
   const cakePrice = usePriceCakeBusd()
   const dispatch = useAppDispatch()
   const rawEarningsBalance = account ? getBalanceAmount(earnings) : BIG_ZERO
-  const displayBalance = rawEarningsBalance.toFixed(3, BigNumber.ROUND_DOWN)
+  const displayBalance = rawEarningsBalance.toFixed(6, BigNumber.ROUND_DOWN)
   const earningsBusd = rawEarningsBalance ? rawEarningsBalance.multipliedBy(cakePrice).toNumber() : 0
 
   return (
@@ -52,7 +52,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
         {sideRewards.map((reward, index) => (
           <Flex key={index} justifyContent="space-between">
             <Text mr={10}>{reward.token}:</Text>
-            <Text bold>{(Number(displayBalance) * (reward.percentage / 100)).toFixed(4)}</Text>
+            <Text bold>{(Number(displayBalance) * (reward.percentage / 100)).toFixed(6)}</Text>
           </Flex>
         ))}
       </Flex>
