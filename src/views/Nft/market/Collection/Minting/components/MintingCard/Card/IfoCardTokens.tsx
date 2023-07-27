@@ -15,6 +15,7 @@ import {
   useModal,
   Link,
   ErrorIcon,
+  ProfileAvatar,
 } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { useWeb3React } from '@web3-react/core'
@@ -39,11 +40,12 @@ import NFTMedia from 'views/Nft/market/components/NFTMedia'
 import PreviewImage from 'views/Nft/market/components/CollectibleCard/PreviewImage'
 
 interface TokenSectionProps extends FlexProps {
+  avatarUrl?: string
   primaryToken?: Token
   secondaryToken?: Token
 }
 
-const TokenSection: React.FC<TokenSectionProps> = ({ primaryToken, secondaryToken, children, ...props }) => {
+const TokenSection: React.FC<TokenSectionProps> = ({ avatarUrl, primaryToken, secondaryToken, children, ...props }) => {
   const renderTokenComponent = () => {
     if (!primaryToken) {
       return <BunnyPlaceholderIcon width={32} mr="16px" />
@@ -62,7 +64,7 @@ const TokenSection: React.FC<TokenSectionProps> = ({ primaryToken, secondaryToke
       )
     }
 
-    return <TokenImage token={primaryToken} height={32} width={32} mr="16px" />
+    return <ProfileAvatar src={avatarUrl} width={36} height={36} mr="16px" />
   }
 
   return (
@@ -97,10 +99,10 @@ interface IfoCardTokensProps {
   isEligible?: boolean
 }
 
-const OnSaleInfo = ({ token, saleAmount, distributionRatio }) => {
+const OnSaleInfo = ({ avatarUrl, token, saleAmount, distributionRatio }) => {
   const { t } = useTranslation()
   return (
-    <TokenSection primaryToken={token}>
+    <TokenSection avatarUrl={avatarUrl} primaryToken={token}>
       <Flex flexDirection="column">
         {/*<Label>{t('On sale').toUpperCase()}</Label>*/}
         <Value>{saleAmount}</Value>
@@ -167,7 +169,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
     />,
   )
 
-  let { showCase, address, name, openSeaUrl } = ifo
+  let { showCase, address, name, avatar, openSeaUrl } = ifo
   const nfts = showCase ? showCase.map((item, index) => ({ 'tokenId': item.tokenId, 'collectionAddress': address, 'name': `#${item.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': item.image } })) : [];
   const nft = nfts[0]
 
@@ -178,7 +180,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
    
       return (
         <>
-          <OnSaleInfo token={token} distributionRatio={totalSupply} saleAmount={ifo[poolId].saleAmount} />
+          <OnSaleInfo avatarUrl={avatar} token={token} distributionRatio={totalSupply} saleAmount={ifo[poolId].saleAmount} />
 
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mt="10px" borderRadius="8px" />
