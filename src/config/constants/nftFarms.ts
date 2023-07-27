@@ -49,10 +49,10 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0xEf0B91bA446213C2671AA45a7652Be1e25a80Ef9',
-      80001: '0x888BCbB019383f4c13528CBCb41DEa3B606Ee1dE',
+      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808d',
     },
-    tokenPerBlock: '0.0000102',
-    participantThreshold: 20,
+    tokenPerBlock: '0.000152',
+    participantThreshold: 300,
     isFinished: false,
     earningToken: serializedTokens.lot,
     sideRewards: [
