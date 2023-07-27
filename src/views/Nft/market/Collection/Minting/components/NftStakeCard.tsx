@@ -77,7 +77,7 @@ const NftStakeCardBody = ({ farm, account }) => {
   const { t } = useTranslation()
   const [showExpandableSection, setShowExpandableSection] = useState(false)
   const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
-  const earnLabel = farm.dual ? farm.dual.earnLabel : t('COLLECT')
+  const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
   const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
   const isPromotedFarm = true //farm.token.symbol === 'COLLECT' Caution: Fix
