@@ -95,6 +95,7 @@ const ifos: Minting[] = [
     address: getCoinCollectBronzeNftAddress(),
     symbol: 'BRONZE',
     totalSupply: 3300,
+    lastPrice: 80,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
@@ -166,6 +167,7 @@ const ifos: Minting[] = [
     address: getCoinCollectSilverNftAddress(),
     symbol: 'SILVER',
     totalSupply: 2200,
+    lastPrice: 155,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
@@ -237,6 +239,7 @@ const ifos: Minting[] = [
     address: getCoinCollectGoldNftAddress(),
     symbol: 'GOLD',
     totalSupply: 1100,
+    lastPrice: 305,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
@@ -308,6 +311,7 @@ const ifos: Minting[] = [
     address: getLotNftAddress(),
     symbol: 'LOT',
     totalSupply: 2556,
+    lastPrice: 100,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
@@ -359,7 +363,6 @@ const ifos: Minting[] = [
       saleAmount: '1100 NFT',
       distributionRatio: 1,
     },
-    lastPrice: 100,
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
