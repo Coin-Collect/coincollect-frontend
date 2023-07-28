@@ -56,8 +56,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     isFinished: false,
     earningToken: serializedTokens.lot,
     sideRewards: [
-      {token: 'Collect', percentage: 6670},
-      {token: 'Shiba', percentage: 33350},
+      {token: 'COLLECT', percentage: 6670},
+      {token: 'SHIB', percentage: 33350},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
