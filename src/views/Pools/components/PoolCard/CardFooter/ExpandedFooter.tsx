@@ -22,7 +22,7 @@ import { useVaultPoolByKey, useVaultPools } from 'state/pools/hooks'
 import { DeserializedPool } from 'state/types'
 import { getAddress, getVaultPoolAddress } from 'utils/addressHelpers'
 import { registerToken } from 'utils/wallet'
-import { getBscScanLink } from 'utils'
+import { getPolygonScanLink } from 'utils'
 import Balance from 'components/Balance'
 import { getPoolBlockInfo } from 'views/Pools/helpers'
 import { BIG_ZERO } from 'utils/bigNumber'
@@ -147,7 +147,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ pool, account }) => {
           <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
           {blocksRemaining || blocksUntilStart ? (
             <Flex alignItems="center">
-              <Link external href={getBscScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
+              <Link external href={getPolygonScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
                 <Balance small value={blocksToDisplay} decimals={0} color="primary" />
                 <Text small ml="4px" color="primary" textTransform="lowercase">
                   {t('Blocks')}
