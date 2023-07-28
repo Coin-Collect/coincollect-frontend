@@ -29,7 +29,7 @@ const formatPriceDetails = (details) => ({
  * Gets all public data of an IFO
  */
 const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
-  const { address, releaseBlockNumber, version } = ifo
+  const { address, releaseBlockNumber, version, lastPrice } = ifo
   const cakePriceUsd = usePriceCakeBusd()
   //const lpTokenPriceInUsd = useLpTokenPrice(ifo.currency.symbol)
   const currencyPriceInUSD = new BigNumber(1)
@@ -71,6 +71,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
     partialMaxSupply: 0, 
     isLastPrice: true, 
     nextPrice: 0,
+    lastPrice,
   })
 
   const abi = coinCollectAbi

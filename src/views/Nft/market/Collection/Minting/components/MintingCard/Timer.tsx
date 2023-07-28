@@ -98,14 +98,14 @@ const LiveNowHeading = styled(EndInHeading)`
 
 const LiveTimer: React.FC<Props> = ({ publicIfoData }) => {
   const { t } = useTranslation()
-  const { cost, status, secondsUntilEnd, totalSupply, partialMaxSupply, isLastPrice, nextPrice } = publicIfoData
+  const { cost, status, secondsUntilEnd, totalSupply, partialMaxSupply, isLastPrice, nextPrice, lastPrice } = publicIfoData
   const remainingSupply = partialMaxSupply - totalSupply
   const timeUntil = getTimePeriods(secondsUntilEnd)
   const isDynamicPrice = (partialMaxSupply && nextPrice);
 
+  const lastOrNextPrice = lastPrice ?? nextPrice;
   
-  
-  const discountPercentage = isLastPrice ? 0 : Math.round(((nextPrice - cost) / nextPrice) * 100);
+  const discountPercentage = isLastPrice ? 0 : Math.round(((lastOrNextPrice - cost) / lastOrNextPrice) * 100);
   const messages = [
     `Hurry up! Only ${remainingSupply} left at this price - now ${discountPercentage}% off!`,
     `Don't miss out! Only ${remainingSupply} left at this price with a ${discountPercentage}% discount!`,

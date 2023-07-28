@@ -359,6 +359,7 @@ const ifos: Minting[] = [
       saleAmount: '1100 NFT',
       distributionRatio: 1,
     },
+    lastPrice: 100,
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,

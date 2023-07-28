@@ -2,7 +2,6 @@
 import { Heading, Flex, Button, Grid, ChevronRightIcon } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { NextLinkFromReactRouter } from 'components/NextLink'
-import { nftsBaseUrl } from 'views/Nft/market/constants'
 import GridPlaceholder from '../components/GridPlaceholder'
 import CollectibleLinkCard from '../components/CollectibleCard/CollectibleLinkCard'
 
@@ -37,7 +36,7 @@ const NewestForCollection = ({mintingData}) => {
             return (
               <CollectibleLinkCard
                 data-test="showcase-nft-card"
-                key={nft.address + index}
+                key={nft.tokenId}
                 nft={nft}
                 directLink={openSeaUrl}
               />

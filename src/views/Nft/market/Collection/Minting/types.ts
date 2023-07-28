@@ -40,6 +40,7 @@ export interface PublicIfoData {
   partialMaxSupply: number
   isLastPrice: boolean
   nextPrice: number
+  lastPrice?: number
 
   fetchIfoData: (currentBlock: number, account: string | undefined) => void
   [PoolIds.poolBasic]?: PoolCharacteristics

@@ -84,6 +84,7 @@ export interface Minting {
   currency: Token
   token: Token
   releaseBlockNumber: number
+  lastPrice?: number
   description?: string
   articleUrl?: string
   twitterUrl?: string
