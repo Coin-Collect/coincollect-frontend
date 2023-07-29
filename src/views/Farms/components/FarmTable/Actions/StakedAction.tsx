@@ -165,67 +165,17 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     )
   }
 
-  if (isApproved) {
-    if (stakedBalance.gt(0)) {
-      return (
-        <ActionContainer>
-          <ActionTitles>
-            <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-              {lpSymbol}
-            </Text>
-            <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-              {t('Staked')}
-            </Text>
-          </ActionTitles>
-          <ActionContent>
-            <div>
-              <Heading>{displayBalance()}</Heading>
-              {stakedBalance.gt(0) && lpPrice.gt(0) && (
-                <Balance
-                  fontSize="12px"
-                  color="textSubtle"
-                  decimals={2}
-                  value={getBalanceNumber(lpPrice.times(stakedBalance))}
-                  unit=" USD"
-                  prefix="~"
-                />
-              )}
-            </div>
-            <IconButtonWrapper>
-              <IconButton variant="secondary" onClick={onPresentWithdraw} mr="6px">
-                <MinusIcon color="primary" width="14px" />
-              </IconButton>
-              <IconButton
-                variant="secondary"
-                onClick={onPresentDeposit}
-                disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
-              >
-                <AddIcon color="primary" width="14px" />
-              </IconButton>
-            </IconButtonWrapper>
-          </ActionContent>
-        </ActionContainer>
-      )
-    }
-
+  if (!isApproved && stakedBalance?.eq(0)) {
     return (
       <ActionContainer>
         <ActionTitles>
-          <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px" pr="4px">
-            {t('Stake')}
-          </Text>
-          <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
-            {lpSymbol}
+          <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
+            {t('Enable Farm')}
           </Text>
         </ActionTitles>
         <ActionContent>
-          <Button
-            width="100%"
-            onClick={onPresentDeposit}
-            variant="secondary"
-            disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
-          >
-            {t('Stake LP')}
+          <Button width="100%" disabled={pendingTx} onClick={handleApprove} variant="secondary">
+            {t('Enable')}
           </Button>
         </ActionContent>
       </ActionContainer>
@@ -247,20 +197,72 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     )
   }
 
+
+  if (stakedBalance.gt(0)) {
+    return (
+      <ActionContainer>
+        <ActionTitles>
+          <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
+            {lpSymbol}
+          </Text>
+          <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
+            {t('Staked')}
+          </Text>
+        </ActionTitles>
+        <ActionContent>
+          <div>
+            <Heading>{displayBalance()}</Heading>
+            {stakedBalance.gt(0) && lpPrice.gt(0) && (
+              <Balance
+                fontSize="12px"
+                color="textSubtle"
+                decimals={2}
+                value={getBalanceNumber(lpPrice.times(stakedBalance))}
+                unit=" USD"
+                prefix="~"
+              />
+            )}
+          </div>
+          <IconButtonWrapper>
+            <IconButton variant="secondary" onClick={onPresentWithdraw} mr="6px">
+              <MinusIcon color="primary" width="14px" />
+            </IconButton>
+            <IconButton
+              variant="secondary"
+              onClick={onPresentDeposit}
+              disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
+            >
+              <AddIcon color="primary" width="14px" />
+            </IconButton>
+          </IconButtonWrapper>
+        </ActionContent>
+      </ActionContainer>
+    )
+  }
+
   return (
     <ActionContainer>
       <ActionTitles>
-        <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-          {t('Enable Farm')}
+        <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px" pr="4px">
+          {t('Stake')}
+        </Text>
+        <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
+          {lpSymbol}
         </Text>
       </ActionTitles>
       <ActionContent>
-        <Button width="100%" disabled={pendingTx} onClick={handleApprove} variant="secondary">
-          {t('Enable')}
+        <Button
+          width="100%"
+          onClick={onPresentDeposit}
+          variant="secondary"
+          disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
+        >
+          {t('Stake LP')}
         </Button>
       </ActionContent>
     </ActionContainer>
   )
+
 }
 
 export default Staked

@@ -56,7 +56,11 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   }, [onApprove, dispatch, account, pid, t, toastSuccess, fetchWithCatchTxError])
 
   const renderApprovalOrStakeButton = () => {
-    return isApproved ? (
+    return !isApproved && stakedBalance?.eq(0) ? (
+      <Button mt="8px" width="100%" disabled={pendingTx} onClick={handleApprove}>
+        {t('Enable Contract')}
+      </Button>
+    ) : (
       <StakeAction
         stakedBalance={stakedBalance}
         tokenBalance={tokenBalance}
@@ -70,10 +74,6 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         enablePendingTx={pendingTx}
         handleApprove={handleApprove}
       />
-    ) : (
-      <Button mt="8px" width="100%" disabled={pendingTx} onClick={handleApprove}>
-        {t('Enable Contract')}
-      </Button>
     )
   }
 
