@@ -182,7 +182,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({ pool, userDataLoa
     )
   }
 
-  if (needsApproval) {
+  if (needsApproval && !isNotVaultAndHasStake && !isVaultWithShares) {
     return (
       <ActionContainer>
         <ActionTitles>
