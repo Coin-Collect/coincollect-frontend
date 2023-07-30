@@ -196,7 +196,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     )
   }
 
-  if (isApproved) {
+  if (isApproved && !pendingTx) {
     if (stakedBalance.gt(0)) {
       return (
         <ActionContainer>
