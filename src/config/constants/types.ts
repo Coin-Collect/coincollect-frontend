@@ -79,6 +79,7 @@ export interface Minting {
   totalSupply: number
   avatar: string
   banner: {large: string, small: string}
+  sampleNftImage?: {tokenId: number, image: string, link: string}
   showCase?: any[]
   faq?: {title: string, description: string[]}[]
   currency: Token

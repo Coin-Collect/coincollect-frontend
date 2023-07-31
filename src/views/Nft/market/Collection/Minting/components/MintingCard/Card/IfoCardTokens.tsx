@@ -169,9 +169,9 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
     />,
   )
 
-  let { showCase, address, name, avatar, openSeaUrl } = ifo
+  let { showCase, sampleNftImage, address, name, avatar, openSeaUrl } = ifo
   const nfts = showCase ? showCase.map((item, index) => ({ 'tokenId': item.tokenId, 'collectionAddress': address, 'name': `#${item.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': item.image } })) : [];
-  const nft = nfts[0]
+  const nft = sampleNftImage ? { 'tokenId': sampleNftImage.tokenId, 'collectionAddress': address, 'name': `#${sampleNftImage.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': sampleNftImage.image } } : nfts[0]
 
   const renderTokenSection = () => {
     if (isLoading) {
