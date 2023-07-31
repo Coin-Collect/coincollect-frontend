@@ -360,7 +360,7 @@ const ifos: Minting[] = [
       }
     ],
     poolUnlimited: {
-      saleAmount: '1100 NFT',
+      saleAmount: '2556 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
