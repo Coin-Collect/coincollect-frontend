@@ -22,7 +22,6 @@ import {
 import { SerializedNftFarmsState, SerializedNftFarm } from '../types'
 import { fetchMasterChefFarmPoolLength } from './fetchMasterChefData'
 import { BIG_ZERO } from 'utils/bigNumber'
-import { setPoolsPublicData } from 'state/pools'
 
 const noAccountFarmConfig = farmsConfig.map((farm) => ({
   ...farm,
