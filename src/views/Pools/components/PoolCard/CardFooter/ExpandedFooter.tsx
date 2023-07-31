@@ -180,7 +180,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ pool, account }) => {
 
       {
       <Flex mb="2px" justifyContent="flex-end">
-        <LinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`} bold={false} small>
+        <LinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`} bold={false} small>
           {t('See Token Info')}
         </LinkExternal>
       </Flex>

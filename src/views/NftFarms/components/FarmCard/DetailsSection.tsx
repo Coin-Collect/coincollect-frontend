@@ -118,7 +118,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
       <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>
 
 
-      {earningToken?.address && (<StyledLinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
+      {earningToken?.address && (<StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
       {projectLink && (<StyledLinkExternal href={projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
 
 

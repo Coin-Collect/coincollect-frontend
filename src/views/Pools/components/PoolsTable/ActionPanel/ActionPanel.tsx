@@ -297,7 +297,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
         {shouldShowBlockCountdown && blocksRow}
         {
           <Flex mb="8px" justifyContent={['flex-end', 'flex-end', 'flex-start']}>
-            <LinkExternal href={`https://info.uniswap.org/#/polygon/pools/${earningToken.address}`} bold={false}>
+            <LinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`} bold={false}>
               {t('See Token Info')}
             </LinkExternal>
           </Flex>
