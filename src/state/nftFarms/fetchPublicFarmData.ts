@@ -43,7 +43,7 @@ const fetchFarmCalls = (farm: SerializedNftFarm) => {
 
 export const fetchPublicFarmsData = async (farms: SerializedNftFarmConfig[]): Promise<any[]> => {
   const farmCalls = farms.flatMap((farm) => fetchFarmCalls(farm))
-  const chunkSize = farmCalls.length / farms.length
+  const chunkSize = farms.length / farms.length
   const farmMultiCallResult = await multicallPolygonv2(erc20, farmCalls)
 
   const updatedfarmMultiCallResult= [];

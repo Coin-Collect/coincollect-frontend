@@ -46,6 +46,7 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     totalStaked: farm.totalStaked ? new BigNumber(farm.totalStaked) : BIG_ZERO,
     poolWeight: farm.poolWeight ? new BigNumber(farm.poolWeight) : BIG_ZERO,
     totalShares: farm.totalShares ? new BigNumber(farm.totalShares) : BIG_ZERO,
+    supportedCollectionPids: farm.supportedCollectionPids ? farm.supportedCollectionPids : []
   }
 }
 

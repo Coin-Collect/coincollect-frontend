@@ -52,13 +52,17 @@ export default function CollectionSelectModal({
   
   const { data: nftFarms} = useFarms()
   
-  const communityTokenFarms = nftFarms.filter(
-    (farm) => farm.pid <= 4
-  )
 
   const mainNftStakeFarm = nftFarms.filter(
     (farm) => farm.pid == pid
   )
+
+  const communityTokenFarms = nftFarms.filter(
+    (farm) => farm.pid <= 4 && farm.lpSymbol != mainNftStakeFarm[0].lpSymbol
+  )
+
+
+  const eligibleCollections = [mainNftStakeFarm[0].pid, ...mainNftStakeFarm[0]["supportedCollectionPids"]]
 
   const collectionList = [...mainNftStakeFarm, ...communityTokenFarms]
 
@@ -101,6 +105,7 @@ export default function CollectionSelectModal({
             onCurrencySelect={handleCurrencySelect}
             allowance={allowance}
             fixedListRef={fixedList}
+            eligiblePids={eligibleCollections}
           />
         </Box>
       </StyledModalBody>

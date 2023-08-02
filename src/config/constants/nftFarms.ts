@@ -64,6 +64,29 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: 'https://lotshare.app/',
   },
+  {
+    pid: 6,
+    lpSymbol: 'CoinCollect Starter NFT',
+    nftAddresses: {
+      137: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
+      80001: '0x11DdF94710AD390063357D532042Bd5f23A3fBd6',
+    },
+    contractAddresses: {
+      137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
+      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808d',
+    },
+    tokenPerBlock: '0.0077',
+    participantThreshold: 100,
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'SHIB', percentage: 340},
+    ],
+    //supportedCollectionPids: [1,2],
+    mainCollectionWeight: '1',
+    performanceFee: '0',
+    projectLink: 'https://lotshare.app/',
+  },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
 export default nftFarms

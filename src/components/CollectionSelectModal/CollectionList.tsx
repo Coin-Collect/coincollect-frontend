@@ -54,17 +54,21 @@ function CollectionRow({
   isSelected,
   style,
   allowance,
+  eligiblePids
 }: {
   collection: DeserializedNftFarm
   onSelect: (task: string) => void
   isSelected: boolean
   style: CSSProperties
   allowance: boolean
+  eligiblePids?: number[]
 }) {
   const { account } = useActiveWeb3React()
   const key = collectionKey(collection)
   const balance = collection.userData.tokenBalance.toNumber()
   const collectionData = mintingConfig.find((mintCollection) => mintCollection.stake_pid === collection.pid)
+  const isEligible = eligiblePids.includes(collection.pid)
+  
 
   // only show add or remove buttons if not on selected list
   return (
@@ -72,14 +76,18 @@ function CollectionRow({
       style={style}
       className={`token-item-${key}`}
       onClick={() => (isSelected ? null : onSelect(allowance ? "stake" : "approve"))}
-      disabled={balance == 0}
+      disabled={balance == 0 || !isEligible} // Disable the item if not eligible
       selected={isSelected}
     >
       <ListLogo logoURI={collectionData ? collectionData.avatar : ""} size={"34px"} />
       <Column>
         <Text bold>{collection.lpSymbol}</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
-          {balance === 0 ? "Insufficient balance" : allowance ? "Click to Start Staking" : "Click to Enable"}
+          {
+            !isEligible ? "This collection is not eligible" : // Show message if not eligible
+            balance === 0 ? "Insufficient balance" :
+            allowance ? "Click to Start Staking" : "Click to Enable"
+          }
         </Text>
       </Column>
       <RowFixed style={{ justifySelf: 'flex-end' }}>
@@ -87,6 +95,7 @@ function CollectionRow({
       </RowFixed>
     </MenuItem>
   )
+
 }
 
 export default function CollectionList({
@@ -96,6 +105,7 @@ export default function CollectionList({
   onCurrencySelect,
   allowance,
   fixedListRef,
+  eligiblePids,
 }: {
   height: number
   collections: DeserializedNftFarm[]
@@ -103,6 +113,7 @@ export default function CollectionList({
   onCurrencySelect: (collection: number, task: string) => void
   allowance: boolean[]
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
+  eligiblePids?: number[]
 }) {
 
   const { chainId } = useActiveWeb3React()
@@ -123,6 +134,7 @@ export default function CollectionList({
           isSelected={isSelected}
           onSelect={handleSelect}
           allowance={allowance[index]}
+          eligiblePids={eligiblePids}
         />
       )
     },
