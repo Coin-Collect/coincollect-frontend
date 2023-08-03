@@ -4,6 +4,7 @@ import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CoreTag } from 'components/Tags'
 import Image from 'next/image'
 import { mintingConfig } from 'config/constants'
+import nftFarmsConfig from 'config/constants/nftFarms'
 
 
 export interface ExpandableSectionProps {
@@ -37,9 +38,13 @@ export const CollectionAvatar = styled(ProfileAvatar)`
 
 const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken, pid, disabled= false }) => {
   const collectionData = mintingConfig.find((collection) => collection.stake_pid === pid)
+  const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
+  const banner = nftFarmData["banner"] ? nftFarmData["banner"] : collectionData?.banner.small
+  const avatar = nftFarmData["avatar"] ? nftFarmData["avatar"] : collectionData?.avatar
+
   return (
     <CardBody p="0px">
-      <StyledImage src={collectionData ? collectionData.banner.small : ""} height={125} width={375} />
+      <StyledImage src={banner} height={125} width={375} />
       <Flex
         position="relative"
         height="65px"
@@ -48,7 +53,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
         py="8px"
         flexDirection="column"
       >
-        <CollectionAvatar src={collectionData ? collectionData.avatar : ""} width={86} height={86} />
+        <CollectionAvatar src={avatar} width={86} height={86} />
         <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
           {lpLabel}
         </Heading>
