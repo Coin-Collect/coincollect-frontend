@@ -11,7 +11,7 @@ const collectionLinks = {
   'bronze': 'https://opensea.io/collection/coincollect-bronze-nft',
   'silver': 'https://opensea.io/collection/coincollect-silver-nft',
   'gold': 'https://opensea.io/collection/coincollect-gold-nft',
-  'lot': 'www.lotnft.com'
+  'lot': 'https://lotshare.app/'
 }
 
 const ifos: Minting[] = [
@@ -377,78 +377,6 @@ const ifos: Minting[] = [
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
     telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/lotShareApp',
-  },
-  //============================Free Mint NFTS====================================
-  {
-    id: 'starternfts',
-    stake_pid: 6,
-    name: 'CoinCollect Starter NFT',
-    description: 'CoinCollect Starter NFTs are most valuable FREE utility NFTs on the market. Starter NFT is a gift and a lifetime privilege to our community. Starter NFTs earn new tokens from pools and airdrops. it also has a chance on whitelists',
-    address: getCoinCollectNftAddress(),
-    symbol: 'STARTER',
-    totalSupply: 5000,
-    isActive: true,
-    status: 'finished',
-    avatar: "https://coincollect.org/assets/images/clone/nft350.png",
-    banner: {
-      large: "https://coincollect.org/assets/images/clone/banner-lg.png",
-      small: "https://coincollect.org/assets/images/clone/banner-lg.png",
-    },
-    sampleNftImage: { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
-    showCase: [
-      { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
-      { 'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze'] },
-      { 'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver'] },
-      { 'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold'] },
-    ],
-    faq: [
-      {
-        title: "What types of NFTs does CoinCollect offer?",
-        description: ["CoinCollect provides four distinct categories of NFTs, namely Starter, Bronze, Silver, and Gold. The Starter NFT is a free offering intended for community development and surprisingly includes all advantages seen in the other types. The Gold NFT is considered the most prestigious and valuable among the available categories."]
-      },
-      {
-        title: "What benefits do I get from CoinCollect NFTs?",
-        description: ["Owning a CoinCollect NFT carries a slew of perks. These include the ability to stake your NFTs in any active pool on CoinCollect to accumulate new tokens. You'll also gain access to all pools on the claim page, secure discounts across various collections, be whitelisted for upcoming projects, participate in exclusive minting events, and obtain a special Discord role in our owned communities. The platform is also continually working on launching more exciting benefits."]
-      },
-      {
-        title: "How can I get these NFTs?",
-        description: ["For acquiring a Starter NFT, you need to check secondary marketplaces like OpenSea. However, the Bronze, Silver, and Gold NFTs can be directly minted on CoinCollect. With every sale, the pricing elevates, naturally causing an increase in the floor price."]
-      },
-      {
-        title: "Can I use CoinCollect NFTs on other platforms?",
-        description: ["Yes, you certainly can. CoinCollect NFTs are built on the Polygon blockchain and are thus compatible with any other marketplaces that support Polygon, such as OpenSea."]
-      },
-      {
-        title: "What's the value growth potential for these NFTs?",
-        description: ["The valuation of the NFTs is designed to increase as their availability decreases. Therefore, as sales progress, the floor price climbs accordingly, suggesting a potential for value appreciation."]
-      },
-      {
-        title: "How secure are CoinCollect NFTs?",
-        description: ["CoinCollect NFTs are self-custodial, implying that you are in charge of securing your wallet. When your NFTs are staked in our pools, they are protected by reliable, open-source smart contracts on the blockchain adhering to market-standard security practices."]
-      },
-      {
-        title: "What can I do with CoinCollect NFTs if I buy one?",
-        description: ["If you purchase a CoinCollect NFT, you can benefit from various features. You can claim your tokens directly from the Claim Page and stake them in any pool via the NFT Stake page. Additionally, you can enjoy a discount on subsequent purchases from any collection of your choice. Exclusive Discord roles are also accessible from our Discord server. Lastly, if you wish to sell your NFT, you can do so on OpenSea or any other preferred marketplace."]
-      },
-      {
-        title: "Why should I buy a CoinCollect NFT?",
-        description: ["Purchasing a CoinCollect NFT offers the opportunity for passive income through staking and the potential for value appreciation. Owners enjoy exclusive benefits, including access to new projects, private minting events, special Discord roles, and discounts on subsequent purchases. Furthermore, as CoinCollect is an evolving, innovative DeFi platform, investing in its NFTs allows you to be part of a dynamic and forward-thinking community."]
-      }
-    ],
-    poolUnlimited: {
-      saleAmount: '5000 NFT',
-      distributionRatio: 1,
-    },
-    currency: tokens.cake,
-    token: tokens.collect,
-    releaseBlockNumber: 15156634,
-    articleUrl: 'https://coincollect.org',
-    version: 1.0,
-    openSeaUrl: 'https://opensea.io/collection/coincollect-nfts',
-    cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/CoinCollectOrg',
-    twitterUrl: 'https://twitter.com/CoinCollectOrg',
   },
 ]
 
