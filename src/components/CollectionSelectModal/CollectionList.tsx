@@ -10,6 +10,7 @@ import { ListLogo } from '../Logo'
 import CircleLoader from '../Loader/CircleLoader'
 import { DeserializedNftFarm } from 'state/types'
 import { mintingConfig } from 'config/constants'
+import nftFarmsConfig from 'config/constants/nftFarms'
 
 
 function collectionKey(collection: DeserializedNftFarm): number {
@@ -67,6 +68,8 @@ function CollectionRow({
   const key = collectionKey(collection)
   const balance = collection.userData.tokenBalance.toNumber()
   const collectionData = mintingConfig.find((mintCollection) => mintCollection.stake_pid === collection.pid)
+  const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === collection.pid)
+  const avatar = nftFarmData["avatar"] ? nftFarmData["avatar"] : collectionData?.avatar
   const isEligible = eligiblePids.includes(collection.pid)
   
 
@@ -79,7 +82,7 @@ function CollectionRow({
       disabled={balance == 0 || !isEligible} // Disable the item if not eligible
       selected={isSelected}
     >
-      <ListLogo logoURI={collectionData ? collectionData.avatar : ""} size={"34px"} />
+      <ListLogo logoURI={avatar} size={"34px"} />
       <Column>
         <Text bold>{collection.lpSymbol}</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
