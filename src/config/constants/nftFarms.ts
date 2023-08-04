@@ -108,7 +108,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
       80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808a',
     },
-    tokenPerBlock: '0.0230',
+    tokenPerBlock: '0.023',
     participantThreshold: 60,
     isFinished: false,
     earningToken: serializedTokens.collect,
