@@ -81,7 +81,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
-      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808a',
+      80001: '0x0d579904aD91D6C642eE60cD4c6f94540e306537',
     },
     tokenPerBlock: '0.0077',
     participantThreshold: 100,
@@ -106,7 +106,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
-      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808a',
+      80001: '0x1DD7cb6eb48FC04639d22fA237AD879C66eeE5E4',
     },
     tokenPerBlock: '0.023',
     participantThreshold: 60,
@@ -131,7 +131,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
-      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808a',
+      80001: '0x68D73e5F25d36EeACD4b665b25AC090b66195c76',
     },
     tokenPerBlock: '0.0224',
     participantThreshold: 25,
@@ -156,7 +156,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
-      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808a',
+      80001: '0x16ABF1d9AF710E689d3C476D05420d55B1C399a9',
     },
     tokenPerBlock: '0.0306',
     participantThreshold: 15,
