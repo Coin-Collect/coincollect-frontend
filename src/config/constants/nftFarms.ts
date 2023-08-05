@@ -74,7 +74,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   },
   {
     pid: 6,
-    lpSymbol: 'CoinCollect Starter NFT',
+    lpSymbol: 'Starter SHIB',
     nftAddresses: {
       137: '0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD',
       80001: '0x11DdF94710AD390063357D532042Bd5f23A3fBd6',
@@ -94,12 +94,12 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://coincollect.org/',
-    banner: "https://coincollect.org/assets/images/clone/banner-lg.png",
+    banner: "https://coincollect.org/assets/images/showcase/shibStarter.png",
     avatar: "https://coincollect.org/assets/images/clone/nft350.png",
   },
   {
     pid: 7,
-    lpSymbol: 'CoinCollect Bronze NFT',
+    lpSymbol: 'Bronze SHIB',
     nftAddresses: {
       137: '0x0B8E7D22CE826f1228a82525b8779dBdD9E24B80',
       80001: '0x2c65d5355813D3E1f86d1c9b25DCFF367bBd913D' 
@@ -119,12 +119,12 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://coincollect.org/',
-    banner: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
+    banner: "https://coincollect.org/assets/images/showcase/shibBronze.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
   },
   {
     pid: 8,
-    lpSymbol: 'CoinCollect Silver NFT',
+    lpSymbol: 'Silver SHIB',
     nftAddresses: {
       137: '0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9',
       80001: '0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9' 
@@ -144,12 +144,12 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://coincollect.org/',
-    banner: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
+    banner: "https://coincollect.org/assets/images/showcase/shibSilver.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
   },
   {
     pid: 9,
-    lpSymbol: 'CoinCollect Gold NFT',
+    lpSymbol: 'Gold SHIB',
     nftAddresses: {
       137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
       80001: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e'
@@ -169,12 +169,12 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://coincollect.org/',
-    banner: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
+    banner: "https://coincollect.org/assets/images/showcase/shibGold.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
   },
   {
     pid: 10,
-    lpSymbol: 'COLLECT USDT Rewards',
+    lpSymbol: 'Collectors Pool',
     nftAddresses: {
       137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
       80001: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e'
