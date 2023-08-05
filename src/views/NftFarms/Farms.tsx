@@ -108,7 +108,7 @@ const NUMBER_OF_FARMS_VISIBLE = 12
 
 export const getDisplayApr = (cakeRewardsApr?: number) => {
   if (cakeRewardsApr) {
-    return cakeRewardsApr.toLocaleString('en-US', { maximumFractionDigits: 2 })
+    return cakeRewardsApr.toLocaleString('en-US', { maximumFractionDigits: 4 })
   }
   return null
 }

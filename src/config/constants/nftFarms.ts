@@ -172,6 +172,31 @@ const nftFarms: SerializedNftFarmConfig[] = [
     banner: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
   },
+  {
+    pid: 10,
+    lpSymbol: 'COLLECT USDT Rewards',
+    nftAddresses: {
+      137: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e',
+      80001: '0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e'
+    },
+    contractAddresses: {
+      137: '0xA01C4679Db07830c46661008cAFaEB9DaAA93953',
+      80001: '0x16ABF1d9AF710E689d3C476D05420d55B1C399a9',
+    },
+    tokenPerBlock: '0.00002',
+    participantThreshold: 150,
+    isFinished: false,
+    earningToken: serializedTokens.usdt,
+    sideRewards: [
+      {token: 'COLLECT', percentage: 166667},
+    ],
+    supportedCollectionPids: [1,2,3,4],
+    mainCollectionWeight: '1',
+    performanceFee: '0',
+    projectLink: 'https://coincollect.org/',
+    banner: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
+    avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
+  },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
 export default nftFarms
