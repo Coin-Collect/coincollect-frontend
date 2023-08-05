@@ -52,19 +52,27 @@ export default function CollectionSelectModal({
   
   const { data: nftFarms} = useFarms()
   
+  const notToListFarms = ["Starter SHIB", "Bronze SHIB", "Silver SHIB", "Gold SHIB", "Collectors Pool"]
+  const collectionPidOrigins = {
+                            6 : 1, 
+                            7 : 2, 
+                            8 : 3, 
+                            9 : 4, 
+                            10 : 4,
+                          }
 
   const mainNftStakeFarm = nftFarms.filter(
     (farm) => farm.pid == pid
   )
 
   const communityTokenFarms = nftFarms.filter(
-    (farm) => farm.pid <= 4 && farm.lpSymbol != mainNftStakeFarm[0].lpSymbol
+    (farm) => farm.pid <= 4
   )
 
 
-  const eligibleCollections = [mainNftStakeFarm[0].pid, ...mainNftStakeFarm[0]["supportedCollectionPids"]]
+  const eligibleCollections = [collectionPidOrigins[mainNftStakeFarm[0].pid] ?? mainNftStakeFarm[0].pid, ...mainNftStakeFarm[0]["supportedCollectionPids"]]
 
-  const collectionList = [...mainNftStakeFarm, ...communityTokenFarms]
+  const collectionList = notToListFarms.includes(mainNftStakeFarm[0].lpSymbol) ? [...communityTokenFarms] : [...mainNftStakeFarm, ...communityTokenFarms]
 
   const { allowance } = useFarmUser(pid)
 
