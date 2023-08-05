@@ -30,9 +30,7 @@ const MaxStakeRow: React.FC<MaxStakeRowProps> = ({
     <Flex flexDirection="column">
       <Flex justifyContent="space-between" alignItems="center">
         <Text small={small}>{t('Max. stake per user')}:</Text>
-        <Text small={small}>{`${stakingLimit.toNumber()} ${
-          stakingTokenSymbol
-        }`}</Text>
+        <Text small={small}>{`${stakingLimit.toNumber()} NFT`}</Text>
       </Flex>
       {hasPoolStarted && (
         <Flex justifyContent="space-between" alignItems="center">
