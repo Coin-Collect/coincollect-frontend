@@ -190,7 +190,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     sideRewards: [
       {token: 'COLLECT', percentage: 166667},
     ],
-    supportedCollectionPids: [1,2,3,4],
+    supportedCollectionPids: [1,2,3],
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://coincollect.org/',
