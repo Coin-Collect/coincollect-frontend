@@ -194,8 +194,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://coincollect.org/',
-    banner: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
-    avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
+    banner: "https://coincollect.org/assets/images/showcase/tetherPool.png",
+    avatar: "https://coincollect.org/assets/images/showcase/250logo.png",
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
