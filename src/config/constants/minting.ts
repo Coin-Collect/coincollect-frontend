@@ -370,16 +370,12 @@ const ifos: Minting[] = [
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-<<<<<<< Updated upstream
     articleUrl: 'https://lotshare.app/',
-=======
-    articleUrl: 'https://lotshare.app',
->>>>>>> Stashed changes
     version: 3.1,
     openSeaUrl: 'https://opensea.io/collection/lotshare',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    //discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/lotshare',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
+    telegramUrl: 'https://t.me/CoinCollectOrg',
     twitterUrl: 'https://twitter.com/lotShareApp',
   },
 ]
