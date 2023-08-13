@@ -47,6 +47,14 @@ export const mainnetTokens = defineTokens({
     'LOTSHARE Token',
     'https://lotshare.app/',
   ),
+  blitz: new Token(
+    POLYGON_MAINNET,
+    '0x4e6D6d050BEEfd732344398aE20B23c245d6A59F',
+    18,
+    'BLITZ',
+    'BLITZ Token',
+    'https://blitzbrawler.com/',
+  ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(
@@ -2094,6 +2102,14 @@ export const testnetTokens = defineTokens({
     'LOT',
     'LOTSHARE Test Token',
     'https://lotshare.app/',
+  ),
+  blitz: new Token(
+    MUMBAI_TESTNET,
+    '0xAED9FcD0E99C26022c5214548543CA84BB4506ab',
+    18,
+    'BLITZ',
+    'BLITZ Test Token',
+    'https://blitzbrawler.com/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,
