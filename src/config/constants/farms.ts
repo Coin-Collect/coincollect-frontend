@@ -59,6 +59,18 @@ const farms: SerializedFarmConfig[] = [
     token: serializedTokens.lot,
     quoteToken: serializedTokens.collect,
   },
+  {
+    pid: 4,
+    lpSymbol: 'COLLECT-BLITZ LP',
+    lpAddresses: {
+      97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
+      56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
+      137: '0x27307257eA70280da5692A2Cd3C863D021127Ac1',
+      80001: '0x159a66a1808613C037c008e6b4868cf5f68C22ca' // CHANGE_ADDRESS:Pair
+    },
+    token: serializedTokens.blitz,
+    quoteToken: serializedTokens.collect,
+  },
   
 ].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
 
