@@ -382,7 +382,7 @@ const ifos: Minting[] = [
   {
     id: 'blitzbrawlernfts',
     stake_pid: 6,
-    name: 'BlitzBrawler NFT',
+    name: 'BlitzBrawler Player',
     description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
     address: getBlitzBrawlerNftAddress(),
     symbol: 'BRAWLER',
@@ -390,10 +390,10 @@ const ifos: Minting[] = [
     lastPrice: 25,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
+    avatar: "https://coincollect.org/assets/images/partners/blitz/blitzLogo150.png",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/banners/bannerLotLg.png",
-      small: "https://coincollect.org/assets/images/clone/banners/bannerLotSm.png",
+      large: "https://coincollect.org/assets/images/partners/blitz/blitzBannerLg.png",
+      small: "https://coincollect.org/assets/images/partners/blitz/blitzBannerSm.png",
     },
     showCase: [
       { 'tokenId': 57, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_20.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
