@@ -396,10 +396,10 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/partners/blitz/blitzBannerSm.png",
     },
     showCase: [
-      { 'tokenId': 57, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_20.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 245, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_21.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 454, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_22.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 679, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_23.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 8, 'image': 'https://i.seadn.io/gcs/files/d123afa62c649e05eef7778901f41844.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 134, 'image': 'https://i.seadn.io/gcs/files/d7ddf6e4d08cb15cf9d18ef9278d5b00.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 201, 'image': 'https://i.seadn.io/gcs/files/8df761db003534772e5c1ca088d9729e.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 94, 'image': 'https://i.seadn.io/gcs/files/5db953c72fedd2df4fea7ec4dd000f38.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
     ],
     faq: [
       {
