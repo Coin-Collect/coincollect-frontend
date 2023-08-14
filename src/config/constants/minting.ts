@@ -436,19 +436,19 @@ const ifos: Minting[] = [
       }
     ],
     poolUnlimited: {
-      saleAmount: '2556 NFT',
+      saleAmount: '4952 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-    articleUrl: 'https://lotshare.app/',
+    articleUrl: 'https://blitzbrawler.com/',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/lotshare',
+    openSeaUrl: 'https://opensea.io/collection/blitzbrawler',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/CoinCollectOrg',
-    twitterUrl: 'https://twitter.com/lotShareApp',
+    telegramUrl: 'https://t.me/blitzbrawler',
+    twitterUrl: 'https://twitter.com/blitz_brawler',
   },
 ]
 
