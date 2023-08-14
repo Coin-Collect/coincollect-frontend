@@ -383,7 +383,7 @@ const ifos: Minting[] = [
     id: 'blitzbrawlernfts',
     stake_pid: 11,
     name: 'BlitzBrawler Player',
-    description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
+    description: 'BlitzBrawler combines football with blockchain, allowing users to collect unique NFT brawlers to build teams and compete in tournaments. Features include staking, renting, trading, or selling NFTs.',
     address: getBlitzBrawlerNftAddress(),
     symbol: 'BRAWLER',
     totalSupply: 4952,
