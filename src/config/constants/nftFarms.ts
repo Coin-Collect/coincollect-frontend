@@ -197,6 +197,29 @@ const nftFarms: SerializedNftFarmConfig[] = [
     banner: "https://coincollect.org/assets/images/showcase/tetherPool.png",
     avatar: "https://coincollect.org/assets/images/showcase/250logo.png",
   },
+  {
+    pid: 11,
+    lpSymbol: 'Brawler NFT',
+    nftAddresses: {
+      137: '0x7121D40FDe5F2a82674262b8601DEcd9E066C936',
+      80001: '0x3bc9134913CD9B3Bf0C72280CF14fe93D5EABE50'
+    },
+    contractAddresses: {
+      137: '0x2b0dcF4f55A6f19aF410D7BD51bbfAb499Bb5C84',
+      80001: '0x02905b3528f0D737BB324A202B7F79eA0e9d808d',
+    },
+    tokenPerBlock: '0.00068',
+    participantThreshold: 130,
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'BLITZ', percentage: 33000},
+    ],
+    supportedCollectionPids: [1,2,3,4],
+    mainCollectionWeight: '15',
+    performanceFee: '0',
+    projectLink: 'https://blitzbrawler.com/',
+  },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
 export default nftFarms
