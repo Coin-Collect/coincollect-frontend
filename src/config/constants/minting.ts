@@ -396,10 +396,10 @@ const ifos: Minting[] = [
       small: "https://coincollect.org/assets/images/partners/blitz/blitzBannerSm.png",
     },
     showCase: [
-      { 'tokenId': 57, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_20.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 245, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_21.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 454, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_22.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 679, 'image': 'https://coincollect.org/assets/images/showcase/lotNFT_23.png', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 8, 'image': 'https://i.seadn.io/gcs/files/d123afa62c649e05eef7778901f41844.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 134, 'image': 'https://i.seadn.io/gcs/files/d7ddf6e4d08cb15cf9d18ef9278d5b00.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 201, 'image': 'https://i.seadn.io/gcs/files/8df761db003534772e5c1ca088d9729e.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 94, 'image': 'https://i.seadn.io/gcs/files/5db953c72fedd2df4fea7ec4dd000f38.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
     ],
     faq: [
       {
@@ -436,19 +436,19 @@ const ifos: Minting[] = [
       }
     ],
     poolUnlimited: {
-      saleAmount: '2556 NFT',
+      saleAmount: '4952 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-    articleUrl: 'https://lotshare.app/',
+    articleUrl: 'https://blitzbrawler.com/',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/lotshare',
+    openSeaUrl: 'https://opensea.io/collection/blitzbrawler',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/CoinCollectOrg',
-    twitterUrl: 'https://twitter.com/lotShareApp',
+    telegramUrl: 'https://t.me/blitzbrawler',
+    twitterUrl: 'https://twitter.com/blitz_brawler',
   },
 ]
 
