@@ -80,10 +80,10 @@ const HarvestCard = () => {
             </Text>
           </Flex>
           {numTotalToCollect <= 0 ? (
-            <NextLinkFromReactRouter to="nfts/collections">
+            <NextLinkFromReactRouter to="nftpools">
               <Button width={['100%', null, null, 'auto']} variant="secondary">
                 <Text color="primary" bold>
-                  {t('Mint NFT')}
+                  {t('Stake NFT')}
                 </Text>
                 <ArrowForwardIcon ml="4px" color="primary" />
               </Button>

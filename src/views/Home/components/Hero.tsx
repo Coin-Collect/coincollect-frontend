@@ -114,7 +114,7 @@ const Hero = () => {
           <Flex>
             {!account && <ConnectWalletButton mr="8px" />}
             <NextLinkFromReactRouter to="/nfts/collections">
-              <Button variant={!account ? 'secondary' : 'primary'}>{t('Trade Now')}</Button>
+              <Button variant={!account ? 'secondary' : 'primary'}>{t('Mint NFT')}</Button>
             </NextLinkFromReactRouter>
           </Flex>
         </Flex>
