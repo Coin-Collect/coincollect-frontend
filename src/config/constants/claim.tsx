@@ -32,6 +32,21 @@ const claims: any[] = [
     projectSite: 'https://lotshare.app/',
     version: 2,
   },
+  {
+    cid: 1,
+    name: 'Blitz Rewards',
+    description: <Trans>BRAWLER and CoinCollect NFT holders can now claim their LOT tokens, a gift to our vibrant community. At LotShare, ownership equates to rewards, offering exclusive benefits within our ecosystem.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/blitz/BlitzClaim.png',
+    rewardToken: 'BLITZ',
+    requiredToken: 'BRAWLER NFT', 
+    baseAmount: 500,
+    nftLimit: 5,
+    totalReward: 100000,
+    isFinished: false,
+    rewardTokenAddress: '0x4e6D6d050BEEfd732344398aE20B23c245d6A59F',
+    projectSite: 'https://blitzbrawler.com/',
+    version: 2,
+  },
   /*
   {
     name: 'Holder Party',
