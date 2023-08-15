@@ -209,7 +209,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: '0xfB877EE2a65fb56b4FBb1822497f02d3De9737f7',
     },
     tokenPerBlock: '0.01',
-    participantThreshold: 1950,
+    participantThreshold: 1950, // Weight x Target Nft Count(130)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
