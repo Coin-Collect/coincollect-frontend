@@ -373,6 +373,10 @@ const Farms: React.FC = ({ children }) => {
               <Select
                 options={[
                   {
+                    label: t('Latest'),
+                    value: 'latest',
+                  },
+                  {
                     label: t('Hot'),
                     value: 'hot',
                   },
@@ -391,10 +395,6 @@ const Farms: React.FC = ({ children }) => {
                   {
                     label: t('Liquidity'),
                     value: 'liquidity',
-                  },
-                  {
-                    label: t('Latest'),
-                    value: 'latest',
                   },
                 ]}
                 onOptionChange={handleSortOptionChange}
