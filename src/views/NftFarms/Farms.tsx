@@ -121,7 +121,7 @@ const Farms: React.FC = ({ children }) => {
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useUserFarmsViewMode()
   const { account } = useWeb3React()
-  const [sortOption, setSortOption] = useState('hot')
+  const [sortOption, setSortOption] = useState('latest')
   const { observerRef, isIntersecting } = useIntersectionObserver()
   const chosenFarmsLength = useRef(0)
 
