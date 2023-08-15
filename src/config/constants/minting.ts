@@ -403,36 +403,36 @@ const ifos: Minting[] = [
     ],
     faq: [
       {
-        title: "What is LotShare?",
-        description: ["LotShare is a revolutionary real estate investment platform. It democratizes land ownership by tokenizing land lots, offering global accessibility, and empowering a new generation of property investors with smart contract power, shared revenue opportunities, and enhanced liquidity."]
+        title: "What is BlitzBrawler?",
+        description: ["BlitzBrawler is an exciting universe where football meets blockchain. It includes 4952 unique NFTs called Brawlers (BlitzBrawler Players) and a token named BLITZ that powers the ecosystem."]
       },
       {
-        title: "How does LotShare work?",
-        description: ["LotShare acquires land and divides it into smaller units, represented by NFTs. These NFTs are available for purchase on the LotShare platform and OpenSea. When land sales occur, revenue is distributed among NFT holders, fostering shared success and value creation."]
+        title: "How do I get a Brawler NFT?",
+        description: ["You can purchase already minted Brawlers on OpenSea or mint a fresh Brawler exclusively from CoinCollect at a more affordable rate and with exclusive benefits. Details are available on our official website."]
       },
       {
-        title: "What is the LOT token and what benefits does it offer?",
-        description: ["The LOT token is integral to the LotShare ecosystem. It enables you to buy, sell, or trade land NFTs, provides access to early land lot releases, and allows you to take part in ecosystem governance. Additionally, holding the LOT token can yield transaction fee discounts, staking rewards, and a share of revenue from land sales."]
+        title: "What is the BLITZ token?",
+        description: ["BLITZ is the native token within the BlitzBrawler ecosystem, used for transactions, staking, trading, and more."]
       },
       {
-        title: "What are LotShare Prime NFTs?",
-        description: ["LotShare Prime NFTs are special assets that offer additional benefits to their holders, including insurance, VIP membership, discounts, early access, special offers, priority support, and community participation."]
+        title: "How can I acquire BLITZ tokens?",
+        description: ["BLITZ tokens can be purchased on CoinCollect and UniSwap. For more information on acquiring BLITZ tokens, visit blitzbrawler.com."]
       },
       {
-        title: "How can I earn from LotShare?",
-        description: ["Investors can earn from LotShare through the shared revenue model, which fairly distributes the revenue from land sales among NFT holders. Additionally, holding and staking LOT tokens yield rewards, and LOT token holders can benefit from transaction fee discounts."]
+        title: "Can I trade or sell my Brawler NFT?",
+        description: ["Yes, Brawlers are fully tradable and can be sold or rented on OpenSea. They can also be staked or used in competitions within the BlitzBrawler universe."]
       },
       {
-        title: "Is there flexibility in investing with LotShare?",
-        description: ["Yes, LotShare offers unparalleled liquidity and flexibility in land investments. Investors can buy, sell, or trade their NFTs whenever they want or return them at a low cost."]
+        title: "How many Brawlers are there?",
+        description: ["There are a total of 4952 unique Brawler NFTs within the BlitzBrawler universe."]
       },
       {
-        title: "How is transparency and reliability ensured with LotShare?",
-        description: ["LotShare leverages smart contract technology to ensure transparent and reliable transactions. All transactions and commissions are recorded openly and are auditable."]
+        title: "How do I participate in tournaments?",
+        description: ["Tournaments are integral to the BlitzBrawler experience. Detailed instructions on entering and competing are found on our website."]
       },
       {
-        title: "What future plans does LotShare have for expansion?",
-        description: ["LotShare plans to consistently add new land lots to its portfolio using cost-effective methods, providing new opportunities and potential for value creation for investors."]
+        title: "Is my investment safe?",
+        description: ["While we prioritize security, please exercise caution and do your research when investing. Consult a financial advisor if needed."]
       }
     ],
     poolUnlimited: {

@@ -168,7 +168,7 @@ const Step2 = ({ hasProfile, isLive, isCommitted }: { hasProfile: boolean; isLiv
   return (
     <CardBody>
       <Heading as="h4" color="secondary" mb="16px">
-        {t('AirDrop $COLLECT')}
+        {t('Claim Your Tokens!')}
       </Heading>
       <Text color="textSubtle" small>
         {t('When the IFO sales are live, you can “commit” your CAKE to buy the tokens being sold.')} <br />
