@@ -387,7 +387,7 @@ const ifos: Minting[] = [
     address: getBlitzBrawlerNftAddress(),
     symbol: 'BRAWLER',
     totalSupply: 4952,
-    lastPrice: 25,
+    lastPrice: 30,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/partners/blitz/blitzLogo150.png",
