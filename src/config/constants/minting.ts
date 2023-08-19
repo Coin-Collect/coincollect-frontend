@@ -467,11 +467,12 @@ const ifos: Minting[] = [
       large: "https://coincollect.org/assets/images/clone/avatars.jpeg",
       small: "https://coincollect.org/assets/images/clone/avatars.jpeg",
     },
+    sampleNftImage: { 'tokenId': 124, 'image': 'https://i.seadn.io/gcs/files/3cefbe057e7c246e56895218b6165c9a.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
     showCase: [
-      { 'tokenId': 8, 'image': 'https://i.seadn.io/gcs/files/d123afa62c649e05eef7778901f41844.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 134, 'image': 'https://i.seadn.io/gcs/files/d7ddf6e4d08cb15cf9d18ef9278d5b00.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 201, 'image': 'https://i.seadn.io/gcs/files/8df761db003534772e5c1ca088d9729e.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
-      { 'tokenId': 94, 'image': 'https://i.seadn.io/gcs/files/5db953c72fedd2df4fea7ec4dd000f38.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 139, 'image': 'https://i.seadn.io/gcs/files/20036e4f02a2c0722da652dba36bbfe5.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+      { 'tokenId': 181, 'image': 'https://i.seadn.io/gcs/files/80c0a0419175d504bb9ee8e5da501d0d.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+      { 'tokenId': 223, 'image': 'https://i.seadn.io/gcs/files/7a0657fde0528bcce143e2d96583154c.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+      { 'tokenId': 226, 'image': 'https://i.seadn.io/gcs/files/7de4770f86ec2841b2ff7123921a96c9.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
     ],
     faq: [
       {
@@ -514,13 +515,13 @@ const ifos: Minting[] = [
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-    articleUrl: 'https://blitzbrawler.com/',
+    articleUrl: 'https://avatarsai.net/',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/blitzbrawler',
+    openSeaUrl: 'https://opensea.io/collection/avatarsai-heroes',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
     telegramUrl: 'https://t.me/blitzbrawler',
-    twitterUrl: 'https://twitter.com/blitz_brawler',
+    twitterUrl: 'https://twitter.com/avatarsainet',
   },
 ]
 

@@ -220,6 +220,29 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: 'https://blitzbrawler.com/',
   },
+  {
+    pid: 12,
+    lpSymbol: 'AVATAR NFT',
+    nftAddresses: {
+      137: '0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5',
+      80001: '0xdf4a8a0f9a3Cf3a97f04DFfEE4ABAe71496Ae49f'
+    },
+    contractAddresses: {
+      137: '0x43C430fcA944675BA7FF9Fc150d9FEa901367f52',
+      80001: '0xfB877EE2a65fb56b4FBb1822497f02d3De9737f7',
+    },
+    tokenPerBlock: '0.01',
+    participantThreshold: 1950, // Weight x Target Nft Count(130)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'BLITZ', percentage: 34000},
+    ],
+    supportedCollectionPids: [1,2,3,4],
+    mainCollectionWeight: '15',
+    performanceFee: '0',
+    projectLink: 'https://avatarsai.net/',
+  },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
 export default nftFarms
