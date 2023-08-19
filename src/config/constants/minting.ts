@@ -462,7 +462,7 @@ const ifos: Minting[] = [
     lastPrice: 30,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/clone/avatarlogo.png",
+    avatar: "https://i.seadn.io/gcs/files/f4234250ffb80456f4e84baa17c59400.gif?auto=format&dpr=1&w=256",
     banner: {
       large: "https://coincollect.org/assets/images/clone/avatars.jpeg",
       small: "https://coincollect.org/assets/images/clone/avatars.jpeg",
