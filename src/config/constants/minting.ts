@@ -455,7 +455,7 @@ const ifos: Minting[] = [
     id: 'avatarsainfts',
     stake_pid: 12,
     name: 'AvatarsAI Heroes',
-    description: 'Enter the Intergalactic Arena of Digital Mastery! In the boundless cosmos of AvatarsAI, heroes and villains, armed with unparalleled powers, battle for supremacy.',
+    description: 'AvatarsAI ignites a fierce battle in the digital realm. Heroes and villains, armed with unique powers, strive for control over the AI-driven blockchain universe. The stakes are high, alliances shift, and every decision echoes in a thrilling fight for dominion. Join the adventure at AvatarsAI.',
     address: getAvatarsAiNftAddress(),
     symbol: 'AVATAR',
     totalSupply: 6952,
@@ -467,47 +467,48 @@ const ifos: Minting[] = [
       large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
       small: "https://coincollect.org/assets/images/partners/avatar/avatarBannerSg.png",
     },
-    sampleNftImage: { 'tokenId': 124, 'image': 'https://i.seadn.io/gcs/files/3cefbe057e7c246e56895218b6165c9a.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+    sampleNftImage: { 'tokenId': 124, 'image': 'https://i.seadn.io/gcs/files/b304c520de38cca993b1898db62754b7.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
     showCase: [
-      { 'tokenId': 139, 'image': 'https://i.seadn.io/gcs/files/20036e4f02a2c0722da652dba36bbfe5.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
-      { 'tokenId': 181, 'image': 'https://i.seadn.io/gcs/files/80c0a0419175d504bb9ee8e5da501d0d.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
-      { 'tokenId': 223, 'image': 'https://i.seadn.io/gcs/files/7a0657fde0528bcce143e2d96583154c.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+      { 'tokenId': 139, 'image': 'https://i.seadn.io/gcs/files/f7f2eb06e446528308d979d5c939cc26.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+      { 'tokenId': 181, 'image': 'https://i.seadn.io/gcs/files/94e341a551e7817d96b92cb2a934621e.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
+      { 'tokenId': 223, 'image': 'https://i.seadn.io/gcs/files/0fdfef3653530ea9068e34964d0468f6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
       { 'tokenId': 226, 'image': 'https://i.seadn.io/gcs/files/7de4770f86ec2841b2ff7123921a96c9.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
     ],
     faq: [
       {
-        title: "What is BlitzBrawler?",
-        description: ["BlitzBrawler is an exciting universe where football meets blockchain. It includes 4952 unique NFTs called Brawlers (BlitzBrawler Players) and a token named BLITZ that powers the ecosystem."]
+        title: "What is AvatarsAI?",
+        description: ["AvatarsAI is a thrilling digital universe where heroes and villains battle for control over the AI-driven blockchain cosmos. Unique characters and exciting strategies unfold in the fight for digital dominion."]
       },
       {
-        title: "How do I get a Brawler NFT?",
-        description: ["You can purchase already minted Brawlers on OpenSea or mint a fresh Brawler exclusively from CoinCollect at a more affordable rate and with exclusive benefits. Details are available on our official website."]
+        title: "How do I join the battle in AvatarsAI?",
+        description: ["You can become part of the AvatarsAI world by visiting our website at https://avatarsai.net and following the instructions to engage in the battle for digital control."]
       },
       {
-        title: "What is the BLITZ token?",
-        description: ["BLITZ is the native token within the BlitzBrawler ecosystem, used for transactions, staking, trading, and more."]
+        title: "What makes each character unique?",
+        description: ["Each character in AvatarsAI is endowed with unique powers, contributing to an ever-evolving strategy and blurring the lines between right and wrong. The choices and alliances you make impact the unfolding conflict."]
       },
       {
-        title: "How can I acquire BLITZ tokens?",
-        description: ["BLITZ tokens can be purchased on CoinCollect and UniSwap. For more information on acquiring BLITZ tokens, visit blitzbrawler.com."]
+        title: "Can I trade or sell my characters?",
+        description: ["Yes, characters within the AvatarsAI universe are tradable and can be sold on supported platforms. More details are available on our official website."]
       },
       {
-        title: "Can I trade or sell my Brawler NFT?",
-        description: ["Yes, Brawlers are fully tradable and can be sold or rented on OpenSea. They can also be staked or used in competitions within the BlitzBrawler universe."]
+        title: "What is the AVATAR token?",
+        description: ["AVATAR is the intergalactic token that powers the AI in AvatarsAI and serves as the currency for the ecosystem. It is central to the operations and transactions within the AvatarsAI universe."]
       },
       {
-        title: "How many Brawlers are there?",
-        description: ["There are a total of 4952 unique Brawler NFTs within the BlitzBrawler universe."]
+        title: "How can I acquire AVATAR tokens?",
+        description: ["You can buy and sell AVATAR tokens via CoinCollect or Uniswap. Detailed information on obtaining the tokens is available on our official website."]
       },
       {
-        title: "How do I participate in tournaments?",
-        description: ["Tournaments are integral to the BlitzBrawler experience. Detailed instructions on entering and competing are found on our website."]
+        title: "Can I stake or farm AVATAR tokens?",
+        description: ["Yes, you can stake and farm the AVATAR token on CoinCollect. For more information on staking and farming options, please visit our official website or CoinCollect's platform."]
       },
       {
-        title: "Is my investment safe?",
-        description: ["While we prioritize security, please exercise caution and do your research when investing. Consult a financial advisor if needed."]
+        title: "Is my investment in AvatarsAI safe?",
+        description: ["While we prioritize security in AvatarsAI, it's always wise to exercise caution and conduct thorough research when investing. Consult with a financial advisor if needed."]
       }
     ],
+    
     poolUnlimited: {
       saleAmount: '6952 NFT',
       distributionRatio: 1,
@@ -520,7 +521,7 @@ const ifos: Minting[] = [
     openSeaUrl: 'https://opensea.io/collection/avatarsai-heroes',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/blitzbrawler',
+    telegramUrl: 'https://t.me/avatarsai',
     twitterUrl: 'https://twitter.com/avatarsainet',
   },
 ]
