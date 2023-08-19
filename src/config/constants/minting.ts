@@ -464,8 +464,8 @@ const ifos: Minting[] = [
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://i.seadn.io/gcs/files/f4234250ffb80456f4e84baa17c59400.gif?auto=format&dpr=1&w=256",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/avatars.jpeg",
-      small: "https://coincollect.org/assets/images/clone/avatars.jpeg",
+      large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
+      small: "https://coincollect.org/assets/images/partners/avatar/avatarBannerSg.png",
     },
     sampleNftImage: { 'tokenId': 124, 'image': 'https://i.seadn.io/gcs/files/3cefbe057e7c246e56895218b6165c9a.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
     showCase: [
