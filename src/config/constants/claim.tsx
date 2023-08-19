@@ -47,6 +47,21 @@ const claims: any[] = [
     projectSite: 'https://blitzbrawler.com/',
     version: 2,
   },
+  {
+    cid: 2,
+    name: 'Avatar Rewards',
+    description: <Trans>Do you own an Avatar NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/blitz/BlitzClaim.png',
+    rewardToken: 'AVATAR',
+    requiredToken: 'AVATAR NFT', 
+    baseAmount: 500,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0x4e6D6d050BEEfd732344398aE20B23c245d6A59F',
+    projectSite: 'https://avatarsai.net/',
+    version: 2,
+  },
   /*
   {
     name: 'Holder Party',
