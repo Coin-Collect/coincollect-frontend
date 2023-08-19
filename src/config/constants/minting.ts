@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -437,6 +437,78 @@ const ifos: Minting[] = [
     ],
     poolUnlimited: {
       saleAmount: '4952 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://blitzbrawler.com/',
+    version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/blitzbrawler',
+    //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
+    telegramUrl: 'https://t.me/blitzbrawler',
+    twitterUrl: 'https://twitter.com/blitz_brawler',
+  },
+  //============================AvatarsAI NFTS====================================
+  {
+    id: 'avatarsainfts',
+    stake_pid: 12,
+    name: 'AvatarsAI Heroes',
+    description: 'Enter the Intergalactic Arena of Digital Mastery! In the boundless cosmos of AvatarsAI, heroes and villains, armed with unparalleled powers, battle for supremacy.',
+    address: getAvatarsAiNftAddress(),
+    symbol: 'AVATAR',
+    totalSupply: 6952,
+    lastPrice: 30,
+    isActive: true,
+    status: 'liveprivate', /// Options: livepublic, liveprivate
+    avatar: "https://coincollect.org/assets/images/clone/avatarlogo.png",
+    banner: {
+      large: "https://coincollect.org/assets/images/clone/avatars.jpeg",
+      small: "https://coincollect.org/assets/images/clone/avatars.jpeg",
+    },
+    showCase: [
+      { 'tokenId': 8, 'image': 'https://i.seadn.io/gcs/files/d123afa62c649e05eef7778901f41844.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 134, 'image': 'https://i.seadn.io/gcs/files/d7ddf6e4d08cb15cf9d18ef9278d5b00.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 201, 'image': 'https://i.seadn.io/gcs/files/8df761db003534772e5c1ca088d9729e.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+      { 'tokenId': 94, 'image': 'https://i.seadn.io/gcs/files/5db953c72fedd2df4fea7ec4dd000f38.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/coincollect-gold-nft' },
+    ],
+    faq: [
+      {
+        title: "What is BlitzBrawler?",
+        description: ["BlitzBrawler is an exciting universe where football meets blockchain. It includes 4952 unique NFTs called Brawlers (BlitzBrawler Players) and a token named BLITZ that powers the ecosystem."]
+      },
+      {
+        title: "How do I get a Brawler NFT?",
+        description: ["You can purchase already minted Brawlers on OpenSea or mint a fresh Brawler exclusively from CoinCollect at a more affordable rate and with exclusive benefits. Details are available on our official website."]
+      },
+      {
+        title: "What is the BLITZ token?",
+        description: ["BLITZ is the native token within the BlitzBrawler ecosystem, used for transactions, staking, trading, and more."]
+      },
+      {
+        title: "How can I acquire BLITZ tokens?",
+        description: ["BLITZ tokens can be purchased on CoinCollect and UniSwap. For more information on acquiring BLITZ tokens, visit blitzbrawler.com."]
+      },
+      {
+        title: "Can I trade or sell my Brawler NFT?",
+        description: ["Yes, Brawlers are fully tradable and can be sold or rented on OpenSea. They can also be staked or used in competitions within the BlitzBrawler universe."]
+      },
+      {
+        title: "How many Brawlers are there?",
+        description: ["There are a total of 4952 unique Brawler NFTs within the BlitzBrawler universe."]
+      },
+      {
+        title: "How do I participate in tournaments?",
+        description: ["Tournaments are integral to the BlitzBrawler experience. Detailed instructions on entering and competing are found on our website."]
+      },
+      {
+        title: "Is my investment safe?",
+        description: ["While we prioritize security, please exercise caution and do your research when investing. Consult a financial advisor if needed."]
+      }
+    ],
+    poolUnlimited: {
+      saleAmount: '6952 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,

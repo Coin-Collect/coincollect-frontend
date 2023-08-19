@@ -292,20 +292,6 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
           </Flex>
         </CollectionCard>
 
-        <CollectionCard
-          key="dummy"
-          bgSrc="https://coincollect.org/assets/images/clone/avatars.jpeg"
-          avatarSrc="https://coincollect.org/assets/images/clone/avatarlogo.png"
-          collectionName="Avatar NFTs (soon)"
-          url=""
-        >
-          <Flex alignItems="center">
-            <Text fontSize="12px" color="textSubtle">
-              MaxSupply
-            </Text>
-            <BNBAmountLabel amount={10000} />
-          </Flex>
-        </CollectionCard>
         {/* ======Dummy Collections====== */}
 
 

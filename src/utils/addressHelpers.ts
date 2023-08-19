@@ -83,6 +83,9 @@ export const getLotNftAddress = () => {
 export const getBlitzBrawlerNftAddress = () => {
   return getAddress(addresses.blitzBrawlerNft)
 }
+export const getAvatarsAiNftAddress = () => {
+  return getAddress(addresses.avatarsAiNft)
+}
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null
