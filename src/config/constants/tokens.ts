@@ -2121,7 +2121,7 @@ export const testnetTokens = defineTokens({
   ),
   avatar: new Token(
     MUMBAI_TESTNET,
-    '0x4e6D6d050BEEfd732344398aE20B23c245d6A59F',
+    '0x827D32de1Aef2E9f87392542901a686c1d50559f',
     18,
     'AVATAR',
     'AVATAR Token',
