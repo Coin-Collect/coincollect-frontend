@@ -51,7 +51,7 @@ const claims: any[] = [
     cid: 2,
     name: 'Avatar Rewards',
     description: <Trans>Do you own an Avatar NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/blitz/BlitzClaim.png',
+    imageLink: 'https://coincollect.org/assets/images/partners/avatar/AvatarsClaim.png',
     rewardToken: 'AVATAR',
     requiredToken: 'AVATAR NFT', 
     baseAmount: 500,
