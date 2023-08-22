@@ -37,7 +37,7 @@
     {
       "name": "Avatar Token",
       "symbol": "AVATAR",
-      "address": "0x827D32de1Aef2E9f87392542901a686c1d50559f",
+      "address": "0x0D8550552A7F277e141331C2fe7798BB5c9359b9",
       "chainId": 137,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/tokens/blitzLogo128.png"

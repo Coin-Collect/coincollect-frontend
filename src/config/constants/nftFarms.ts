@@ -229,14 +229,14 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x43C430fcA944675BA7FF9Fc150d9FEa901367f52',
-      80001: '0x815f1C523D0A851a5E39A3099410816066eC3057',
+      80001: '0x2bc8F0560C6a00032005711AdC316fa9D9823eA6',
     },
-    tokenPerBlock: '0.01',
-    participantThreshold: 1950, // Weight x Target Nft Count(130)
+    tokenPerBlock: '0.0116',
+    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'AVATAR', percentage: 299000},
+      {token: 'AVATAR', percentage: 298000},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',

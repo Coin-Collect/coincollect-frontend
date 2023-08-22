@@ -57,7 +57,7 @@ export const mainnetTokens = defineTokens({
   ),
   avatar: new Token(
     POLYGON_MAINNET,
-    '0x4e6D6d050BEEfd732344398aE20B23c245d6A59F',
+    '0x0D8550552A7F277e141331C2fe7798BB5c9359b9',
     18,
     'AVATAR',
     'AVATAR Token',
