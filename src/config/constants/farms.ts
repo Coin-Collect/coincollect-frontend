@@ -71,6 +71,18 @@ const farms: SerializedFarmConfig[] = [
     token: serializedTokens.blitz,
     quoteToken: serializedTokens.collect,
   },
+  {
+    pid: 5,
+    lpSymbol: 'COLLECT-AVATAR LP',
+    lpAddresses: {
+      97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
+      56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
+      137: '0x244C4b75C83d38f1458e322996e09d9E60f55d77',
+      80001: '0x2FC92a1F6556201b978c3A399b993e141a224aE4' // CHANGE_ADDRESS:Pair
+    },
+    token: serializedTokens.avatar,
+    quoteToken: serializedTokens.collect,
+  },
   
 ].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
 
