@@ -236,7 +236,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'BLITZ', percentage: 34000},
+      {token: 'AVATAR', percentage: 299000},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
