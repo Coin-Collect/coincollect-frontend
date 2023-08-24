@@ -261,7 +261,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     sideRewards: [
       {token: 'AVATAR', percentage: 298000},
     ],
-    supportedCollectionPids: [1],
+    supportedCollectionPids: [14],
     mainCollectionWeight: '15',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
@@ -287,7 +287,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     sideRewards: [
       {token: 'AVATAR', percentage: 298000},
     ],
-    supportedCollectionPids: [1],
+    supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',

@@ -73,10 +73,16 @@ export default function CollectionSelectModal({
 
 
   const eligibleCollections = [collectionPidOrigins[mainNftStakeFarm[0].pid] ?? mainNftStakeFarm[0].pid, ...mainNftStakeFarm[0]["supportedCollectionPids"]]
+  
+  const externalCommunityCollectionPids = mainNftStakeFarm[0]["supportedCollectionPids"].filter((pid) => pid > 4)
+  const externalNftStakeFarm = nftFarms.filter(
+    (farm) => externalCommunityCollectionPids.includes(farm.pid)
+  )
+
 
   const collectionList = mainNftStakeFarmReplaced 
     ? [...mainNftStakeFarmReplaced, ...communityTokenFarms] 
-    : [...mainNftStakeFarm, ...communityTokenFarms]
+    : [...mainNftStakeFarm, ...externalNftStakeFarm, ...communityTokenFarms]
 
 
   const { allowance } = useFarmUser(pid)
