@@ -243,6 +243,32 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
   },
+  {
+    pid: 13,
+    lpSymbol: 'GALXE OATs',
+    nftAddresses: {
+      137: '0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5',
+      80001: '0xdf4a8a0f9a3Cf3a97f04DFfEE4ABAe71496Ae49f'
+    },
+    contractAddresses: {
+      137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
+      80001: '0x2bc8F0560C6a00032005711AdC316fa9D9823eA6',
+    },
+    tokenPerBlock: '0.0116',
+    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'AVATAR', percentage: 298000},
+    ],
+    supportedCollectionPids: [1],
+    mainCollectionWeight: '15',
+    performanceFee: '0',
+    projectLink: 'https://avatarsai.net/',
+    banner: "https://coincollect.org/assets/images/clone/banner-lg.png",
+    avatar: "https://s3.coinmarketcap.com/static-gravity/image/ac7647a95e38418c8840f43ea82fccd0.png",
+    staticNftImage: "https://s3.coinmarketcap.com/static-gravity/image/ac7647a95e38418c8840f43ea82fccd0.png"
+  },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
 export default nftFarms

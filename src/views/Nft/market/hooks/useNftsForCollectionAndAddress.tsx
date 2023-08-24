@@ -19,40 +19,61 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
     const collectionContract = useCoinCollectNFTContract(collectionAddress)
 
 
-        const getNfts = async () => {
+    const getNfts = async () => {
+      try {
+        const tokenIds = await collectionContract.walletOfOwner(account);
+    
+        let tokenIdsNumber = [];
+    
+        if (nftPool["staticNftImage"]) {
+          // If staticNftImage exists, use that image directly
+          tokenIdsNumber = tokenIds.map((id) => {
+            return {
+              tokenId: id.toNumber(),
+              collectionAddress,
+              image: nftPool["staticNftImage"]
+            };
+          });
+        } else {
+          // If staticNftImage doesn't exist, get image from blockchain
+          const imageCalls = tokenIds.map((id) => {
+            return {
+              address: collectionAddress,
+              name: 'tokenURI',
+              params: [id.toNumber()]
+            };
+          });
+    
+          const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls);
+    
+          tokenIdsNumber = await Promise.all(tokenIds.map(async (id, index) => {
             try {
-              const tokenIds = await collectionContract.walletOfOwner(account)
-
-              const imageCalls = tokenIds.map((id) => {
-                return {
-                  address: collectionAddress,
-                  name: 'tokenURI',
-                  params: [id.toNumber()],
-                }
-              })
-              const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls)
-
-              const tokenIdsNumber = await Promise.all(tokenIds.map(async (id, index) => {
-
-                let meta = null;
-                try {
-                  //@ts-ignore
-                  const tokenURI = rawTokenURIs[index][0];
-                  meta = await axios.get(tokenURI)
-                  return {tokenId: id.toNumber(), collectionAddress, image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)}
-                } catch (error) {
-                  console.log('IPFS link is broken!', error);
-                  return {tokenId: id.toNumber(), collectionAddress, image: 'images/nfts/no-profile-md.png'}
-                }
-                
-              }))
-              console.log("promise done")
-              return tokenIdsNumber
+              const tokenURI = rawTokenURIs[index][0];
+              const meta = await axios.get(tokenURI);
+              return {
+                tokenId: id.toNumber(),
+                collectionAddress,
+                image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)
+              };
             } catch (error) {
-              console.log('Error fetching NFTs:', error);
-              throw error; // Re-throw the error to trigger SWR's error handling
+              console.log('IPFS link is broken!', error);
+              return {
+                tokenId: id.toNumber(),
+                collectionAddress,
+                image: 'images/nfts/no-profile-md.png'
+              };
             }
+          }));
         }
+    
+        console.log("promise done");
+        return tokenIdsNumber;
+      } catch (error) {
+        console.log('Error fetching NFTs:', error);
+        throw error; // Re-throw the error to trigger SWR's error handling
+      }
+    };
+    
 
         const { data, status, error, mutate } = useSWR(isAddress(account) ? [account, selectedPid, 'unstakedNftList'] : null, async () => getNfts(), {
           onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
