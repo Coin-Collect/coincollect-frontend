@@ -62,6 +62,21 @@ const claims: any[] = [
     projectSite: 'https://avatarsai.net/',
     version: 2,
   },
+  {
+    cid: 3,
+    name: 'Galxe Rewards',
+    description: <Trans>Do you own an Avatar NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/avatar/AvatarsClaim.png',
+    rewardToken: 'AVATAR',
+    requiredToken: 'GALXE OAT', 
+    baseAmount: 5000,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0x0D8550552A7F277e141331C2fe7798BB5c9359b9',
+    projectSite: 'https://avatarsai.net/',
+    version: 2,
+  },
   /*
   {
     name: 'Holder Party',
