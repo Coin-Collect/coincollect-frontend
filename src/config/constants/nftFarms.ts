@@ -247,8 +247,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     pid: 13,
     lpSymbol: 'GALXE OATs',
     nftAddresses: {
-      137: '0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5',
-      80001: '0xdf4a8a0f9a3Cf3a97f04DFfEE4ABAe71496Ae49f'
+      137: '0x5D666F215a85B87Cb042D59662A7ecd2C8Cc44e6',
+      80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
     },
     contractAddresses: {
       137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
@@ -274,7 +274,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     lpSymbol: 'GALXE Pass',
     nftAddresses: {
       137: '0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5',
-      80001: '0xdf4a8a0f9a3Cf3a97f04DFfEE4ABAe71496Ae49f'
+      80001: '0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63'
     },
     contractAddresses: {
       137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
