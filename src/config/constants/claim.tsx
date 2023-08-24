@@ -65,8 +65,8 @@ const claims: any[] = [
   {
     cid: 3,
     name: 'Galxe Rewards',
-    description: <Trans>Do you own an Avatar NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/avatar/AvatarsClaim.png',
+    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 20,000 to hit the claim button, and you'll be eligible to claim exclusive rewards. Act fast, as these rewards are only available to the quickest claimers!</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png',
     rewardToken: 'AVATAR',
     requiredToken: 'GALXE OAT', 
     baseAmount: 5000,

@@ -265,9 +265,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '15',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
-    banner: "https://coincollect.org/assets/images/clone/banner-lg.png",
-    avatar: "https://s3.coinmarketcap.com/static-gravity/image/ac7647a95e38418c8840f43ea82fccd0.png",
-    staticNftImage: "https://s3.coinmarketcap.com/static-gravity/image/ac7647a95e38418c8840f43ea82fccd0.png"
+    banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
+    avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
+    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png"
   },
   {
     pid: 14,
@@ -291,9 +291,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '15',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
-    banner: "https://coincollect.org/assets/images/clone/banner-lg.png",
-    avatar: "https://img.freepik.com/free-vector/gradient-galaxy-logo-template_23-2149203103.jpg?w=2000",
-    staticNftImage: "https://img.freepik.com/free-vector/gradient-galaxy-logo-template_23-2149203103.jpg?w=2000"
+    banner: "https://coincollect.org/assets/images/partners/galxe/galxeOAT%2Bstake.png",
+    avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
+    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png"
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
