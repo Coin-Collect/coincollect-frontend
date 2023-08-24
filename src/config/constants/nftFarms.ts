@@ -291,8 +291,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '15',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
-    banner: "https://coincollect.org/assets/images/partners/galxe/galxeOAT%2Bstake.png",
-    avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
+    banner: "https://coincollect.org/assets/images/partners/galxe/galxePASSstake.png",
+    avatar: "https://coincollect.org/assets/images/partners/galxe/galxeLogo.png",
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png"
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
