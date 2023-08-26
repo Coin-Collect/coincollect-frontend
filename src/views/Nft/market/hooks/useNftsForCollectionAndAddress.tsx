@@ -9,6 +9,7 @@ import { isAddress } from 'utils'
 import { FetchStatus } from 'config/constants/types'
 import { multicallPolygonv1 } from 'utils/multicall'
 import erc721ABI from 'config/abi/erc721.json'
+import { walletOfOwnerApi } from 'state/nftMarket/helpers'
 
 
 export const useNftsForCollectionAndAddress = (selectedPid: number) => {
@@ -21,7 +22,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
 
     const getNfts = async () => {
       try {
-        const tokenIds = await collectionContract.walletOfOwner(account);
+        const tokenIds = nftPool["useApi"] ? await walletOfOwnerApi(account, collectionAddress) : await collectionContract.walletOfOwner(account);
     
         let tokenIdsNumber = [];
     

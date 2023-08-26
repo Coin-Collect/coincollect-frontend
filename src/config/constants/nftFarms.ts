@@ -267,13 +267,14 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: 'https://avatarsai.net/',
     banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
     avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
-    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png"
+    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
+    useApi: true,
   },
   {
     pid: 14,
     lpSymbol: 'GALXE Pass',
     nftAddresses: {
-      137: '0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5',
+      137: '0x72Fdf59AeB9980F5a11F86599a513dE450159Ff6',
       80001: '0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63'
     },
     contractAddresses: {
@@ -293,7 +294,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: 'https://avatarsai.net/',
     banner: "https://coincollect.org/assets/images/partners/galxe/galxePASSstake.png",
     avatar: "https://coincollect.org/assets/images/partners/galxe/galxeLogo.png",
-    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png"
+    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
+    useApi: true,
   },
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 

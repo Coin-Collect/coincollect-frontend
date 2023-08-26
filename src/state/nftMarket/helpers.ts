@@ -28,6 +28,7 @@ import {
   MarketEvent,
 } from './types'
 import { getBaseNftFields, getBaseTransactionFields, getCollectionBaseFields } from './queries'
+import BigNumber from 'bignumber.js'
 
 /**
  * API HELPERS
@@ -46,6 +47,32 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
   console.error('Failed to fetch NFT collections', res.statusText)
   return null
 }
+
+/**
+ * Fetch NFTs based on ownerAddress and collectionAddress parameters using the API
+ * @param {string} ownerAddress - The owner's Ethereum address.
+ * @param {string} collectionAddress - The collection's Ethereum address.
+ * @returns {Promise<BigNumber[]>} - The response from the API or null if an error occurs.
+ */
+ export const walletOfOwnerApi = async (
+  ownerAddress: string,
+  collectionAddress: string
+): Promise<BigNumber[]> => {
+  const mumbaiCollections = ["0xf2149E6B11638BAEf791e3E66ac7E6469328e840", "0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63"];
+  const network = mumbaiCollections.includes(collectionAddress) ? 'mumbai' : 'mainnet';
+  const baseUrl = `https://polygon-${network}.g.alchemy.com/nft/v2/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4/getNFTs`;
+  const queryParams = `?owner=${ownerAddress}&contractAddresses[]=${collectionAddress}&pageSize=5`;
+  const fullUrl = `${baseUrl}${queryParams}`;
+
+  const res = await fetch(fullUrl);
+  if (res.ok) {
+    const json = await res.json();
+    return json.ownedNfts.map(item => new BigNumber(item.id.tokenId));
+  }
+  console.error('Failed to fetch NFTs', res.statusText);
+  return null;
+}
+
 
 const fetchCollectionsTotalSupply = async (collections: ApiCollection[]): Promise<number[]> => {
   const totalSupplyCalls = collections.map((collection) => ({
