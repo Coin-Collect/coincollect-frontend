@@ -251,7 +251,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
     },
     contractAddresses: {
-      137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
+      137: '0x0f30AaAfF12d9cEca35BEB306DF6Eb5cccA44534',
       80001: '0xa00645C2498EFa1688A7d83F8371F10068545539',
     },
     tokenPerBlock: '0.0154',
@@ -279,7 +279,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: '0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63'
     },
     contractAddresses: {
-      137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
+      137: '0x46E7bD1a244C858760F01AaD55d24eEeB0ce2C0C',
       80001: '0xa1b97Dd70b64A654C31e0D8941077F95149EE17b',
     },
     tokenPerBlock: '0.026',
