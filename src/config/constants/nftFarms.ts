@@ -252,17 +252,18 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
-      80001: '0x2bc8F0560C6a00032005711AdC316fa9D9823eA6',
+      80001: '0xa00645C2498EFa1688A7d83F8371F10068545539',
     },
-    tokenPerBlock: '0.0116',
-    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
+    tokenPerBlock: '0.0154',
+    participantThreshold: 2400, // Weight(1) x Target Nft Count(1900) & Weight(5) x Target Nft Count(100)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'AVATAR', percentage: 298000},
+      {token: 'AVATAR', percentage: 40000},
+      {token: 'BLITZ', percentage: 4100},
     ],
     supportedCollectionPids: [14],
-    mainCollectionWeight: '15',
+    mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
     banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
@@ -279,14 +280,15 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
-      80001: '0x2bc8F0560C6a00032005711AdC316fa9D9823eA6',
+      80001: '0xa1b97Dd70b64A654C31e0D8941077F95149EE17b',
     },
-    tokenPerBlock: '0.0116',
-    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
+    tokenPerBlock: '0.026',
+    participantThreshold: 15000, // Weight(15) x Target Nft Count(1000)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'AVATAR', percentage: 298000},
+      {token: 'AVATAR', percentage: 49000},
+      {token: 'BLITZ', percentage: 4900},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
