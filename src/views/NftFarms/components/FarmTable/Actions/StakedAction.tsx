@@ -167,7 +167,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
 
   const handleCollectionChange = useCallback(
     (collectionId: number, task: string) => {
-      const optionId = collectionId > 4 ? 0 : collectionId
+      const optionId = (collectionId > 4 && collectionId !== 14) ? 0 : collectionId
       setTask(task)
       setCollectionOption(optionId)
     },
