@@ -121,6 +121,7 @@ const getWeightForCollection = (
 
 
 const getClaimInfoApi = async (account) => {
+  console.log("Started")
   const v2Claims = claimConfig.filter((claim) => claim.version == 2);
   const claimCalls = v2Claims.map((claim) => {
     const { cid } = claim
@@ -350,14 +351,15 @@ const getClaimInfoApi = async (account) => {
   console.log("userClaimInfos")
   console.log(userClaimInfos)
 
-
+  return [communityNfts, targetNFTs, userClaimInfos, rewardBalancesRaw];
 }
 
 
 const getClaimInfo = async (account, claimRewardContract, claimRewardV2Contract) => {
-  getClaimInfoApi(account)
+  
   const claimInfo = await claimRewardContract.getInfo(account);
-  const claimInfo2 = await claimRewardV2Contract.getInfo(account);
+  //const claimInfo2 = await claimRewardV2Contract.getInfo(account);
+  const [communityNfts, targetNFTs, userClaimInfos, rewardBalancesRaw] = await getClaimInfoApi(account);
 
 
 
@@ -367,16 +369,39 @@ const getClaimInfo = async (account, claimRewardContract, claimRewardV2Contract)
     let claimIndex2 = 0;
     const claimDetails = claimConfig.map((claim) => {
 
-      const info = claim.version == 2 ? claimInfo2 : claimInfo;
       const claimIndex = claim.version == 2 ? claimIndex2++ : claimIndex1++;
+
+      if (claim.version == 2) {
+
+      const nftsToClaim: CollectionInfo[] = [targetNFTs[claimIndex], ...communityNfts];
+      let nftsToClaimClean = [[], []];
+      nftsToClaim.forEach((info) => {
+        info.nftIds.forEach((tokenId) => {
+          nftsToClaimClean[0].push(info.collectionAddress);
+          nftsToClaimClean[1].push(tokenId);
+        });
+      });
+
+
+        return {
+          ...claim,
+          userWeight: userClaimInfos[claimIndex]?.totalWeights,
+          remainingClaims: userClaimInfos[claimIndex]?.remainingClaims,
+          rewardBalance: new BigNumber(rewardBalancesRaw[claimIndex][0]?._hex).toNumber(),
+          nftsToClaim: nftsToClaimClean,
+        }
+
+      }
 
       return {
         ...claim,
-        userWeight: new BigNumber(getSpecificData(info, "userClaimInfo")[claimIndex]?.totalWeights?._hex).toNumber(),
-        remainingClaims: new BigNumber(getSpecificData(info, "userClaimInfo")[claimIndex]?.remainingClaims?._hex).toNumber(),
-        rewardBalance: new BigNumber(getSpecificData(info, "rewardBalances")[claimIndex]?._hex).toNumber(),
-        nftsToClaim: [[...getSpecificData(info, "targetNftsForClaimIndex")[claimIndex]?.[0] ?? [], ...getSpecificData(info, "communityNfts")[0]], [...getSpecificData(info, "targetNftsForClaimIndex")[claimIndex]?.[1] ?? [], ...getSpecificData(info, "communityNfts")[1]]],
+        userWeight: new BigNumber(getSpecificData(claimInfo, "userClaimInfo")[claimIndex]?.totalWeights?._hex).toNumber(),
+        remainingClaims: new BigNumber(getSpecificData(claimInfo, "userClaimInfo")[claimIndex]?.remainingClaims?._hex).toNumber(),
+        rewardBalance: new BigNumber(getSpecificData(claimInfo, "rewardBalances")[claimIndex]?._hex).toNumber(),
+        nftsToClaim: [[...getSpecificData(claimInfo, "targetNftsForClaimIndex")[claimIndex]?.[0] ?? [], ...getSpecificData(claimInfo, "communityNfts")[0]], [...getSpecificData(claimInfo, "targetNftsForClaimIndex")[claimIndex]?.[1] ?? [], ...getSpecificData(claimInfo, "communityNfts")[1]]],
       }
+
+
     })
 
 
