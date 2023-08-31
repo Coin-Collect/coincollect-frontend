@@ -25,7 +25,7 @@ const claims: any[] = [
     rewardToken: 'LOT',
     requiredToken: 'LotShare NFT', 
     baseAmount: 0.2,
-    nftLimit: 5,
+    nftLimit: 1,
     totalReward: 15000,
     isFinished: false,
     rewardTokenAddress: '0x8c1245BA1714BD7a61A34Cb63b95331Fa3db497C',

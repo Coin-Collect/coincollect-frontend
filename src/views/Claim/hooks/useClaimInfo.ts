@@ -15,6 +15,7 @@ import { walletOfOwnerApi } from 'state/nftMarket/helpers'
 interface CollectionInfo {
   collectionAddress: string;
   nftIds: number[];
+  isTargetNft?: boolean;
 }
 
 interface UserClaimInfo {
@@ -24,10 +25,10 @@ interface UserClaimInfo {
 
 interface ClaimInfo {
   claimId: number;
-  collectionAddress: string;
-  tokenIds: number[];
+  collections: CollectionInfo[];
   targetCollectionWeight: number;
   nftLimit: number;
+  claimedList: boolean[];
 }
 
 const getSpecificData = (claimInfo, dataType) => {
@@ -64,15 +65,17 @@ const getSpecificData = (claimInfo, dataType) => {
 const getWeightForCollection = (
   {
     claimId,
-    collectionAddress,
-    tokenIds,
+    collections,
     targetCollectionWeight,
-    nftLimit
+    nftLimit,
+    claimedList,
+
   }: ClaimInfo
 ) => {
 
   let totalWeights = 0;
   let claimCount = 0;
+  let tokenIndex = 0;
   const communityCollectionWeights = {
     "0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD": 1,
     "0x11DdF94710AD390063357D532042Bd5f23A3fBd6": 1,
@@ -82,21 +85,34 @@ const getWeightForCollection = (
     "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e": 10,
   };
 
-  for (let i = 0; i < tokenIds.length; i++) {
-    const tokenId = tokenIds[i];
+  for (let i = 0; i < collections.length; i++) {
+    const collection = collections[i];
 
-    if (!isNFTClaimed(claimId, collectionAddress, tokenId)) {
-      if (targetCollectionWeight > 0) {
-        totalWeights += targetCollectionWeight;
-      } else {
-        totalWeights += communityCollectionWeights[collectionAddress];
-      }
-      claimCount += 1;
 
-      if (claimCount >= nftLimit) {
-        break;
+    for (let y = 0; y < collection.nftIds.length; y++) {
+
+      if (!claimedList[tokenIndex]) {
+        if (collection.isTargetNft) {
+          totalWeights += targetCollectionWeight;
+        } else {
+          totalWeights += communityCollectionWeights[collection.collectionAddress];
+        }
+        claimCount += 1;
+
+        if (claimCount >= nftLimit) {
+          break;
+        }
       }
+
+      tokenIndex += 1;
+
     }
+
+    if (claimCount >= nftLimit) {
+      break;
+    }
+
+
   }
 
   return [totalWeights, claimCount];
@@ -188,7 +204,8 @@ const getClaimInfoApi = async (account) => {
     const nftIdsNumber = nftIdsRaw.map((id) => id.toNumber());
     const collectionInfo: CollectionInfo = {
       collectionAddress: claim.targetCollectionAddress,
-      nftIds: nftIdsNumber
+      nftIds: nftIdsNumber,
+      isTargetNft: true,
     };
 
 
@@ -287,7 +304,7 @@ const getClaimInfoApi = async (account) => {
         collectionInfo.nftIds.forEach((tokenId, index) => {
 
           isClaimedListForClaim.push(isClaimedListFlat[tokenIndex]);
-          tokenIndex ++;
+          tokenIndex++;
 
         });
       }
@@ -317,21 +334,21 @@ const getClaimInfoApi = async (account) => {
     let remainingClaimCount = claim.nftLimit - walletClaimedCount;
     userClaimInfo.remainingClaims = remainingClaimCount;
 
-    // Add weight for target nfts(priority)
-    if (claim.targetCollectionWeight != 0) {
-      
-      const [weight, claimedCount] = getWeightForCollection({
-        claimId: claim.cid,
-        collectionAddress: targetNFTs[index].collectionAddress,
-        tokenIds: targetNFTs[index].nftIds,
-        targetCollectionWeight: claim.targetCollectionWeight,
-        nftLimit: remainingClaimCount,
-      });
-      userClaimInfo.totalWeights += weight;
-      
-    }
+    // Calculate weights
+    const [weight, claimedCount] = getWeightForCollection({
+      claimId: claim.cid,
+      collections: [targetNFTs[index], ...communityNfts],
+      targetCollectionWeight: parseInt(claim.targetCollectionWeight),
+      nftLimit: remainingClaimCount,
+      claimedList: isClaimedListSeperated[index],
+    });
+    userClaimInfo.totalWeights += weight;
+    return userClaimInfo;
 
   });
+
+  console.log("userClaimInfos")
+  console.log(userClaimInfos)
 
 
 }
