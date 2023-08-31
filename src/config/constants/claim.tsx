@@ -76,6 +76,7 @@ const claims: any[] = [
     rewardTokenAddress: '0x0D8550552A7F277e141331C2fe7798BB5c9359b9',
     projectSite: 'https://avatarsai.net/',
     version: 2,
+    useApi: true,
   },
   {
     cid: 4,
@@ -91,6 +92,7 @@ const claims: any[] = [
     rewardTokenAddress: '0x0D8550552A7F277e141331C2fe7798BB5c9359b9',
     projectSite: 'https://avatarsai.net/',
     version: 2,
+    useApi: true,
   },
   /*
   {
