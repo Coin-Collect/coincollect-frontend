@@ -357,9 +357,11 @@ const getClaimInfoApi = async (account) => {
 
 const getClaimInfo = async (account, claimRewardContract, claimRewardV2Contract) => {
   
-  const claimInfo = await claimRewardContract.getInfo(account);
-  //const claimInfo2 = await claimRewardV2Contract.getInfo(account);
-  const [communityNfts, targetNFTs, userClaimInfos, rewardBalancesRaw] = await getClaimInfoApi(account);
+  const [claimInfo, [communityNfts, targetNFTs, userClaimInfos, rewardBalancesRaw]] = await Promise.all([
+    claimRewardContract.getInfo(account),
+    getClaimInfoApi(account)
+  ]);
+  
 
 
 
