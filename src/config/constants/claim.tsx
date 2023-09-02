@@ -78,6 +78,7 @@ const claims: any[] = [
     version: 2,
     useApi: true,
   },
+/*
   {
     cid: 4,
     name: 'Galxe Pass Rewards',
@@ -94,6 +95,7 @@ const claims: any[] = [
     version: 2,
     useApi: true,
   },
+*/
   /*
   {
     name: 'Holder Party',

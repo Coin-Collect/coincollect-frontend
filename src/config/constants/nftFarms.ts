@@ -271,6 +271,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
     useApi: true,
   },
+/*
   {
     pid: 14,
     lpSymbol: 'GALXE Pass',
@@ -299,6 +300,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
     useApi: true,
   },
+*/
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
 export default nftFarms
