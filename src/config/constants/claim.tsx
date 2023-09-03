@@ -65,7 +65,7 @@ const claims: any[] = [
   {
     cid: 3,
     name: 'Galxe OAT Rewards',
-    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 20,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
+    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png',
     rewardToken: 'AVATAR',
     requiredToken: 'GALXE OAT', 
@@ -74,7 +74,7 @@ const claims: any[] = [
     totalReward: 120000000,
     isFinished: false,
     rewardTokenAddress: '0x0D8550552A7F277e141331C2fe7798BB5c9359b9',
-    projectSite: 'https://avatarsai.net/',
+    projectSite: 'https://galxe.com/CoinCollect',
     version: 2,
     useApi: true,
   },

@@ -265,7 +265,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://avatarsai.net/',
+    projectLink: 'https://galxe.com/CoinCollect',
     banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
     avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
