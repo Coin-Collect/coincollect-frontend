@@ -262,7 +262,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       {token: 'AVATAR', percentage: 40000},
       {token: 'BLITZ', percentage: 4100},
     ],
-    supportedCollectionPids: [14],
+    //supportedCollectionPids: [],
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://avatarsai.net/',
