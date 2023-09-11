@@ -48,7 +48,7 @@
       "address": "0xeacde3e3c5aae81d435d9a592827803296e25aae",
       "chainId": 137,
       "decimals": 18,
-      "logoURI": "https://coincollect.org/assets/images/partners/avatar/avatarLogo128.png"
+      "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"
     },
     {
       "name": "WMATIC Token",
@@ -112,7 +112,7 @@
       "address": "0x199463e8F3b40f5A3d518b5AD02A62F2f5b18B0F",
       "chainId": 80001,
       "decimals": 18,
-      "logoURI": "https://coincollect.org/assets/images/tokens/blitzLogo128.png"
+      "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"
     },
     {
       "name": "WMATIC Token",
