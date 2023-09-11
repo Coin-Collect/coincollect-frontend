@@ -43,6 +43,14 @@
       "logoURI": "https://coincollect.org/assets/images/partners/avatar/avatarLogo128.png"
     },
     {
+      "name": "Hunt Token",
+      "symbol": "HUNT",
+      "address": "0xeacde3e3c5aae81d435d9a592827803296e25aae",
+      "chainId": 137,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/avatar/avatarLogo128.png"
+    },
+    {
       "name": "WMATIC Token",
       "symbol": "WMATIC",
       "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
@@ -94,6 +102,14 @@
       "name": "Avatar Token",
       "symbol": "AVATAR",
       "address": "0x827D32de1Aef2E9f87392542901a686c1d50559f",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/tokens/blitzLogo128.png"
+    },
+    {
+      "name": "Hunt Token",
+      "symbol": "HUNT",
+      "address": "0x199463e8F3b40f5A3d518b5AD02A62F2f5b18B0F",
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/tokens/blitzLogo128.png"

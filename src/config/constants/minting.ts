@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -523,6 +523,80 @@ const ifos: Minting[] = [
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
     telegramUrl: 'https://t.me/avatarsai',
     twitterUrl: 'https://twitter.com/avatarsainet',
+  },
+  //============================BeastHunter NFTS====================================
+  {
+    id: 'beasthunternfts',
+    stake_pid: 13,
+    name: 'Beast Hunter',
+    description: 'Unleash the power of your Hunters in BeastHunter! Build an unbeatable team, capture rare beasts, and explore dynamic worlds.',
+    address: getBeastHunterNftAddress(),
+    symbol: 'HUNTER',
+    totalSupply: 2876,
+    lastPrice: 25,
+    isActive: true,
+    status: 'liveprivate', /// Options: livepublic, liveprivate
+    avatar: "https://i.seadn.io/gcs/files/637cce6e6eb437261b100c1f6549e806.png?auto=format&dpr=1&w=256",
+    banner: {
+      large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
+      small: "https://coincollect.org/assets/images/partners/avatar/avatarBannerSg.png",
+    },
+    sampleNftImage: { 'tokenId': 11, 'image': 'https://i.seadn.io/gcs/files/61a8fc82e1d50ccaf23023547c279cb1.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/beasthunterapp' },
+    showCase: [
+      { 'tokenId': 14, 'image': 'https://i.seadn.io/gcs/files/029a81eceacc8480218e80d1d71d681b.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/beasthunterapp' },
+      { 'tokenId': 22, 'image': 'https://i.seadn.io/gcs/files/a7fdb712724a13bbb408a4b23900956f.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/beasthunterapp' },
+      { 'tokenId': 53, 'image': 'https://i.seadn.io/gcs/files/a1142935770ee58562ffd8ff683150cb.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/beasthunterapp' },
+      { 'tokenId': 48, 'image': 'https://i.seadn.io/gcs/files/e506eb06bdefffa3fe44e6100043b22f.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/beasthunterapp' },
+    ],
+    faq: [
+      {
+        title: "What is AvatarsAI?",
+        description: ["AvatarsAI is a thrilling digital universe where heroes and villains battle for control over the AI-driven blockchain cosmos. Unique characters and exciting strategies unfold in the fight for digital dominion."]
+      },
+      {
+        title: "How do I join the battle in AvatarsAI?",
+        description: ["You can become part of the AvatarsAI world by visiting our website at https://avatarsai.net and following the instructions to engage in the battle for digital control."]
+      },
+      {
+        title: "What makes each character unique?",
+        description: ["Each character in AvatarsAI is endowed with unique powers, contributing to an ever-evolving strategy and blurring the lines between right and wrong. The choices and alliances you make impact the unfolding conflict."]
+      },
+      {
+        title: "Can I trade or sell my characters?",
+        description: ["Yes, characters within the AvatarsAI universe are tradable and can be sold on supported platforms. More details are available on our official website."]
+      },
+      {
+        title: "What is the AVATAR token?",
+        description: ["AVATAR is the intergalactic token that powers the AI in AvatarsAI and serves as the currency for the ecosystem. It is central to the operations and transactions within the AvatarsAI universe."]
+      },
+      {
+        title: "How can I acquire AVATAR tokens?",
+        description: ["You can buy and sell AVATAR tokens via CoinCollect or Uniswap. Detailed information on obtaining the tokens is available on our official website."]
+      },
+      {
+        title: "Can I stake or farm AVATAR tokens?",
+        description: ["Yes, you can stake and farm the AVATAR token on CoinCollect. For more information on staking and farming options, please visit our official website or CoinCollect's platform."]
+      },
+      {
+        title: "Is my investment in AvatarsAI safe?",
+        description: ["While we prioritize security in AvatarsAI, it's always wise to exercise caution and conduct thorough research when investing. Consult with a financial advisor if needed."]
+      }
+    ],
+    
+    poolUnlimited: {
+      saleAmount: '2876 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://beasthunter.app/',
+    version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/beasthunterapp',
+    //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
+    discordUrl: 'https://discord.gg/u6j7bAjH8w',
+    telegramUrl: 'https://t.me/beasthunterapp',
+    twitterUrl: 'https://twitter.com/Beasthunterapp',
   },
 ]
 

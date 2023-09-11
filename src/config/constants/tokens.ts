@@ -63,6 +63,14 @@ export const mainnetTokens = defineTokens({
     'AVATAR Token',
     'https://avatarsai.net/',
   ),
+  hunt: new Token(
+    POLYGON_MAINNET,
+    '0xeacde3e3c5aae81d435d9a592827803296e25aae',
+    18,
+    'HUNT',
+    'HUNT Token',
+    'https://beasthunter.app/',
+  ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(
@@ -2126,6 +2134,14 @@ export const testnetTokens = defineTokens({
     'AVATAR',
     'AVATAR Token',
     'https://avatarsai.net/',
+  ),
+  hunt: new Token(
+    MUMBAI_TESTNET,
+    '0x199463e8F3b40f5A3d518b5AD02A62F2f5b18B0F',
+    18,
+    'HUNT',
+    'HUNT Token',
+    'https://beasthunter.app/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,
