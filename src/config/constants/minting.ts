@@ -536,10 +536,10 @@ const ifos: Minting[] = [
     lastPrice: 25,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://i.seadn.io/gcs/files/637cce6e6eb437261b100c1f6549e806.png?auto=format&dpr=1&w=256",
+    avatar: "https://coincollect.org/assets/images/partners/BeastHunter/logo.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
-      small: "https://coincollect.org/assets/images/partners/avatar/avatarBannerSg.png",
+      large: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerLg.png",
+      small: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerSm.png",
     },
     sampleNftImage: { 'tokenId': 11, 'image': 'https://i.seadn.io/gcs/files/61a8fc82e1d50ccaf23023547c279cb1.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/beasthunterapp' },
     showCase: [
@@ -550,36 +550,32 @@ const ifos: Minting[] = [
     ],
     faq: [
       {
-        title: "What is AvatarsAI?",
-        description: ["AvatarsAI is a thrilling digital universe where heroes and villains battle for control over the AI-driven blockchain cosmos. Unique characters and exciting strategies unfold in the fight for digital dominion."]
+        title: "What is BeastHunter?",
+        description: ["BeastHunter is a blockchain-based NFT game where players can build, train, and strategize with their unique team of Hunters. Capture rare beasts, explore dynamic ecosystems, and stake your way to glory—all while earning $HUNT tokens."]
       },
       {
-        title: "How do I join the battle in AvatarsAI?",
-        description: ["You can become part of the AvatarsAI world by visiting our website at https://avatarsai.net and following the instructions to engage in the battle for digital control."]
+        title: "How do I get started with BeastHunter?",
+        description: ["To start your journey, you'll need to own a Hunter NFT. These can be bought on OpenSea or directly from our website during exclusive sales. Once you have a Hunter, you can immediately start capturing beasts and participating in staking and farming."]
       },
       {
-        title: "What makes each character unique?",
-        description: ["Each character in AvatarsAI is endowed with unique powers, contributing to an ever-evolving strategy and blurring the lines between right and wrong. The choices and alliances you make impact the unfolding conflict."]
+        title: "What are the different Hunter types?",
+        description: ["We have six unique Hunter types: Elementalist, Shadowmancer, Beast Tamer, Skyseer, Mechanist, and Warden. Each type has specific abilities and attributes that influence gameplay."]
       },
       {
-        title: "Can I trade or sell my characters?",
-        description: ["Yes, characters within the AvatarsAI universe are tradable and can be sold on supported platforms. More details are available on our official website."]
+        title: "What can I do with $HUNT tokens?",
+        description: ["The $HUNT token is the lifeblood of the BeastHunter ecosystem. Use it for in-game purchases, staking rewards, participating in contests, and much more. It's your key to unlocking the full BeastHunter experience."]
       },
       {
-        title: "What is the AVATAR token?",
-        description: ["AVATAR is the intergalactic token that powers the AI in AvatarsAI and serves as the currency for the ecosystem. It is central to the operations and transactions within the AvatarsAI universe."]
+        title: "Can I trade my Hunters and beasts?",
+        description: ["Yes, all Hunters and captured beasts are NFTs that can be traded on OpenSea or any compatible NFT marketplace. Your digital assets are fully under your control."]
       },
       {
-        title: "How can I acquire AVATAR tokens?",
-        description: ["You can buy and sell AVATAR tokens via CoinCollect or Uniswap. Detailed information on obtaining the tokens is available on our official website."]
+        title: "How can I join the community?",
+        description: ["Our community is vibrant and ever-growing. Join our Discord and Telegram channels to stay up-to-date with the latest news, participate in community contests, and connect with other Hunters."]
       },
       {
-        title: "Can I stake or farm AVATAR tokens?",
-        description: ["Yes, you can stake and farm the AVATAR token on CoinCollect. For more information on staking and farming options, please visit our official website or CoinCollect's platform."]
-      },
-      {
-        title: "Is my investment in AvatarsAI safe?",
-        description: ["While we prioritize security in AvatarsAI, it's always wise to exercise caution and conduct thorough research when investing. Consult with a financial advisor if needed."]
+        title: "What's the future for BeastHunter?",
+        description: ["We have an exciting roadmap that includes new beast types, gameplay features, and partnerships. Each season brings new adventures and opportunities for our community."]
       }
     ],
     
@@ -594,7 +590,7 @@ const ifos: Minting[] = [
     version: 3.1,
     openSeaUrl: 'https://opensea.io/collection/beasthunterapp',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    discordUrl: 'https://discord.gg/u6j7bAjH8w',
+    discordUrl: 'https://discord.gg/GdqfTmFc',
     telegramUrl: 'https://t.me/beasthunterapp',
     twitterUrl: 'https://twitter.com/Beasthunterapp',
   },
