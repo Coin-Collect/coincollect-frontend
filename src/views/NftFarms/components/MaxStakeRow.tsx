@@ -29,12 +29,12 @@ const MaxStakeRow: React.FC<MaxStakeRowProps> = ({
   return (
     <Flex flexDirection="column">
       <Flex justifyContent="space-between" alignItems="center">
-        <Text small={small}>{t('Max. stake per user')}:</Text>
+        <Text small={small}>{t('Max. stake')}:</Text>
         <Text small={small}>{`${stakingLimit.toNumber()} NFT`}</Text>
       </Flex>
       {hasPoolStarted && (
         <Flex justifyContent="space-between" alignItems="center">
-          <Text small={small}>{t('Max. stake limit ends in')}:</Text>
+          <Text small={small}>{t('Stake limit ends')}:</Text>
           <Link external href={getPolygonScanLink(stakingLimitEndBlock, 'countdown')}>
             <Balance
               small={small}
