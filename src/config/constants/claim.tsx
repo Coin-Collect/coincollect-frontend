@@ -78,6 +78,21 @@ const claims: any[] = [
     version: 2,
     useApi: true,
   },
+  {
+    cid: 4,
+    name: 'Hunter Rewards',
+    description: <Trans>Do you own an Avatar NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/avatar/AvatarsClaim.png',
+    rewardToken: 'HUNT',
+    requiredToken: 'HUNTER NFT', 
+    baseAmount: 5000,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0xeacde3e3c5aae81d435d9a592827803296e25aae',
+    projectSite: 'https://beasthunter.app/',
+    version: 2,
+  },
 /*
   {
     cid: 4,
