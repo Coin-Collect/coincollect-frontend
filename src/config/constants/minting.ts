@@ -527,7 +527,7 @@ const ifos: Minting[] = [
   //============================BeastHunter NFTS====================================
   {
     id: 'beasthunternfts',
-    stake_pid: 13,
+    stake_pid: 14,
     name: 'Beast Hunter',
     description: 'Unleash the power of your Hunters in BeastHunter! Build an unbeatable team, capture rare beasts, and explore dynamic worlds.',
     address: getBeastHunterNftAddress(),

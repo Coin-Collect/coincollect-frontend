@@ -271,6 +271,29 @@ const nftFarms: SerializedNftFarmConfig[] = [
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
     useApi: true,
   },
+  {
+    pid: 14,
+    lpSymbol: 'HUNTER NFT',
+    nftAddresses: {
+      137: '0x446f52447C1bf0613b782A0A9707100655EF6A28',
+      80001: '0x446f52447C1bf0613b782A0A9707100655EF6A28'
+    },
+    contractAddresses: {
+      137: '0x06703Ce4494dDF7DD918BB9298B010B5ad6C4c4D',
+      80001: '0x3eef3b0a1c1999068552a622Ecf05FbB3fC8a02C',
+    },
+    tokenPerBlock: '0.0116',
+    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'HUNT', percentage: 165000},
+    ],
+    supportedCollectionPids: [1,2,3,4],
+    mainCollectionWeight: '15',
+    performanceFee: '0',
+    projectLink: 'https://beasthunter.app/',
+  },
 /*
   {
     pid: 14,
