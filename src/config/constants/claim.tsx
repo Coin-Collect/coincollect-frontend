@@ -81,8 +81,8 @@ const claims: any[] = [
   {
     cid: 4,
     name: 'Hunter Rewards',
-    description: <Trans>Do you own an Avatar NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/avatar/AvatarsClaim.png',
+    description: <Trans>Do you own an BeastHunter NFT or a CoinCollect NFT? As a special thank you from our team, exclusive HUNT tokens have been reserved just for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/BeastHunter/HunterClaim.png',
     rewardToken: 'HUNT',
     requiredToken: 'HUNTER NFT', 
     baseAmount: 5000,
