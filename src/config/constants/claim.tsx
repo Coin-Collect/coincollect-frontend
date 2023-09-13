@@ -85,7 +85,7 @@ const claims: any[] = [
     imageLink: 'https://coincollect.org/assets/images/partners/BeastHunter/HunterClaim.png',
     rewardToken: 'HUNT',
     requiredToken: 'HUNTER NFT', 
-    baseAmount: 5000,
+    baseAmount: 2000,
     nftLimit: 5,
     totalReward: 120000000,
     isFinished: false,
