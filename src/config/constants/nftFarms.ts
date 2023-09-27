@@ -294,6 +294,34 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: 'https://beasthunter.app/',
   },
+  {
+    pid: 15,
+    lpSymbol: 'KEY NFT',
+    nftAddresses: {
+      137: '0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247',
+      80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
+    },
+    contractAddresses: {
+      137: '0xA2f3fdb09F9f98070D71A55b2876537F8c3D9255',
+      80001: '0xDA35D873fD89D6e110573c8b469ca4EdECf4dD77',
+    },
+    tokenPerBlock: '0.0154',
+    participantThreshold: 2400, // Weight(1) x Target Nft Count(1900) & Weight(5) x Target Nft Count(100)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'AVATAR', percentage: 40000},
+      {token: 'HUNT', percentage: 4100},
+    ],
+    //supportedCollectionPids: [],
+    mainCollectionWeight: '1',
+    performanceFee: '0',
+    projectLink: 'https://opensea.io/collection/key2web3/drop',
+    banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
+    avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
+    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
+    useApi: true,
+  },
 /*
   {
     pid: 14,
