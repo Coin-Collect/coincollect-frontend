@@ -100,7 +100,7 @@ const claims: any[] = [
     imageLink: 'https://coincollect.org/assets/images/partners/key/keyClaim.gif',
     rewardToken: 'AVATAR',
     requiredToken: 'KEY NFT', 
-    baseAmount: 250,
+    baseAmount: 4166,
     nftLimit: 5,
     totalReward: 120000000,
     isFinished: false,
