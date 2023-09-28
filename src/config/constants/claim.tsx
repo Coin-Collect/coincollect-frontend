@@ -96,8 +96,8 @@ const claims: any[] = [
   {
     cid: 5,
     name: 'Key Rewards',
-    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/key/keyBanner.gif',
+    description: <Trans>Unlock the world of web3 with the KEY. Mint your Key NFT on OpenSea, then claim exclusive rewards on CoinCollect. Join and open doors to the metaverse and beyond!</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/key/keyClaim.gif',
     rewardToken: 'AVATAR',
     requiredToken: 'KEY NFT', 
     baseAmount: 250,
