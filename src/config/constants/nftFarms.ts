@@ -317,9 +317,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: '1',
     performanceFee: '0',
     projectLink: 'https://opensea.io/collection/key2web3/drop',
-    banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
-    avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
-    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
+    banner: "https://coincollect.org/assets/images/partners/key/keyBanner.gif",
+    avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
+    staticNftImage: "https://coincollect.org/assets/images/partners/key/key128.jpg",
     useApi: true,
   },
 /*
