@@ -71,6 +71,14 @@ export const mainnetTokens = defineTokens({
     'HUNT Token',
     'https://beasthunter.app/',
   ),
+  nitro: new Token(
+    POLYGON_MAINNET,
+    '0x7b6459369Ff7Eda42c1A8465c079D48EF95c1D75',
+    18,
+    'NITRO',
+    'NITRO Token',
+    'https://nitroclash.net/',
+  ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(
@@ -2142,6 +2150,14 @@ export const testnetTokens = defineTokens({
     'HUNT',
     'HUNT Token',
     'https://beasthunter.app/',
+  ),
+  nitro: new Token(
+    MUMBAI_TESTNET,
+    '0x1226aD9E97260a912aA83c1918BaE961C7cd9d8A',
+    18,
+    'NITRO',
+    'NITRO Token',
+    'https://nitroclash.net/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,

@@ -51,6 +51,14 @@
       "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"
     },
     {
+      "name": "Nitro Token",
+      "symbol": "NITRO",
+      "address": "0x7b6459369Ff7Eda42c1A8465c079D48EF95c1D75",
+      "chainId": 137,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"
+    },
+    {
       "name": "WMATIC Token",
       "symbol": "WMATIC",
       "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
@@ -110,6 +118,14 @@
       "name": "Hunt Token",
       "symbol": "HUNT",
       "address": "0x199463e8F3b40f5A3d518b5AD02A62F2f5b18B0F",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"
+    },
+    {
+      "name": "Nitro Token",
+      "symbol": "NITRO",
+      "address": "0x1226aD9E97260a912aA83c1918BaE961C7cd9d8A",
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"
