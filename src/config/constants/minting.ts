@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -317,7 +317,7 @@ const ifos: Minting[] = [
     totalSupply: 2556,
     lastPrice: 100,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
     banner: {
       large: "https://coincollect.org/assets/images/clone/banners/bannerLotLg.png",
@@ -389,7 +389,7 @@ const ifos: Minting[] = [
     totalSupply: 4952,
     lastPrice: 30,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/partners/blitz/blitzLogo150.png",
     banner: {
       large: "https://coincollect.org/assets/images/partners/blitz/blitzBannerLg.png",
@@ -461,7 +461,7 @@ const ifos: Minting[] = [
     totalSupply: 6952,
     lastPrice: 30,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://i.seadn.io/gcs/files/f4234250ffb80456f4e84baa17c59400.gif?auto=format&dpr=1&w=256",
     banner: {
       large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
@@ -593,6 +593,76 @@ const ifos: Minting[] = [
     discordUrl: 'https://discord.gg/GdqfTmFc',
     telegramUrl: 'https://t.me/beasthunterapp',
     twitterUrl: 'https://twitter.com/Beasthunterapp',
+  },
+  //============================Nitro NFTS====================================
+  {
+    id: 'nitronfts',
+    stake_pid: 16,
+    name: 'NitroClash',
+    description: 'Choose from 5000+ customizable NFT cars, earn $NITRO tokens, and dominate tracks across the universe.',
+    address: getNitroNftAddress(),
+    symbol: 'CAR',
+    totalSupply: 3800,
+    lastPrice: 30,
+    isActive: true,
+    status: 'liveprivate', /// Options: livepublic, liveprivate
+    avatar: "https://coincollect.org/assets/images/partners/BeastHunter/logo.png",
+    banner: {
+      large: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerLg.png",
+      small: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerSm.png",
+    },
+    sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/gcs/files/60b333cf442c9131c9dd0a076f653931.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+    showCase: [
+      { 'tokenId': 40, 'image': 'https://i.seadn.io/gcs/files/213ece08802dc34ce1bf15c67f566e5a.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 11, 'image': 'https://i.seadn.io/gcs/files/0025ad2a545a5bc8bde8eb42174d2352.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 18, 'image': 'https://i.seadn.io/gcs/files/c466b87da33d890765bfee4cc2189e83.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 22, 'image': 'https://i.seadn.io/gcs/files/9a4bc0e58ee576d533048972f95cc851.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+    ],
+    faq: [
+      {
+        title: "What is BeastHunter?",
+        description: ["BeastHunter is a blockchain-based NFT game where players can build, train, and strategize with their unique team of Hunters. Capture rare beasts, explore dynamic ecosystems, and stake your way to glory—all while earning $HUNT tokens."]
+      },
+      {
+        title: "How do I get started with BeastHunter?",
+        description: ["To start your journey, you'll need to own a Hunter NFT. These can be bought on OpenSea or directly from our website during exclusive sales. Once you have a Hunter, you can immediately start capturing beasts and participating in staking and farming."]
+      },
+      {
+        title: "What are the different Hunter types?",
+        description: ["We have six unique Hunter types: Elementalist, Shadowmancer, Beast Tamer, Skyseer, Mechanist, and Warden. Each type has specific abilities and attributes that influence gameplay."]
+      },
+      {
+        title: "What can I do with $HUNT tokens?",
+        description: ["The $HUNT token is the lifeblood of the BeastHunter ecosystem. Use it for in-game purchases, staking rewards, participating in contests, and much more. It's your key to unlocking the full BeastHunter experience."]
+      },
+      {
+        title: "Can I trade my Hunters and beasts?",
+        description: ["Yes, all Hunters and captured beasts are NFTs that can be traded on OpenSea or any compatible NFT marketplace. Your digital assets are fully under your control."]
+      },
+      {
+        title: "How can I join the community?",
+        description: ["Our community is vibrant and ever-growing. Join our Discord and Telegram channels to stay up-to-date with the latest news, participate in community contests, and connect with other Hunters."]
+      },
+      {
+        title: "What's the future for BeastHunter?",
+        description: ["We have an exciting roadmap that includes new beast types, gameplay features, and partnerships. Each season brings new adventures and opportunities for our community."]
+      }
+    ],
+    
+    poolUnlimited: {
+      saleAmount: '3800 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://nitroclash.net/',
+    version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/nitroclash',
+    //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
+    discordUrl: 'https://discord.gg/GdqfTmFc',
+    telegramUrl: 'https://t.me/nitroclash',
+    twitterUrl: 'https://twitter.com/nitroclashnet',
   },
 ]
 

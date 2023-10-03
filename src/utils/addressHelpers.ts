@@ -89,6 +89,9 @@ export const getAvatarsAiNftAddress = () => {
 export const getBeastHunterNftAddress = () => {
   return getAddress(addresses.beastHunterNft)
 }
+export const getNitroNftAddress = () => {
+  return getAddress(addresses.nitroNft)
+}
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null
