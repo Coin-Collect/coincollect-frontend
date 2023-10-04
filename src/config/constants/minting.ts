@@ -590,7 +590,7 @@ const ifos: Minting[] = [
     version: 3.1,
     openSeaUrl: 'https://opensea.io/collection/beasthunterapp',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    discordUrl: 'https://discord.gg/GdqfTmFc',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
     telegramUrl: 'https://t.me/beasthunterapp',
     twitterUrl: 'https://twitter.com/Beasthunterapp',
   },
@@ -606,10 +606,10 @@ const ifos: Minting[] = [
     lastPrice: 30,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/partners/BeastHunter/logo.png",
+    avatar: "https://coincollect.org/assets/images/partners/NitroClash/logo256.jpg",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerLg.png",
-      small: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerSm.png",
+      large: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerLg.jpg",
+      small: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerSm.jpg",
     },
     sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/gcs/files/60b333cf442c9131c9dd0a076f653931.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
     showCase: [
@@ -620,34 +620,39 @@ const ifos: Minting[] = [
     ],
     faq: [
       {
-        title: "What is BeastHunter?",
-        description: ["BeastHunter is a blockchain-based NFT game where players can build, train, and strategize with their unique team of Hunters. Capture rare beasts, explore dynamic ecosystems, and stake your way to glory—all while earning $HUNT tokens."]
+        title: "What is NitroClash?",
+        description: ["NitroClash is a revolutionary Play-to-Earn NFT racing and combat game. Dive into high-octane battles, race to the finish line, and unlock the power of unique NFT cars. Each race, each combat, means more $NITRO tokens in your wallet."]
       },
       {
-        title: "How do I get started with BeastHunter?",
-        description: ["To start your journey, you'll need to own a Hunter NFT. These can be bought on OpenSea or directly from our website during exclusive sales. Once you have a Hunter, you can immediately start capturing beasts and participating in staking and farming."]
+        title: "How do I get started with NitroClash?",
+        description: ["Begin your NitroClash journey by minting or purchasing a unique car NFT. You can mint a fresh car using CoinCollect, buy one from platforms like OpenSea, or even stake your car at CoinCollect to start earning $NITRO tokens."]
       },
       {
-        title: "What are the different Hunter types?",
-        description: ["We have six unique Hunter types: Elementalist, Shadowmancer, Beast Tamer, Skyseer, Mechanist, and Warden. Each type has specific abilities and attributes that influence gameplay."]
+        title: "What are the different car types in NitroClash?",
+        description: ["We offer six distinctive car types in NitroClash: Speedster, Tank, Artillery, Racer, Combat, and Hybrid. Each car type has its own strengths and abilities that can be utilized in races and battles."]
       },
       {
-        title: "What can I do with $HUNT tokens?",
-        description: ["The $HUNT token is the lifeblood of the BeastHunter ecosystem. Use it for in-game purchases, staking rewards, participating in contests, and much more. It's your key to unlocking the full BeastHunter experience."]
+        title: "How do I use $NITRO tokens?",
+        description: ["$NITRO is the primary token of NitroClash. Use it to upgrade your cars, access special in-game features, stake for rewards, and trade in various crypto marketplaces. It's your gateway to the full NitroClash experience."]
       },
       {
-        title: "Can I trade my Hunters and beasts?",
-        description: ["Yes, all Hunters and captured beasts are NFTs that can be traded on OpenSea or any compatible NFT marketplace. Your digital assets are fully under your control."]
+        title: "Can I trade my NitroClash cars?",
+        description: ["Absolutely! All NitroClash cars are NFTs, which means you can sell or trade them on NFT platforms like OpenSea, Element Market, and others. Every car NFT is your digital property, giving you full control and ownership."]
       },
       {
-        title: "How can I join the community?",
-        description: ["Our community is vibrant and ever-growing. Join our Discord and Telegram channels to stay up-to-date with the latest news, participate in community contests, and connect with other Hunters."]
+        title: "How can I engage with the NitroClash community?",
+        description: ["The NitroClash community is buzzing with activity! Join our social platforms like Telegram, Twitter, and Instagram to connect with fellow racers, discuss strategies, and stay updated on the latest developments."]
       },
       {
-        title: "What's the future for BeastHunter?",
-        description: ["We have an exciting roadmap that includes new beast types, gameplay features, and partnerships. Each season brings new adventures and opportunities for our community."]
+        title: "What's in store for the future of NitroClash?",
+        description: ["Our roadmap is loaded with electrifying updates, including new track terrains, powerful car abilities, partnerships, and seasonal events. The race has just begun, and the finish line is nowhere in sight!"]
+      },
+      {
+        title: "How can I buy or trade NFT cars in NitroClash?",
+        description: ["To acquire NitroClash car NFTs, you can mint new cars from CoinCollect or buy them from NFT marketplaces such as OpenSea, Element Market, and others. The choice is yours!"]
       }
     ],
+  
     
     poolUnlimited: {
       saleAmount: '3800 NFT',
@@ -660,7 +665,7 @@ const ifos: Minting[] = [
     version: 3.1,
     openSeaUrl: 'https://opensea.io/collection/nitroclash',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    discordUrl: 'https://discord.gg/GdqfTmFc',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
     telegramUrl: 'https://t.me/nitroclash',
     twitterUrl: 'https://twitter.com/nitroclashnet',
   },
