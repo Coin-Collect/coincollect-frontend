@@ -326,19 +326,19 @@ const nftFarms: SerializedNftFarmConfig[] = [
     pid: 16,
     lpSymbol: 'CAR NFT',
     nftAddresses: {
-      137: '0x446f52447C1bf0613b782A0A9707100655EF6A28',
-      80001: '0x446f52447C1bf0613b782A0A9707100655EF6A28'
+      137: '0xB2e4ab09684a4850d3271C53D39D68C9afA4785E',
+      80001: '0xB2e4ab09684a4850d3271C53D39D68C9afA4785E'
     },
     contractAddresses: {
-      137: '0xD3b2B1156F810886B1A0cCA3d87E14b7AC05B31c',
-      80001: '0x3eef3b0a1c1999068552a622Ecf05FbB3fC8a02C',
+      137: '0xCce9e3b6C3b9bc91b72982B08F8E7950897127d1',
+      80001: '0xaf1bF01c64550eb6b3475608fBD5E096085cc84b',
     },
     tokenPerBlock: '0.0116',
     participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'NITRO', percentage: 165000},
+      {token: 'NITRO', percentage: 66000},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',

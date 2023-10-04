@@ -116,7 +116,7 @@ const claims: any[] = [
     imageLink: 'https://coincollect.org/assets/images/partners/NitroClash/nitroClaim.jpg',
     rewardToken: 'NITRO',
     requiredToken: 'CAR NFT', 
-    baseAmount: 2000,
+    baseAmount: 500,
     nftLimit: 5,
     totalReward: 120000000,
     isFinished: false,
