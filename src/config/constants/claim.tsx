@@ -113,7 +113,7 @@ const claims: any[] = [
     cid: 6,
     name: 'Nitro Rewards',
     description: <Trans>Are you a holder of a CAR NFT or a CoinCollect NFT? In appreciation for your support, our team has exclusively reserved NITRO tokens for you.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/BeastHunter/HunterClaim.png',
+    imageLink: 'https://coincollect.org/assets/images/partners/NitroClash/nitroClaim.jpg',
     rewardToken: 'NITRO',
     requiredToken: 'CAR NFT', 
     baseAmount: 2000,
