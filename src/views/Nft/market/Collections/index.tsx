@@ -279,10 +279,10 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
 
         <CollectionCard
           key="dummy"
-          bgSrc="https://coincollect.org/assets/images/clone/mortalkombat.jpeg"
-          avatarSrc="https://coincollect.org/assets/images/clone/mklogo.jpeg"
-          collectionName="Mortal Kombat (soon)"
-          url=""
+          bgSrc="https://coincollect.org/assets/images/partners/placedj/banner2.gif"
+          avatarSrc="https://coincollect.org/assets/images/partners/placedj/logo512s.png"
+          collectionName="PlaceDJ 2.0"
+          url="https://www.placedj.com/"
         >
           <Flex alignItems="center">
             <Text fontSize="12px" color="textSubtle">
