@@ -109,6 +109,21 @@ const claims: any[] = [
     version: 2,
     useApi: true,
   },
+  {
+    cid: 6,
+    name: 'Nitro Rewards',
+    description: <Trans>Are you a holder of a CAR NFT or a CoinCollect NFT? In appreciation for your support, our team has exclusively reserved NITRO tokens for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/BeastHunter/HunterClaim.png',
+    rewardToken: 'NITRO',
+    requiredToken: 'CAR NFT', 
+    baseAmount: 2000,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0x7b6459369Ff7Eda42c1A8465c079D48EF95c1D75',
+    projectSite: 'https://nitroclash.net/',
+    version: 2,
+  },
 /*
   {
     cid: 4,
