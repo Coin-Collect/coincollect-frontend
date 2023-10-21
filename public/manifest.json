@@ -1,12 +1,12 @@
 {
   "short_name": "CoinCollect",
-  "name": "CoinCollect",
-  "description": "Farm COLLECT with CoinCollect LP Tokens",
-  "homepage_url": "https://coincollect.org",
+  "name": "CoinCollect - Passive Income NFTs",
+  "description": "Generate Passive Income Through NFTs",
+  "homepage_url": "https://app.coincollect.org",
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#1FC7D4",
-  "background_color": "#ffffff",
+  "background_color": "#e91e62",
   "orientation": "portrait",
   "icons": [
     {
