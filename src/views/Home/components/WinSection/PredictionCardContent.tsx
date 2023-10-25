@@ -51,7 +51,7 @@ const PredictionCardContent = () => {
         </Text>
         {
           <Heading color="#280D5F" my="8px" scale="xl" bold>
-            {t('Mint your free NFT')}
+            {t('Mint, Stake, Earn ')}
           </Heading>
         
           }
