@@ -63,7 +63,7 @@ const PredictionCardContent = () => {
         </Text>
       </Flex>
       <Flex alignItems="center" justifyContent="center">
-        <StyledLink to="/nfts/collections" id="homepage-prediction-cta">
+        <StyledLink target="blank" to="https://opensea.io/collection/key2web3/drop" id="homepage-prediction-cta">
           <Button width="100%">
             <Text bold color="invertedContrast">
               {t('Play')}
