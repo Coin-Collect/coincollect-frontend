@@ -39,5 +39,8 @@ export const unstakeNftFarm = async (
 }
 
 export const harvestNftFarm = async (masterChefContract, pid, gasPrice, isSmartNftPool) => {
-  return isSmartNftPool ? masterChefContract.harvest({ ...options, gasPrice }) : masterChefContract.harvest(pid, { ...options, gasPrice })
+  const stakeParams = isSmartNftPool ? [] : [pid];
+  return callWithEstimateGas(masterChefContract, 'harvest', stakeParams, {
+    gasPrice,
+  })
 }
