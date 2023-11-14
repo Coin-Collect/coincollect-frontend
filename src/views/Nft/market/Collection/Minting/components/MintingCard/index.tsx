@@ -21,7 +21,6 @@ import useToast from 'hooks/useToast'
 import { useEffect, useState } from "react"
 import { useCurrentBlock } from 'state/block/hooks'
 import styled from "styled-components"
-import IfoAchievement from "views/Nft/market/Collection/Minting/components/MintingCard/Achievement"
 import { IfoRibbon } from "views/Nft/market/Collection/Minting/components/MintingCard/IfoRibbon"
 import EnableStatus from 'views/Ifos/components/IfoFoldableCard/types'
 import useIfoApprove from 'views/Nft/market/Collection/Minting/hooks/useIfoApprove'
@@ -203,12 +202,6 @@ export const MintingCurrentCard = ({
               </>
             )}
             <MintingCard ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
-            <StyledCardFooter>
-              <ExpandableLabel expanded={isExpanded} onClick={() => setIsExpanded(!isExpanded)}>
-                {isExpanded ? t('Hide') : t('Details')}
-              </ExpandableLabel>
-              {isExpanded && <IfoAchievement ifo={ifo} publicIfoData={publicIfoData} />}
-            </StyledCardFooter>
           </StyledCard>
         </Box>
       </>

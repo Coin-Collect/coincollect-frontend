@@ -1,10 +1,6 @@
 import styled from 'styled-components'
 import {
   Flex,
-  Image,
-  Text,
-  PrizeIcon,
-  Skeleton,
   LanguageIcon,
   SvgProps,
   Svg,
@@ -15,13 +11,11 @@ import {
   OpenSeaIcon,
   CmcIcon,
 } from '@pancakeswap/uikit'
-import tokens from 'config/constants/tokens'
+
 import { useTranslation } from 'contexts/Localization'
 import { PublicIfoData } from '../../types'
-import { Ifo, Minting } from 'config/constants/types'
-import { BIG_TEN } from 'utils/bigNumber'
-import { getBscScanLink, getPolygonScanLink } from 'utils'
-import { formatBigNumber } from 'utils/formatBalance'
+import { Minting } from 'config/constants/types'
+import { getPolygonScanLink } from 'utils'
 import { FlexGap } from 'components/Layout/Flex'
 
 const SmartContractIcon: React.FC<SvgProps> = (props) => {
@@ -37,7 +31,6 @@ const SmartContractIcon: React.FC<SvgProps> = (props) => {
   )
 }
 
-const FIXED_MIN_DOLLAR_FOR_ACHIEVEMENT = BIG_TEN
 
 interface Props {
   ifo: Minting
@@ -57,56 +50,12 @@ const Container = styled(Flex)`
   }
 `
 
-const AchievementFlex = styled(Flex)<{ isFinished: boolean }>`
-  ${({ isFinished }) => (isFinished ? 'filter: grayscale(100%)' : '')};
-  text-align: left;
-`
-
-const InlinePrize = styled(Flex)`
-  display: inline-flex;
-  vertical-align: top;
-`
-
 const IfoAchievement: React.FC<Props> = ({ ifo, publicIfoData }) => {
   const { t } = useTranslation()
-  const tokenName = ifo.token.symbol?.toLowerCase()
-  const campaignTitle = ifo.name
-  const minLpForAchievement = publicIfoData.thresholdPoints
-    ? formatBigNumber(publicIfoData.thresholdPoints, 3)
-    : FIXED_MIN_DOLLAR_FOR_ACHIEVEMENT.div(publicIfoData.currencyPriceInUSD).toNumber().toFixed(3)
 
   return (
-    <Container p="16px" pb="32px">
-      <AchievementFlex isFinished={publicIfoData.status === 'finished'} alignItems="flex-start" flex={1}>
-        {/*<Image src={`/images/achievements/ifo-${tokenName}.svg`} width={56} height={56} mr="8px" />*/}
         <Flex flexDirection="column" ml="8px">
-          {/*
-          <Text color="secondary" fontSize="12px">
-            {`${t('Achievement')}:`}
-          </Text>
-          <Flex>
-            <Text bold mr="8px" lineHeight={1.2}>
-              {t('IFO Shopper: %title%', { title: campaignTitle })}
-              <InlinePrize alignItems="center" ml="8px">
-                <PrizeIcon color="textSubtle" width="16px" mr="4px" />
-                <Text lineHeight={1.2} color="textSubtle">
-                  {publicIfoData.numberPoints}
-                </Text>
-              </InlinePrize>
-            </Text>
-          </Flex>
-          {publicIfoData.currencyPriceInUSD.gt(0) ? (
-            <Text color="textSubtle" fontSize="12px">
-              {t('Commit ~%amount% %symbol% in total to earn!', {
-                amount: minLpForAchievement,
-                symbol: ifo.currency === tokens.cake ? 'CAKE' : 'LP',
-              })}
-            </Text>
-          ) : (
-            <Skeleton minHeight={18} width={80} />
-          )}
-          */}
-          <FlexGap gap="16px" pt="24px" pl="4px">
+          <FlexGap gap="16px" pt="14px" pl="4px">
             <Link external href={ifo.articleUrl}>
               <LanguageIcon color="textSubtle" />
             </Link>
@@ -140,15 +89,6 @@ const IfoAchievement: React.FC<Props> = ({ ifo, publicIfoData }) => {
             )}
           </FlexGap>
         </Flex>
-      </AchievementFlex>
-      {ifo.description && (
-        <Flex alignItems="flex-end" flexDirection="column" flex={1}>
-          <Text fontSize="14px" lineHeight={1.2} style={{ whiteSpace: 'pre-line' }}>
-            {ifo.description}
-          </Text>
-        </Flex>
-      )}
-    </Container>
   )
 }
 

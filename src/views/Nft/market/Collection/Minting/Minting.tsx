@@ -48,6 +48,7 @@ import FlexLayout from "components/Layout/Flex";
 import NftStakeCard from "./components/NftStakeCard";
 import PoolCard from "views/Pools/components/PoolCard";
 import NewestForCollection from "../../Home/NewestForCollection";
+import IfoAchievement from "./components/MintingCard/Achievement";
 
 
 const BackLink = styled(NextLinkFromReactRouter)`
@@ -81,8 +82,8 @@ export default function Minting() {
   const { isLastPrice, nextPrice } = publicIfoData
 
   usePollFarmsWithUserData()
-  const farm= useFarmFromPid(minting.stake_pid)
-  
+  const farm = useFarmFromPid(minting.stake_pid)
+
   return (
     <>
       <PageMeta />
@@ -92,18 +93,23 @@ export default function Minting() {
             <ChevronLeftIcon color="primary" width="24px" />
             {t('All Collections')}
           </BackLink>
-
+          <IfoAchievement ifo={minting} publicIfoData={publicIfoData} />
         </Flex>
         <BannerHeader bannerImage={banner.large} avatar={<AvatarImage src={avatar} />} />
+
         <MarketPageTitle
           title={name}
           description={description ? <Text color="textSubtle">{t(description)}</Text> : null}
         >
+
+
           <StatBox>
             <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
             <StatBoxItem title={t('Price')} stat={(cost) + ' Matic'} />
             <StatBoxItem title={t('Status')} stat={status} />
           </StatBox>
+
+
         </MarketPageTitle>
       </MarketPageHeader>
 
@@ -116,9 +122,9 @@ export default function Minting() {
         <Container>
 
           <MintingLayoutWrapper>
-          
-          <NftStakeCard farm={farm} account={account} />
-          
+
+            <NftStakeCard farm={farm} account={account} />
+
             <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
           </MintingLayoutWrapper>
 
