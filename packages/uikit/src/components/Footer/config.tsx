@@ -108,6 +108,16 @@ export const socials: SocialLinkType[] = [
     icon: "Discord",
     href: "https://discord.gg/FW9dnRFZk9",
   },
+  {
+    label: "Youtube",
+    icon: "Youtube",
+    href: "https://www.youtube.com/@CoinCollectApp",
+  },
+  {
+    label: "Medium",
+    icon: "Medium",
+    href: "https://medium.com/@coincollect",
+  },
 ];
 
 export const langs: Language[] = [...Array(20)].map((_, i) => ({

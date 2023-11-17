@@ -183,6 +183,16 @@ export const socials: { label?: string, icon: string, items?: { label?: string, 
     icon: "InstagramIcon",
     href: "https://www.instagram.com/coincollectorg/",
   },
+  {
+    label: "Youtube",
+    icon: "YoutubeIcon",
+    href: "https://www.youtube.com/@CoinCollectApp",
+  },
+  {
+    label: "Medium",
+    icon: "MediumIcon",
+    href: "https://medium.com/@coincollect",
+  },
 ];
 
 export const MENU_HEIGHT = 56;
