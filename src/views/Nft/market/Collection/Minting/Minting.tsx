@@ -49,7 +49,7 @@ import NftStakeCard from "./components/NftStakeCard";
 import PoolCard from "views/Pools/components/PoolCard";
 import NewestForCollection from "../../Home/NewestForCollection";
 import IfoAchievement from "./components/MintingCard/Achievement";
-import ActivityHistory from "../../ActivityHistory/ActivityHistory";
+import ActivityHistoryMinting from "../../ActivityHistory/ActivityHistoryMinting";
 
 
 const BackLink = styled(NextLinkFromReactRouter)`
@@ -133,7 +133,7 @@ export default function Minting() {
 
         <Container>
           <Card>
-            <ActivityHistory />
+            <ActivityHistoryMinting />
           </Card>
         </Container>
 
