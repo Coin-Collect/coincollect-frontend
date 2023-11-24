@@ -1,9 +1,4 @@
-import { useEffect, useState } from 'react'
-import { isAddress } from 'utils'
-import { useAppDispatch } from 'state'
 import {
-  ArrowBackIcon,
-  ArrowForwardIcon,
   Box,
   Button,
   Flex,
@@ -12,109 +7,36 @@ import {
   Th,
   useMatchBreakpoints,
 } from '@pancakeswap/uikit'
-import { getCollectionActivity } from 'state/nftMarket/helpers'
 import Container from 'components/Layout/Container'
 import TableLoader from 'components/TableLoader'
-import { Activity, Collection, NftToken } from 'state/nftMarket/types'
+import { Collection } from 'state/nftMarket/types'
 import { useTranslation } from 'contexts/Localization'
-import { useBNBBusdPrice } from 'hooks/useBUSDPrice'
 import useTheme from 'hooks/useTheme'
 import useLastUpdated from 'hooks/useLastUpdated'
-import { useGetNftActivityFilters } from 'state/nftMarket/hooks'
-import { Arrow, PageButtons } from '../components/PaginationButtons'
+import { useMintingActivity } from 'state/nftMarket/hooks'
 import NoNftsImage from '../components/Activity/NoNftsImage'
-import ActivityFilters from './ActivityFilters'
-import ActivityRow from '../components/Activity/ActivityRow'
-import { sortActivity } from './utils/sortActivity'
-import { fetchActivityNftMetadata } from './utils/fetchActivityNftMetadata'
+import MintingActivityRow from '../components/Activity/MintingActivityRow'
+import { getPolygonScanLink } from 'utils'
 
-const MAX_PER_PAGE = 3
-
-const MAX_PER_QUERY = 100
 
 interface ActivityHistoryProps {
-  collection?: Collection
+  collectionAddress: string
 }
 
-const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collection }) => {
-  const dispatch = useAppDispatch()
-  const { address: collectionAddress } = collection || { address: '' }
-  const nftActivityFilters = useGetNftActivityFilters(collectionAddress)
+const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collectionAddress }) => {
   const { theme } = useTheme()
   const { t } = useTranslation()
-  const [paginationData, setPaginationData] = useState<{
-    activity: Activity[]
-    currentPage: number
-    maxPage: number
-  }>({
-    activity: [],
-    currentPage: 1,
-    maxPage: 1,
-  })
-  const [activitiesSlice, setActivitiesSlice] = useState<Activity[]>([])
-  const [nftMetadata, setNftMetadata] = useState<NftToken[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [queryPage, setQueryPage] = useState(1)
-  const { lastUpdated, setLastUpdated: refresh } = useLastUpdated()
-  const bnbBusdPrice = useBNBBusdPrice()
+
+  
   const { isXs, isSm } = useMatchBreakpoints()
 
-  const nftActivityFiltersString = JSON.stringify(nftActivityFilters)
+  const { activities, isLoading, error, refresh } = useMintingActivity(collectionAddress.toLowerCase())
 
-  useEffect(() => {
-    const fetchCollectionActivity = async () => {
-      try {
-        setIsLoading(true)
-        const nftActivityFiltersParsed = JSON.parse(nftActivityFiltersString)
-        const collectionActivity = await getCollectionActivity(
-          collectionAddress.toLowerCase(),
-          nftActivityFiltersParsed,
-          MAX_PER_QUERY,
-        )
-        const activity = sortActivity(collectionActivity)
-        setPaginationData({
-          activity,
-          currentPage: 1,
-          maxPage: Math.ceil(activity.length / MAX_PER_PAGE) || 1,
-        })
-        setIsLoading(false)
-        setIsInitialized(true)
-      } catch (error) {
-        console.error('Failed to fetch collection activity', error)
-      }
-    }
-
-    if ((collectionAddress && isAddress(collectionAddress)) || collectionAddress === '') {
-      fetchCollectionActivity()
-    }
-  }, [dispatch, collectionAddress, nftActivityFiltersString, lastUpdated])
-
-  useEffect(() => {
-    const fetchNftMetadata = async () => {
-      const nfts = await fetchActivityNftMetadata(activitiesSlice)
-      setNftMetadata(nfts)
-    }
-
-    if (activitiesSlice.length > 0) {
-      fetchNftMetadata()
-    }
-  }, [activitiesSlice])
-
-  useEffect(() => {
-    const slice = paginationData.activity.slice(
-      MAX_PER_PAGE * (paginationData.currentPage - 1),
-      MAX_PER_PAGE * paginationData.currentPage,
-    )
-    setActivitiesSlice(slice)
-  }, [paginationData])
-
+  
   return (
     <Box py="32px">
       <Container style={{ overflowX: 'auto' }}>
-        {paginationData.activity.length === 0 &&
-        nftMetadata.length === 0 &&
-        activitiesSlice.length === 0 &&
+        {activities.length === 0 &&
         !isLoading ? (
           <Flex p="24px" flexDirection="column" alignItems="center">
             <NoNftsImage />
@@ -131,7 +53,6 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collection }) 
                   <Th textAlign="right"> {t('Event')}</Th>
                   {isXs || isSm ? null : (
                     <>
-                      <Th textAlign="right"> {t('Price')}</Th>
                       <Th textAlign="center"> {t('From')}</Th>
                       <Th textAlign="center"> {t('To')}</Th>
                     </>
@@ -142,17 +63,14 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collection }) 
               </thead>
 
               <tbody>
-                {!isInitialized ? (
+                {isLoading ? (
                   <TableLoader />
                 ) : (
-                  activitiesSlice.map((activity) => {
-                    const nftMeta = nftMetadata.find((metaNft) => metaNft.tokenId === activity.nft.tokenId)
+                  activities.map((activity) => {
                     return (
-                      <ActivityRow
-                        key={`${activity.marketEvent}#${activity.nft.tokenId}#${activity.timestamp}#${activity.tx}`}
+                      <MintingActivityRow
+                        key={`${activity.marketEvent}#${activity.tokenId}#${activity.timestamp}#${activity.tx}`}
                         activity={activity}
-                        nft={nftMeta}
-                        bnbBusdPrice={bnbBusdPrice}
                       />
                     )
                   })
@@ -162,16 +80,16 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collection }) 
             <Flex
               borderTop={`1px ${theme.colors.cardBorder} solid`}
               pt="24px"
-              flexDirection="column"
-              justifyContent="space-between"
+              flexDirection="row"
+              justifyContent="center"
               height="100%"
             >
             <Button
+            as="a"
+            external 
+            href={ getPolygonScanLink(collectionAddress, 'token', "137") }
             scale="sm"
             disabled={isLoading}
-            onClick={() => {
-              refresh()
-            }}
           >
             {t('See All')}
           </Button>

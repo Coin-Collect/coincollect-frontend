@@ -26,9 +26,13 @@ import {
   ApiTokenFilterResponse,
   ApiCollectionsResponse,
   MarketEvent,
+  Activity,
 } from './types'
 import { getBaseNftFields, getBaseTransactionFields, getCollectionBaseFields } from './queries'
 import BigNumber from 'bignumber.js'
+import useSWR from 'swr'
+import { FetchStatus } from 'config/constants/types'
+import { isAddress } from 'utils'
 
 /**
  * API HELPERS
@@ -73,6 +77,61 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
   return null;
 }
 
+/**
+ * Fetch NFT minting activities
+ * @param {string} collectionAddress - The collection's Ethereum address.
+ * @returns {Promise<BigNumber[]>} - The response from the API or null if an error occurs.
+ */
+ export const mintingActivityApi = async (
+  collectionAddress: string
+): Promise<any[]> => {
+  const mumbaiCollections = ["0xf2149E6B11638BAEf791e3E66ac7E6469328e840", "0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63"];
+  const network = mumbaiCollections.includes(collectionAddress) ? 'mumbai' : 'mainnet';
+  const baseUrl = `https://polygon-${network}.g.alchemy.com/v2/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4`;
+  
+  const payload = {
+    "id": 1,
+    "jsonrpc": "2.0",
+    "method": "alchemy_getAssetTransfers",
+    "params": [
+      {
+        "fromBlock": "0x0",
+        "toBlock": "latest",
+        "withMetadata": true,
+        "excludeZeroValue": true,
+        "maxCount": "0x3",
+        "fromAddress": "0x0000000000000000000000000000000000000000",
+        "contractAddresses": ["0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD","0x0B8E7D22CE826f1228a82525b8779dBdD9E24B80","0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9","0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e","0x2E1cF0960Fc9Ece56f53bf58351d175cd1867b2c"],
+        "category": ["erc721"],
+        "order": "desc"
+      }
+    ]
+  };
+
+  const headers = {
+    "accept": "application/json",
+    "content-type": "application/json"
+  };
+
+  try {
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      const responseData = await response.json();
+      return responseData;
+    } else {
+      console.error('Failed to fetch activities:', response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error occurred:', error);
+  }
+
+}
 
 const fetchCollectionsTotalSupply = async (collections: ApiCollection[]): Promise<number[]> => {
   const totalSupplyCalls = collections.map((collection) => ({
@@ -661,6 +720,7 @@ export const getCollectionActivity = async (
     }
   }
 }
+
 
 export const getTokenActivity = async (
   tokenId: string,

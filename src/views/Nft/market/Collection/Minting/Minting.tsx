@@ -133,7 +133,7 @@ export default function Minting() {
 
         <Container>
           <Card>
-            <ActivityHistoryMinting />
+            <ActivityHistoryMinting  collectionAddress={collectionAddress} />
           </Card>
         </Container>
 

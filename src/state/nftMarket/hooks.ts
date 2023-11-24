@@ -15,8 +15,9 @@ import shuffle from 'lodash/shuffle'
 
 import { fetchNewPBAndUpdateExisting } from './reducer'
 import { State } from '../types'
-import { ApiCollections, NftActivityFilter, NftFilter, NftToken, Collection } from './types'
-import { getCollection, getCollections } from './helpers'
+import { ApiCollections, NftActivityFilter, NftFilter, NftToken, Collection, MintingActivity } from './types'
+import { getCollection, getCollections, mintingActivityApi } from './helpers'
+import BigNumber from 'bignumber.js'
 
 const DEFAULT_NFT_ORDERING = { field: 'currentAskPrice', direction: 'asc' as 'asc' | 'desc' }
 const DEFAULT_NFT_ACTIVITY_FILTER = { typeFilters: [], collectionFilters: [] }
@@ -171,4 +172,28 @@ export const useGetNftActivityFilters = (collectionAddress: string) => {
     (state: State) => state.nftMarket.data.activityFilters[collectionAddress],
   )
   return collectionFilter || DEFAULT_NFT_ACTIVITY_FILTER
+}
+
+export const useMintingActivity = (
+  collectionAddress: string,
+) => {
+
+  const { data, status, error, mutate } = useSWR(
+    [collectionAddress, 'mintingActivities'], 
+    async () => mintingActivityApi(collectionAddress), {
+  });
+
+  const processedData: MintingActivity[] = data ? data["result"]["transfers"].map(({ tokenId, asset, hash, from, to, rawContract, metadata }) => ({
+    tokenId: new BigNumber(tokenId).toString(),
+    asset,
+    marketEvent: "Minted",
+    tx: hash,
+    from,
+    to,
+    address: rawContract?.address,
+    timestamp: metadata?.blockTimestamp
+  })) : [];
+
+  return { activities: processedData, isLoading: status !== FetchStatus.Fetched, error, refresh: mutate }
+
 }
