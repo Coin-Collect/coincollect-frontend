@@ -13,7 +13,7 @@ import {
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { MintingActivity, NftToken } from 'state/nftMarket/types'
 import { Price } from '@coincollect/sdk'
-import { getBscScanLink, getPolygonScanLink } from 'utils'
+import { getPolygonScanLink, isAddress } from 'utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import ProfileCell from 'views/Nft/market/components/ProfileCell'
 import MobileModal from './MobileModal'
@@ -62,7 +62,7 @@ const MintingActivityRow: React.FC<MintingActivityRowProps> = ({
                   <Flex flexDirection="column">
                     <Text
                       as={NextLinkFromReactRouter}
-                      to={`${nftsBaseUrl}/collections/${activity.address}`}
+                      to={`${nftsBaseUrl}/collections/mint/${isAddress(activity.address)}`}
                       textAlign={['center', null, 'left']}
                       color="textSubtle"
                       fontSize="14px"
@@ -71,7 +71,7 @@ const MintingActivityRow: React.FC<MintingActivityRowProps> = ({
                     </Text>
                     <Text
                       as={NextLinkFromReactRouter}
-                      to={`${nftsBaseUrl}/collections/${activity.address}`}
+                      to={`${nftsBaseUrl}/collections/mint/${isAddress(activity.address)}`}
                       textAlign={['center', null, 'left']}
                       bold
                     >
