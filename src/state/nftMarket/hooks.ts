@@ -181,6 +181,7 @@ export const useMintingActivity = (
   const { data, status, error, mutate } = useSWR(
     [collectionAddress, 'mintingActivities'], 
     async () => mintingActivityApi(collectionAddress), {
+    refreshInterval: 60 * 1000,
   });
 
   const processedData: MintingActivity[] = data ? data["result"]["transfers"].map(({ tokenId, asset, hash, from, to, rawContract, metadata }) => ({
