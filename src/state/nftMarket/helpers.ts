@@ -101,7 +101,17 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
         "excludeZeroValue": true,
         "maxCount": "0x3",
         "fromAddress": "0x0000000000000000000000000000000000000000",
-        "contractAddresses": ["0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD","0x0B8E7D22CE826f1228a82525b8779dBdD9E24B80","0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9","0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e","0x2E1cF0960Fc9Ece56f53bf58351d175cd1867b2c"],
+        "contractAddresses": [
+                              "0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD",
+                              "0x0B8E7D22CE826f1228a82525b8779dBdD9E24B80",
+                              "0x0a846Dd40152d6fE8CB4DE4107E0b063B6D6b3F9",
+                              "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e",
+                              "0x2E1cF0960Fc9Ece56f53bf58351d175cd1867b2c",
+                              "0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5",
+                              "0x7121D40FDe5F2a82674262b8601DEcd9E066C936",
+                              "0x446f52447C1bf0613b782A0A9707100655EF6A28",
+                              "0xB2e4ab09684a4850d3271C53D39D68C9afA4785E",
+                            ],
         "category": ["erc721"],
         "order": "desc"
       }

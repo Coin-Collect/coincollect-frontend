@@ -17,6 +17,10 @@ import { useMintingActivity } from 'state/nftMarket/hooks'
 import NoNftsImage from '../components/Activity/NoNftsImage'
 import MintingActivityRow from '../components/Activity/MintingActivityRow'
 import { getPolygonScanLink } from 'utils'
+import useToast from 'hooks/useToast'
+import { ToastDescriptionWithTx } from 'components/Toast'
+import { useEffect } from 'react'
+import { formatDistance, formatDistanceToNowStrict, parseISO } from 'date-fns'
 
 
 interface ActivityHistoryProps {
@@ -26,11 +30,22 @@ interface ActivityHistoryProps {
 const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collectionAddress }) => {
   const { theme } = useTheme()
   const { t } = useTranslation()
-
-  
   const { isXs, isSm } = useMatchBreakpoints()
+  const { toastSuccess } = useToast()
 
   const { activities, isLoading, error, refresh } = useMintingActivity(collectionAddress.toLowerCase())
+  
+  useEffect(() => {
+    if(activities.length > 0) {
+      const dateCreated = formatDistanceToNowStrict(parseISO(activities[0].timestamp), {addSuffix: true})
+      toastSuccess(
+        `${t('🎉 New NFT Alert!')}`,
+        <ToastDescriptionWithTx txHash={activities[0].tx}>
+          {t(`${activities[0].asset} NFT minted ${dateCreated}`)}
+        </ToastDescriptionWithTx>,
+      )
+    }
+  },[activities[0]?.timestamp])
 
   
   return (
