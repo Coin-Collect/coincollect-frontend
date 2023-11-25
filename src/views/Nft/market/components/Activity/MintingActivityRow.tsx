@@ -19,7 +19,7 @@ import ProfileCell from 'views/Nft/market/components/ProfileCell'
 import MobileModal from './MobileModal'
 import ActivityPrice from './ActivityPrice'
 import ActivityEventText from './ActivityEventText'
-import { nftsBaseUrl, pancakeBunniesAddress } from '../../constants'
+import { nftsBaseUrl } from '../../constants'
 import NFTMedia from '../NFTMedia'
 import truncateHash from 'utils/truncateHash'
 
