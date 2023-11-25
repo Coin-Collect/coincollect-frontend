@@ -100,7 +100,7 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
         "withMetadata": true,
         "excludeZeroValue": true,
         "maxCount": "0x3",
-        "fromAddress": "0x0000000000000000000000000000000000000000",
+        //"fromAddress": "0x0000000000000000000000000000000000000000",
         "contractAddresses": [
                               "0x569B70fc565AFba702d9e77e75FD3e3c78F57eeD",
                               "0x0B8E7D22CE826f1228a82525b8779dBdD9E24B80",
@@ -111,6 +111,7 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
                               "0x7121D40FDe5F2a82674262b8601DEcd9E066C936",
                               "0x446f52447C1bf0613b782A0A9707100655EF6A28",
                               "0xB2e4ab09684a4850d3271C53D39D68C9afA4785E",
+                              "0xD5cA946AC1c1F24Eb26dae9e1A53ba6a02bd97Fe"
                             ],
         "category": ["erc721"],
         "order": "desc"
