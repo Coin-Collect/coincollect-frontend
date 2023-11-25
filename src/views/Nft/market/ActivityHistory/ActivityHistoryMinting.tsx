@@ -37,15 +37,21 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collectionAddr
   
   useEffect(() => {
     if(activities.length > 0) {
-      const dateCreated = formatDistanceToNowStrict(parseISO(activities[0].timestamp), {addSuffix: true})
-      toastSuccess(
-        `${t('🎉 New NFT Alert!')}`,
-        <ToastDescriptionWithTx txHash={activities[0].tx}>
-          {t(`${activities[0].asset} NFT minted ${dateCreated}`)}
-        </ToastDescriptionWithTx>,
-      )
+      // Using setTimeout to delay the execution of toastSuccess by 30 seconds
+      const timeoutId = setTimeout(() => {
+        const dateCreated = formatDistanceToNowStrict(parseISO(activities[0].timestamp), { addSuffix: true });
+        toastSuccess(
+          `${t('🎉 New NFT Alert!')}`,
+          <ToastDescriptionWithTx txHash={activities[0].tx}>
+            {t(`${activities[0].asset} NFT minted ${dateCreated}`)}
+          </ToastDescriptionWithTx>,
+        );
+      }, 30000); // 30 seconds in milliseconds
+
+      // Clear the timeout
+      return () => clearTimeout(timeoutId);
     }
-  },[activities[0]?.timestamp])
+  },[activities.length])
 
   
   return (
