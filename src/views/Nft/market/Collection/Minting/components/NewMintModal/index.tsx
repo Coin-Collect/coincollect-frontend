@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import styled from 'styled-components'
-import { Heading, ModalContainer, ModalHeader, ModalTitle, ModalBody, ModalCloseButton, Flex, Text, Button } from '@pancakeswap/uikit'
+import { Heading, ModalContainer, ModalHeader, ModalTitle, ModalBody, ModalCloseButton, Flex, Text, Button, Skeleton } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
 import { useTranslation } from 'contexts/Localization'
 import delay from 'lodash/delay'
 import confetti from 'canvas-confetti'
 import NFTMedia from 'views/Nft/market/components/NFTMedia'
 import PreviewImage from 'views/Nft/market/components/CollectibleCard/PreviewImage'
+import { useLastMintedNft } from 'state/nftMarket/hooks'
 
 
 const StyledModal = styled(ModalContainer)`
@@ -51,9 +52,12 @@ interface ClaimPrizesModalModalProps {
 
 const NewMintModal: React.FC<ClaimPrizesModalModalProps> = ({ onDismiss }) => {
   const { t } = useTranslation()
-  const { account } = useWeb3React()
+  const { account, chainId } = useWeb3React()
   //const { currentLotteryId } = useLottery()
-  const nft = { 'tokenId': 12, 'collectionAddress': "0xA", 'name': `#${12}`, 'collectionName': "My Name", 'image': { 'thumbnail': "https://i.seadn.io/gcs/files/b304c520de38cca993b1898db62754b7.png?auto=format&dpr=1&w=1000" }}
+  const { lastMintedNft, isLoading, error } = useLastMintedNft(account, "0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5", chainId)
+  const isNftReady = !isLoading && !error && lastMintedNft && lastMintedNft.length > 0
+
+  const nft = { 'tokenId': 12, 'collectionAddress': "0xA", 'name': isNftReady ? lastMintedNft[0].name : null, 'collectionName': "My Name", 'image': { 'thumbnail': isNftReady ? lastMintedNft[0].image : null } }
 
 
   useEffect(() => {
@@ -72,9 +76,33 @@ const NewMintModal: React.FC<ClaimPrizesModalModalProps> = ({ onDismiss }) => {
         <ModalCloseButton onDismiss={onDismiss} />
       </StyledModalHeader>
       <ModalBody p="24px">
-        <Flex justifyContent={"center"} alignItems="center" maxWidth={440}>
-                <NFTMedia style={{ backgroundPosition: "center" }} as={PreviewImage} nft={nft} height={200} width={200} mt="10px" borderRadius="8px" />
-        </Flex>
+
+        {isLoading ? (
+          <Flex alignItems="center" justifyContent="center">
+            <Skeleton height={200} width={200} />
+          </Flex>
+        ) : (
+          <>
+            <Flex alignItems="center" justifyContent="center">
+              <Text fontSize="14px" color="textSubtle">
+                {nft.name}
+              </Text>
+            </Flex>
+
+            <Flex justifyContent={"center"} alignItems="center" maxWidth={440}>
+              <NFTMedia
+                style={{ backgroundPosition: "center" }}
+                as={PreviewImage}
+                nft={nft}
+                height={200}
+                width={200}
+                mt="10px"
+                borderRadius="8px"
+              />
+            </Flex>
+          </>
+        )}
+
 
 
         <Flex alignItems="center" justifyContent="center">
@@ -95,14 +123,14 @@ const NewMintModal: React.FC<ClaimPrizesModalModalProps> = ({ onDismiss }) => {
           </Text>
         </Flex>
 
-      <Flex alignItems="center" justifyContent="space-evenly" mt="15px">
-        <Button>
-          Claim Rewards
-        </Button>
-        <Button>
-          Stake Now
-        </Button>
-      </Flex>
+        <Flex alignItems="center" justifyContent="space-evenly" mt="15px">
+          <Button>
+            Claim Rewards
+          </Button>
+          <Button>
+            Stake Now
+          </Button>
+        </Flex>
       </ModalBody>
     </StyledModal>
   )

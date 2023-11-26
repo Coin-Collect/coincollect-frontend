@@ -77,6 +77,26 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
   return null;
 }
 
+export const getLastMintedNft = async (
+  ownerAddress: string,
+  collectionAddress: string,
+  chainId: number
+): Promise<any> => {
+  const network = chainId == 80001 ? 'mumbai' : 'mainnet';
+  const baseUrl = `https://polygon-${network}.g.alchemy.com/nft/v3/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4/getNFTsForOwner`;
+  const queryParams = `?owner=${ownerAddress}&contractAddresses[]=${collectionAddress}&withMetadata=true&orderBy=transferTime&pageSize=1`;
+  const fullUrl = `${baseUrl}${queryParams}`;
+
+  const res = await fetch(fullUrl);
+  if (res.ok) {
+    const json = await res.json();
+    return json.ownedNfts.map(item => ({ "name": item.name, "image": item.image.originalUrl }));
+  }
+
+  console.error('Failed to fetch NFTs', res.statusText);
+  return null;
+}
+
 /**
  * Fetch NFT minting activities
  * @param {string} collectionAddress - The collection's Ethereum address.

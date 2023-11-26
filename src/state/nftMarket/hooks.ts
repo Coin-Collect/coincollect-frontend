@@ -16,7 +16,7 @@ import shuffle from 'lodash/shuffle'
 import { fetchNewPBAndUpdateExisting } from './reducer'
 import { State } from '../types'
 import { ApiCollections, NftActivityFilter, NftFilter, NftToken, Collection, MintingActivity } from './types'
-import { getCollection, getCollections, mintingActivityApi } from './helpers'
+import { getCollection, getCollections, getLastMintedNft, mintingActivityApi } from './helpers'
 import BigNumber from 'bignumber.js'
 
 const DEFAULT_NFT_ORDERING = { field: 'currentAskPrice', direction: 'asc' as 'asc' | 'desc' }
@@ -196,5 +196,22 @@ export const useMintingActivity = (
   })) : [];
 
   return { activities: processedData, isLoading: status !== FetchStatus.Fetched, error, refresh: mutate }
+
+}
+
+export const useLastMintedNft = (
+  ownerAddress: string,
+  collectionAddress: string,
+  chainId: number
+) => {
+
+  const { data, status, error, mutate } = useSWR(
+    [ownerAddress, collectionAddress, 'lastMintedNft'], 
+    async () => getLastMintedNft(ownerAddress, collectionAddress, chainId), {
+    revalidateOnFocus: false,
+    revalidateIfStale: false
+  });
+
+  return { lastMintedNft: data ?? null, isLoading: status !== FetchStatus.Fetched, error, refresh: mutate }
 
 }
