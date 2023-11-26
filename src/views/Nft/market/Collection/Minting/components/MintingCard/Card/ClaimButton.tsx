@@ -1,4 +1,4 @@
-import { AutoRenewIcon, Button } from '@pancakeswap/uikit'
+import { AutoRenewIcon, Button, useModal } from '@pancakeswap/uikit'
 import { PoolIds } from 'config/constants/types'
 import { PublicIfoData, WalletIfoData } from 'views/Nft/market/Collection/Minting/types'
 import { useTranslation } from 'contexts/Localization'
@@ -7,6 +7,7 @@ import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { parseEther } from '@ethersproject/units'
+import NewMintModal from '../../NewMintModal'
 
 interface Props {
   poolId: PoolIds
@@ -23,11 +24,13 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
   const { account } = useActiveWeb3React()
+  const [onPresentNewMintModal] = useModal(<NewMintModal />, false)
 
   const setPendingTx = (isPending: boolean) => walletIfoData.setPendingTx(isPending, poolId)
   
   const handleClaim = async () => {
 
+    /*
     const receipt = await fetchWithCatchTxError(() => {
       setPendingTx(true)
       return walletIfoData.contract.mint(account, 1, {value: parseEther((cost - discountAmount).toString())})
@@ -42,7 +45,8 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
       )
     }
     setPendingTx(false)
-    
+    */
+    onPresentNewMintModal();
   }
 
   return (

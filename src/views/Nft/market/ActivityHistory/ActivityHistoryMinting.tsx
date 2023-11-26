@@ -38,6 +38,7 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collectionAddr
   useEffect(() => {
     if(activities.length > 0) {
       // Using setTimeout to delay the execution of toastSuccess by 30 seconds
+      // TODO: Use lodash/delay
       const timeoutId = setTimeout(() => {
         const dateCreated = formatDistanceToNowStrict(parseISO(activities[0].timestamp), { addSuffix: true });
         toastSuccess(
