@@ -46,15 +46,16 @@ const showConfetti = () => {
   })
 }
 
-interface ClaimPrizesModalModalProps {
-  onDismiss?: () => void
+interface NewMintModalProps {
+  onDismiss?: () => void,
+  collectionAddress: string
 }
 
-const NewMintModal: React.FC<ClaimPrizesModalModalProps> = ({ onDismiss }) => {
+const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddress }) => {
   const { t } = useTranslation()
   const { account, chainId } = useWeb3React()
   //const { currentLotteryId } = useLottery()
-  const { lastMintedNft, isLoading, error } = useLastMintedNft(account, "0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5", chainId)
+  const { lastMintedNft, isLoading, error } = useLastMintedNft(account, collectionAddress, chainId)
   const isNftReady = !isLoading && !error && lastMintedNft && lastMintedNft.length > 0
 
   const nft = { 'tokenId': 12, 'collectionAddress': "0xA", 'name': isNftReady ? lastMintedNft[0].name : null, 'collectionName': "My Name", 'image': { 'thumbnail': isNftReady ? lastMintedNft[0].image : null } }

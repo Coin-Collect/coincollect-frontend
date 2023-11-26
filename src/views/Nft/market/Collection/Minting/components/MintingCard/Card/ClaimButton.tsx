@@ -24,7 +24,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
   const { account } = useActiveWeb3React()
-  const [onPresentNewMintModal] = useModal(<NewMintModal />, false)
+  const [onPresentNewMintModal] = useModal(<NewMintModal collectionAddress={walletIfoData.contract.address} />, false)
 
   const setPendingTx = (isPending: boolean) => walletIfoData.setPendingTx(isPending, poolId)
   
