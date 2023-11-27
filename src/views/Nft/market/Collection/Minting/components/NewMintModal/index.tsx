@@ -54,7 +54,6 @@ interface NewMintModalProps {
 const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddress }) => {
   const { t } = useTranslation()
   const { account, chainId } = useWeb3React()
-  //const { currentLotteryId } = useLottery()
   const { lastMintedNft, isLoading, error, isValidating } = useLastMintedNft(account, collectionAddress, chainId)
   const isNftReady = !isLoading && !error && lastMintedNft && lastMintedNft.length > 0
 
