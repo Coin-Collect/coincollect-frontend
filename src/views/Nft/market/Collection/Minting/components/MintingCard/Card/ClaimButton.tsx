@@ -30,7 +30,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
   
   const handleClaim = async () => {
 
-    /*
+    
     const receipt = await fetchWithCatchTxError(() => {
       setPendingTx(true)
       return walletIfoData.contract.mint(account, 1, {value: parseEther((cost - discountAmount).toString())})
@@ -43,10 +43,11 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
           {t('You have successfully minted your NFT.')}
         </ToastDescriptionWithTx>,
       )
+      onPresentNewMintModal();
     }
     setPendingTx(false)
-    */
-    onPresentNewMintModal();
+    
+    
   }
 
   return (

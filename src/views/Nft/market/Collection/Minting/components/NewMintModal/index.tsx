@@ -55,7 +55,7 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
   const { t } = useTranslation()
   const { account, chainId } = useWeb3React()
   //const { currentLotteryId } = useLottery()
-  const { lastMintedNft, isLoading, error } = useLastMintedNft(account, collectionAddress, chainId)
+  const { lastMintedNft, isLoading, error, isValidating } = useLastMintedNft(account, collectionAddress, chainId)
   const isNftReady = !isLoading && !error && lastMintedNft && lastMintedNft.length > 0
 
   const nft = { 'tokenId': 12, 'collectionAddress': "0xA", 'name': isNftReady ? lastMintedNft[0].name : null, 'collectionName': "My Name", 'image': { 'thumbnail': isNftReady ? lastMintedNft[0].image : null } }
@@ -78,7 +78,7 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
       </StyledModalHeader>
       <ModalBody p="24px">
 
-        {isLoading ? (
+        {isLoading || isValidating ? (
           <Flex alignItems="center" justifyContent="center">
             <Skeleton height={200} width={200} />
           </Flex>

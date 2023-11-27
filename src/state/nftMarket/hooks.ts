@@ -182,6 +182,8 @@ export const useMintingActivity = (
     [collectionAddress, 'mintingActivities'], 
     async () => mintingActivityApi(collectionAddress), {
     refreshInterval: 60 * 1000,
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
   });
 
   const processedData: MintingActivity[] = data ? data["result"]["transfers"].map(({ tokenId, asset, hash, from, to, rawContract, metadata }) => ({
@@ -205,13 +207,14 @@ export const useLastMintedNft = (
   chainId: number
 ) => {
 
-  const { data, status, error, mutate } = useSWR(
-    [ownerAddress, collectionAddress, 'lastMintedNft'], 
+  const { data, status, error, mutate, isValidating } = useSWR(
+    [collectionAddress, 'lastMintedNft'], 
     async () => getLastMintedNft(ownerAddress, collectionAddress, chainId), {
     revalidateOnFocus: false,
-    revalidateIfStale: false
+    revalidateIfStale: true,
+    revalidateOnReconnect: false
   });
 
-  return { lastMintedNft: data ?? null, isLoading: status !== FetchStatus.Fetched, error, refresh: mutate }
+  return { lastMintedNft: data ?? null, isLoading: status !== FetchStatus.Fetched, error, isValidating }
 
 }
