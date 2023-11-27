@@ -124,7 +124,7 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
         </Flex>
 
         <Flex alignItems="center" justifyContent="space-evenly" mt="15px">
-          <Button>
+          <Button as="a" external href="/claim">
             Claim Rewards
           </Button>
           <Button>
