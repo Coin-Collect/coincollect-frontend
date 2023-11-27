@@ -8,11 +8,14 @@ import { PanelProps, PushedProps } from "../types";
 interface Props extends PanelProps, PushedProps {
   showMenu: boolean;
   isMobile: boolean;
+  showPhishingWarningBanner: boolean;
 }
 
-const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean }>`
+const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean; showPhishingWarningBanner: boolean }>`
   position: fixed;
-  padding-top: ${({ showMenu }) => (showMenu ? "80px" : 0)};
+  padding-top: ${({ showMenu, showPhishingWarningBanner }) => (
+  showMenu ? (showPhishingWarningBanner ? "150px" : "80px") : 0
+  )};
   top: 0;
   left: 0;
   display: flex;
@@ -35,9 +38,9 @@ const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean }>`
 `;
 
 const Panel: React.FC<Props> = (props) => {
-  const { isPushed, showMenu } = props;
+  const { isPushed, showMenu, showPhishingWarningBanner } = props;
   return (
-    <StyledPanel isPushed={isPushed} showMenu={showMenu}>
+    <StyledPanel isPushed={isPushed} showMenu={showMenu} showPhishingWarningBanner={showPhishingWarningBanner}>
       <PanelBody {...props} />
       <PanelFooter {...props} />
     </StyledPanel>

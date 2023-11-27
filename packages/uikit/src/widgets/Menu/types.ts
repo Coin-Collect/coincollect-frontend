@@ -27,6 +27,7 @@ export interface NavProps {
   activeItem: string;
   activeSubItem: string;
   isDark: boolean;
+  showPhishingWarningBanner: boolean; //*
   toggleTheme: (isDark: boolean) => void;
   cakePriceUsd?: number;
   currentLang: string;

@@ -31,8 +31,9 @@ const Menu = (props) => {
       }}
       userMenu={<UserMenu />}
       globalMenu={<GlobalSettings />}
-      //banner={showPhishingWarningBanner && typeof window !== 'undefined' && <PhishingWarningBanner />}
+      banner={showPhishingWarningBanner && typeof window !== 'undefined' && <PhishingWarningBanner />}
       isDark={isDark}
+      showPhishingWarningBanner={showPhishingWarningBanner}
       toggleTheme={toggleTheme}
       currentLang={currentLanguage.code}
       langs={languageList}

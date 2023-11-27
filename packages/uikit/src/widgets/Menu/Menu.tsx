@@ -75,6 +75,7 @@ const Menu: React.FC<NavProps> = ({
   banner,
   globalMenu,
   isDark,
+  showPhishingWarningBanner,
   toggleTheme,
   currentLang,
   setLang,
@@ -190,6 +191,7 @@ const Menu: React.FC<NavProps> = ({
             isPushed={isPushed}
             isMobile={isMobile}
             showMenu={showMenu}
+            showPhishingWarningBanner={showPhishingWarningBanner}
             isDark={isDark}
             toggleTheme={toggleTheme}
             langs={langs}
