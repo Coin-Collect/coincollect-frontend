@@ -11,6 +11,10 @@ const drawerLinks: MenuItemsType[] = [
             {
                 label: 'Collections',
                 href: '/nfts/collections',
+            },
+            {
+                label: 'Marketplace',
+                href: 'https://market.coincollect.org/',
             },            
 
         ],
