@@ -127,7 +127,7 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
           <Button as="a" external href="/claim">
             Claim Rewards
           </Button>
-          <Button>
+          <Button as="a" external href="/nftpools">
             Stake Now
           </Button>
         </Flex>
