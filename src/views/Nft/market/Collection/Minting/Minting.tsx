@@ -125,8 +125,8 @@ export default function Minting() {
           <MintingLayoutWrapper>
 
             <NftStakeCard farm={farm} account={account} />
-
             <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+
           </MintingLayoutWrapper>
 
         </Container>
