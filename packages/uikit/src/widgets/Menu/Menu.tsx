@@ -212,7 +212,7 @@ const Menu: React.FC<NavProps> = ({
               currentLang={currentLang}
               cakePriceUsd={cakePriceUsd}
               buyCakeLabel={buyCakeLabel}
-              mb={[`${MOBILE_MENU_HEIGHT}px`, null, "0px"]}
+              mb={[null, null, "0px"]} //mb={[`${MOBILE_MENU_HEIGHT}px`, null, "0px"]}
             />
           </Inner>
         </BodyWrapper>
