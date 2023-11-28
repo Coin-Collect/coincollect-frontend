@@ -47,7 +47,7 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collectionAddr
             {t(`${activities[0].asset} NFT minted ${dateCreated}`)}
           </ToastDescriptionWithTx>,
         );
-      }, 30000); // 30 seconds in milliseconds
+      }, 20000); // 20 seconds in milliseconds
 
       // Clear the timeout
       return () => clearTimeout(timeoutId);
