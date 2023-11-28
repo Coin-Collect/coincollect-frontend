@@ -25,7 +25,7 @@ const SalesSection: React.FC<SalesSectionProps> = (props) => {
     <Flex flexDirection="column">
       <Flex
         flexDirection={['column-reverse', null, null, reverse ? 'row-reverse' : 'row']}
-        alignItems={['flex-end', null, null, 'center']}
+        alignItems={['center', null, null, 'center']}
         justifyContent="center"
       >
         <Flex
