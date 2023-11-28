@@ -101,7 +101,7 @@ const Hero = () => {
         flexDirection={['column-reverse', null, null, 'row']}
         alignItems={['center', null, null, 'center']}
         justifyContent="center"
-        mt={[account ? '280px' : '50px', null, 0]}
+        mt={[account ? '0px' : '50px', null, 0]}
         id="homepage-hero"
       >
         <Flex flex="1" flexDirection="column">
