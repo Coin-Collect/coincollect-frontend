@@ -6,7 +6,7 @@ import { useTranslation } from 'contexts/Localization'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import useTheme from 'hooks/useTheme'
 import { SlideSvgDark, SlideSvgLight } from './SlideSvg'
-import CompositeImage, { getSrcSet, CompositeImageProps } from './CompositeImage'
+import { getSrcSet } from './CompositeImage'
 
 const flyingAnim = () => keyframes`
   from {
@@ -20,17 +20,6 @@ const flyingAnim = () => keyframes`
   }
 `
 
-const fading = () => keyframes`
-  from {
-    opacity: 0.9;
-  }
-  50% {
-    opacity: 0.1;
-  }
-  to {
-    opacity: 0.9;
-  }
-`
 
 const BgWrapper = styled.div`
   z-index: -1;
@@ -53,38 +42,10 @@ const BunnyWrapper = styled.div`
   animation: ${flyingAnim} 3.5s ease-in-out infinite;
 `
 
-const StarsWrapper = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  & :nth-child(2) {
-    animation: ${fading} 2s ease-in-out infinite;
-    animation-delay: 1s;
-  }
-
-  & :nth-child(3) {
-    animation: ${fading} 5s ease-in-out infinite;
-    animation-delay: 0.66s;
-  }
-
-  & :nth-child(4) {
-    animation: ${fading} 2.5s ease-in-out infinite;
-    animation-delay: 0.33s;
-  }
-`
 
 const imagePath = '/images/home/lunar-bunny/'
 const imageSrc = 'bunny'
 
-const starsImage: CompositeImageProps = {
-  path: '/images/home/lunar-bunny/',
-  attributes: [
-    { src: 'star-l', alt: '3D Star' },
-    { src: 'star-r', alt: '3D Star' },
-    { src: 'star-top-r', alt: '3D Star' },
-  ],
-}
 
 const Hero = () => {
   const { t } = useTranslation()
@@ -123,6 +84,7 @@ const Hero = () => {
           width={['250px', null, null, '100%']}
           flex={[null, null, null, '1']}
           mb={['24px', null, null, '0']}
+          justifyContent='center'
           position="relative"
         >
           <BunnyWrapper>
@@ -132,9 +94,7 @@ const Hero = () => {
               <img src={`${imagePath}${imageSrc}.png`} alt={t('Lunar bunny')} />
             </picture>
           </BunnyWrapper>
-          <StarsWrapper>
-            <CompositeImage {...starsImage} />
-          </StarsWrapper>
+          
         </Flex>
       </Flex>
     </>
