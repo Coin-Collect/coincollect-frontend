@@ -92,7 +92,7 @@ export default function Minting() {
         <Flex alignItems="center" justifyContent="space-between" mb="24px">
           <BackLink to={`${nftsBaseUrl}/collections`}>
             <ChevronLeftIcon color="primary" width="24px" />
-            {t('All Collections')}
+            {t('Back')}
           </BackLink>
           <IfoAchievement ifo={minting} publicIfoData={publicIfoData} />
         </Flex>
