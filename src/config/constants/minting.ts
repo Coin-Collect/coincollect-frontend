@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress, getPlaceDjNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -535,7 +535,7 @@ const ifos: Minting[] = [
     totalSupply: 2876,
     lastPrice: 25,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/partners/BeastHunter/logo.png",
     banner: {
       large: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerLg.png",
@@ -604,6 +604,81 @@ const ifos: Minting[] = [
     symbol: 'CAR',
     totalSupply: 3800,
     lastPrice: 30,
+    isActive: true,
+    status: 'livepublic', /// Options: livepublic, liveprivate
+    avatar: "https://coincollect.org/assets/images/partners/NitroClash/logo256.jpg",
+    banner: {
+      large: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerLg.jpg",
+      small: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerSm.jpg",
+    },
+    sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/gcs/files/60b333cf442c9131c9dd0a076f653931.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+    showCase: [
+      { 'tokenId': 40, 'image': 'https://i.seadn.io/gcs/files/213ece08802dc34ce1bf15c67f566e5a.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 11, 'image': 'https://i.seadn.io/gcs/files/0025ad2a545a5bc8bde8eb42174d2352.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 18, 'image': 'https://i.seadn.io/gcs/files/c466b87da33d890765bfee4cc2189e83.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 22, 'image': 'https://i.seadn.io/gcs/files/9a4bc0e58ee576d533048972f95cc851.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+    ],
+    faq: [
+      {
+        title: "What is NitroClash?",
+        description: ["NitroClash is a revolutionary Play-to-Earn NFT racing and combat game. Dive into high-octane battles, race to the finish line, and unlock the power of unique NFT cars. Each race, each combat, means more $NITRO tokens in your wallet."]
+      },
+      {
+        title: "How do I get started with NitroClash?",
+        description: ["Begin your NitroClash journey by minting or purchasing a unique car NFT. You can mint a fresh car using CoinCollect, buy one from platforms like OpenSea, or even stake your car at CoinCollect to start earning $NITRO tokens."]
+      },
+      {
+        title: "What are the different car types in NitroClash?",
+        description: ["We offer six distinctive car types in NitroClash: Speedster, Tank, Artillery, Racer, Combat, and Hybrid. Each car type has its own strengths and abilities that can be utilized in races and battles."]
+      },
+      {
+        title: "How do I use $NITRO tokens?",
+        description: ["$NITRO is the primary token of NitroClash. Use it to upgrade your cars, access special in-game features, stake for rewards, and trade in various crypto marketplaces. It's your gateway to the full NitroClash experience."]
+      },
+      {
+        title: "Can I trade my NitroClash cars?",
+        description: ["Absolutely! All NitroClash cars are NFTs, which means you can sell or trade them on NFT platforms like OpenSea, Element Market, and others. Every car NFT is your digital property, giving you full control and ownership."]
+      },
+      {
+        title: "How can I engage with the NitroClash community?",
+        description: ["The NitroClash community is buzzing with activity! Join our social platforms like Telegram, Twitter, and Instagram to connect with fellow racers, discuss strategies, and stay updated on the latest developments."]
+      },
+      {
+        title: "What's in store for the future of NitroClash?",
+        description: ["Our roadmap is loaded with electrifying updates, including new track terrains, powerful car abilities, partnerships, and seasonal events. The race has just begun, and the finish line is nowhere in sight!"]
+      },
+      {
+        title: "How can I buy or trade NFT cars in NitroClash?",
+        description: ["To acquire NitroClash car NFTs, you can mint new cars from CoinCollect or buy them from NFT marketplaces such as OpenSea, Element Market, and others. The choice is yours!"]
+      }
+    ],
+  
+    
+    poolUnlimited: {
+      saleAmount: '3800 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://nitroclash.net/',
+    version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/nitroclash',
+    //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
+    telegramUrl: 'https://t.me/nitroclash',
+    twitterUrl: 'https://twitter.com/nitroclashnet',
+  },
+  //============================PlaceDJ NFTS====================================
+  {
+    id: 'placedjnfts',
+    stake_pid: 17,
+    name: 'PlaceDJ',
+    description: 'Choose from 5000+ customizable NFT cars, earn $NITRO tokens, and dominate tracks across the universe.',
+    address: getPlaceDjNftAddress(),
+    symbol: 'PLACEDJ',
+    totalSupply: 5832,
+    lastPrice: 100,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/partners/NitroClash/logo256.jpg",
