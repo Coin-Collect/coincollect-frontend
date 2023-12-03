@@ -107,6 +107,18 @@ const farms: SerializedFarmConfig[] = [
     token: serializedTokens.nitro,
     quoteToken: serializedTokens.collect,
   },
+  {
+    pid: 8,
+    lpSymbol: 'COLLECT-DJ LP',
+    lpAddresses: {
+      97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
+      56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
+      137: '0x9556C3c45333476e0D2466CfBBE8f001055BDc41',
+      80001: '0xf228A55fFCD281b5a245D48f5677870313381c15' // CHANGE_ADDRESS:Pair
+    },
+    token: serializedTokens.dj,
+    quoteToken: serializedTokens.collect,
+  },
   
 ].filter((f) => !!f.lpAddresses[ChainId.MAINNET])
 
