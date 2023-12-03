@@ -361,12 +361,12 @@ const nftFarms: SerializedNftFarmConfig[] = [
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'NITRO', percentage: 66000},
+      {token: 'DJ', percentage: 66000},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://nitroclash.net/',
+    projectLink: 'https://placedj.com/',
   },
 /*
   {

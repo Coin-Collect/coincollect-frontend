@@ -124,6 +124,21 @@ const claims: any[] = [
     projectSite: 'https://nitroclash.net/',
     version: 2,
   },
+  {
+    cid: 7,
+    name: 'PlaceDJ Rewards',
+    description: <Trans>Do you own a PLACEDJ NFT or a CoinCollect NFT? As a token of our gratitude for your support, our team has set aside DJ tokens exclusively for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/NitroClash/nitroClaim.jpg',
+    rewardToken: 'DJ',
+    requiredToken: 'PLACEDJ NFT', 
+    baseAmount: 0.5,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816',
+    projectSite: 'https://placedj.com/',
+    version: 2,
+  },
 /*
   {
     cid: 4,
