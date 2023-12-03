@@ -673,76 +673,73 @@ const ifos: Minting[] = [
   {
     id: 'placedjnfts',
     stake_pid: 17,
-    name: 'PlaceDJ',
-    description: 'Choose from 5000+ customizable NFT cars, earn $NITRO tokens, and dominate tracks across the universe.',
+    name: 'PlaceDJ 2.0',
+    description: 'PlaceDJ 2.0 offers over 5832 unique NFTs for license-free AI music streams, revolutionizing venue soundscapes with exclusive NFT benefits.',
     address: getPlaceDjNftAddress(),
     symbol: 'PLACEDJ',
     totalSupply: 5832,
     lastPrice: 100,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/partners/NitroClash/logo256.jpg",
+    avatar: "https://coincollect.org/assets/images/partners/placedj/logo512s.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerLg.jpg",
-      small: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerSm.jpg",
+      large: "https://coincollect.org/assets/images/partners/placedj/placedjBannerMin.png",
+      small: "https://coincollect.org/assets/images/partners/placedj/banner2.gif",
     },
-    sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/gcs/files/60b333cf442c9131c9dd0a076f653931.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+    sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/s/raw/files/ac74e2307650b86343144f0e324d69c9.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
     showCase: [
-      { 'tokenId': 40, 'image': 'https://i.seadn.io/gcs/files/213ece08802dc34ce1bf15c67f566e5a.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
-      { 'tokenId': 11, 'image': 'https://i.seadn.io/gcs/files/0025ad2a545a5bc8bde8eb42174d2352.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
-      { 'tokenId': 18, 'image': 'https://i.seadn.io/gcs/files/c466b87da33d890765bfee4cc2189e83.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
-      { 'tokenId': 22, 'image': 'https://i.seadn.io/gcs/files/9a4bc0e58ee576d533048972f95cc851.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/nitroclash' },
+      { 'tokenId': 40, 'image': 'https://i.seadn.io/s/raw/files/1ca0d4cdf100351c7df6a302b1ffd218.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 11, 'image': 'https://i.seadn.io/s/raw/files/9f032dc7201a737ba99f64f5c01e4197.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 18, 'image': 'https://i.seadn.io/s/raw/files/98030b144471dca11340187b68f93a8b.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 22, 'image': 'https://i.seadn.io/s/raw/files/815047510bb37b12b7d5c07556b98049.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
     ],
     faq: [
       {
-        title: "What is NitroClash?",
-        description: ["NitroClash is a revolutionary Play-to-Earn NFT racing and combat game. Dive into high-octane battles, race to the finish line, and unlock the power of unique NFT cars. Each race, each combat, means more $NITRO tokens in your wallet."]
+        title: "What is PlaceDJ 2.0?",
+        description: ["PlaceDJ 2.0 is a cutting-edge music streaming service, offering over 5000 unique NFTs for AI-powered, license-free music tailored to different venues. It provides exclusive benefits and customization options to enhance any environment."]
       },
       {
-        title: "How do I get started with NitroClash?",
-        description: ["Begin your NitroClash journey by minting or purchasing a unique car NFT. You can mint a fresh car using CoinCollect, buy one from platforms like OpenSea, or even stake your car at CoinCollect to start earning $NITRO tokens."]
+        title: "How do I get started with PlaceDJ 2.0?",
+        description: ["Start your PlaceDJ 2.0 experience by acquiring an NFT from our collection. These NFTs grant access to our extensive library of AI-curated, license-free tracks, perfectly suited for your venue's unique atmosphere."]
       },
       {
-        title: "What are the different car types in NitroClash?",
-        description: ["We offer six distinctive car types in NitroClash: Speedster, Tank, Artillery, Racer, Combat, and Hybrid. Each car type has its own strengths and abilities that can be utilized in races and battles."]
+        title: "What unique features does PlaceDJ 2.0 offer?",
+        description: ["PlaceDJ 2.0 stands out with its AI-driven music curation, license-free streaming, and exclusive NFTs that unlock tailored playlists and soundscapes for various venues, ensuring a unique auditory experience."]
       },
       {
-        title: "How do I use $NITRO tokens?",
-        description: ["$NITRO is the primary token of NitroClash. Use it to upgrade your cars, access special in-game features, stake for rewards, and trade in various crypto marketplaces. It's your gateway to the full NitroClash experience."]
+        title: "Where can I acquire PlaceDJ 2.0 NFTs?",
+        description: ["PlaceDJ 2.0 NFTs can be purchased from our platform or traded on leading NFT marketplaces. Owning these NFTs not only enhances your venue's ambiance but also adds to your digital asset collection."]
       },
       {
-        title: "Can I trade my NitroClash cars?",
-        description: ["Absolutely! All NitroClash cars are NFTs, which means you can sell or trade them on NFT platforms like OpenSea, Element Market, and others. Every car NFT is your digital property, giving you full control and ownership."]
+        title: "How does PlaceDJ 2.0 benefit venue owners?",
+        description: ["Venue owners benefit from PlaceDJ 2.0 by accessing a vast, AI-curated, license-free music library, eliminating the need for music licensing fees while providing an unmatched auditory experience to their customers."]
       },
       {
-        title: "How can I engage with the NitroClash community?",
-        description: ["The NitroClash community is buzzing with activity! Join our social platforms like Telegram, Twitter, and Instagram to connect with fellow racers, discuss strategies, and stay updated on the latest developments."]
+        title: "What's next for PlaceDJ 2.0?",
+        description: ["The future of PlaceDJ 2.0 includes expanding our NFT collection, integrating more AI-powered features for music customization, and forming partnerships to further enhance the venue music streaming experience."]
       },
       {
-        title: "What's in store for the future of NitroClash?",
-        description: ["Our roadmap is loaded with electrifying updates, including new track terrains, powerful car abilities, partnerships, and seasonal events. The race has just begun, and the finish line is nowhere in sight!"]
-      },
-      {
-        title: "How can I buy or trade NFT cars in NitroClash?",
-        description: ["To acquire NitroClash car NFTs, you can mint new cars from CoinCollect or buy them from NFT marketplaces such as OpenSea, Element Market, and others. The choice is yours!"]
+        title: "Can I participate in the PlaceDJ 2.0 community?",
+        description: ["Join the PlaceDJ 2.0 community on platforms like Telegram and Twitter to connect with other users, share experiences, and stay updated on the latest features and developments in venue music streaming."]
       }
     ],
+    
   
     
     poolUnlimited: {
-      saleAmount: '3800 NFT',
+      saleAmount: '5832 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-    articleUrl: 'https://nitroclash.net/',
+    articleUrl: 'https://placedj.com/',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/nitroclash',
+    openSeaUrl: 'https://opensea.io/collection/placedj',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
     discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/nitroclash',
-    twitterUrl: 'https://twitter.com/nitroclashnet',
+    telegramUrl: 'https://t.me/placedjcom',
+    twitterUrl: 'https://twitter.com/placedjcom',
   },
 ]
 
