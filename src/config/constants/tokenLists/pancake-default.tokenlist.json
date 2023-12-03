@@ -59,6 +59,14 @@
       "logoURI": "https://coincollect.org/assets/images/partners/NitroClash/slogo128.png"
     },
     {
+      "name": "DJ Token",
+      "symbol": "DJ",
+      "address": "0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816",
+      "chainId": 137,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/NitroClash/slogo128.png"
+    },
+    {
       "name": "WMATIC Token",
       "symbol": "WMATIC",
       "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
@@ -126,6 +134,14 @@
       "name": "Nitro Token",
       "symbol": "NITRO",
       "address": "0x1226aD9E97260a912aA83c1918BaE961C7cd9d8A",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/NitroClash/slogo128.png"
+    },
+    {
+      "name": "DJ Token",
+      "symbol": "DJ",
+      "address": "0x97F5a198886AA4a7c22a9c5cc98754d7C737f964",
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/partners/NitroClash/slogo128.png"

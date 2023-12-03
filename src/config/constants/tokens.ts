@@ -79,6 +79,14 @@ export const mainnetTokens = defineTokens({
     'NITRO Token',
     'https://nitroclash.net/',
   ),
+  dj: new Token(
+    POLYGON_MAINNET,
+    '0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816',
+    18,
+    'DJ',
+    'DJ Token',
+    'https://placedj.com/',
+  ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(
@@ -2158,6 +2166,14 @@ export const testnetTokens = defineTokens({
     'NITRO',
     'NITRO Token',
     'https://nitroclash.net/',
+  ),
+  dj: new Token(
+    MUMBAI_TESTNET,
+    '0x97F5a198886AA4a7c22a9c5cc98754d7C737f964',
+    18,
+    'DJ',
+    'DJ Token',
+    'https://placedj.com/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,
