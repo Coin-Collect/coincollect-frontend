@@ -345,6 +345,29 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: 'https://nitroclash.net/',
   },
+  {
+    pid: 17,
+    lpSymbol: 'PLACEDJ NFT',
+    nftAddresses: {
+      137: '0x79C55f7f25b16D33A9C3352a332cbe6F375f7076',
+      80001: '0x82de52A7031C5EFdd51847527179bEBEa6C68e5C'
+    },
+    contractAddresses: {
+      137: '0xCce9e3b6C3b9bc91b72982B08F8E7950897127d1',
+      80001: '0xaf1bF01c64550eb6b3475608fBD5E096085cc84b',
+    },
+    tokenPerBlock: '0.0116',
+    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'NITRO', percentage: 66000},
+    ],
+    supportedCollectionPids: [1,2,3,4],
+    mainCollectionWeight: '15',
+    performanceFee: '0',
+    projectLink: 'https://nitroclash.net/',
+  },
 /*
   {
     pid: 14,
