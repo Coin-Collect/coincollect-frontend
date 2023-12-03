@@ -236,7 +236,7 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
       return (<Grid gridGap="16px" gridTemplateColumns={['1fr', '1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)']} mb="64px">
 
 
-        {collections.slice(0, 6).map((collection) => {
+        {collections.slice(0, 9).map((collection) => {
           return (
             <CollectionCard
               key={collection.address}

@@ -605,7 +605,7 @@ const ifos: Minting[] = [
     totalSupply: 3800,
     lastPrice: 30,
     isActive: true,
-    status: 'liveprivate', /// Options: livepublic, liveprivate
+    status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/partners/NitroClash/logo256.jpg",
     banner: {
       large: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerLg.jpg",
