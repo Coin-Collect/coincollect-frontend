@@ -128,7 +128,7 @@ const claims: any[] = [
     cid: 7,
     name: 'PlaceDJ Rewards',
     description: <Trans>Do you own a PLACEDJ NFT or a CoinCollect NFT? As a token of our gratitude for your support, our team has set aside DJ tokens exclusively for you.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/NitroClash/nitroClaim.jpg',
+    imageLink: 'https://coincollect.org/assets/images/partners/placedj/logoMin.gif',
     rewardToken: 'DJ',
     requiredToken: 'PLACEDJ NFT', 
     baseAmount: 0.5,
