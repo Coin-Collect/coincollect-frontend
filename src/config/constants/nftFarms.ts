@@ -354,14 +354,14 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     contractAddresses: {
       137: '0xCce9e3b6C3b9bc91b72982B08F8E7950897127d1',
-      80001: '0x4b6738bc080eef21e650e1eb12edbe65955332cf',
+      80001: '0xe7f5dad6b256ad27ebb334f2728ec5869d74de03',
     },
     tokenPerBlock: '0.0116',
     participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'DJ', percentage: 66000},
+      {token: 'DJ', percentage: 66},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
