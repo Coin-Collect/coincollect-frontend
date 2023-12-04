@@ -213,7 +213,7 @@ const pools: SerializedPoolConfig[] = [
     stakingToken: serializedTokens.collect,
     earningToken: serializedTokens.dj,
     contractAddress: {
-      137: '0x8820f182F3a2E2927e4Adc6622868FC64D015e1a',
+      137: '0x7199Fec50451F5612df0392dbb74A6B91cD9e6c4',
       80001: '0x209c54ae81ca70334369692b73abcb09cdda0f21',
     },
     poolCategory: PoolCategory.CORE,
@@ -229,7 +229,7 @@ const pools: SerializedPoolConfig[] = [
     stakingToken: serializedTokens.dj,
     earningToken: serializedTokens.collect,
     contractAddress: {
-      137: '0x2FE87D842B3994ca07130d76362ff504f3530ca8',
+      137: '0xE81076995DA01C847B979b72dCf81c63067EdcA8',
       80001: '0x71082763808734ff10e35bd214d82fa756500848',
     },
     poolCategory: PoolCategory.CORE,
