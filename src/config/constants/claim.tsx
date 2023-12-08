@@ -139,6 +139,22 @@ const claims: any[] = [
     projectSite: 'https://placedj.com/',
     version: 2,
   },
+  {
+    cid: 8,
+    name: 'TaskOn CAP Rewards',
+    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png',
+    rewardToken: 'AVATAR',
+    requiredToken: 'TaskOn CAP', 
+    baseAmount: 250,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0x0D8550552A7F277e141331C2fe7798BB5c9359b9',
+    projectSite: 'https://taskon.xyz/space/553258',
+    version: 2,
+    useApi: true,
+  },
 /*
   {
     cid: 4,
