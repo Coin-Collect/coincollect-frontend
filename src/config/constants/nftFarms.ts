@@ -368,6 +368,34 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: 'https://placedj.com/',
   },
+  {
+    pid: 18,
+    lpSymbol: 'TaskOn CAP',
+    nftAddresses: {
+      137: '0x9d083c192c44fAC3E07786D787918c456f58a27C',
+      80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
+    },
+    contractAddresses: {
+      137: '0xB113E0F75393532a39A8A02089B89171CF2A2f64',
+      80001: '0xDA35D873fD89D6e110573c8b469ca4EdECf4dD77',
+    },
+    tokenPerBlock: '0.11',
+    participantThreshold: 2400, // Weight(1) x Target Nft Count(4000)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'HUNT', percentage: 46500},
+      {token: 'NITRO', percentage: 4700},
+    ],
+    //supportedCollectionPids: [],
+    mainCollectionWeight: '1',
+    performanceFee: '0',
+    projectLink: 'https://taskon.xyz/space/553258',
+    banner: "https://coincollect.org/assets/images/partners/key/keyBanner.gif",
+    avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
+    staticNftImage: "https://coincollect.org/assets/images/partners/key/key128.jpg",
+    useApi: true,
+  },
 /*
   {
     pid: 14,
