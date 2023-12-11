@@ -379,13 +379,13 @@ const nftFarms: SerializedNftFarmConfig[] = [
       137: '0xB113E0F75393532a39A8A02089B89171CF2A2f64',
       80001: '0xDA35D873fD89D6e110573c8b469ca4EdECf4dD77',
     },
-    tokenPerBlock: '0.11',
-    participantThreshold: 2400, // Weight(1) x Target Nft Count(4000)
+    tokenPerBlock: '0.01273',
+    participantThreshold: 2000, // Weight(1) x Target Nft Count(2000)
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'HUNT', percentage: 46500},
-      {token: 'NITRO', percentage: 4700},
+      {token: 'HUNT', percentage: 40000},
+      {token: 'NITRO', percentage: 4000},
     ],
     //supportedCollectionPids: [],
     mainCollectionWeight: '1',

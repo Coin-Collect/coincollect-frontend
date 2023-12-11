@@ -146,7 +146,7 @@ const claims: any[] = [
     imageLink: 'https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png',
     rewardToken: 'AVATAR',
     requiredToken: 'TaskOn CAP', 
-    baseAmount: 250,
+    baseAmount: 500,
     nftLimit: 5,
     totalReward: 120000000,
     isFinished: false,
