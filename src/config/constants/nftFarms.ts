@@ -376,7 +376,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
     },
     contractAddresses: {
-      137: '0xB113E0F75393532a39A8A02089B89171CF2A2f64',
+      137: '0xa2acf502696925dedc24d8601c0483e300fc1bcb',
       80001: '0xDA35D873fD89D6e110573c8b469ca4EdECf4dD77',
     },
     tokenPerBlock: '0.01273',
