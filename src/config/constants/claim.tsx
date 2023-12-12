@@ -142,8 +142,8 @@ const claims: any[] = [
   {
     cid: 8,
     name: 'TaskOn CAP Rewards',
-    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
-    imageLink: 'https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png',
+    description: <Trans>The CoinCollect TaskON Claim Pool is now open to all CAP NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/taskon/taskonclaim.png',
     rewardToken: 'AVATAR',
     requiredToken: 'TaskOn CAP', 
     baseAmount: 500,
