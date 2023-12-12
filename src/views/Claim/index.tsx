@@ -48,7 +48,7 @@ const Pools: React.FC = () => {
     <CardLayout>
       {claimConfig.map((claim, index) =>
         <ClaimCard key={index} claimId={index} claim={claim} claimData={claimData} account={account} />
-      )}
+      ).reverse()}
     </CardLayout>
   )
 
