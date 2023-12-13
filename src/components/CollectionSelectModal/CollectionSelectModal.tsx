@@ -83,7 +83,21 @@ export default function CollectionSelectModal({
   const collectionList = mainNftStakeFarmReplaced 
     ? [...mainNftStakeFarmReplaced, ...communityTokenFarms] 
     : [...mainNftStakeFarm, ...externalNftStakeFarm, ...communityTokenFarms]
-
+  
+  const collectionPowers = collectionList.map((collection) => {
+    switch (collection.pid) {
+      case 1:
+        return 1;
+      case 2:
+        return 3;
+      case 3:
+        return 6;
+      case 4:
+        return 12;
+      default:
+        return 15;
+    }
+  })
 
   const { allowance } = useFarmUser(pid)
 
@@ -123,6 +137,7 @@ export default function CollectionSelectModal({
             collections={collectionList}
             onCurrencySelect={handleCurrencySelect}
             allowance={allowance}
+            collectionPowers={collectionPowers}
             fixedListRef={fixedList}
             eligiblePids={eligibleCollections}
           />

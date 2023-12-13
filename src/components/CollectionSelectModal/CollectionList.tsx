@@ -55,6 +55,7 @@ function CollectionRow({
   isSelected,
   style,
   allowance,
+  collectionPower,
   eligiblePids
 }: {
   collection: DeserializedNftFarm
@@ -62,6 +63,7 @@ function CollectionRow({
   isSelected: boolean
   style: CSSProperties
   allowance: boolean
+  collectionPower: number
   eligiblePids?: number[]
 }) {
   const { account } = useActiveWeb3React()
@@ -84,7 +86,7 @@ function CollectionRow({
     >
       <ListLogo logoURI={avatar} size={"34px"} />
       <Column>
-        <Text bold>{collection.lpSymbol}</Text>
+        <Text bold>{collection.lpSymbol} ({collectionPower}X)</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
           {
             !isEligible ? "This collection is not eligible" : // Show message if not eligible
@@ -107,6 +109,7 @@ export default function CollectionList({
   selectedCollection,
   onCurrencySelect,
   allowance,
+  collectionPowers,
   fixedListRef,
   eligiblePids,
 }: {
@@ -115,6 +118,7 @@ export default function CollectionList({
   selectedCollection?: DeserializedNftFarm | null
   onCurrencySelect: (collection: number, task: string) => void
   allowance: boolean[]
+  collectionPowers: number[]
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
   eligiblePids?: number[]
 }) {
@@ -137,6 +141,7 @@ export default function CollectionList({
           isSelected={isSelected}
           onSelect={handleSelect}
           allowance={allowance[index]}
+          collectionPower={collectionPowers[index]}
           eligiblePids={eligiblePids}
         />
       )
