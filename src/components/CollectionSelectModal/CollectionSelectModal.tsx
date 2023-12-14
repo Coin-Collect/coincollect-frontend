@@ -84,7 +84,7 @@ export default function CollectionSelectModal({
     ? [...mainNftStakeFarmReplaced, ...communityTokenFarms] 
     : [...mainNftStakeFarm, ...externalNftStakeFarm, ...communityTokenFarms]
   
-  const collectionPowers = collectionList.map((collection) => {
+  const collectionPowers = mainNftStakeFarm[0]["collectionPowers"] ?? collectionList.map((collection) => {
     switch (collection.pid) {
       case 1:
         return 1;
