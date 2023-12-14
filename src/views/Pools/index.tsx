@@ -96,7 +96,7 @@ const Pools: React.FC = () => {
   const [numberOfPoolsVisible, setNumberOfPoolsVisible] = useState(NUMBER_OF_POOLS_VISIBLE)
   const { observerRef, isIntersecting } = useIntersectionObserver()
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortOption, setSortOption] = useState('hot')
+  const [sortOption, setSortOption] = useState('apr')
   const chosenPoolsLength = useRef(0)
   const vaultPools = useVaultPools()
   const cakeInVaults = Object.values(vaultPools).reduce((total, vault) => {
@@ -291,12 +291,12 @@ const Pools: React.FC = () => {
                 <Select
                   options={[
                     {
-                      label: t('Hot'),
-                      value: 'hot',
-                    },
-                    {
                       label: t('APR'),
                       value: 'apr',
+                    },
+                    {
+                      label: t('Hot'),
+                      value: 'hot',
                     },
                     {
                       label: t('Earned'),

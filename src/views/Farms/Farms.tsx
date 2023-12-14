@@ -122,7 +122,7 @@ const Farms: React.FC = ({ children }) => {
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useUserFarmsViewMode()
   const { account } = useWeb3React()
-  const [sortOption, setSortOption] = useState('hot')
+  const [sortOption, setSortOption] = useState('apr')
   const { observerRef, isIntersecting } = useIntersectionObserver()
   const chosenFarmsLength = useRef(0)
 
@@ -372,12 +372,12 @@ const Farms: React.FC = ({ children }) => {
               <Select
                 options={[
                   {
-                    label: t('Hot'),
-                    value: 'hot',
-                  },
-                  {
                     label: t('APR'),
                     value: 'apr',
+                  },
+                  {
+                    label: t('Hot'),
+                    value: 'hot',
                   },
                   {
                     label: t('Multiplier'),
