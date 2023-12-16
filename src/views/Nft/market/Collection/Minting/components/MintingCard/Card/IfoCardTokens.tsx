@@ -194,7 +194,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
             <MessageText display="inline">
             {t(`You don't have any CoinCollect NFT, NFT holders get %${holderDiscountPercentage} discount and doesn't have to wait for the countdown.`)}
               </MessageText>{' '}
-              <MessageTextLink display="inline" fontWeight={700} href="https://opensea.io/CoinCollectNFT" target="_blank" color="failure">
+              <MessageTextLink display="inline" fontWeight={700} href="https://market.coincollect.org/" target="_blank" color="failure">
                 {t('Not too late')} »
               </MessageTextLink>
             </Box>
