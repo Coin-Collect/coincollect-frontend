@@ -55,7 +55,7 @@ const IfoAchievement: React.FC<Props> = ({ ifo, publicIfoData }) => {
 
   return (
         <Flex flexDirection="column" ml="8px">
-          <FlexGap gap="16px" pt="14px" pl="4px">
+          <FlexGap gap="16px" pl="4px">
             <Link external href={ifo.articleUrl}>
               <LanguageIcon color="textSubtle" />
             </Link>
