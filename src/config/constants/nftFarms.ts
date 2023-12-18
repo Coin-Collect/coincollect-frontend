@@ -395,7 +395,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: 'https://taskon.xyz/space/553258',
     banner: "https://coincollect.org/assets/images/partners/taskon/taskON.gif",
     avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
-    staticNftImage: "https://coincollect.org/assets/images/partners/key/key128.jpg",
+    staticNftImage: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
     useApi: true,
   },
 /*
