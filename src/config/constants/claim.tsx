@@ -145,7 +145,7 @@ const claims: any[] = [
     description: <Trans>The CoinCollect Tasker Claim Pool is now open to all TASKER NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/partners/taskon/taskonclaim.gif',
     rewardToken: 'AVATAR',
-    requiredToken: 'TaskOn CAP', 
+    requiredToken: 'TASKER NFT', 
     baseAmount: 500,
     nftLimit: 5,
     totalReward: 120000000,
