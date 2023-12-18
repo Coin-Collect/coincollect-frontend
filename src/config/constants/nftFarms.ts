@@ -15,6 +15,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     banner: "https://coincollect.org/assets/images/clone/banner-lg.png",
     avatar: "https://coincollect.org/assets/images/clone/nft350.png",
+    isFinished: true,
   },
   {
     pid: 2,
@@ -25,6 +26,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     banner: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
+    isFinished: true,
   },
   {
     pid: 3,
@@ -35,7 +37,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     banner: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
-    isFinished: false,
+    isFinished: true,
   },
   {
     pid: 4,
@@ -46,7 +48,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
     banner: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
-    isFinished: false,
+    isFinished: true,
   },
   {
     pid: 5,
