@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress, getPlaceDjNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress, getPlaceDjNftAddress, getZidanogoNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -677,6 +677,78 @@ const ifos: Minting[] = [
     description: 'PlaceDJ 2.0 offers over 5832 unique NFTs for license-free AI music streams, revolutionizing venue soundscapes with exclusive NFT benefits.',
     address: getPlaceDjNftAddress(),
     symbol: 'PLACEDJ',
+    totalSupply: 5832,
+    lastPrice: 100,
+    isActive: true,
+    status: 'liveprivate', /// Options: livepublic, liveprivate
+    avatar: "https://coincollect.org/assets/images/partners/placedj/logo512s.png",
+    banner: {
+      large: "https://coincollect.org/assets/images/partners/placedj/placedjBannerMin.png",
+      small: "https://coincollect.org/assets/images/partners/placedj/banner2.gif",
+    },
+    sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/s/raw/files/ac74e2307650b86343144f0e324d69c9.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+    showCase: [
+      { 'tokenId': 40, 'image': 'https://i.seadn.io/s/raw/files/1ca0d4cdf100351c7df6a302b1ffd218.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 11, 'image': 'https://i.seadn.io/s/raw/files/9f032dc7201a737ba99f64f5c01e4197.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 18, 'image': 'https://i.seadn.io/s/raw/files/98030b144471dca11340187b68f93a8b.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 22, 'image': 'https://i.seadn.io/s/raw/files/815047510bb37b12b7d5c07556b98049.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+    ],
+    faq: [
+      {
+        title: "What is PlaceDJ 2.0?",
+        description: ["PlaceDJ 2.0 is a cutting-edge music streaming service, offering over 5000 unique NFTs for AI-powered, license-free music tailored to different venues. It provides exclusive benefits and customization options to enhance any environment."]
+      },
+      {
+        title: "How do I get started with PlaceDJ 2.0?",
+        description: ["Start your PlaceDJ 2.0 experience by acquiring an NFT from our collection. These NFTs grant access to our extensive library of AI-curated, license-free tracks, perfectly suited for your venue's unique atmosphere."]
+      },
+      {
+        title: "What unique features does PlaceDJ 2.0 offer?",
+        description: ["PlaceDJ 2.0 stands out with its AI-driven music curation, license-free streaming, and exclusive NFTs that unlock tailored playlists and soundscapes for various venues, ensuring a unique auditory experience."]
+      },
+      {
+        title: "Where can I acquire PlaceDJ 2.0 NFTs?",
+        description: ["PlaceDJ 2.0 NFTs can be purchased from our platform or traded on leading NFT marketplaces. Owning these NFTs not only enhances your venue's ambiance but also adds to your digital asset collection."]
+      },
+      {
+        title: "How does PlaceDJ 2.0 benefit venue owners?",
+        description: ["Venue owners benefit from PlaceDJ 2.0 by accessing a vast, AI-curated, license-free music library, eliminating the need for music licensing fees while providing an unmatched auditory experience to their customers."]
+      },
+      {
+        title: "What's next for PlaceDJ 2.0?",
+        description: ["The future of PlaceDJ 2.0 includes expanding our NFT collection, integrating more AI-powered features for music customization, and forming partnerships to further enhance the venue music streaming experience."]
+      },
+      {
+        title: "Can I participate in the PlaceDJ 2.0 community?",
+        description: ["Join the PlaceDJ 2.0 community on platforms like Telegram and Twitter to connect with other users, share experiences, and stay updated on the latest features and developments in venue music streaming."]
+      }
+    ],
+    
+  
+    
+    poolUnlimited: {
+      saleAmount: '5832 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://placedj.com/',
+    version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/placedj',
+    //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
+    telegramUrl: 'https://t.me/placedjcom',
+    twitterUrl: 'https://twitter.com/placedjcom',
+  },
+  //============================Zidanogo NFTS====================================
+  {
+    id: 'zidanogonfts',
+    stake_pid: 18,
+    name: 'GentleMals',
+    description: 'PlaceDJ 2.0 offers over 5832 unique NFTs for license-free AI music streams, revolutionizing venue soundscapes with exclusive NFT benefits.',
+    address: getZidanogoNftAddress(),
+    symbol: 'GMAL',
     totalSupply: 5832,
     lastPrice: 100,
     isActive: true,
