@@ -240,6 +240,38 @@ const pools: SerializedPoolConfig[] = [
     version: 3,
     participantThreshold: 100000,
   },
+  {
+    sousId: 13,
+    stakingToken: serializedTokens.collect,
+    earningToken: serializedTokens.z,
+    contractAddress: {
+      137: '0x7199Fec50451F5612df0392dbb74A6B91cD9e6c4',
+      80001: '0x209c54ae81ca70334369692b73abcb09cdda0f21',
+    },
+    poolCategory: PoolCategory.CORE,
+    harvest: true,
+    sortOrder: 4,
+    tokenPerBlock: '0.00082',
+    deployedBlockNumber: 45634502,
+    version: 3,
+    participantThreshold: 500000,
+  },
+  {
+    sousId: 14,
+    stakingToken: serializedTokens.z,
+    earningToken: serializedTokens.collect,
+    contractAddress: {
+      137: '0xE81076995DA01C847B979b72dCf81c63067EdcA8',
+      80001: '0x71082763808734ff10e35bd214d82fa756500848',
+    },
+    poolCategory: PoolCategory.CORE,
+    harvest: true,
+    sortOrder: 5,
+    tokenPerBlock: '0.021',
+    deployedBlockNumber: 45634502,
+    version: 3,
+    participantThreshold: 100000,
+  },
 ].filter((p) => !!p.contractAddress[ChainId.POLYGON])
 
 
