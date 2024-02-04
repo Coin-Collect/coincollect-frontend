@@ -745,73 +745,74 @@ const ifos: Minting[] = [
   {
     id: 'zidanogonfts',
     stake_pid: 18,
-    name: 'GentleMals',
-    description: 'PlaceDJ 2.0 offers over 5832 unique NFTs for license-free AI music streams, revolutionizing venue soundscapes with exclusive NFT benefits.',
+    name: 'Zidanogo GentleMals',
+    description: 'Zidanogo introduces 4181 GentleMals NFTs, showcasing sophisticated animal characters. Each NFT is a unique collectible granting access to exclusive platform airdrops.',
     address: getZidanogoNftAddress(),
     symbol: 'GMAL',
-    totalSupply: 5832,
-    lastPrice: 100,
+    totalSupply: 4181,
+    lastPrice: 50,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/partners/placedj/logo512s.png",
+    avatar: "https://coincollect.org/assets/images/partners/zidanogo/zLogoBlack512-min.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/placedj/placedjBannerMin.png",
-      small: "https://coincollect.org/assets/images/partners/placedj/banner2.gif",
+      large: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerLg-min.png",
+      small: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerSm-min.png",
     },
-    sampleNftImage: { 'tokenId': 43, 'image': 'https://i.seadn.io/s/raw/files/ac74e2307650b86343144f0e324d69c9.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+    sampleNftImage: { 'tokenId': 143, 'image': 'https://i.seadn.io/s/raw/files/51d599e09a1e1ceecc4209ac0ad67005.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
     showCase: [
-      { 'tokenId': 40, 'image': 'https://i.seadn.io/s/raw/files/1ca0d4cdf100351c7df6a302b1ffd218.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
-      { 'tokenId': 11, 'image': 'https://i.seadn.io/s/raw/files/9f032dc7201a737ba99f64f5c01e4197.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
-      { 'tokenId': 18, 'image': 'https://i.seadn.io/s/raw/files/98030b144471dca11340187b68f93a8b.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
-      { 'tokenId': 22, 'image': 'https://i.seadn.io/s/raw/files/815047510bb37b12b7d5c07556b98049.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/placedj' },
+      { 'tokenId': 140, 'image': 'https://i.seadn.io/s/raw/files/a41f6da05262174042fec9a35cdf2793.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 131, 'image': 'https://i.seadn.io/s/raw/files/af938b31fb0031449c53c91f2ecdd1d6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 418, 'image': 'https://i.seadn.io/s/raw/files/f5a9da7b2860e515dd7bc19299c7e75c.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 26, 'image': 'https://i.seadn.io/s/raw/files/72b21f1a6a37af0a0951259af8646484.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
     ],
     faq: [
       {
-        title: "What is PlaceDJ 2.0?",
-        description: ["PlaceDJ 2.0 is a cutting-edge music streaming service, offering over 5000 unique NFTs for AI-powered, license-free music tailored to different venues. It provides exclusive benefits and customization options to enhance any environment."]
+        title: "What is Zidanogo?",
+        description: ["Zidanogo showcases 4181 GentleMals NFTs, each depicting a sophisticated, gentleman-like animal character. These unique digital collectibles unlock exclusive platform airdrops, enhancing the NFT ownership experience."]
       },
       {
-        title: "How do I get started with PlaceDJ 2.0?",
-        description: ["Start your PlaceDJ 2.0 experience by acquiring an NFT from our collection. These NFTs grant access to our extensive library of AI-curated, license-free tracks, perfectly suited for your venue's unique atmosphere."]
+        title: "How can I acquire a GentleMal NFT?",
+        description: ["Acquire your own GentleMal NFT directly from the Zidanogo platform or through secondary NFT marketplaces. Each NFT serves as a unique digital asset and a key to unlock special platform rewards."]
       },
       {
-        title: "What unique features does PlaceDJ 2.0 offer?",
-        description: ["PlaceDJ 2.0 stands out with its AI-driven music curation, license-free streaming, and exclusive NFTs that unlock tailored playlists and soundscapes for various venues, ensuring a unique auditory experience."]
+        title: "What benefits do GentleMal NFT owners receive?",
+        description: ["GentleMal NFT owners enjoy exclusive airdrops, access to special events, and potential future utilities within the Zidanogo ecosystem, adding value beyond mere collectibility."]
       },
       {
-        title: "Where can I acquire PlaceDJ 2.0 NFTs?",
-        description: ["PlaceDJ 2.0 NFTs can be purchased from our platform or traded on leading NFT marketplaces. Owning these NFTs not only enhances your venue's ambiance but also adds to your digital asset collection."]
+        title: "Can I trade or sell my GentleMal NFT?",
+        description: ["Yes, GentleMal NFTs can be traded or sold on recognized NFT marketplaces, allowing owners to leverage the dynamic NFT market while still enjoying the benefits provided by the Zidanogo platform."]
       },
       {
-        title: "How does PlaceDJ 2.0 benefit venue owners?",
-        description: ["Venue owners benefit from PlaceDJ 2.0 by accessing a vast, AI-curated, license-free music library, eliminating the need for music licensing fees while providing an unmatched auditory experience to their customers."]
+        title: "What makes GentleMals unique?",
+        description: ["GentleMals stand out with their elegant, gentleman-like designs and the dual utility of being both collectible art pieces and keys to platform-specific perks, fostering a vibrant community of collectors and enthusiasts."]
       },
       {
-        title: "What's next for PlaceDJ 2.0?",
-        description: ["The future of PlaceDJ 2.0 includes expanding our NFT collection, integrating more AI-powered features for music customization, and forming partnerships to further enhance the venue music streaming experience."]
+        title: "Are there any upcoming features for GentleMal NFT holders?",
+        description: ["Zidanogo is constantly innovating, with plans to expand the GentleMal universe through additional content, interactive features, and community-driven events, enhancing the value and experience of NFT ownership."]
       },
       {
-        title: "Can I participate in the PlaceDJ 2.0 community?",
-        description: ["Join the PlaceDJ 2.0 community on platforms like Telegram and Twitter to connect with other users, share experiences, and stay updated on the latest features and developments in venue music streaming."]
+        title: "How can I join the Zidanogo community?",
+        description: ["Engage with the Zidanogo community on social media platforms and our official Discord server to connect with fellow enthusiasts, share insights, and stay informed on the latest developments and opportunities."]
       }
     ],
+    
     
   
     
     poolUnlimited: {
-      saleAmount: '5832 NFT',
+      saleAmount: '4181 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-    articleUrl: 'https://placedj.com/',
+    articleUrl: 'https://zidanogo.com/',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/placedj',
+    openSeaUrl: 'https://opensea.io/collection/zidanogo',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    discordUrl: 'https://discord.gg/FW9dnRFZk9',
-    telegramUrl: 'https://t.me/placedjcom',
-    twitterUrl: 'https://twitter.com/placedjcom',
+    discordUrl: 'https://discord.gg/mPKy3jdYU9',
+    telegramUrl: 'https://t.me/zidanogo',
+    twitterUrl: 'https://twitter.com/zidanogo',
   },
 ]
 
