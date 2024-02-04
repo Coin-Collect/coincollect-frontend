@@ -67,6 +67,14 @@
       "logoURI": "https://coincollect.org/assets/images/partners/placedj/logo256.png"
     },
     {
+      "name": "Z Token",
+      "symbol": "Z",
+      "address": "0x6EBd8F29AE4636E9B52b666Af6E0fA0BB2FBb43A",
+      "chainId": 137,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/placedj/logo256.png"
+    },
+    {
       "name": "WMATIC Token",
       "symbol": "WMATIC",
       "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
@@ -142,6 +150,14 @@
       "name": "DJ Token",
       "symbol": "DJ",
       "address": "0x97F5a198886AA4a7c22a9c5cc98754d7C737f964",
+      "chainId": 80001,
+      "decimals": 18,
+      "logoURI": "https://coincollect.org/assets/images/partners/placedj/logo256.png"
+    },
+    {
+      "name": "Z Token",
+      "symbol": "Z",
+      "address": "0x206e2FD8d9B6A84Cb9d450fddd49f25a38A229F3",
       "chainId": 80001,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/partners/placedj/logo256.png"

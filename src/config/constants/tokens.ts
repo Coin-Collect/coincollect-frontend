@@ -87,6 +87,14 @@ export const mainnetTokens = defineTokens({
     'DJ Token',
     'https://placedj.com/',
   ),
+  z: new Token(
+    POLYGON_MAINNET,
+    '0x6EBd8F29AE4636E9B52b666Af6E0fA0BB2FBb43A',
+    18,
+    'Z',
+    'Z Token',
+    'https://zidanogo.com/',
+  ),
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(
@@ -2174,6 +2182,14 @@ export const testnetTokens = defineTokens({
     'DJ',
     'DJ Token',
     'https://placedj.com/',
+  ),
+  z: new Token(
+    MUMBAI_TESTNET,
+    '0x206e2FD8d9B6A84Cb9d450fddd49f25a38A229F3',
+    18,
+    'Z',
+    'Z Token',
+    'https://zidanogo.com/',
   ),
   usdc: new Token(
     MUMBAI_TESTNET,
