@@ -158,7 +158,7 @@ const claims: any[] = [
   {
     cid: 9,
     name: 'Gentlemal Rewards',
-    description: <Trans>Do you own a PLACEDJ NFT or a CoinCollect NFT? As a token of our gratitude for your support, our team has set aside DJ tokens exclusively for you.</Trans>,
+    description: <Trans>If you own a GENTLEMAL NFT or a CoinCollect NFT, as a gesture of our appreciation for your support, our team has reserved Z tokens exclusively for you.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/partners/placedj/logoMin.gif',
     rewardToken: 'Z',
     requiredToken: 'Gentlemal NFT', 
