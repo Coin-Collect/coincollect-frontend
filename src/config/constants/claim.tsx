@@ -155,6 +155,21 @@ const claims: any[] = [
     version: 2,
     useApi: true,
   },
+  {
+    cid: 9,
+    name: 'Gentlemal Rewards',
+    description: <Trans>Do you own a PLACEDJ NFT or a CoinCollect NFT? As a token of our gratitude for your support, our team has set aside DJ tokens exclusively for you.</Trans>,
+    imageLink: 'https://coincollect.org/assets/images/partners/placedj/logoMin.gif',
+    rewardToken: 'Z',
+    requiredToken: 'Gentlemal NFT', 
+    baseAmount: 0.5,
+    nftLimit: 5,
+    totalReward: 120000000,
+    isFinished: false,
+    rewardTokenAddress: '0x6EBd8F29AE4636E9B52b666Af6E0fA0BB2FBb43A',
+    projectSite: 'https://zidanogo.com/',
+    version: 2,
+  },
 /*
   {
     cid: 4,
