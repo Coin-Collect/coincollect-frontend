@@ -251,7 +251,7 @@ const pools: SerializedPoolConfig[] = [
     poolCategory: PoolCategory.CORE,
     harvest: true,
     sortOrder: 4,
-    tokenPerBlock: '0.00082',
+    tokenPerBlock: '0.049',
     deployedBlockNumber: 45634502,
     version: 3,
     participantThreshold: 500000,
@@ -267,10 +267,10 @@ const pools: SerializedPoolConfig[] = [
     poolCategory: PoolCategory.CORE,
     harvest: true,
     sortOrder: 5,
-    tokenPerBlock: '0.021',
+    tokenPerBlock: '0.018',
     deployedBlockNumber: 45634502,
     version: 3,
-    participantThreshold: 100000,
+    participantThreshold: 5000000,
   },
 ].filter((p) => !!p.contractAddress[ChainId.POLYGON])
 
