@@ -400,6 +400,29 @@ const nftFarms: SerializedNftFarmConfig[] = [
     staticNftImage: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
     useApi: true,
   },
+  {
+    pid: 19,
+    lpSymbol: 'GENTLEMALS NFT',
+    nftAddresses: {
+      137: '0x334a3EBA14Bf369132B7A77CA0B09cfd0761D9d2',
+      80001: '0x334a3EBA14Bf369132B7A77CA0B09cfd0761D9d2'
+    },
+    contractAddresses: {
+      137: '0xe9Af052E2C61566F6E07ffcd786Fa2764580Ba8F',
+      80001: '0xe7f5dad6b256ad27ebb334f2728ec5869d74de03',
+    },
+    tokenPerBlock: '0.0116',
+    participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
+    isFinished: false,
+    earningToken: serializedTokens.collect,
+    sideRewards: [
+      {token: 'Z', percentage: 66},
+    ],
+    supportedCollectionPids: [1,2,3,4],
+    mainCollectionWeight: '15',
+    performanceFee: '0',
+    projectLink: 'https://zidanogo.com/',
+  },
 /*
   {
     pid: 14,

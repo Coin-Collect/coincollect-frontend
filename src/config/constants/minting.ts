@@ -744,7 +744,7 @@ const ifos: Minting[] = [
   //============================Zidanogo NFTS====================================
   {
     id: 'zidanogonfts',
-    stake_pid: 18,
+    stake_pid: 19,
     name: 'Zidanogo GentleMals',
     description: 'Zidanogo introduces 4181 GentleMals NFTs, showcasing sophisticated animal characters. Each NFT is a unique collectible granting access to exclusive platform airdrops.',
     address: getZidanogoNftAddress(),
