@@ -125,7 +125,7 @@ const farms: SerializedFarmConfig[] = [
     lpAddresses: {
       97: '0x3ed8936cAFDF85cfDBa29Fbe5940A5b0524824F4',
       56: '0x0eD7e52944161450477ee417DE9Cd3a859b14fD0',
-      137: '0x94d979cebe0481eab8a1296818e81fc2636b0d2f',
+      137: '0x3ad14c5fb4f8d2f09cdd1434473ed97fc8c7a62e',
       80001: '0x32a0bd863Cd833a6306449f67c7211284D1EAF00' // CHANGE_ADDRESS:Pair
     },
     token: serializedTokens.z,
