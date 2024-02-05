@@ -162,7 +162,7 @@ const claims: any[] = [
     imageLink: 'https://coincollect.org/assets/images/partners/zidanogo/zidanogoGifsm.gif',
     rewardToken: 'Z Token',
     requiredToken: 'Gentlemal NFT', 
-    baseAmount: 0.5,
+    baseAmount: 100,
     nftLimit: 5,
     totalReward: 120000000,
     isFinished: false,
