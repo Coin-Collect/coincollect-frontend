@@ -20,7 +20,7 @@ const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowMaticBalance, onDismiss }
   const { account } = useWeb3React()
   //const { balance, fetchStatus } = useGetBnbBalance()
   const { balance, fetchStatus } = useGetMaticBalance()
-  const { balance: cakeBalance, fetchStatus: cakeFetchStatus } = useTokenBalance(tokens.cake.address)
+  const { balance: cakeBalance, fetchStatus: cakeFetchStatus } = useTokenBalance(tokens.collect.address)
   const { logout } = useAuth()
 
   const handleLogout = () => {
