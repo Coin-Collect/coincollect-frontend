@@ -22,6 +22,7 @@ import ActivityEventText from './ActivityEventText'
 import { nftsBaseUrl } from '../../constants'
 import NFTMedia from '../NFTMedia'
 import truncateHash from 'utils/truncateHash'
+import { formatDistanceToNowStrict, parseISO } from 'date-fns'
 
 interface MintingActivityRowProps {
   activity: MintingActivity
@@ -36,13 +37,7 @@ const MintingActivityRow: React.FC<MintingActivityRowProps> = ({
 }) => {
   const { chainId } = useActiveWeb3React()
   const { isXs, isSm } = useMatchBreakpoints()
-  const localeTimestamp = new Date(activity.timestamp).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  })
+  const localeTimestamp = formatDistanceToNowStrict(parseISO(activity.timestamp), { addSuffix: true });
   
 
   return (
