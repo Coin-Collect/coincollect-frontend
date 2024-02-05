@@ -19,9 +19,9 @@ interface Props {
 const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walletIfoData }) => {
   const userPoolCharacteristics = walletIfoData[poolId]
   const { isHolder, discountAmount, } = walletIfoData
-  const { status, cost } = publicIfoData
+  const { status, cost, balance } = publicIfoData
   const { t } = useTranslation()
-  const { toastSuccess } = useToast()
+  const { toastSuccess, toastError } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
   const { account } = useActiveWeb3React()
   const [onPresentNewMintModal] = useModal(<NewMintModal collectionAddress={walletIfoData.contract.address} />, false)
@@ -29,6 +29,11 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
   const setPendingTx = (isPending: boolean) => walletIfoData.setPendingTx(isPending, poolId)
   
   const handleClaim = async () => {
+
+    if (balance >= 2) {
+      toastError('Minting Limit Reached', 'Max 2 NFTs per account.')
+      return;
+    }
 
     
     const receipt = await fetchWithCatchTxError(() => {
