@@ -160,19 +160,19 @@ const Collectible = () => {
               </Flex>
                 */}
             </Flex>
+            
+            {activePrivateMintings.length > 0 && <Collections
+              key="active-private-mintings"
+              title={t('🔥New & Hot')}
+              testId="active-private-mintings"
+              collections={activePrivateMintings}
+            />}
 
             {activePublicMintings.length > 0 && <Collections
               key="active-public-mintings"
               title={t('Live Public Mintings')}
               testId="active-public-mintings"
               collections={activePublicMintings}
-            />}
-
-            {activePrivateMintings.length > 0 && <Collections
-              key="active-private-mintings"
-              title={t('Live Private Mintings(Only Holders)')}
-              testId="active-private-mintings"
-              collections={activePrivateMintings}
             />}
 
 
