@@ -186,7 +186,7 @@ export const useMintingActivity = (
     revalidateOnFocus: false,
   });
 
-  const processedData: MintingActivity[] = data ? data["result"]["transfers"].map(({ tokenId, asset, hash, from, to, rawContract, metadata }) => ({
+  const processedData: MintingActivity[] = data && !data["error"] ? data["result"]["transfers"].map(({ tokenId, asset, hash, from, to, rawContract, metadata }) => ({
     tokenId: new BigNumber(tokenId).toString(),
     asset,
     marketEvent: "Minted",
