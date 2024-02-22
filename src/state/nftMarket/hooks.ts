@@ -181,7 +181,7 @@ export const useMintingActivity = (
   const { data, status, error, mutate } = useSWR(
     [collectionAddress, 'mintingActivities'], 
     async () => mintingActivityApi(collectionAddress), {
-    refreshInterval: 60 * 1000,
+    //refreshInterval: 60 * 1000,
     revalidateIfStale: false,
     revalidateOnFocus: false,
   });
