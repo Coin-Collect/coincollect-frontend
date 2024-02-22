@@ -354,7 +354,7 @@ const Farms: React.FC = ({ children }) => {
       <Page>
         <ControlContainer>
           <ViewControls>
-            <ToggleView viewMode={viewMode} onToggle={(mode: ViewMode) => setViewMode(mode)} />
+            {/*<ToggleView viewMode={viewMode} onToggle={(mode: ViewMode) => setViewMode(mode)} />*/}
             <ToggleWrapper>
               <Toggle
                 id="staked-only-farms"
