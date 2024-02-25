@@ -879,13 +879,13 @@ const ifos: Minting[] = [
     currency: tokens.cake,
     token: tokens.collect,
     releaseBlockNumber: 15156634,
-    articleUrl: 'https://zidanogo.com/',
+    articleUrl: 'https://sapienx.app/',
     version: 3.1,
-    openSeaUrl: 'https://opensea.io/collection/zidanogo',
+    openSeaUrl: 'https://opensea.io/collection/sapienxapp',
     //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
-    discordUrl: 'https://discord.gg/mPKy3jdYU9',
-    telegramUrl: 'https://t.me/zidanogo',
-    twitterUrl: 'https://twitter.com/zidanogo',
+    discordUrl: 'https://discord.gg/FW9dnRFZk9',
+    telegramUrl: 'https://t.me/sapienapp',
+    twitterUrl: 'https://twitter.com/sapienapp',
   },
 ]
 
