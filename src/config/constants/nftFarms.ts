@@ -440,7 +440,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     earningToken: serializedTokens.collect,
     sideRewards: [
       {token: 'ETH', percentage: 3400},
-      {token: 'Matic', percentage: 3400},
+      {token: 'MATIC', percentage: 3400},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
