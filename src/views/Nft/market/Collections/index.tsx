@@ -264,10 +264,10 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
         {/* ======Dummy Collections====== */}
         <CollectionCard
           key="dummy"
-          bgSrc="https://coincollect.org/assets/images/partners/sapienx/sapienBannerSm-min.png"
-          avatarSrc="https://coincollect.org/assets/images/partners/sapienx/SapienXlogo.gif"
-          collectionName="Cyberpunk"
-          url="https://sapienx.app"
+          bgSrc="https://coincollect.org/assets/images/partners/cyberpunk/bannersm-min.png"
+          avatarSrc="https://coincollect.org/assets/images/partners/cyberpunk/logo300-min.png"
+          collectionName="CyberPunk Space"
+          url="https://twitter.com/cyberpunk_space"
         >
           <Flex alignItems="center">
             <Text fontSize="12px" color="textSubtle">

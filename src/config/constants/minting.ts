@@ -818,25 +818,25 @@ const ifos: Minting[] = [
   {
     id: 'sapienxnfts',
     stake_pid: 20,
-    name: 'SapienX',
-    description: 'Zidanogo introduces 4181 GentleMals NFTs, showcasing sophisticated animal characters. Each NFT is a unique collectible granting access to exclusive platform airdrops.',
+    name: 'SapienX AI',
+    description: 'SapienX, developed and operated by AI, is governed by a DAO and has 6854 NFTs and the $X token, creating AI tools that elevate humans to superhuman levels.',
     address: getSapienXNftAddress(),
     symbol: 'AGENT',
     totalSupply: 6854,
     lastPrice: 150,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/partners/zidanogo/zLogoBlack512-min.png",
+    avatar: "https://coincollect.org/assets/images/partners/sapienx/SapienXlogo.gif",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerLg-min.png",
-      small: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerSm-min.png",
+      large: "https://coincollect.org/assets/images/partners/cyberpunk/bannerLg-min.png",
+      small: "https://coincollect.org/assets/images/partners/sapienx/sapienBannerSm-min.png",
     },
-    sampleNftImage: { 'tokenId': 143, 'image': 'https://i.seadn.io/s/raw/files/51d599e09a1e1ceecc4209ac0ad67005.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+    sampleNftImage: { 'tokenId': 143, 'image': 'https://i.seadn.io/s/raw/files/028ad8eedc276e552b5f8b601ad6d7d0.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
     showCase: [
-      { 'tokenId': 140, 'image': 'https://i.seadn.io/s/raw/files/a41f6da05262174042fec9a35cdf2793.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
-      { 'tokenId': 131, 'image': 'https://i.seadn.io/s/raw/files/af938b31fb0031449c53c91f2ecdd1d6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
-      { 'tokenId': 418, 'image': 'https://i.seadn.io/s/raw/files/f5a9da7b2860e515dd7bc19299c7e75c.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
-      { 'tokenId': 26, 'image': 'https://i.seadn.io/s/raw/files/72b21f1a6a37af0a0951259af8646484.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 140, 'image': 'https://i.seadn.io/s/raw/files/294297d4399aaa420c41ce846e0daac6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 131, 'image': 'https://i.seadn.io/s/raw/files/1b265f996decbd80828eb91530733252.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 418, 'image': 'https://i.seadn.io/s/raw/files/8a56af988c84464c300a651f57d795b3.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 26, 'image': 'https://i.seadn.io/s/raw/files/c9867cbec32c80129a0b19f6869446db.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
     ],
     faq: [
       {
