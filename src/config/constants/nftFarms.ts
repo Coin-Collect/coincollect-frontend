@@ -439,7 +439,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     isFinished: false,
     earningToken: serializedTokens.collect,
     sideRewards: [
-      {token: 'AVATAR', percentage: 3400},
+      {token: 'ETH', percentage: 3400},
+      {token: 'Matic', percentage: 3400},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
