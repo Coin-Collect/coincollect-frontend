@@ -160,7 +160,7 @@ const claims: any[] = [
     name: 'Gentlemal Rewards',
     description: <Trans>If you own a GENTLEMAL NFT or a CoinCollect NFT, as a gesture of our appreciation for your support, our team has reserved $Z tokens exclusively for you.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/partners/zidanogo/zidanogoGifsm.gif',
-    rewardToken: 'Z Token',
+    rewardToken: 'Z',
     requiredToken: 'Gentlemal NFT', 
     baseAmount: 100,
     nftLimit: 5,
