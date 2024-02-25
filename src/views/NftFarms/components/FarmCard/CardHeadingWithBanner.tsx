@@ -44,7 +44,9 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
 
   return (
     <CardBody p="0px">
-      <StyledImage src={banner} height={125} width={375} />
+      <Flex justifyContent="center">
+        <StyledImage src={banner} height={125} width={375} />
+      </Flex>
       <Flex
         position="relative"
         height="65px"
