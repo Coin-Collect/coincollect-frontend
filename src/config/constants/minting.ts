@@ -2,7 +2,7 @@ import { Token, ChainId } from '@coincollect/sdk'
 import tokens from './tokens'
 import farms from './farms'
 import { Ifo, Minting } from './types'
-import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress, getPlaceDjNftAddress, getZidanogoNftAddress } from 'utils/addressHelpers'
+import { getCoinCollectBronzeNftAddress, getCoinCollectGoldNftAddress, getCoinCollectNftAddress, getCoinCollectSilverNftAddress, getLotNftAddress, getBlitzBrawlerNftAddress, getAvatarsAiNftAddress, getBeastHunterNftAddress, getNitroNftAddress, getPlaceDjNftAddress, getZidanogoNftAddress, getSapienXNftAddress } from 'utils/addressHelpers'
 
 //export const cakeBnbLpToken = new Token(ChainId.MAINNET, farms[1].lpAddresses[ChainId.MAINNET], 18, farms[1].lpSymbol)
 
@@ -461,7 +461,7 @@ const ifos: Minting[] = [
     totalSupply: 6952,
     lastPrice: 30,
     isActive: true,
-    status: 'livepublic', /// Options: livepublic, liveprivate
+    status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://i.seadn.io/gcs/files/f4234250ffb80456f4e84baa17c59400.gif?auto=format&dpr=1&w=256",
     banner: {
       large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
@@ -751,6 +751,79 @@ const ifos: Minting[] = [
     symbol: 'GMAL',
     totalSupply: 4181,
     lastPrice: 50,
+    isActive: true,
+    status: 'livepublic', /// Options: livepublic, liveprivate
+    avatar: "https://coincollect.org/assets/images/partners/zidanogo/zLogoBlack512-min.png",
+    banner: {
+      large: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerLg-min.png",
+      small: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerSm-min.png",
+    },
+    sampleNftImage: { 'tokenId': 143, 'image': 'https://i.seadn.io/s/raw/files/51d599e09a1e1ceecc4209ac0ad67005.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+    showCase: [
+      { 'tokenId': 140, 'image': 'https://i.seadn.io/s/raw/files/a41f6da05262174042fec9a35cdf2793.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 131, 'image': 'https://i.seadn.io/s/raw/files/af938b31fb0031449c53c91f2ecdd1d6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 418, 'image': 'https://i.seadn.io/s/raw/files/f5a9da7b2860e515dd7bc19299c7e75c.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 26, 'image': 'https://i.seadn.io/s/raw/files/72b21f1a6a37af0a0951259af8646484.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+    ],
+    faq: [
+      {
+        title: "What is Zidanogo?",
+        description: ["Zidanogo showcases 4181 GentleMals NFTs, each depicting a sophisticated, gentleman-like animal character. These unique digital collectibles unlock exclusive platform airdrops, enhancing the NFT ownership experience."]
+      },
+      {
+        title: "How can I acquire a GentleMal NFT?",
+        description: ["Acquire your own GentleMal NFT directly from the Zidanogo platform or through secondary NFT marketplaces. Each NFT serves as a unique digital asset and a key to unlock special platform rewards."]
+      },
+      {
+        title: "What benefits do GentleMal NFT owners receive?",
+        description: ["GentleMal NFT owners enjoy exclusive airdrops, access to special events, and potential future utilities within the Zidanogo ecosystem, adding value beyond mere collectibility."]
+      },
+      {
+        title: "Can I trade or sell my GentleMal NFT?",
+        description: ["Yes, GentleMal NFTs can be traded or sold on recognized NFT marketplaces, allowing owners to leverage the dynamic NFT market while still enjoying the benefits provided by the Zidanogo platform."]
+      },
+      {
+        title: "What makes GentleMals unique?",
+        description: ["GentleMals stand out with their elegant, gentleman-like designs and the dual utility of being both collectible art pieces and keys to platform-specific perks, fostering a vibrant community of collectors and enthusiasts."]
+      },
+      {
+        title: "Are there any upcoming features for GentleMal NFT holders?",
+        description: ["Zidanogo is constantly innovating, with plans to expand the GentleMal universe through additional content, interactive features, and community-driven events, enhancing the value and experience of NFT ownership."]
+      },
+      {
+        title: "How can I join the Zidanogo community?",
+        description: ["Engage with the Zidanogo community on social media platforms and our official Discord server to connect with fellow enthusiasts, share insights, and stay informed on the latest developments and opportunities."]
+      }
+    ],
+    
+    
+  
+    
+    poolUnlimited: {
+      saleAmount: '4181 NFT',
+      distributionRatio: 1,
+    },
+    currency: tokens.cake,
+    token: tokens.collect,
+    releaseBlockNumber: 15156634,
+    articleUrl: 'https://zidanogo.com/',
+    version: 3.1,
+    openSeaUrl: 'https://opensea.io/collection/zidanogo',
+    //cmcUrl: 'https://coinmarketcap.com/currencies/coincollect/',
+    discordUrl: 'https://discord.gg/mPKy3jdYU9',
+    telegramUrl: 'https://t.me/zidanogo',
+    twitterUrl: 'https://twitter.com/zidanogo',
+  },
+  //============================SapienX NFTS====================================
+  {
+    id: 'sapienxnfts',
+    stake_pid: 20,
+    name: 'SapienX',
+    description: 'Zidanogo introduces 4181 GentleMals NFTs, showcasing sophisticated animal characters. Each NFT is a unique collectible granting access to exclusive platform airdrops.',
+    address: getSapienXNftAddress(),
+    symbol: 'AGENT',
+    totalSupply: 6854,
+    lastPrice: 150,
     isActive: true,
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "https://coincollect.org/assets/images/partners/zidanogo/zLogoBlack512-min.png",

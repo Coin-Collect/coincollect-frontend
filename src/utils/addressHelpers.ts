@@ -98,6 +98,9 @@ export const getPlaceDjNftAddress = () => {
 export const getZidanogoNftAddress = () => {
   return getAddress(addresses.zidanogoNft)
 }
+export const getSapienXNftAddress = () => {
+  return getAddress(addresses.sapienXNft)
+}
 export const getVaultPoolAddress = (vaultKey: VaultKey) => {
   if (!vaultKey) {
     return null

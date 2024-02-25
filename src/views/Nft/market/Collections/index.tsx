@@ -266,7 +266,7 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
           key="dummy"
           bgSrc="https://coincollect.org/assets/images/partners/sapienx/sapienBannerSm-min.png"
           avatarSrc="https://coincollect.org/assets/images/partners/sapienx/SapienXlogo.gif"
-          collectionName="SapienX AI"
+          collectionName="Cyberpunk"
           url="https://sapienx.app"
         >
           <Flex alignItems="center">
