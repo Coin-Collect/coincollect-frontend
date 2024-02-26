@@ -431,16 +431,16 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: '0x2945b9F3DFf5f489AB2ec70812A9C6Ceeb2BB82e'
     },
     contractAddresses: {
-      137: '0x44F4d8aC7cD0C9552daDc1682d3D0852Ae8330b2',
-      80001: '0x7dE962D788Cc2dF5A898Ca13d2ce4AD206E7dE14',
+      137: '0x44F4d8aC7cD0C9552daDc1682d3D0852Ae8330ba',
+      80001: '0x7dE962D788Cc2dF5A898Ca13d2ce4AD206E7dE1a',
     },
-    tokenPerBlock: '0.0115',
+    tokenPerBlock: '0.000040',
     participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
     isFinished: false,
-    earningToken: serializedTokens.collect,
+    earningToken: serializedTokens.wmatic,
     sideRewards: [
-      {token: 'ETH', percentage: 3400},
-      {token: 'MATIC', percentage: 3400},
+      {token: 'AVATAR', percentage: 29000000},
+      {token: 'COLLECT', percentage: 48000},
     ],
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
