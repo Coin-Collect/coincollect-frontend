@@ -833,39 +833,43 @@ const ifos: Minting[] = [
     },
     sampleNftImage: { 'tokenId': 143, 'image': 'https://i.seadn.io/s/raw/files/028ad8eedc276e552b5f8b601ad6d7d0.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
     showCase: [
-      { 'tokenId': 140, 'image': 'https://i.seadn.io/s/raw/files/294297d4399aaa420c41ce846e0daac6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
-      { 'tokenId': 131, 'image': 'https://i.seadn.io/s/raw/files/1b265f996decbd80828eb91530733252.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
-      { 'tokenId': 418, 'image': 'https://i.seadn.io/s/raw/files/8a56af988c84464c300a651f57d795b3.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
-      { 'tokenId': 26, 'image': 'https://i.seadn.io/s/raw/files/c9867cbec32c80129a0b19f6869446db.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 1240, 'image': 'https://i.seadn.io/s/raw/files/294297d4399aaa420c41ce846e0daac6.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 211, 'image': 'https://i.seadn.io/s/raw/files/1b265f996decbd80828eb91530733252.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 514, 'image': 'https://i.seadn.io/s/raw/files/8a56af988c84464c300a651f57d795b3.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
+      { 'tokenId': 261, 'image': 'https://i.seadn.io/s/raw/files/c9867cbec32c80129a0b19f6869446db.png?auto=format&dpr=1&w=1000', 'link': 'https://opensea.io/collection/zidanogo' },
     ],
     faq: [
       {
-        title: "What is Zidanogo?",
-        description: ["Zidanogo showcases 4181 GentleMals NFTs, each depicting a sophisticated, gentleman-like animal character. These unique digital collectibles unlock exclusive platform airdrops, enhancing the NFT ownership experience."]
+        "title": "What is SapienX?",
+        "description": ["SapienX is an AI-driven platform that blends AI with Web3 technology to transform humans into superhumans by providing advanced tools and processes. Governed by a DAO and utilizing NFTs and the $X token, it fosters a secure, efficient, and community-driven ecosystem."]
       },
       {
-        title: "How can I acquire a GentleMal NFT?",
-        description: ["Acquire your own GentleMal NFT directly from the Zidanogo platform or through secondary NFT marketplaces. Each NFT serves as a unique digital asset and a key to unlock special platform rewards."]
+        "title": "How does SapienX enhance human capabilities?",
+        "description": ["SapienX creates AI tools that augment human decision-making, creativity, and efficiency, offering users superhuman abilities. These tools are accessible within the SapienX ecosystem, leveraging the power of AI to push the boundaries of what individuals and businesses can achieve."]
       },
       {
-        title: "What benefits do GentleMal NFT owners receive?",
-        description: ["GentleMal NFT owners enjoy exclusive airdrops, access to special events, and potential future utilities within the Zidanogo ecosystem, adding value beyond mere collectibility."]
+        "title": "What role do NFTs play in the SapienX ecosystem?",
+        "description": ["Within the SapienX ecosystem, NFTs are not just unique digital assets but also powerful tools within the DAO, instrumental in shaping the platform's future. They grant holders access to exclusive features and play a crucial role in unlocking superhuman capabilities, thereby offering significant value and utility."]
       },
       {
-        title: "Can I trade or sell my GentleMal NFT?",
-        description: ["Yes, GentleMal NFTs can be traded or sold on recognized NFT marketplaces, allowing owners to leverage the dynamic NFT market while still enjoying the benefits provided by the Zidanogo platform."]
+        "title": "How can I acquire $X tokens?",
+        "description": ["The $X token is yet to be released. Its launch will utilize both Initial DEX Offering (IDO) and Initial Exchange Offering (IEO) methods. Additionally, $X tokens will be available through whitelisting and airdrops on various platforms. Stay tuned for updates on how to participate in these opportunities."]
       },
       {
-        title: "What makes GentleMals unique?",
-        description: ["GentleMals stand out with their elegant, gentleman-like designs and the dual utility of being both collectible art pieces and keys to platform-specific perks, fostering a vibrant community of collectors and enthusiasts."]
+        "title": "What benefits do $X token holders receive?",
+        "description": ["$X token holders enjoy governance rights within the SapienX DAO, access to premium features, and the opportunity to participate in exclusive events and rewards, fostering a rich and engaging community experience."]
       },
       {
-        title: "Are there any upcoming features for GentleMal NFT holders?",
-        description: ["Zidanogo is constantly innovating, with plans to expand the GentleMal universe through additional content, interactive features, and community-driven events, enhancing the value and experience of NFT ownership."]
+        "title": "Can I trade or sell my SapienX NFTs?",
+        "description": ["Yes, SapienX NFTs can be traded or sold on recognized NFT marketplaces, enabling owners to capitalize on the vibrant NFT market while enjoying the unique benefits and utilities offered by the SapienX ecosystem."]
       },
       {
-        title: "How can I join the Zidanogo community?",
-        description: ["Engage with the Zidanogo community on social media platforms and our official Discord server to connect with fellow enthusiasts, share insights, and stay informed on the latest developments and opportunities."]
+        "title": "What makes SapienX unique?",
+        "description": ["SapienX stands out for its integration of AI and Web3 technologies to empower users with superhuman capabilities, governed by a DAO, and its unique approach to utilizing NFTs and the $X token to provide a secure, efficient, and user-centric platform."]
+      },
+      {
+        "title": "How can I join the SapienX community?",
+        "description": ["Join the SapienX community on social media platforms and our official channels to connect with like-minded individuals, share experiences, and stay updated on the latest innovations and opportunities within the ecosystem."]
       }
     ],
     
@@ -873,7 +877,7 @@ const ifos: Minting[] = [
   
     
     poolUnlimited: {
-      saleAmount: '4181 NFT',
+      saleAmount: '6854 NFT',
       distributionRatio: 1,
     },
     currency: tokens.cake,
