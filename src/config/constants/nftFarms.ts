@@ -437,7 +437,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     tokenPerBlock: '0.000040',
     participantThreshold: 2250, // Weight(15) x Target Nft Count(150)
     isFinished: false,
-    earningToken: serializedTokens.wmatic,
+    earningToken: serializedTokens.matic,
     sideRewards: [
       {token: 'AVATAR', percentage: 29000000},
       {token: 'COLLECT', percentage: 48000},

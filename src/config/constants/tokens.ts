@@ -31,6 +31,14 @@ export const mainnetTokens = defineTokens({
     'Wrapped Matic',
     'https://polygon.technology/',
   ),
+  matic: new Token(
+    POLYGON_MAINNET,
+    '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+    18,
+    'MATIC',
+    'Matic',
+    'https://polygon.technology/',
+  ),
   collect: new Token(
     POLYGON_MAINNET,
     '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
@@ -2125,6 +2133,14 @@ export const testnetTokens = defineTokens({
     18,
     'WMATIC',
     'Wrapped Matic',
+    'https://polygon.technology/',
+  ),
+  matic: new Token(
+    MUMBAI_TESTNET,
+    '0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889',
+    18,
+    'MATIC',
+    'Matic',
     'https://polygon.technology/',
   ),
   collect: new Token(
