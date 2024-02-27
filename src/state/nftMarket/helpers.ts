@@ -132,7 +132,8 @@ export const getLastMintedNft = async (
                               "0x446f52447C1bf0613b782A0A9707100655EF6A28",
                               "0xB2e4ab09684a4850d3271C53D39D68C9afA4785E",
                               "0x79C55f7f25b16D33A9C3352a332cbe6F375f7076",
-                              "0x334a3EBA14Bf369132B7A77CA0B09cfd0761D9d2"
+                              "0x334a3EBA14Bf369132B7A77CA0B09cfd0761D9d2",
+                              "0x589C351d8836177BfD0F6d8A5f7Bd3aA9DfBB70C"
                             ],
         "category": ["erc721"],
         "order": "desc"
