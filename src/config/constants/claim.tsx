@@ -173,7 +173,7 @@ const claims: any[] = [
   {
     cid: 10,
     name: 'SapienX Rewards',
-    description: <Trans>Do you own an Agent NFT or a CoinCollect NFT? As a special thank you from our team, exclusive AVATAR tokens have been reserved just for you.</Trans>,
+    description: <Trans>Do you own an Agent NFT or a CoinCollect NFT? As a special thank you from our team, exclusive COLLECT tokens have been reserved just for you.</Trans>,
     imageLink: 'https://coincollect.org/assets/images/partners/sapienx/sapienxclaim.png',
     rewardToken: 'COLLECT',
     requiredToken: 'Agent NFT', 
