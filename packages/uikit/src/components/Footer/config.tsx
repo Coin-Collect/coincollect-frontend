@@ -116,7 +116,7 @@ export const socials: SocialLinkType[] = [
   {
     label: "Medium",
     icon: "Medium",
-    href: "https://medium.com/@coincollect",
+    href: "https://medium.com/@coincollectapp",
   },
 ];
 

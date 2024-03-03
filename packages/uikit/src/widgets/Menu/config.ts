@@ -191,7 +191,7 @@ export const socials: { label?: string, icon: string, items?: { label?: string, 
   {
     label: "Medium",
     icon: "MediumIcon",
-    href: "https://medium.com/@coincollect",
+    href: "https://medium.com/@coincollectapp",
   },
 ];
 
