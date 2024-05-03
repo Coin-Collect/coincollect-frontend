@@ -153,7 +153,16 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   // =====/Duplicate Use Codes=====
 
   const renderApprovalOrStakeButton = () => {
-    return isApproved && !pendingTx ? (
+    return (!isApproved && stakedBalance?.eq(0)) || pendingTx ? (
+      <Button mt="8px" 
+              width="100%" 
+              isLoading={pendingTx} 
+              endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+              onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
+        >
+        {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
+      </Button>
+    ) : (
       <StakeAction
         stakedBalance={stakedBalance}
         tokenBalance={tokenBalance}
@@ -168,15 +177,6 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         onClickStake={smartNftPoolAddress ? onPresentCollectionModal : null}
         pendingTx={pendingTx}
       />
-    ) : (
-      <Button mt="8px" 
-              width="100%" 
-              isLoading={pendingTx} 
-              endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
-              onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
-        >
-        {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
-      </Button>
     )
   }
 
