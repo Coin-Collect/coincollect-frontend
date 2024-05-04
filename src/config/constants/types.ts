@@ -135,6 +135,7 @@ interface NftFarmConfigBaseProps {
   nftAddresses: Address
   contractAddresses?: Address
   multiplier?: string
+  isCommunity?: boolean
   tokenPerBlock?: string
   participantThreshold?: number
   isFinished?: boolean
