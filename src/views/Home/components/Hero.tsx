@@ -73,9 +73,14 @@ const Hero = () => {
             {t('Trade, earn, and win crypto on the most popular decentralized platform in the galaxy.')}
           </Heading>
           <Flex>
-            {!account && <ConnectWalletButton mr="8px" />}
+
+            {/*!account && <ConnectWalletButton mr="8px" />*/}
+
+            <NextLinkFromReactRouter to="/nftpools">
+              <Button mr="8px" variant='primary'>{t('Explore')}</Button>
+            </NextLinkFromReactRouter>
             <NextLinkFromReactRouter to="/nfts/collections">
-              <Button variant={!account ? 'secondary' : 'primary'}>{t('Mint NFT')}</Button>
+              <Button variant='secondary'>{t('Mint NFT')}</Button>
             </NextLinkFromReactRouter>
           </Flex>
         </Flex>

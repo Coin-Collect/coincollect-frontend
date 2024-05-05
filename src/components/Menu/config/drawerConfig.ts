@@ -9,6 +9,10 @@ const drawerLinks: MenuItemsType[] = [
         initialOpenState: true,
         items: [
             {
+                label: 'Explore',
+                href: '/nftpools',
+            },
+            {
                 label: 'Collections',
                 href: '/nfts/collections',
             },
