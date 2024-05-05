@@ -10,6 +10,7 @@ import nftFarmsConfig from 'config/constants/nftFarms'
 export interface ExpandableSectionProps {
   lpLabel?: string
   multiplier?: string
+  isCommunity?: boolean
   nftToken?: string
   pid?: number
   disabled?: boolean
@@ -36,7 +37,7 @@ export const CollectionAvatar = styled(ProfileAvatar)`
   border: 4px white solid;
 `
 
-const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, nftToken, pid, disabled= false }) => {
+const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, isCommunity, nftToken, pid, disabled= false }) => {
   const collectionData = mintingConfig.find((collection) => collection.stake_pid === pid)
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
   const banner = nftFarmData["banner"] ? nftFarmData["banner"] : collectionData?.banner.small
@@ -56,7 +57,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
         flexDirection="column"
       >
         <CollectionAvatar src={avatar} width={86} height={86} />
-        <CommunityTag variant='success' mb='2px' scale='sm'/>
+        {isCommunity ? <CommunityTag variant='success' mb='2px' scale='sm'/> : null}
         <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
           {lpLabel}
         </Heading>

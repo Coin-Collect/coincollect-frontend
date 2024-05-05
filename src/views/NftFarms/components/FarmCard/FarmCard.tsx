@@ -70,6 +70,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         <CardHeadingWithBanner
           lpLabel={lpLabel}
           multiplier={farm.multiplier}
+          isCommunity={farm.isCommunity}
           nftToken={nftAddress}
           pid={farm.pid}
           disabled={farm.isFinished}

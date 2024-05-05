@@ -250,6 +250,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   {
     pid: 13,
     lpSymbol: 'GALXE OATs',
+    isCommunity: true,
     nftAddresses: {
       137: '0x5D666F215a85B87Cb042D59662A7ecd2C8Cc44e6',
       80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
@@ -301,6 +302,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   {
     pid: 15,
     lpSymbol: 'KEY NFT',
+    isCommunity: true,
     nftAddresses: {
       137: '0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247',
       80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
