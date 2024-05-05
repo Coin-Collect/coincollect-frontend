@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
-import { FarmAuctionTag, CoreTag } from 'components/Tags'
+import { FarmAuctionTag, CommunityTag } from 'components/Tags'
 import Image from 'next/image'
 import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
