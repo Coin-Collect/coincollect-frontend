@@ -56,6 +56,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
         flexDirection="column"
       >
         <CollectionAvatar src={avatar} width={86} height={86} />
+        <CommunityTag variant='success' mb='2px' scale='sm'/>
         <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
           {lpLabel}
         </Heading>
