@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useMemo, useRef, createContext } from 'react'
 import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
-import { Image, Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex } from '@pancakeswap/uikit'
+import { Image, Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex, Box } from '@pancakeswap/uikit'
 import { ChainId } from '@coincollect/sdk'
 import styled from 'styled-components'
 import FlexLayout from 'components/Layout/Flex'
@@ -30,6 +30,9 @@ import ToggleView from './components/ToggleView/ToggleView'
 import { DesktopColumnSchema } from './components/types'
 import { getAddress } from 'utils/addressHelpers'
 import nftFarmsConfig from 'config/constants/nftFarms'
+import { NextLinkFromReactRouter } from 'components/NextLink'
+import CommunitySwitch from './components/CommunitySwitch'
+import CompetitionBanner from 'views/Home/components/Banners/CompetitionBanner'
 
 
 const ControlContainer = styled.div`
@@ -128,6 +131,7 @@ const Farms: React.FC = ({ children }) => {
   const isArchived = pathname.includes('archived')
   const isInactive = pathname.includes('history')
   const isActive = !isInactive && !isArchived
+  const isCommunity = pathname.includes('community-collections')
 
   usePollFarmsWithUserData(isArchived)
 
@@ -139,7 +143,7 @@ const Farms: React.FC = ({ children }) => {
 
   const activeFarms = farmsLP.filter(
     (farm) =>
-      farm.pid !== 0 && (farm.tokenPerBlock || farm.multiplier !== '0X') && !isArchivedPid(farm.pid) && !farm.isFinished,
+      farm.pid !== 0 && (farm.tokenPerBlock || farm.multiplier !== '0X') && !isArchivedPid(farm.pid) && !farm.isFinished && (!isCommunity || farm.isCommunity),
   )
 
   const inactiveFarms = farmsLP.filter((farm) => farm.pid !== 0 && ((!farm.tokenPerBlock && farm.multiplier === '0X') || farm.isFinished) && !isArchivedPid(farm.pid))
@@ -337,20 +341,23 @@ const Farms: React.FC = ({ children }) => {
   return (
     <FarmsContext.Provider value={{ chosenFarmsMemoized }}>
       <PageHeader>
+        <Box mb="32px" mt="16px">
+          <CompetitionBanner />
+        </Box>
         <Heading as="h1" scale="xxl" color="secondary" mb="24px">
           {t('NFT Stake')}
         </Heading>
         <Heading scale="lg" color="text">
           {t('Stake NFT to earn Rewards.')}
         </Heading>
-        {/*<NextLinkFromReactRouter to="/farms/auction" id="lottery-pot-banner">
+        {<NextLinkFromReactRouter to="/farms/auction" id="lottery-pot-banner">
           <Button p="0" variant="text">
             <Text color="primary" bold fontSize="16px" mr="4px">
               {t('Community Auctions')}
             </Text>
             <ArrowForwardIcon color="primary" />
           </Button>
-        </NextLinkFromReactRouter>*/}
+        </NextLinkFromReactRouter>}
       </PageHeader>
       <Page>
         <ControlContainer>
@@ -366,6 +373,7 @@ const Farms: React.FC = ({ children }) => {
               <Text> {t('Staked only')}</Text>
             </ToggleWrapper>
             <FarmTabButtons hasStakeInFinishedFarms={stakedInactiveFarms.length > 0} />
+            <CommunitySwitch />
           </ViewControls>
           <FilterContainer>
             <LabelWrapper>

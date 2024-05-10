@@ -377,6 +377,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   {
     pid: 18,
     lpSymbol: 'Tasker NFT',
+    isCommunity: true,
     nftAddresses: {
       137: '0x6Bb55cAF18897dF614bfa6261ECcd21E78085a6C',
       80001: '0xf2149E6B11638BAEf791e3E66ac7E6469328e840'
