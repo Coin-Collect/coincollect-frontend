@@ -33,6 +33,7 @@ import nftFarmsConfig from 'config/constants/nftFarms'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import CommunitySwitch from './components/CommunitySwitch'
 import CompetitionBanner from 'views/Home/components/Banners/CompetitionBanner'
+import { CommunityCollectionsBanner } from 'views/Home/components/Banners/CommunityCollectionsBanner'
 
 
 const ControlContainer = styled.div`
@@ -342,22 +343,25 @@ const Farms: React.FC = ({ children }) => {
     <FarmsContext.Provider value={{ chosenFarmsMemoized }}>
       <PageHeader>
         <Box mb="32px" mt="16px">
-          <CompetitionBanner />
+          <CommunityCollectionsBanner />
         </Box>
+        {/*
         <Heading as="h1" scale="xxl" color="secondary" mb="24px">
           {t('NFT Stake')}
         </Heading>
         <Heading scale="lg" color="text">
           {t('Stake NFT to earn Rewards.')}
         </Heading>
-        {<NextLinkFromReactRouter to="/farms/auction" id="lottery-pot-banner">
+        */}
+        {/*<NextLinkFromReactRouter to="/farms/auction" id="lottery-pot-banner">
           <Button p="0" variant="text">
             <Text color="primary" bold fontSize="16px" mr="4px">
               {t('Community Auctions')}
             </Text>
             <ArrowForwardIcon color="primary" />
           </Button>
-        </NextLinkFromReactRouter>}
+        </NextLinkFromReactRouter>*/}
+        <CommunitySwitch />
       </PageHeader>
       <Page>
         <ControlContainer>
@@ -373,7 +377,6 @@ const Farms: React.FC = ({ children }) => {
               <Text> {t('Staked only')}</Text>
             </ToggleWrapper>
             <FarmTabButtons hasStakeInFinishedFarms={stakedInactiveFarms.length > 0} />
-            <CommunitySwitch />
           </ViewControls>
           <FilterContainer>
             <LabelWrapper>
