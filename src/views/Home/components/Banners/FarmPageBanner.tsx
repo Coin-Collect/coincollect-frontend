@@ -15,13 +15,9 @@ import {
 } from 'components/Banner'
 import styled from 'styled-components'
 
-import floatingAsset from 'views/NftFarms/images/floating-item.png'
-import bgDesktop from 'views/NftFarms/images/bg-desktop.png'
-import bgMobile from 'views/NftFarms/images/bg-mobile.png'
-
-//const floatingAsset = `views/NftFarms/images/floating-item.png`
-//const bgDesktop = `views/NftFarms/images/bg-desktop.png`
-//const bgMobile = `views/NftFarms/images/bg-mobile.png`
+import floatingAsset from 'views/Farms/images/floating-item.png'
+import bgDesktop from 'views/Farms/images/bg-desktop.png'
+import bgMobile from 'views/Farms/images/bg-mobile.png'
 
 const bgSmVariant: GraphicDetail = {
   src: bgMobile.src,
