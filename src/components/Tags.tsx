@@ -44,6 +44,15 @@ const FarmAuctionTag: React.FC<TagProps> = (props) => {
   )
 }
 
+const PartnerTag: React.FC<TagProps> = (props) => {
+  const { t } = useTranslation()
+  return (
+    <Tag variant="failure" outline startIcon={<VerifiedIcon width="18px" color="failure" mr="4px" />} {...props}>
+      {t('Partner')}
+    </Tag>
+  )
+}
+
 const CommunityTag: React.FC<TagProps> = (props) => {
   const { t } = useTranslation()
   return (
@@ -136,4 +145,5 @@ export {
   SoonTag,
   ClosedTag,
   CommunityTag,
+  PartnerTag,
 }

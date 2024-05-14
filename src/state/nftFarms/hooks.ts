@@ -29,7 +29,7 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     pid,
     dual,
     multiplier,
-    isCommunity,
+    isCommunity: isCommunity ?? false,
     tokenPerBlock,
     startBlock,
     endBlock,

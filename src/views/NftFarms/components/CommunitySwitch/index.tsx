@@ -14,8 +14,11 @@ const CommunitySwitch: React.FC<any> = () => {
     case '/nftpools':
       activeIndex = 0
       break
-    case '/nftpools/community-collections':
+    case '/nftpools/partner-collections':
       activeIndex = 1
+      break
+    case '/nftpools/community-collections':
+      activeIndex = 2
       break
     default:
       activeIndex = 0
@@ -28,9 +31,12 @@ const CommunitySwitch: React.FC<any> = () => {
         <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools">
           {t('All')}
         </ButtonMenuItem>
-          <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools/community-collections" id="finished-farms-button">
-            {t('Community')}
-          </ButtonMenuItem>
+        <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools/partner-collections">
+          {t('Partner')}
+        </ButtonMenuItem>
+        <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools/community-collections">
+          {t('Community')}
+        </ButtonMenuItem>
       </ButtonMenu>
     </Wrapper>
   )

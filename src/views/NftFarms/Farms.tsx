@@ -132,6 +132,7 @@ const Farms: React.FC = ({ children }) => {
   const isArchived = pathname.includes('archived')
   const isInactive = pathname.includes('history')
   const isActive = !isInactive && !isArchived
+  const isPartner = pathname.includes('partner-collections')
   const isCommunity = pathname.includes('community-collections')
 
   usePollFarmsWithUserData(isArchived)
@@ -144,7 +145,7 @@ const Farms: React.FC = ({ children }) => {
 
   const activeFarms = farmsLP.filter(
     (farm) =>
-      farm.pid !== 0 && (farm.tokenPerBlock || farm.multiplier !== '0X') && !isArchivedPid(farm.pid) && !farm.isFinished && (!isCommunity || farm.isCommunity),
+      farm.pid !== 0 && (farm.tokenPerBlock || farm.multiplier !== '0X') && !isArchivedPid(farm.pid) && !farm.isFinished && ((!isCommunity && !isPartner) || farm.isCommunity == isCommunity),
   )
 
   const inactiveFarms = farmsLP.filter((farm) => farm.pid !== 0 && ((!farm.tokenPerBlock && farm.multiplier === '0X') || farm.isFinished) && !isArchivedPid(farm.pid))

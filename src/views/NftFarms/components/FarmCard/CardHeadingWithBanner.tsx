@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
-import { FarmAuctionTag, CommunityTag } from 'components/Tags'
+import { FarmAuctionTag, CommunityTag, PartnerTag } from 'components/Tags'
 import Image from 'next/image'
 import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
@@ -57,10 +57,11 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
         flexDirection="column"
       >
         <CollectionAvatar src={avatar} width={86} height={86} />
-        {isCommunity ? <CommunityTag variant='success' mb='2px' scale='sm'/> : null}
+        
         <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
           {lpLabel}
         </Heading>
+        {isCommunity ? <CommunityTag variant='success' mb='2px' scale='sm'/> : <PartnerTag variant='textSubtle' mb='2px' scale='sm'/>}
       </Flex>
     </CardBody>
   )
