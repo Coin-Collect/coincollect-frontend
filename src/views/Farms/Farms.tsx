@@ -340,12 +340,14 @@ const Farms: React.FC = ({ children }) => {
         <Box mb="32px" mt="16px">
           <FarmPageBanner />
         </Box>
+        {/*
         <Heading as="h1" scale="xxl" color="secondary" mb="24px">
           {t('Farms')}
         </Heading>
         <Heading scale="lg" color="text">
           {t('Stake LP tokens to earn.')}
         </Heading>
+        */}
         {/*<NextLinkFromReactRouter to="/farms/auction" id="lottery-pot-banner">
           <Button p="0" variant="text">
             <Text color="primary" bold fontSize="16px" mr="4px">

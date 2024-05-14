@@ -37,7 +37,6 @@ import BountyCard from './components/BountyCard'
 import HelpButton from './components/HelpButton'
 import PoolsTable from './components/PoolsTable/PoolsTable'
 import { getCakeVaultEarnings } from './helpers'
-import { StakePageBanner } from 'views/Home/components/Banners/StakePageBanner'
 
 const CardLayout = styled(FlexLayout)`
   justify-content: center;
@@ -256,9 +255,6 @@ const Pools: React.FC = () => {
   return (
     <>
       <PageHeader>
-        <Box mb="32px" mt="16px">
-          <StakePageBanner />
-        </Box>
         <Flex justifyContent="space-between" flexDirection={['column', null, null, 'row']}>
           <Flex flex="1" flexDirection="column" mr={['8px', 0]}>
             <Heading as="h1" scale="xxl" color="secondary" mb="24px">
