@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
-import { Heading, Flex, Image, Text } from '@pancakeswap/uikit'
+import { Heading, Flex, Image, Text, Box } from '@pancakeswap/uikit'
 import orderBy from 'lodash/orderBy'
 import partition from 'lodash/partition'
 import { useTranslation } from 'contexts/Localization'
@@ -28,6 +28,7 @@ import ClaimCard from './components/ClaimCard'
 import HelpButton from './components/HelpButton'
 import claimConfig from 'config/constants/claim'
 import { useClaimInfo } from './hooks/useClaimInfo'
+import { ClaimPageBanner } from 'views/Home/components/Banners/ClaimPageBanner'
 
 
 const CardLayout = styled(FlexLayout)`
@@ -56,6 +57,10 @@ const Pools: React.FC = () => {
   return (
     <>
       <PageHeader>
+        <Box mb="32px" mt="16px">
+          <ClaimPageBanner />
+        </Box>
+      {/*  
         <Flex justifyContent="space-between" flexDirection={['column', null, null, 'row']}>
           <Flex flex="1" flexDirection="column" mr={['8px', 0]}>
             <Heading as="h1" scale="xxl" color="secondary" mb="24px">
@@ -69,6 +74,7 @@ const Pools: React.FC = () => {
             <HelpButton />
           </Flex>
         </Flex>
+      */}
       </PageHeader>
       <Page>
         

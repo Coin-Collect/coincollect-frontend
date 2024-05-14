@@ -51,7 +51,7 @@ const whitepaperLink =
 const learnMoreLink =
   'https://developer.pancakeswap.finance/?utm_source=homepagebanner&utm_medium=banner&utm_campaign=homepagebanner&utm_id=Startbuilding'
 
-export const StakePageBanner = () => {
+export const CollectionsPageBanner = () => {
   const { t } = useTranslation()
   const { isMobile, isTablet } = useMatchBreakpoints()
 

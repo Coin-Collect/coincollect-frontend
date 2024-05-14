@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowBackIcon, ArrowForwardIcon, Button, ChevronRightIcon, Flex, Grid, Heading, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
+import { ArrowBackIcon, ArrowForwardIcon, Box, Button, ChevronRightIcon, Flex, Grid, Heading, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { FetchStatus } from 'config/constants/types'
 import { useGetShuffledCollections } from 'state/nftMarket/hooks'
@@ -13,6 +13,7 @@ import { CollectionCard } from '../components/CollectibleCard'
 import { BNBAmountLabel } from '../components/CollectibleCard/styles'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { Collection } from 'state/nftMarket/types'
+import { CollectionsPageBanner } from 'views/Home/components/Banners/CollectionsPageBanner'
 
 export const ITEMS_PER_PAGE = 9
 
@@ -115,9 +116,13 @@ const Collectible = () => {
   return (
     <>
       <PageHeader>
-        <Heading as="h1" scale="xxl" color="secondary" data-test="nft-collections-title">
+        <Box mb="32px" mt="16px">
+          <CollectionsPageBanner />
+        </Box>
+        {/*<Heading as="h1" scale="xxl" color="secondary" data-test="nft-collections-title">
           {t('Collections')}
-        </Heading>
+        </Heading>*/}
+
       </PageHeader>
       <Page>
         {status !== FetchStatus.Fetched ? (
