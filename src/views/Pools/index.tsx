@@ -4,7 +4,7 @@ import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
 import { formatUnits } from '@ethersproject/units'
 import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
-import { Heading, Flex, Image, Text } from '@pancakeswap/uikit'
+import { Heading, Flex, Image, Text, Box } from '@pancakeswap/uikit'
 import orderBy from 'lodash/orderBy'
 import partition from 'lodash/partition'
 import { useTranslation } from 'contexts/Localization'
@@ -37,6 +37,7 @@ import BountyCard from './components/BountyCard'
 import HelpButton from './components/HelpButton'
 import PoolsTable from './components/PoolsTable/PoolsTable'
 import { getCakeVaultEarnings } from './helpers'
+import { StakePageBanner } from 'views/Home/components/Banners/StakePageBanner'
 
 const CardLayout = styled(FlexLayout)`
   justify-content: center;
@@ -108,8 +109,8 @@ const Pools: React.FC = () => {
 
   // TODO aren't arrays in dep array checked just by reference, i.e. it will rerender every time reference changes?
   const [finishedPools, openPools] = useMemo(() => partition(pools, (pool) => pool.isFinished), [pools])
-  
-  
+
+
   const stakedOnlyFinishedPools = useMemo(
     () =>
       finishedPools.filter((pool) => {
@@ -174,12 +175,12 @@ const Pools: React.FC = () => {
             }
             return pool.vaultKey
               ? getCakeVaultEarnings(
-                  account,
-                  vaultPools[pool.vaultKey].userData.cakeAtLastUserAction,
-                  vaultPools[pool.vaultKey].userData.userShares,
-                  vaultPools[pool.vaultKey].pricePerFullShare,
-                  pool.earningTokenPrice,
-                ).autoUsdToDisplay
+                account,
+                vaultPools[pool.vaultKey].userData.cakeAtLastUserAction,
+                vaultPools[pool.vaultKey].userData.userShares,
+                vaultPools[pool.vaultKey].pricePerFullShare,
+                pool.earningTokenPrice,
+              ).autoUsdToDisplay
               : pool.userData.pendingReward.times(pool.earningTokenPrice).toNumber()
           },
           'desc',
@@ -255,6 +256,9 @@ const Pools: React.FC = () => {
   return (
     <>
       <PageHeader>
+        <Box mb="32px" mt="16px">
+          <StakePageBanner />
+        </Box>
         <Flex justifyContent="space-between" flexDirection={['column', null, null, 'row']}>
           <Flex flex="1" flexDirection="column" mr={['8px', 0]}>
             <Heading as="h1" scale="xxl" color="secondary" mb="24px">
@@ -335,7 +339,7 @@ const Pools: React.FC = () => {
             <Loading />
           </Flex>
         )}
-        
+
         {viewMode === ViewMode.CARD ? cardLayout : tableLayout}
         <div ref={observerRef} />
         <Image
