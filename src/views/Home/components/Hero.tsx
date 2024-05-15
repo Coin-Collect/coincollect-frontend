@@ -39,6 +39,7 @@ const InnerWrapper = styled.div`
 
 const BunnyWrapper = styled.div`
   width: 100%;
+  text-align: center;
   animation: ${flyingAnim} 3.5s ease-in-out infinite;
 `
 
@@ -65,6 +66,7 @@ const Hero = () => {
         mt={['50px', null, 0]}
         id="homepage-hero"
       >
+
         <Flex flex="1" flexDirection="column">
           <Heading scale="xxl" color="secondary" mb="24px">
             {t('The moon is made of pancakes.')}
@@ -72,8 +74,8 @@ const Hero = () => {
           <Heading scale="md" mb="24px">
             {t('Trade, earn, and win crypto on the most popular decentralized platform in the galaxy.')}
           </Heading>
-          <Flex>
 
+          <Flex>
             {/*!account && <ConnectWalletButton mr="8px" />*/}
 
             <NextLinkFromReactRouter to="/nftpools">
@@ -84,12 +86,12 @@ const Hero = () => {
             </NextLinkFromReactRouter>
           </Flex>
         </Flex>
+
         <Flex
-          height={['250px', null, null, '100%']}
-          width={['250px', null, null, '100%']}
+          height={['100%', null, null, '100%']}
+          width={['100%', null, null, '100%']}
           flex={[null, null, null, '1']}
           mb={['24px', null, null, '0']}
-          justifyContent='center'
           position="relative"
         >
           <BunnyWrapper>
