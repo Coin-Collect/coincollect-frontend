@@ -47,7 +47,7 @@ const drawerLinks: MenuItemsType[] = [
             },
             {
                 label: 'Quest(Soon)',
-                href: '',
+                href: '/?q=soon',
             },
 
         ],
