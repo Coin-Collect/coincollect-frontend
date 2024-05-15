@@ -10,11 +10,19 @@ const drawerLinks: MenuItemsType[] = [
         items: [
             {
                 label: 'Explore',
-                href: '/nftpools',
+                href: '/nftpools?q=all',
             },
             {
                 label: 'Collections',
                 href: '/nfts/collections',
+            },
+            {
+                label: 'NFT Stake',
+                href: '/nftpools',
+            },
+            {
+                label: 'Claim Rewards',
+                href: '/claim',
             },
             {
                 label: 'Marketplace',
@@ -38,12 +46,8 @@ const drawerLinks: MenuItemsType[] = [
                 href: '/pools',
             },
             {
-                label: 'NFT Stake',
-                href: '/nftpools',
-            },
-            {
-                label: 'Claim Rewards',
-                href: '/claim',
+                label: 'Quest(Soon)',
+                href: '',
             },
 
         ],
@@ -72,7 +76,7 @@ const drawerLinks: MenuItemsType[] = [
         label: 'More',
         icon: 'InfoIcon',
         href: '/more',
-        initialOpenState: false,
+        initialOpenState: true,
         items: [
             {
                 label: 'CoinMarketCap',
