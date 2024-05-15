@@ -38,7 +38,7 @@ const InnerWrapper = styled.div`
 `
 
 const BunnyWrapper = styled.div`
-  width: 70%;
+  width: 100%;
   animation: ${flyingAnim} 3.5s ease-in-out infinite;
 `
 
