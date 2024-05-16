@@ -140,6 +140,7 @@ export const FeaturedSection: React.FC = () => {
   }, [])
   return (
     <Flex flexDirection="column" style={{ gap: 36 }}>
+      <Flex flexDirection="column">
       <Flex justifyContent="center" style={{ gap: 8 }}>
         <Text fontSize={40} fontWeight={600} textAlign="center">
           {t('Community')}
@@ -147,6 +148,11 @@ export const FeaturedSection: React.FC = () => {
         <Text fontSize={40} fontWeight={600} color="secondary" textAlign="center">
           {t('Collections')}
         </Text>
+      </Flex>
+
+      <Text textAlign="center" color="textSubtle">
+        {t('Stake Your NFTs and Start Earning!')}
+      </Text>
       </Flex>
       <Flex>
         <Flex alignItems="center" mr="8px">
@@ -176,7 +182,7 @@ export const FeaturedSection: React.FC = () => {
                   </Text>
                   <Flex justifyContent="center">
                     <NextLinkFromReactRouter to="/nftpools">
-                      <Button mr="8px" variant='primary'>{t('Stake Now')}</Button>
+                      <Button variant='primary'>{t('Stake Now')}</Button>
                     </NextLinkFromReactRouter>
                   </Flex>
                 </ContentBox>
