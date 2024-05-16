@@ -64,7 +64,7 @@ export const FarmPageBanner = () => {
   )
 
   return (
-    <BannerContainer background="radial-gradient(112.67% 197.53% at 30.75% 3.72%, #e91e63 0%, #CCC2FE 76.19%, #C6A3FF 100%), linear-gradient(180deg, rgba(231, 253, 255, 0.2) 0%, rgba(242, 241, 255, 0.2) 100%)">
+    <BannerContainer background="radial-gradient(112.67% 197.53% at 30.75% 3.72%, #2e74f2 0%, #ff9300 76.19%, #C6A3FF 100%), linear-gradient(180deg, rgba(231, 253, 255, 0.2) 0%, rgba(242, 241, 255, 0.2) 100%)">
       <BannerMain
         badges={<PancakeSwapBadge />}
         title={

@@ -68,7 +68,7 @@ export const CollectionsPageBanner = () => {
       <BannerMain
         badges={<PancakeSwapBadge />}
         title={
-          <BannerTitle variant="yellow">
+          <BannerTitle variant="orange">
             {isMobile || isTablet
               ? t('Stake Community NFTs for free')
               : t('Stake community NFTs for FREE income streams, participate in our DAO')}
