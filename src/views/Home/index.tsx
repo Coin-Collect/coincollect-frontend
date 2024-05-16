@@ -16,6 +16,7 @@ import CakeDataRow from './components/CakeDataRow'
 import { WedgeTopLeft, InnerWedgeWrapper, OuterWedgeWrapper, WedgeTopRight } from './components/WedgeSvgs'
 import UserBanner from './components/UserBanner'
 import HomeBanner from './components/Banners/HomeBanner'
+import { FeaturedSection } from './components/FeaturedSection'
 
 const StyledHeroSection = styled(PageSection)`
   padding-top: 16px;
@@ -71,6 +72,19 @@ const Home: React.FC = () => {
 
         <Hero />
       </StyledHeroSection>
+      <PageSection
+        innerProps={{
+          style: {
+            ...HomeSectionContainerStyles,
+            maxWidth: '1400px',
+          },
+        }}
+        background={theme.colors.background}
+        index={2}
+        hasCurvedDivider={false}
+      >
+        <FeaturedSection />
+      </PageSection>
       <PageSection
         innerProps={{ style: { margin: '0', width: '100%' } }}
         background={
