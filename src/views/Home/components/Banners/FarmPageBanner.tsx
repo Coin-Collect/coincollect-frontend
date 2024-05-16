@@ -53,13 +53,13 @@ export const FarmPageBanner = () => {
 
   const readWhitepaperAction = (
     <StyledButtonLinkAction color="white" href={whitepaperLink} padding={['8px 12px']}>
-      {isMobile ? t('Vote') : t('Vote on DAO')}
+       {isMobile ? t('Explore') : t('Community Collections')}
     </StyledButtonLinkAction>
   )
 
   const learnMoreAction = (
     <LinkExternalAction fontSize={['14px']} color="black" href={learnMoreLink}>
-      {isMobile ? t('Apply') : t('Apply for Partnership')}
+      {isMobile ? t('Stake') : t('Stake NFT')}
     </LinkExternalAction>
   )
 
