@@ -141,18 +141,18 @@ export const FeaturedSection: React.FC = () => {
   return (
     <Flex flexDirection="column" style={{ gap: 36 }}>
       <Flex flexDirection="column">
-      <Flex justifyContent="center" style={{ gap: 8 }}>
-        <Text fontSize={40} fontWeight={600} textAlign="center">
-          {t('Community')}
-        </Text>
-        <Text fontSize={40} fontWeight={600} color="secondary" textAlign="center">
-          {t('Collections')}
-        </Text>
-      </Flex>
+        <Flex justifyContent="center" style={{ gap: 8 }}>
+          <Text fontSize={40} fontWeight={600} textAlign="center">
+            {t('Community')}
+          </Text>
+          <Text fontSize={40} fontWeight={600} color="secondary" textAlign="center">
+            {t('Collections')}
+          </Text>
+        </Flex>
 
-      <Text textAlign="center" color="textSubtle">
-        {t('Stake Your NFTs and Start Earning!')}
-      </Text>
+        <Text textAlign="center" color="textSubtle">
+          {t('Stake Your NFTs and Start Earning!')}
+        </Text>
       </Flex>
       <Flex>
         <Flex alignItems="center" mr="8px">
@@ -164,26 +164,26 @@ export const FeaturedSection: React.FC = () => {
           {
             articlesData?.map((d) => (
               <NextLinkFromReactRouter to="/nftpools">
-              <NewsCard>
-                <ImageBox>
-                  <img src={d.imgUrl} alt="" />
-                </ImageBox>
-                <ContentBox>
-                  <Flex justifyContent="space-between">
-                    <Text bold fontSize={12} color={theme.colors.textSubtle} lineHeight="120%">
-                      {d.from}
+                <NewsCard>
+                  <ImageBox>
+                    <img src={d.imgUrl} alt="" />
+                  </ImageBox>
+                  <ContentBox>
+                    <Flex justifyContent="space-between">
+                      <Text bold fontSize={12} color={theme.colors.textSubtle} lineHeight="120%">
+                        {d.from}
+                      </Text>
+                    </Flex>
+                    <Text bold mt="16px" lineHeight="120%" minHeight="66px" style={{ whiteSpace: 'pre-wrap' }}>
+                      {d.title}
                     </Text>
-                  </Flex>
-                  <Text bold mt="16px" lineHeight="120%" minHeight="66px" style={{ whiteSpace: 'pre-wrap' }}>
-                    {d.title}
-                  </Text>
-                  <Flex justifyContent="center">
-                    
+                    <Flex justifyContent="center">
+
                       <Button variant='primary'>{t('Stake Now')}</Button>
-                    
-                  </Flex>
-                </ContentBox>
-              </NewsCard>
+
+                    </Flex>
+                  </ContentBox>
+                </NewsCard>
               </NextLinkFromReactRouter>
             ))}
         </CardWrapper>
