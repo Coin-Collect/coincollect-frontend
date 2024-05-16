@@ -53,22 +53,22 @@ export const ClaimPageBanner = () => {
 
   const readWhitepaperAction = (
     <StyledButtonLinkAction color="white" href={whitepaperLink} padding={['8px 12px']}>
-      {isMobile ? t('Vote') : t('Vote on DAO')}
+     {isMobile ? t('Explore') : t('Community Collections')}
     </StyledButtonLinkAction>
   )
 
   const learnMoreAction = (
     <LinkExternalAction fontSize={['14px']} color="black" href={learnMoreLink}>
-      {isMobile ? t('Apply') : t('Apply for Partnership')}
+      {isMobile ? t('Stake') : t('Stake NFT')}
     </LinkExternalAction>
   )
 
   return (
-    <BannerContainer background="radial-gradient(112.67% 197.53% at 30.75% 3.72%, #e91e63 0%, #CCC2FE 76.19%, #C6A3FF 100%), linear-gradient(180deg, rgba(231, 253, 255, 0.2) 0%, rgba(242, 241, 255, 0.2) 100%)">
+    <BannerContainer background="radial-gradient(112.67% 197.53% at 30.75% 3.72%, #b3db18 0%, #eaa21c 76.19%, #C6A3FF 100%), linear-gradient(180deg, rgba(231, 253, 255, 0.2) 0%, rgba(242, 241, 255, 0.2) 100%)">
       <BannerMain
         badges={<PancakeSwapBadge />}
         title={
-          <BannerTitle variant="yellow">
+          <BannerTitle variant="purple">
             {isMobile || isTablet
               ? t('Stake Community NFTs for free')
               : t('Stake community NFTs for FREE income streams, participate in our DAO')}

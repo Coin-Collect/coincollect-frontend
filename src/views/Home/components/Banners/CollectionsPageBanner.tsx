@@ -59,7 +59,7 @@ export const CollectionsPageBanner = () => {
 
   const learnMoreAction = (
     <LinkExternalAction fontSize={['14px']} color="black" href={learnMoreLink}>
-      {isMobile ? t('Stake') : t('Stake Free NFT')}
+      {isMobile ? t('Stake') : t('Stake NFT')}
     </LinkExternalAction>
   )
 
@@ -68,10 +68,10 @@ export const CollectionsPageBanner = () => {
       <BannerMain
         badges={<PancakeSwapBadge />}
         title={
-          <BannerTitle variant="yellow">
+          <BannerTitle variant="orange">
             {isMobile || isTablet
               ? t('Stake Community NFTs for free')
-              : t('Stake community NFTs for FREE income streams, participate in our DAO')}
+              : t('Stake community NFTs for FREE income streams')}
           </BannerTitle>
         }
         actions={
