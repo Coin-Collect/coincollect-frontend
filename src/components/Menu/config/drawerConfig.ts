@@ -9,10 +9,6 @@ const drawerLinks: MenuItemsType[] = [
         initialOpenState: true,
         items: [
             {
-                label: 'Explore',
-                href: '/nftpools?q=all',
-            },
-            {
                 label: 'Collections',
                 href: '/nfts/collections',
             },
@@ -82,19 +78,18 @@ const drawerLinks: MenuItemsType[] = [
                 label: 'CoinMarketCap',
                 href: 'https://coinmarketcap.com/currencies/coincollect/',
             },
-
+            {
+                label: 'CoinGecko',
+                href: 'https://www.coingecko.com/en/coins/coincollect',
+            }, 
             {
                 label: 'OpenSea',
-                href: 'https://opensea.io/collection/coincollect-nfts',
+                href: 'https://opensea.io/web3Community/created',
             },
             {
                 label: 'DappRadar',
                 href: 'https://dappradar.com/dapp/coincollect',
             },
-            {
-                label: 'NFTrade',
-                href: 'https://nftrade.com/assets/polygon/0x569b70fc565afba702d9e77e75fd3e3c78f57eed',
-            }, 
             {
                 label: 'Docs & Guides',
                 href: 'https://docs.coincollect.org/',
