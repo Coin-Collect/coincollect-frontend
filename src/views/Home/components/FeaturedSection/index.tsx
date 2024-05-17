@@ -163,8 +163,9 @@ export const FeaturedSection: React.FC = () => {
         <CardWrapper ref={scrollWrapper}>
           {
             articlesData?.map((d) => (
-              <NextLinkFromReactRouter to="/nftpools">
+              
                 <NewsCard>
+                  <NextLinkFromReactRouter to="/nftpools">
                   <ImageBox>
                     <img src={d.imgUrl} alt="" />
                   </ImageBox>
@@ -183,8 +184,9 @@ export const FeaturedSection: React.FC = () => {
 
                     </Flex>
                   </ContentBox>
+                  </NextLinkFromReactRouter>
                 </NewsCard>
-              </NextLinkFromReactRouter>
+              
             ))}
         </CardWrapper>
         <Flex alignItems="center" ml="8px">
