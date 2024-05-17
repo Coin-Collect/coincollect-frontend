@@ -142,10 +142,10 @@ export const FeaturedSection: React.FC = () => {
     <Flex flexDirection="column" style={{ gap: 36 }}>
       <Flex flexDirection="column">
         <Flex justifyContent="center" style={{ gap: 8 }}>
-          <Text fontSize={40} fontWeight={600} textAlign="center">
+          <Text fontSize={["25px","30px","40px"]} fontWeight={600} textAlign="center">
             {t('Community')}
           </Text>
-          <Text fontSize={40} fontWeight={600} color="secondary" textAlign="center">
+          <Text fontSize={["25px","30px","40px"]} fontWeight={600} color="secondary" textAlign="center">
             {t('Collections')}
           </Text>
         </Flex>
