@@ -1,136 +1,287 @@
-import styled from 'styled-components'
-import { Flex, Text, TicketFillIcon, PredictionsIcon } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
+import { Box, ChevronRightIcon, Flex, Text, useMatchBreakpoints, Image } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
-import ColoredWordHeading from '../ColoredWordHeading'
-import IconCard, { IconCardData } from '../IconCard'
-import PredictionCardContent from './PredictionCardContent'
-import LotteryCardContent from './LotteryCardContent'
-import CompositeImage from '../CompositeImage'
+import  StaticImageData  from 'next/image'
+import { useRouter } from 'next/router'
+import { useMemo } from 'react'
+import  styled  from 'styled-components'
 
-const TransparentFrame = styled.div<{ isDark: boolean }>`
-  background: ${({ theme }) => (theme.isDark ? 'rgba(8, 6, 11, 0.6)' : ' rgba(255, 255, 255, 0.6)')};
-  padding: 16px;
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  box-sizing: border-box;
-  backdrop-filter: blur(12px);
-  border-radius: 22px;
-
-  ${({ theme }) => theme.mediaQueries.md} {
-    padding: 40px;
-  }
-`
-
-const BgWrapper = styled.div`
-  z-index: -1;
-  overflow: hidden;
-  position: absolute;
+export const CardWrapper = styled.div`
+  border-radius: 24px;
+  background: ${({ theme }) => (theme.isDark ? theme.colors.gradients.bubblegum : theme.colors.backgroundAlt)};
   width: 100%;
-  height: 100%;
-  top: 0px;
-  left: 0px;
+  box-sizing: border-box;
+  padding: 48px 24px 24px 24px;
+  min-height: 360px;
+  margin-top: 48px;
+  ${({ theme }) => theme.mediaQueries.lg} {
+    width: 100%;
+  }
+  ${({ theme }) => theme.mediaQueries.xxl} {
+    width: 1152px;
+  }
 `
-
-const BottomLeftImgWrapper = styled(Flex)`
-  position: absolute;
-  left: 0;
-  bottom: -64px;
-  max-width: 192px;
-
-  ${({ theme }) => theme.mediaQueries.md} {
-    max-width: 100%;
+export const ImageBox = styled.div`
+  position: relative;
+  transition: filter 0.25s linear;
+  .default {
+    display: none;
+  }
+  ${({ theme }) => theme.mediaQueries.lg} {
+    .default {
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .hover {
+      transition: opacity 0.25s ease-in-out;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      z-index: 2;
+    }
+    // filter: invert(38%) sepia(97%) saturate(433%) hue-rotate(215deg) brightness(83%) contrast(86%);
   }
 `
 
-const TopRightImgWrapper = styled(Flex)`
-  position: absolute;
-  right: 0;
-  top: -64px;
+export const ItemWrapper = styled(Flex)<{ $flexBasis: number }>`
+  align-items: left;
+  justify-content: space-between;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 12px;
+  cursor: pointer;
+  .cta > * {
+    transition: color 0.25s ease-in-out;
+    path {
+      transition: fill 0.25s ease-in-out;
+    }
+  }
+  padding: 4px;
+  &:hover {
+    .cta > * {
+      color: ${({ theme }) => theme.colors.primary};
+      path {
+        fill: ${({ theme }) => theme.colors.primary};
+      }
+    }
+    ${ImageBox} {
+      .hover {
+        opacity: 1;
+      }
+      // filter: invert(0%) sepia(0%) saturate(100%) hue-rotate(0deg) brightness(100%) contrast(100%);
+    }
+  }
+  flex-basis: calc(50% - 24px);
 
-  max-width: 192px;
-
-  ${({ theme }) => theme.mediaQueries.md} {
-    max-width: 100%;
+  &.type-a {
+    height: 246px;
+    &.adjust-height {
+      margin-top: 20px;
+      height: 220px;
+    }
+    ${({ theme }) => theme.mediaQueries.sm} {
+      &.adjust-height {
+        margin-top: 0px;
+        height: 246px;
+      }
+      flex-basis: calc(33.3% - 48px);
+    }
+    ${({ theme }) => theme.mediaQueries.xl} {
+      height: 286px;
+      &.adjust-height {
+        margin-top: 0px;
+        height: 286px;
+      }
+      &.higher {
+        height: 292px;
+        &.adjust-height {
+          margin-top: 0px;
+          height: 292px;
+        }
+      }
+    }
+    ${({ theme }) => theme.mediaQueries.xxl} {
+      flex-basis: ${({ $flexBasis }) => $flexBasis}%;
+    }
+  }
+  &.type-b {
+    height: 263px;
+    ${({ theme }) => theme.mediaQueries.lg} {
+      flex-basis: ${({ $flexBasis }) => $flexBasis}%;
+    }
+    ${({ theme }) => theme.mediaQueries.lg} {
+      height: 286px;
+    }
+    ${({ theme }) => theme.mediaQueries.xl} {
+      height: 256px;
+    }
+  }
+  ${({ theme }) => theme.mediaQueries.sm} {
+    padding: 12px;
+  }
+  ${({ theme }) => theme.mediaQueries.xxl} {
+    flex-wrap: nowrap;
   }
 `
 
-const PredictionCardData: IconCardData = {
-  icon: <PredictionsIcon width="36px" color="inverseContrast" />,
-  background: 'linear-gradient(180deg, #ffb237 0%, #ffcd51 51.17%, #ffe76a 100%);',
-  borderColor: '#ffb237',
-  rotation: '-2.36deg',
-}
+export const FeatureBoxesWrapper = styled(Flex)`
+  flex-wrap: wrap;
+  gap: 24px;
+  ${({ theme }) => theme.mediaQueries.xxl} {
+    flex-wrap: nowrap;
+  }
+`
 
-const LotteryCardData: IconCardData = {
-  icon: <TicketFillIcon color="white" width="36px" />,
-  background: ' linear-gradient(180deg, #7645D9 0%, #5121B1 100%);',
-  borderColor: '#3C1786',
-  rotation: '1.43deg',
-}
+export const Title = styled.div`
+  font-size: 32px;
+  margin-bottom: 24px;
+  font-weight: 600;
+  line-height: 110%;
+  padding-left: 12px;
+  color: ${({ theme }) => theme.colors.secondary};
+`
 
-const bottomLeftImage = {
-  path: '/images/home/prediction-cards/',
-  attributes: [
-    { src: 'bottom-left', alt: 'CAKE card' },
-    { src: 'green', alt: 'Green CAKE card with up arrow' },
-    { src: 'red', alt: 'Red Cake card with down arrow' },
-    { src: 'top-right', alt: 'CAKE card' },
-  ],
-}
 
-const topRightImage = {
-  path: '/images/home/lottery-balls/',
-  attributes: [
-    { src: '2', alt: 'Lottery ball number 2' },
-    { src: '4', alt: 'Lottery ball number 4' },
-    { src: '6', alt: 'Lottery ball number 6' },
-    { src: '7', alt: 'Lottery ball number 7' },
-    { src: '9', alt: 'Lottery ball number 9' },
-  ],
-}
-
-const WinSection = () => {
+const useNftGameBlockData = () => {
   const { t } = useTranslation()
-  const { theme } = useTheme()
+  return useMemo(() => {
+    return [
+      {
+        title: t('Gaming Marketplace'),
+        description: t('Play, Build and Connect on PancakeSwap'),
+        ctaTitle: t('Play Now'),
+        image: `https://assets.pancakeswap.finance/web/landing/game-pancake-protectors.png`,
+        defaultImage: `https://assets.pancakeswap.finance/web/landing/game-pancake-protectors-purple.png`,
+        path: 'https://pancakeswap.games/',
+      },
+      {
+        title: t('Prediction '),
+        description: t('Forecast token prices within minutes'),
+        ctaTitle: t('Try Now'),
+        image: `https://assets.pancakeswap.finance/web/landing/game-prediction.png`,
+        defaultImage: `https://assets.pancakeswap.finance/web/landing/game-prediction-purple.png`,
+        path: '/prediction',
+      },
+      {
+        title: t('NFT Marketplace'),
+        description: t('Trade unique NFTs on BNB Chain'),
+        ctaTitle: t('Trade Now'),
+        image: `https://assets.pancakeswap.finance/web/landing/nft-marketplace.png`,
+        defaultImage: `https://assets.pancakeswap.finance/web/landing/nft-marketplace-purple.png`,
+        path: '/nfts',
+        className: 'adjust-height',
+      },
+    ]
+  }, [t])
+}
 
+const FeatureBox: React.FC<{
+  title: string
+  description: string
+  image: string
+  defaultImage: string
+  width: number
+  ctaTitle: string
+  className?: string
+  path?: string
+  onClick?: () => void
+}> = ({ title, description, image, defaultImage, ctaTitle, width, className, path, onClick }) => {
+  const { theme } = useTheme()
+  const { push } = useRouter()
   return (
-    <>
-      <BgWrapper>
-        <BottomLeftImgWrapper>
-          <CompositeImage {...bottomLeftImage} />
-        </BottomLeftImgWrapper>
-        <TopRightImgWrapper>
-          <CompositeImage {...topRightImage} />
-        </TopRightImgWrapper>
-      </BgWrapper>
-      <TransparentFrame isDark={theme.isDark}>
-        <Flex flexDirection="column" alignItems="center" justifyContent="center">
-          <ColoredWordHeading textAlign="center" text={t('Win millions in prizes')} />
-          <Text color="textSubtle">{t('Provably fair, on-chain games.')}</Text>
-          <Text mb="40px" color="textSubtle">
-            {t('Win big with PancakeSwap.')}
-          </Text>
-          <Flex m="0 auto" flexDirection={['column', null, null, 'row']} maxWidth="600px">
-            <Flex
-              flex="1"
-              maxWidth={['275px', null, null, '100%']}
-              mr={[null, null, null, '24px']}
-              mb={['32px', null, null, '0']}
-            >
-              <IconCard {...PredictionCardData}>
-                <PredictionCardContent />
-              </IconCard>
-            </Flex>
-           {/* <Flex flex="1" maxWidth={['275px', null, null, '100%']}>
-              <IconCard {...LotteryCardData}>
-                <LotteryCardContent />
-              </IconCard>
-            </Flex> */}
-          </Flex>
-        </Flex>
-      </TransparentFrame>
-    </>
+    <ItemWrapper
+      className={className}
+      $flexBasis={width}
+      onClick={onClick ? () => onClick() : () => path && push(path)}
+    >
+      <ImageBox>
+        <Image className="default" src={defaultImage} width={108} height={108} alt={title} />
+        <Image className="hover" src={image} width={108} height={108} alt={title} />
+      </ImageBox>
+      <Box>
+        <Text fontSize="20px" mb="8px" lineHeight="110%" fontWeight={600} color={theme.colors.text}>
+          {title}
+        </Text>
+        <Text fontSize="14px" lineHeight="120%" color={theme.colors.text}>
+          {description}
+        </Text>
+      </Box>
+      <Flex className="cta">
+        <Text fontSize="16px" fontWeight={600} color={theme.colors.textSubtle}>
+          {ctaTitle}
+        </Text>
+        <ChevronRightIcon color={theme.colors.textSubtle} />
+      </Flex>
+    </ItemWrapper>
   )
 }
 
-export default WinSection
+const EcoSystemSection: React.FC = () => {
+  const { t } = useTranslation()
+  const { theme } = useTheme()
+  const nftGameBlockData = useNftGameBlockData()
+  const { isMobile, isMd } = useMatchBreakpoints()
+
+  return (
+    <Flex justifyContent="center" alignItems="center" flexDirection="column">
+      <Text textAlign="center" p="0px 20px">
+        <Text
+          fontSize={['32px', null, null, '40px']}
+          lineHeight="110%"
+          display="inline-block"
+          bold
+          color={theme.colors.text}
+        >
+          {t('Key 2')}
+        </Text>
+        <Text
+          fontSize={['32px', null, null, '40px']}
+          ml="8px"
+          display="inline-block"
+          bold
+          lineHeight="110%"
+          color={theme.colors.secondary}
+        >
+          {t('WEB 3')}
+        </Text>
+      </Text>
+      <CardWrapper>
+        <Flex
+          style={{ gap: 32 }}
+          flexDirection={isMobile || isMd ? 'column' : 'row'}
+          alignItems={isMobile || isMd ? undefined : 'center'}
+        >
+          <Image
+            style={{ marginLeft: isMobile ? -32 : -72 }}
+            src={`https://assets.pancakeswap.finance/web/landing/game-nft-bunny.png`}
+            alt="game-nft-bunny"
+            width={344}
+            height={360}
+          />
+          <Flex flexDirection="column">
+            <Title>{t('Game & NFT')}</Title>
+            <FeatureBoxesWrapper>
+              {nftGameBlockData.map((item) => (
+                <FeatureBox
+                  className={`type-a higher${item?.className ? ` ${item?.className}` : ''}`}
+                  key={`${item.title}Block`}
+                  title={item.title}
+                  description={item.description}
+                  defaultImage={item.defaultImage}
+                  image={item.image}
+                  width={100 / 5}
+                  ctaTitle={item.ctaTitle}
+                  path={item.path}
+                />
+              ))}
+            </FeatureBoxesWrapper>
+          </Flex>
+        </Flex>
+      </CardWrapper>
+    </Flex>
+  )
+}
+
+export default EcoSystemSection

@@ -125,7 +125,7 @@ const Home: React.FC = () => {
         {/*<FarmsPoolsRow /> */}
       </PageSection>
       <PageSection
-        innerProps={{ style: HomeSectionContainerStyles }}
+        innerProps={{ style: { ...HomeSectionContainerStyles, maxWidth: 'auto' } }}
         background={
           theme.isDark
             ? 'linear-gradient(180deg, #0B4576 0%, #091115 100%)'
