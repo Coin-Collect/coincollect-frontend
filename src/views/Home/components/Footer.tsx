@@ -102,16 +102,16 @@ const Footer = () => {
       </FloatingPancakesWrapper>
       <Wrapper>
         <Heading mb="24px" scale="xl" color="white">
-          {t('Start in seconds.')}
+          {t('Apply for Partnership')}
         </Heading>
         <Text textAlign="center" color="white">
-          {t('Connect your crypto wallet to start using the app in seconds.')}
+          {t('CoinCollect: Unlocking strategic opportunities through partnerships, collaborations, and sponsorships')}
         </Text>
         <Text mb="24px" bold color="white">
-          {t('No registration needed.')}
+          {t('Unlocking Opportunities Through Collaboration')}
         </Text>
 
-        <Link external href="https://docs.coincollect.org/">
+        <Link external href="https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities">
           {t('Learn how to start')}
         </Link>
         {!account && <ConnectWalletButton mt="24px" />}
