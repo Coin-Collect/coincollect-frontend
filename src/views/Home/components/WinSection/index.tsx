@@ -149,9 +149,9 @@ const useNftGameBlockData = () => {
   return useMemo(() => {
     return [
       {
-        title: t('Gaming Marketplace'),
-        description: t('Play, Build and Connect on PancakeSwap'),
-        ctaTitle: t('Play Now'),
+        title: t('Your Gateway to Web3'),
+        description: t('Accessible and Affordable NFT'),
+        ctaTitle: t('Mint Now'),
         image: `https://assets.pancakeswap.finance/web/landing/game-pancake-protectors.png`,
         defaultImage: `https://assets.pancakeswap.finance/web/landing/game-pancake-protectors-purple.png`,
         path: 'https://pancakeswap.games/',
@@ -255,13 +255,13 @@ const EcoSystemSection: React.FC = () => {
         >
           <Image
             style={{ marginLeft: isMobile ? -32 : -72 }}
-            src={`https://assets.pancakeswap.finance/web/landing/game-nft-bunny.png`}
-            alt="game-nft-bunny"
+            src={`/images/home/key/KEYleft.png`}
+            alt="KEYnft"
             width={344}
             height={360}
           />
           <Flex flexDirection="column">
-            <Title>{t('Game & NFT')}</Title>
+            <Title>{t('Mine & Stake & Earn')}</Title>
             <FeatureBoxesWrapper>
               {nftGameBlockData.map((item) => (
                 <FeatureBox
