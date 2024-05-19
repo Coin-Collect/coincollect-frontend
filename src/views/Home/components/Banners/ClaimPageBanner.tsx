@@ -50,21 +50,21 @@ export const ClaimPageBanner = () => {
 
   const readWhitepaperAction = (
     <NextLinkFromReactRouter to='/nftpools/community-collections'>
-    <Button scale={['xs', 'sm', 'md']}>
-      <Text color="white" bold fontSize={["14px", "14px", "16px"]}>
-        {isMobile ? t('Explore') : t('Community Collections')}
-      </Text>
-    </Button>
+      <Button scale={['xs', 'sm', 'md']}>
+        <Text color="white" bold fontSize={["14px", "14px", "16px"]}>
+          {isMobile ? t('Explore') : t('Community Collections')}
+        </Text>
+      </Button>
     </NextLinkFromReactRouter>
   )
 
   const learnMoreAction = (
     <NextLinkFromReactRouter to='/nftpools'>
-    <Button variant='subtle' scale={['xs', 'sm', 'md']}>
-      <Text color="black" bold fontSize={["14px", "14px", "16px"]}>
-      {isMobile ? t('Stake') : t('Stake NFT')}
-      </Text>
-    </Button>
+      <Button variant='subtle' scale={['xs', 'sm', 'md']}>
+        <Text color="black" bold fontSize={["14px", "14px", "16px"]}>
+        {isMobile ? t('Stake') : t('Stake NFT')}
+        </Text>
+      </Button>
     </NextLinkFromReactRouter>
   )
 
