@@ -62,7 +62,7 @@ export const CollectionsPageBanner = () => {
     <NextLinkFromReactRouter to='/nftpools'>
       <Button variant='subtle' scale={['xs', 'sm', 'md']}>
         <Text color="black" bold fontSize={["14px", "14px", "16px"]}>
-        {isMobile ? t('Stake') : t('Stake NFT')}
+          {isMobile ? t('Stake') : t('Stake NFT')}
         </Text>
       </Button>
     </NextLinkFromReactRouter>
