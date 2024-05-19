@@ -43,9 +43,9 @@ const StyledButtonLinkAction = styled(ButtonLinkAction)`
 `
 
 const whitepaperLink =
-  'https://github.com/pancakeswap/pancake-v4-core/blob/main/docs/whitepaper-en.pdf?utm_source=homepagebanner&utm_medium=banner&utm_campaign=homepagebanner&utm_id=v4whitepaper'
+  '/nftpools'
 const learnMoreLink =
-  'https://developer.pancakeswap.finance/?utm_source=homepagebanner&utm_medium=banner&utm_campaign=homepagebanner&utm_id=Startbuilding'
+  '/nftpools'
 
 export const CollectionsPageBanner = () => {
   const { t } = useTranslation()
