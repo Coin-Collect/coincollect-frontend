@@ -261,7 +261,7 @@ const EcoSystemSection: React.FC = () => {
             height={360}
           />
           <Flex flexDirection="column">
-            <Title>{t('Mine & Stake & Earn')}</Title>
+            <Title>{t('Mint & Stake & Earn')}</Title>
             <FeatureBoxesWrapper>
               {nftGameBlockData.map((item) => (
                 <FeatureBox
@@ -274,6 +274,7 @@ const EcoSystemSection: React.FC = () => {
                   width={100 / 5}
                   ctaTitle={item.ctaTitle}
                   path={item.path}
+                  onClick={item.path.startsWith("http") ? () => window.open(item.path, '_blank', 'noopener noreferrer') : null}
                 />
               ))}
             </FeatureBoxesWrapper>

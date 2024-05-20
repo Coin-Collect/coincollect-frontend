@@ -49,7 +49,7 @@ const StyledButtonLinkAction = styled(ButtonLinkAction)`
 const whitepaperLink =
   'https://snapshot.org/#/coincollect.app'
 const learnMoreLink =
-  'https://developer.pancakeswap.finance/?utm_source=homepagebanner&utm_medium=banner&utm_campaign=homepagebanner&utm_id=Startbuilding'
+  'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities'
 
 export const CommunityCollectionsBanner = () => {
   const { t } = useTranslation()
