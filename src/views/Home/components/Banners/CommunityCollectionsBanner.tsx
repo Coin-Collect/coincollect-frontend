@@ -47,7 +47,7 @@ const StyledButtonLinkAction = styled(ButtonLinkAction)`
 `
 
 const whitepaperLink =
-  'https://github.com/pancakeswap/pancake-v4-core/blob/main/docs/whitepaper-en.pdf?utm_source=homepagebanner&utm_medium=banner&utm_campaign=homepagebanner&utm_id=v4whitepaper'
+  'https://snapshot.org/#/coincollect.app'
 const learnMoreLink =
   'https://developer.pancakeswap.finance/?utm_source=homepagebanner&utm_medium=banner&utm_campaign=homepagebanner&utm_id=Startbuilding'
 
@@ -56,7 +56,7 @@ export const CommunityCollectionsBanner = () => {
   const { isMobile, isTablet } = useMatchBreakpoints()
 
   const readWhitepaperAction = (
-    <StyledButtonLinkAction color="white" href={whitepaperLink} padding={['8px 12px']}>
+    <StyledButtonLinkAction external color="white" href={whitepaperLink} padding={['8px 12px']}>
       {isMobile ? t('Vote') : t('Vote on DAO')}
     </StyledButtonLinkAction>
   )

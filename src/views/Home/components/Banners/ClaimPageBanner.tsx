@@ -1,5 +1,5 @@
 import { useTranslation } from 'contexts/Localization'
-import { useMatchBreakpoints } from '@pancakeswap/uikit'
+import { Button, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
 import {
   BackgroundGraphic,
   BannerActionContainer,
@@ -18,6 +18,7 @@ import styled from 'styled-components'
 import floatingAsset from 'views/Claim/images/floating-item.png'
 import bgDesktop from 'views/Claim/images/bg-desktop.png'
 import bgMobile from 'views/Claim/images/bg-mobile.png'
+import { NextLinkFromReactRouter } from 'components/NextLink'
 
 const bgSmVariant: GraphicDetail = {
   src: bgMobile.src,
@@ -42,25 +43,29 @@ const StyledButtonLinkAction = styled(ButtonLinkAction)`
   }
 `
 
-const whitepaperLink =
-  '/nftpools'
-const learnMoreLink =
-  '/nftpools'
 
 export const ClaimPageBanner = () => {
   const { t } = useTranslation()
   const { isMobile, isTablet } = useMatchBreakpoints()
 
   const readWhitepaperAction = (
-    <StyledButtonLinkAction color="white" href={whitepaperLink} padding={['8px 12px']}>
-     {isMobile ? t('Explore') : t('Community Collections')}
-    </StyledButtonLinkAction>
+    <NextLinkFromReactRouter to='/nftpools/community-collections'>
+      <Button scale={['xs', 'sm', 'md']}>
+        <Text color="white" bold fontSize={["14px", "14px", "16px"]}>
+          {isMobile ? t('Explore') : t('Community Collections')}
+        </Text>
+      </Button>
+    </NextLinkFromReactRouter>
   )
 
   const learnMoreAction = (
-    <LinkExternalAction fontSize={['14px']} color="black" href={learnMoreLink}>
-      {isMobile ? t('Stake') : t('Stake NFT')}
-    </LinkExternalAction>
+    <NextLinkFromReactRouter to='/nftpools'>
+      <Button variant='subtle' scale={['xs', 'sm', 'md']}>
+        <Text color="black" bold fontSize={["14px", "14px", "16px"]}>
+          {isMobile ? t('Stake') : t('Stake NFT')}
+        </Text>
+      </Button>
+    </NextLinkFromReactRouter>
   )
 
   return (
