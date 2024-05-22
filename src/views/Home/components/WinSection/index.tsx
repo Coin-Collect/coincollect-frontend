@@ -239,7 +239,10 @@ const EcoSystemSection: React.FC = () => {
             height={360}
           />
           <Flex flexDirection="column">
-            <Title>{t('Mint & Stake & Earn')}</Title>
+            <Title style={{marginBottom:'2px'}}>{t('Mint & Stake & Earn')}</Title>
+            <Text mb={24} pl={12} fontSize="14px" lineHeight="120%" color={theme.colors.text}>
+              Text about key, Text about key, Text about key
+            </Text>
             <FeatureBoxesWrapper>
               {nftGameBlockData.map((item) => (
                 <FeatureBox
