@@ -19,7 +19,7 @@ const FarmsCommunityPage = () => {
           displayApr={getDisplayApr(farm.apr)}
           cakePrice={cakePrice}
           account={account}
-          removed
+          removed={false}
         />
       ))}
     </>
