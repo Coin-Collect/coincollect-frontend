@@ -13,7 +13,6 @@ export const CardWrapper = styled.div`
   box-sizing: border-box;
   padding: 48px 24px 24px 24px;
   min-height: 360px;
-  margin-top: 48px;
   ${({ theme }) => theme.mediaQueries.lg} {
     width: 100%;
   }
@@ -226,27 +225,6 @@ const EcoSystemSection: React.FC = () => {
 
   return (
     <Flex justifyContent="center" alignItems="center" flexDirection="column">
-      <Text textAlign="center" p="0px 20px">
-        <Text
-          fontSize={['32px', null, null, '40px']}
-          lineHeight="110%"
-          display="inline-block"
-          bold
-          color={theme.colors.text}
-        >
-          {t('Key 2')}
-        </Text>
-        <Text
-          fontSize={['32px', null, null, '40px']}
-          ml="8px"
-          display="inline-block"
-          bold
-          lineHeight="110%"
-          color={theme.colors.secondary}
-        >
-          {t('WEB 3')}
-        </Text>
-      </Text>
       <CardWrapper>
         <Flex
           style={{ gap: 32 }}
@@ -254,7 +232,7 @@ const EcoSystemSection: React.FC = () => {
           alignItems={isMobile || isMd ? undefined : 'center'}
         >
           <Image
-            style={{ marginLeft: isMobile ? -32 : -72 }}
+            style={{ marginLeft: isMobile ? 0 : -72, alignSelf: 'center' }}
             src={`/images/home/key/KEYleft.png`}
             alt="KEYnft"
             width={344}
