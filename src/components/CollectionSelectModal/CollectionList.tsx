@@ -56,7 +56,6 @@ function CollectionRow({
   style,
   allowance,
   collectionPower,
-  eligiblePids
 }: {
   collection: DeserializedNftFarm
   onSelect: (task: string) => void
@@ -64,7 +63,6 @@ function CollectionRow({
   style: CSSProperties
   allowance: boolean
   collectionPower: number
-  eligiblePids?: number[]
 }) {
   const { account } = useActiveWeb3React()
   const key = collectionKey(collection)
@@ -72,7 +70,6 @@ function CollectionRow({
   const collectionData = mintingConfig.find((mintCollection) => mintCollection.stake_pid === collection.pid)
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === collection.pid)
   const avatar = nftFarmData["avatar"] ? nftFarmData["avatar"] : collectionData?.avatar
-  const isEligible = eligiblePids.includes(collection.pid)
   
 
   // only show add or remove buttons if not on selected list
@@ -81,7 +78,7 @@ function CollectionRow({
       style={style}
       className={`token-item-${key}`}
       onClick={() => (isSelected ? null : onSelect(allowance ? "stake" : "approve"))}
-      disabled={balance == 0 || !isEligible} // Disable the item if not eligible
+      disabled={balance == 0} // Disable the item if balance is zero
       selected={isSelected}
     >
       <ListLogo logoURI={avatar} size={"34px"} />
@@ -89,7 +86,6 @@ function CollectionRow({
         <Text bold>{collection.lpSymbol} ({collectionPower}X)</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
           {
-            !isEligible ? "This collection is not eligible" : // Show message if not eligible
             balance === 0 ? "Insufficient balance" :
             allowance ? "Click to Start Staking" : "Click to Enable"
           }
@@ -111,7 +107,6 @@ export default function CollectionList({
   allowance,
   collectionPowers,
   fixedListRef,
-  eligiblePids,
 }: {
   height: number
   collections: DeserializedNftFarm[]
@@ -120,7 +115,6 @@ export default function CollectionList({
   allowance: boolean[]
   collectionPowers: number[]
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
-  eligiblePids?: number[]
 }) {
 
   const { chainId } = useActiveWeb3React()
@@ -142,7 +136,6 @@ export default function CollectionList({
           onSelect={handleSelect}
           allowance={allowance[index]}
           collectionPower={collectionPowers[index]}
-          eligiblePids={eligiblePids}
         />
       )
     },

@@ -67,22 +67,17 @@ export default function CollectionSelectModal({
 
   const mainNftStakeFarmReplaced = notToListFarms.includes(mainNftStakeFarm[0].lpSymbol) ? nftFarms.filter((farm) => farm.pid == collectionPidOrigins[mainNftStakeFarm[0].pid]) : null
 
-  const communityTokenFarms = nftFarms.filter((farm) =>
-    farm.pid <= 4 && (mainNftStakeFarmReplaced === null || farm.pid !== mainNftStakeFarmReplaced[0].pid)
-  )
 
-
-  const eligibleCollections = [collectionPidOrigins[mainNftStakeFarm[0].pid] ?? mainNftStakeFarm[0].pid, ...mainNftStakeFarm[0]["supportedCollectionPids"]]
   
-  const externalCommunityCollectionPids = mainNftStakeFarm[0]["supportedCollectionPids"].filter((pid) => pid > 4)
-  const externalNftStakeFarm = nftFarms.filter(
-    (farm) => externalCommunityCollectionPids.includes(farm.pid)
+  const supportedCollectionPids = mainNftStakeFarm[0]["supportedCollectionPids"]
+  const supportedNftStakeFarms = nftFarms.filter(
+    (farm) => supportedCollectionPids.includes(farm.pid)
   )
 
 
   const collectionList = mainNftStakeFarmReplaced 
-    ? [...mainNftStakeFarmReplaced, ...communityTokenFarms] 
-    : [...mainNftStakeFarm, ...externalNftStakeFarm, ...communityTokenFarms]
+    ? [...mainNftStakeFarmReplaced, ...supportedNftStakeFarms] 
+    : [...mainNftStakeFarm, ...supportedNftStakeFarms]
   
   const collectionPowers = mainNftStakeFarm[0]["collectionPowers"] ?? collectionList.map((collection) => {
     switch (collection.pid) {
@@ -139,7 +134,6 @@ export default function CollectionSelectModal({
             allowance={allowance}
             collectionPowers={collectionPowers}
             fixedListRef={fixedList}
-            eligiblePids={eligibleCollections}
           />
         </Box>
       </StyledModalBody>
