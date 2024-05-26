@@ -1,10 +1,11 @@
 import styled from 'styled-components'
-import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody, Text } from '@pancakeswap/uikit'
+import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody, Text, useModal } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CommunityTag, PartnerTag } from 'components/Tags'
 import Image from 'next/image'
 import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
+import AllowedNftsModal from 'components/AllowedNftsModal/AllowedNftsModal'
 
 
 export interface ExpandableSectionProps {
@@ -54,8 +55,24 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
     (farm) => supportedCollectionPids.includes(farm.pid)
   )
 
+  // Todo: Duplicate with CollectionSelectModal, solve in hook level
+  const collectionPowers = nftFarmData["collectionPowers"] ?? supportedNftStakeFarms.map((collection) => {
+    switch (collection.pid) {
+      case 1:
+        return 1;
+      case 2:
+        return 3;
+      case 3:
+        return 6;
+      case 4:
+        return 12;
+      default:
+        return 15;
+    }
+  })
 
-  let avatars = [];
+  let smallAvatars = [];
+  let largeAvatars = [];
   let collectBadgeAdded = false;
   for (let i = 0; i < supportedNftStakeFarms.length; i++) {
     let farm = supportedNftStakeFarms[i];
@@ -63,19 +80,26 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
 
     if (farm.pid <= 4) {
       if (!collectBadgeAdded) {
-        avatars.push({ avatar: "/logo.png" });
+        smallAvatars.push({ avatar: "/logo.png" });
         collectBadgeAdded = true;
       }
     } else {
-      avatars.push({ avatar: farm["avatar"] ?? dataFromMinting?.avatar });
+      smallAvatars.push({ avatar: farm["avatar"] ?? dataFromMinting?.avatar });
     }
+    largeAvatars.push({ title: farm.lpSymbol.replace("CoinCollect",""), power: collectionPowers?.[i], avatar: farm["avatar"] ?? dataFromMinting?.avatar });
 
-    if (avatars.length > 4) {
-      avatars.push({ avatar: "https://cdn-icons-png.flaticon.com/512/2550/2550282.png" });
+    if (smallAvatars.length > 4) {
+      smallAvatars.push({ avatar: "https://cdn-icons-png.flaticon.com/512/2550/2550282.png" });
       break;
     }
 
   }
+
+  const [onPresentAllowedNftsModal] = useModal(
+    <AllowedNftsModal
+      nfts={largeAvatars}
+    />,
+  )
   
 
   return (
@@ -93,16 +117,17 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
       >
 
 
-        {avatars.map((avatar, index) => (
+        {smallAvatars.map((avatar, index) => (
           <CollectionAvatar
             key={index}
             src={avatar["avatar"]}
             width={50}
             height={50}
             style={{ left: `${index * 15}px` }}
+            onClick={onPresentAllowedNftsModal}
           />
         ))}
-        <Text color='gold' fontSize={14} style={{ position: 'absolute', left: '0px', top: '8px' }}>Allowed NFTs:</Text>
+        <Text onClick={onPresentAllowedNftsModal} color='gold' fontSize={14} style={{ position: 'absolute', left: '0px', top: '8px' }}>Allowed NFTs▼</Text>
 
 
         <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>

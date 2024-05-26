@@ -140,6 +140,7 @@ export { default as TradingViewIcon } from "./Icons/TradingView";
 export { default as TrophyFillIcon } from "./Icons/TrophyFill";
 export { default as TrophyGoldIcon } from "./Icons/TrophyGold";
 export { default as TrophyIcon } from "./Icons/Trophy";
+export { default as LightningIcon } from "./Icons/Lightning";
 export { default as TrustWalletIcon } from "./Icons/TrustWallet";
 export { default as TuneIcon } from "./Icons/Tune";
 export { default as TwitterIcon } from "./Icons/Twitter";

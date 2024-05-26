@@ -23,7 +23,10 @@ import { DeserializedNftFarm } from 'state/types'
 const StyledModalContainer = styled(ModalContainer)`
   max-width: 420px;
   width: 100%;
-`
+  ${({ theme }) => theme.mediaQueries.md} {
+    min-width: 800px;
+  }
+`;
 
 const StyledModalBody = styled(ModalBody)`
   padding: 24px;
@@ -79,6 +82,7 @@ export default function CollectionSelectModal({
     ? [...mainNftStakeFarmReplaced, ...supportedNftStakeFarms] 
     : [...mainNftStakeFarm, ...supportedNftStakeFarms]
   
+  // Todo: Duplicate with CardHeadingWithBanner
   const collectionPowers = mainNftStakeFarm[0]["collectionPowers"] ?? collectionList.map((collection) => {
     switch (collection.pid) {
       case 1:
