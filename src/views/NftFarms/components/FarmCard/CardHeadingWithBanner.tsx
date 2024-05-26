@@ -31,13 +31,17 @@ const StyledImage = styled(Image)`
   border-radius: 8px;
 `
 
-export const CollectionAvatar = styled(ProfileAvatar)`
+const CollectionAvatar = styled(ProfileAvatar)`
   left: 0;
   position: absolute;
   top: 30px;
   border: 1px white solid;
   width: 25px;
   height: 25px;
+  cursor: pointer !important;
+`
+
+const TextWithCursor = styled(Text)`
   cursor: pointer !important;
 `
 
@@ -127,7 +131,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
             onClick={onPresentAllowedNftsModal}
           />
         ))}
-        <Text onClick={onPresentAllowedNftsModal} color='gold' fontSize={14} style={{ position: 'absolute', left: '0px', top: '8px' }}>Allowed NFTs▼</Text>
+        <TextWithCursor onClick={onPresentAllowedNftsModal} color='gold' fontSize={14} style={{ position: 'absolute', left: '0px', top: '8px' }}>Allowed NFTs▼</TextWithCursor>
 
 
         <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
