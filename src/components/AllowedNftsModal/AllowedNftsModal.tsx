@@ -62,7 +62,7 @@ const Wrapper = styled(Flex)`
   margin-bottom: 24px;
   justify-content: center;
   flex-wrap: wrap;
-  row-gap: 24px;
+  row-gap: 26px;
   column-gap: 20px;
   background: ${props => props.theme.colors.background};
   padding: 30px 5px 15px 5px;
