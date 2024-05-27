@@ -116,17 +116,17 @@ export default function AllowedNftsModal({
     <StyledModalContainer minWidth="320px">
       <ModalHeader background={theme.colors.gradients.bubblegum}>
         <ModalTitle>
-          <Heading>{t('Allowed Nfts')}</Heading>
+          <Heading>{t('Allowed NFTs')}</Heading>
         </ModalTitle>
         <ModalCloseButton onDismiss={onDismiss} />
       </ModalHeader>
       <StyledModalBody>
 
         <Title style={{ marginBottom: '2px' }}>
-          {t('By staking these NFTs in this pool, you can earn based on their ')}
-          <LightningIcon width={20} />
+          {t('Stake eligible NFTs in this pool to earn rewards based on their ')}
+          <LightningIcon width={15} />
           {t('earning power. ')}
-          <MessageTextLink display="inline" fontWeight={700} href="https://market.coincollect.org/" target="_blank" color="failure">
+          <MessageTextLink display="inline" fontWeight={700} href="https://docs.coincollect.org/" target="_blank" color="failure">
             {t('Discover NFT Power')} »
           </MessageTextLink>
         </Title>
@@ -143,7 +143,7 @@ export default function AllowedNftsModal({
                   width={70}
                   height={70}
                 />
-                <CoinPower><LightningIcon width={16} />{nfts.length > 1 ? avatar["power"] : 1}</CoinPower>
+                <CoinPower><LightningIcon width={12} />{nfts.length > 1 ? avatar["power"] : 1}</CoinPower >
               </CoinContainer>
 
               <Text>{avatar["title"]}</Text>
@@ -152,8 +152,8 @@ export default function AllowedNftsModal({
 
         </Wrapper>
         <Message variant="warning">
-          <MessageText>{t('Daily earnings are calculated based on the highest earning power of NFTs.')}</MessageText>
-        </Message>
+          <MessageText>{t('Daily earnings are calculated based on the NFT with the highest earning power in the pool.')}</MessageText>
+        </Message> 
       </StyledModalBody>
     </StyledModalContainer>
   )
