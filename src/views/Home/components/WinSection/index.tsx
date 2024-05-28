@@ -239,9 +239,12 @@ const EcoSystemSection: React.FC = () => {
             height={360}
           />
           <Flex flexDirection="column">
-            <Title style={{marginBottom:'2px'}}>{t('Mint & Stake & Earn')}</Title>
-            <Text mb={24} pl={12} fontSize="14px" lineHeight="120%" color={theme.colors.text}>
-              Text about key, Text about key, Text about key
+            <Title style={{marginBottom:'2px'}}>{t('Key 2 Web 3')}</Title>
+            <Text mb={24} pl={12} fontSize="20px" lineHeight="120%" fontWeight={800} color={theme.colors.text}>
+              Mint, Stake & Earn Rewards
+            </Text>
+            <Text mb={24} pl={12} fontSize="14px" lineHeight="120%" fontWeight={800} color={theme.colors.text}>
+            KEY is the easiest way to enter web3 and the metaverse, offering access to rewards, staking, and enhanced digital experiences. Mint a KEY to explore and thrive in the decentralized realm.
             </Text>
             <FeatureBoxesWrapper>
               {nftGameBlockData.map((item) => (
