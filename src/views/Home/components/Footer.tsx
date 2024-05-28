@@ -34,6 +34,7 @@ const Wrapper = styled(Flex)`
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  min-height: 332px;
 `
 
 const FloatingPancakesWrapper = styled(Container)`
