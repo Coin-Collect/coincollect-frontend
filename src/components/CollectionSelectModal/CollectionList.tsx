@@ -1,5 +1,5 @@
 import { CSSProperties, MutableRefObject, useCallback } from 'react'
-import { ProfileAvatar, Text } from '@pancakeswap/uikit'
+import { LightningIcon, ProfileAvatar, Text } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { FixedSizeList } from 'react-window'
 import { useTranslation } from 'contexts/Localization'
@@ -83,7 +83,7 @@ function CollectionRow({
     >
       <ListLogo logoURI={avatar} size={"34px"} />
       <Column>
-        <Text bold>{collection.lpSymbol.replace("CoinCollect","")} ({collectionPower}X)</Text>
+        <Text bold>{collection.lpSymbol.replace("CoinCollect","")} <LightningIcon/>{collectionPower}</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
           {
             balance === 0 ? "Insufficient balance" :
@@ -135,7 +135,7 @@ export default function CollectionList({
           isSelected={isSelected}
           onSelect={handleSelect}
           allowance={allowance[index]}
-          collectionPower={collectionPowers[index]}
+          collectionPower={collectionPowers.length > 1 ? collectionPowers[index] : 1}
         />
       )
     },
