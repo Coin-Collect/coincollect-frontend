@@ -67,9 +67,11 @@ export default function CollectionSelectModal({
   const mainNftStakeFarm = nftFarms.filter(
     (farm) => farm.pid == pid
   )
-
-  const mainNftStakeFarmReplaced = notToListFarms.includes(mainNftStakeFarm[0].lpSymbol) ? nftFarms.filter((farm) => farm.pid == collectionPidOrigins[mainNftStakeFarm[0].pid]) : null
-
+  
+  // This expression is used to access the avatar and other information of the main NFT of the pool.
+  // Todo: In the future, I plan to add the mainNftPid value to supportedNfts.
+  //const mainNftStakeFarmReplaced = notToListFarms.includes(mainNftStakeFarm[0].lpSymbol) ? nftFarms.filter((farm) => farm.pid == collectionPidOrigins[mainNftStakeFarm[0].pid]) : null
+  const mainNftStakeFarmReplaced = nftFarms.find((nftFarm) => nftFarm.nftAddresses?.[137] === mainNftStakeFarm[0].nftAddresses?.[137])
 
   
   const supportedCollectionPids = mainNftStakeFarm[0]["supportedCollectionPids"]
@@ -78,9 +80,7 @@ export default function CollectionSelectModal({
   )
 
 
-  const collectionList = mainNftStakeFarmReplaced 
-    ? [...mainNftStakeFarmReplaced, ...supportedNftStakeFarms] 
-    : [...mainNftStakeFarm, ...supportedNftStakeFarms]
+  const collectionList = [mainNftStakeFarmReplaced, ...supportedNftStakeFarms] 
   
   // Todo: Duplicate with CardHeadingWithBanner
   const collectionPowers = mainNftStakeFarm[0]["collectionPowers"] ?? collectionList.map((collection) => {

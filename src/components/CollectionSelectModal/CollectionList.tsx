@@ -83,7 +83,7 @@ function CollectionRow({
     >
       <ListLogo logoURI={avatar} size={"34px"} />
       <Column>
-        <Text bold>{collection.lpSymbol} ({collectionPower}X)</Text>
+        <Text bold>{collection.lpSymbol.replace("CoinCollect","")} ({collectionPower}X)</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
           {
             balance === 0 ? "Insufficient balance" :
