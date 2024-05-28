@@ -126,7 +126,7 @@ export default function AllowedNftsModal({
           {t('Stake eligible NFTs in this pool to earn rewards based on their ')}
           <LightningIcon width={15} />
           {t('earning power. ')}
-          <MessageTextLink display="inline" fontWeight={700} href="https://docs.coincollect.org/" target="_blank" color="failure">
+          <MessageTextLink display="inline" fontWeight={700} href="https://docs.coincollect.org/coincollect-nft/nft-powers" target="_blank" color="failure">
             {t('Discover NFT Power')} »
           </MessageTextLink>
         </Title>
