@@ -153,7 +153,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   // =====/Duplicate Use Codes=====
 
   const renderApprovalOrStakeButton = () => {
-    return (!isApproved && stakedBalance?.eq(0)) || pendingTx ? (
+    return stakedBalance?.eq(0) || pendingTx ? (
       <Button mt="8px"
         width="100%"
         isLoading={pendingTx}
