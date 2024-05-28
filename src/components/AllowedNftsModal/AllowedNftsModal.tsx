@@ -135,25 +135,27 @@ export default function AllowedNftsModal({
         <Wrapper>
 
           {nfts.map((avatar, index) => (
-            <CollectionWrapper>
-              <CoinContainer>
-                <CollectionAvatar
-                  key={index}
-                  src={avatar["avatar"]}
-                  width={70}
-                  height={70}
-                />
-                <CoinPower><LightningIcon width={12} />{nfts.length > 1 ? avatar["power"] : 1}</CoinPower >
-              </CoinContainer>
+            <Link href={avatar["link"]} target="_blank">
+              <CollectionWrapper>
+                <CoinContainer>
+                  <CollectionAvatar
+                    key={index}
+                    src={avatar["avatar"]}
+                    width={70}
+                    height={70}
+                  />
+                  <CoinPower><LightningIcon width={12} />{nfts.length > 1 ? avatar["power"] : 1}</CoinPower >
+                </CoinContainer>
 
-              <Text>{avatar["title"]}</Text>
-            </CollectionWrapper>
+                <Text>{avatar["title"]}</Text>
+              </CollectionWrapper>
+            </Link>
           ))}
 
         </Wrapper>
         <Message variant="warning">
           <MessageText>{t('Daily earnings are calculated based on the NFT with the highest earning power in the pool.')}</MessageText>
-        </Message> 
+        </Message>
       </StyledModalBody>
     </StyledModalContainer>
   )

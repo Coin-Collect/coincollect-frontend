@@ -16,6 +16,11 @@ export interface Address {
   80001?: string
 }
 
+export interface ProjectLink {
+  mainLink?: string
+  getNftLink?: string
+}
+
 export interface SerializedToken {
   chainId: number
   address: string
@@ -152,7 +157,7 @@ interface NftFarmConfigBaseProps {
 // New type for NFT Stake config
 export interface SerializedNftFarmConfig extends NftFarmConfigBaseProps {
   earningToken?: SerializedToken
-  projectLink?: string
+  projectLink?: ProjectLink
 }
 
 // New type for NFT Stake config

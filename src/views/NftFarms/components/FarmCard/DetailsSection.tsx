@@ -8,6 +8,7 @@ import { getPolygonScanLink } from 'utils'
 import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
 import MaxStakeRow from 'views/NftFarms/components/MaxStakeRow'
 import { Token } from '@coincollect/sdk'
+import { ProjectLink } from 'config/constants/types'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
@@ -22,7 +23,7 @@ export interface ExpandableSectionProps {
   stakingLimit?: BigNumber
   stakingLimitEndBlock?: number
   isFinished?: boolean
-  projectLink?: string
+  projectLink?: ProjectLink
 }
 
 const Wrapper = styled.div`
@@ -113,13 +114,13 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
         </Flex>
       )}
       {!removed && (
-        <StyledLinkExternal href={addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel })}</StyledLinkExternal>
+        <StyledLinkExternal href={projectLink?.getNftLink ?? addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel })}</StyledLinkExternal>
       )}
       <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>
 
 
       {earningToken?.address && (<StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
-      {projectLink && (<StyledLinkExternal href={projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
+      {projectLink?.mainLink && (<StyledLinkExternal href={projectLink.mainLink}>{t('View Project Site')}</StyledLinkExternal>)}
 
 
     </Wrapper>

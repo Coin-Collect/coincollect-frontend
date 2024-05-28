@@ -70,10 +70,11 @@ const nftFarms: SerializedNftFarmConfig[] = [
       {token: 'SHIB', percentage: 33350},
     ],
     supportedCollectionPids: [1,2,3,4],
-    collectionPowers: [15,1,3,5,10],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://lotshare.app/',
+    projectLink: {
+      mainLink: 'https://lotshare.app/',
+    },
   },
   {
     pid: 6,
@@ -96,7 +97,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [1,2],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://coincollect.org/',
+    projectLink: {
+      mainLink: 'https://coincollect.org/',
+    },
     banner: "https://coincollect.org/assets/images/showcase/shibStarter.png",
     avatar: "https://coincollect.org/assets/images/clone/nft350.png",
   },
@@ -121,7 +124,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [1,2],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://coincollect.org/',
+    projectLink: {
+      mainLink: 'https://coincollect.org/',
+    },
     banner: "https://coincollect.org/assets/images/showcase/shibBronze.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
   },
@@ -146,7 +151,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [1,2],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://coincollect.org/',
+    projectLink: {
+      mainLink: 'https://coincollect.org/',
+    },
     banner: "https://coincollect.org/assets/images/showcase/shibSilver.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
   },
@@ -171,7 +178,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [1,2],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://coincollect.org/',
+    projectLink: {
+      mainLink: 'https://coincollect.org/',
+    },
     banner: "https://coincollect.org/assets/images/showcase/shibGold.png",
     avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
   },
@@ -197,7 +206,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     collectionPowers: [1,1,1,1],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://coincollect.org/',
+    projectLink: {
+      mainLink: 'https://coincollect.org/',
+    },
     banner: "https://coincollect.org/assets/images/showcase/tetherPool.png",
     avatar: "https://coincollect.org/assets/images/showcase/250logo.png",
   },
@@ -222,7 +233,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://blitzbrawler.com/',
+    projectLink: {
+      mainLink: 'https://blitzbrawler.com/',
+    },
   },
   {
     pid: 12,
@@ -245,7 +258,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://avatarsai.net/',
+    projectLink: {
+      mainLink: 'https://avatarsai.net/',
+    },
   },
   {
     pid: 13,
@@ -270,7 +285,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://galxe.com/CoinCollect',
+    projectLink: {
+      mainLink: 'https://galxe.com/CoinCollect',
+    },
     banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
     avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
@@ -297,7 +314,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://beasthunter.app/',
+    projectLink: {
+      mainLink: 'https://beasthunter.app/',
+    },
   },
   {
     pid: 15,
@@ -322,7 +341,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://opensea.io/collection/key2web3/drop',
+    projectLink: {
+      mainLink: 'https://opensea.io/collection/key2web3/drop',
+    },
     banner: "https://coincollect.org/assets/images/partners/key/keyBanner.gif",
     avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
     staticNftImage: "https://coincollect.org/assets/images/partners/key/key128.jpg",
@@ -349,7 +370,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://nitroclash.net/',
+    projectLink: {
+      mainLink: 'https://nitroclash.net/',
+    },
   },
   {
     pid: 17,
@@ -372,7 +395,10 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://placedj.com/',
+    projectLink: {
+      mainLink: 'https://placedj.com/',
+      getNftLink: '/nfts/collections/mint/0x79C55f7f25b16D33A9C3352a332cbe6F375f7076',
+    },
   },
   {
     pid: 18,
@@ -397,7 +423,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     //supportedCollectionPids: [],
     mainCollectionWeight: '1',
     performanceFee: '0',
-    projectLink: 'https://taskon.xyz/space/553258',
+    projectLink: {
+      mainLink: 'https://taskon.xyz/space/553258',
+    },
     banner: "https://coincollect.org/assets/images/partners/taskon/taskON.gif",
     avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
     staticNftImage: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
@@ -424,7 +452,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://zidanogo.com/',
+    projectLink: {
+      mainLink: 'https://zidanogo.com/',
+    },
   },
   {
     pid: 20,
@@ -448,7 +478,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://sapienx.app/',
+    projectLink: {
+      mainLink: 'https://sapienx.app/',
+    },
   },
 /*
   {
@@ -473,7 +505,9 @@ const nftFarms: SerializedNftFarmConfig[] = [
     supportedCollectionPids: [1,2,3,4],
     mainCollectionWeight: '15',
     performanceFee: '0',
-    projectLink: 'https://avatarsai.net/',
+    projectLink: {
+      mainLink: 'https://avatarsai.net/',
+    },
     banner: "https://coincollect.org/assets/images/partners/galxe/galxePASSstake.png",
     avatar: "https://coincollect.org/assets/images/partners/galxe/galxeLogo.png",
     staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
