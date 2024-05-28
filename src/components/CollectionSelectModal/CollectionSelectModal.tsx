@@ -55,15 +55,6 @@ export default function CollectionSelectModal({
 
   const { data: nftFarms } = useFarms()
 
-  const notToListFarms = ["Starter SHIB", "Bronze SHIB", "Silver SHIB", "Gold SHIB", "Collectors Pool"]
-  const collectionPidOrigins = {
-    6: 1,
-    7: 2,
-    8: 3,
-    9: 4,
-    10: 4,
-  }
-
   const mainNftStakeFarm = nftFarms.filter(
     (farm) => farm.pid == pid
   )
