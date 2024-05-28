@@ -397,7 +397,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: {
       mainLink: 'https://placedj.com/',
-      getNftLink: '/nfts/collections/mint/0x79C55f7f25b16D33A9C3352a332cbe6F375f7076',
     },
   },
   {
