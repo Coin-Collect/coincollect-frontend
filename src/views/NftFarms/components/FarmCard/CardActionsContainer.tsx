@@ -75,12 +75,12 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     if (receipt?.status) {
       toastSuccess(t('Contract Enabled'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
-      
+
       if (smartNftPoolAddress) {
         // Open stake panel automatically
         onPresentDeposit()
       }
-      
+
     }
   }, [onApprove, dispatch, account, pid, t, toastSuccess, fetchWithCatchTxError])
 
@@ -148,18 +148,18 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       pid={collectionOption ? collectionOption : pid}
     />,
   )
-  
+
 
   // =====/Duplicate Use Codes=====
 
   const renderApprovalOrStakeButton = () => {
     return (!isApproved && stakedBalance?.eq(0)) || pendingTx ? (
-      <Button mt="8px" 
-              width="100%" 
-              isLoading={pendingTx} 
-              endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
-              onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
-        >
+      <Button mt="8px"
+        width="100%"
+        isLoading={pendingTx}
+        endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+        onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
+      >
         {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
       </Button>
     ) : (
@@ -183,35 +183,39 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
 
   return (
     <Action>
-      <Flex>
-        <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-          {sideRewards.length == 0 ? "COLLECT" : "REWARDS"}
-        </Text>
-        <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-          {t('Earned')}
-        </Text>
-      </Flex>
-      <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} earningToken={farm.earningToken} />
-      <Flex>
-        {smartNftPoolAddress ? (
-          <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
-            Staked NFT Count
-          </Text>
-        ) : (
-          <>
+      {stakedBalance?.gt(0) && (
+        <>
+          <Flex>
             <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-              {farm.lpSymbol.replace('CoinCollect', '')}
+              {sideRewards.length == 0 ? "COLLECT" : "REWARDS"}
             </Text>
             <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-              {t('Staked')}
+              {t('Earned')}
             </Text>
-          </>
-        )}
-      </Flex>
-
+          </Flex>
+          <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} earningToken={farm.earningToken} />
+          <Flex>
+            {smartNftPoolAddress ? (
+              <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
+                Staked NFT Count
+              </Text>
+            ) : (
+              <>
+                <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
+                  {farm.lpSymbol.replace('CoinCollect', '')}
+                </Text>
+                <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
+                  {t('Staked')}
+                </Text>
+              </>
+            )}
+          </Flex>
+        </>
+      )}
       {!account ? <ConnectWalletButton mt="8px" width="100%" /> : renderApprovalOrStakeButton()}
     </Action>
-  )
+  );
+
 }
 
 export default CardActions
