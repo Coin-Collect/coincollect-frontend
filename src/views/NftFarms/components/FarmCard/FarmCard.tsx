@@ -58,8 +58,8 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
   const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
 
-  const apyModalLink = "/nfts/collections"
   const nftAddress = getAddress(farm.nftAddresses)
+  const apyModalLink = "/nfts/collections/mint/" + nftAddress
   const isPromotedFarm = false //farm.token.symbol === 'COLLECT' Caution: Fix
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
   const farmConfig = nftFarmsConfig.filter((farmConfig) => farmConfig.pid == farm.pid)[0]

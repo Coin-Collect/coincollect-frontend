@@ -113,7 +113,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           )}
         </Flex>
       )}
-      {!removed && (
+      {(!removed && (projectLink?.getNftLink || addLiquidityUrl)) && (
         <StyledLinkExternal href={projectLink?.getNftLink ?? addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel })}</StyledLinkExternal>
       )}
       <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>

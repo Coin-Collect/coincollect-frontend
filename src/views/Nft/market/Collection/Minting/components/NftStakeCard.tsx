@@ -166,7 +166,7 @@ const NftStakeCardBody = ({ farm, account }) => {
             stakingLimit={farm.stakingLimit}
             stakingLimitEndBlock={farm.stakingLimitEndBlock}
             lpLabel={lpLabel}
-            addLiquidityUrl={apyModalLink}
+            addLiquidityUrl={null}
             projectLink={projectLink}
           />
         )}
