@@ -1,4 +1,4 @@
-import { AutoRenewIcon, Button, Flex, Text, useModal } from '@pancakeswap/uikit'
+import { AutoRenewIcon, Button, Flex, HelpIcon, Text, useModal, useTooltip } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ToastDescriptionWithTx } from 'components/Toast'
@@ -19,6 +19,8 @@ import nftFarmsConfig from 'config/constants/nftFarms'
 import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSelectModal'
 import DepositModal from '../DepositModal'
 import useStakeFarms from 'views/NftFarms/hooks/useStakeFarms'
+import { getDisplayApr } from 'views/NftFarms/Farms'
+import Balance from 'components/Balance'
 
 const Action = styled.div`
   padding-top: 16px;
@@ -115,6 +117,31 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     />,
   )
 
+  const displayApr = getDisplayApr(farm.apr)
+  const { targetRef, tooltip, tooltipVisible } = useTooltip(
+    <>
+      <Text bold>Daily Rewards</Text>
+      <Text>
+        {earnLabel}:
+        <Text ml="3px" style={{ display: 'inline-block' }} bold>
+          {displayApr}
+        </Text>
+      </Text>
+
+      {sideRewards.map((reward, index) => (
+        <Text key={index}>
+          {reward.token}:
+          <Text ml="3px" style={{ display: 'inline-block' }} bold>
+            <Balance bold value={Number(displayApr) * (reward.percentage / 100)} />
+          </Text>
+        </Text>
+      ))}
+    </>,
+    {
+      placement: 'top',
+    },
+  )
+
   // TODO: Duplicate Use Codes
   const { onStake } = useStakeFarms(pid)
   const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
@@ -192,6 +219,10 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
             <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
               {t('Earned')}
             </Text>
+            {tooltipVisible && tooltip}
+            <Flex ref={targetRef}>
+              <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
+            </Flex>
           </Flex>
           <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} earningToken={farm.earningToken} />
           <Flex>
