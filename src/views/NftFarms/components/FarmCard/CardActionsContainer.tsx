@@ -1,4 +1,4 @@
-import { AutoRenewIcon, Button, Flex, HelpIcon, Text, useModal, useTooltip } from '@pancakeswap/uikit'
+import { AutoRenewIcon, Button, Flex, HelpIcon, LightningIcon, Text, useModal, useTooltip } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ToastDescriptionWithTx } from 'components/Toast'
@@ -136,6 +136,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
           </Text>
         </Text>
       ))}
+      <Text mt={1} small color='primary'>*Calculated based on the NFT with the highest <LightningIcon/>earning power</Text>
     </>,
     {
       placement: 'top',
