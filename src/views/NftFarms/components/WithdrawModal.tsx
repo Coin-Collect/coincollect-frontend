@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { useCallback, useMemo, useState } from 'react'
-import { Button, Flex, Modal, Text } from '@pancakeswap/uikit'
+import { Button, Flex, Modal, ModalBody, Text } from '@pancakeswap/uikit'
 import { ModalActions, ModalInput } from 'components/Modal'
 import { useTranslation } from 'contexts/Localization'
 import { getFullDisplayBalance } from 'utils/formatBalance'
@@ -9,15 +9,46 @@ import NoNftsImage from 'views/Nft/market/components/Activity/NoNftsImage'
 import CircleLoader from 'components/Loader/CircleLoader'
 import styled from 'styled-components'
 import { useStakedNfts } from 'views/Nft/market/hooks/useStakedNfts'
+import useTheme from 'hooks/useTheme'
 
 const NftBox = styled(RoundedImage)`
+    width: 90px;
+    height: 90px;
     border-radius: 6px;
+    background-color: #ffffff;
+    &:hover {
+        border: 2px solid #cac7c8;
+    }
 `
-
 const SelectedNftBox = styled(RoundedImage)`
+    width: 90px;
+    height: 90px;
+    position: relative;
     border-radius: 6px;
-    box-shadow: 0 0 10px 4px #e91e63;
-`
+    background-color: #f8bbd0;
+    border: 2px solid #e91e63;
+
+    &:after {
+        content: '✔';
+        position: absolute;
+        top: 20%;
+        left: 80%;
+        transform: translate(-50%, -50%);
+        font-size: 15px;
+        color: white;
+        background: rgba(233, 30, 99, 0.8);
+        border-radius: 50%;
+        padding: 5px;
+    }
+`;
+
+const Wrapper = styled(Flex)`
+  background: ${props => props.theme.colors.background};
+  border-radius: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 15px;
+`;
 
 interface WithdrawModalProps {
   max: BigNumber
@@ -31,6 +62,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
   const [pendingTx, setPendingTx] = useState(false)
   const [selectedNftList, setSelectedNftList] = useState<{ collectionAddress: string; tokenId: number }[]>([]);
   const { t } = useTranslation()
+  const { theme } = useTheme()
+
   const fullBalance = useMemo(() => {
     return getFullDisplayBalance(max)
   }, [max])
@@ -54,8 +87,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
         onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
         src={nft.image}
         height={90}
-        width={68}
-        m="8px"
+        width={90}
+        m="3px"
       />
     ) : (
       <NftBox
@@ -63,8 +96,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
         onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
         src={nft.image}
         height={90}
-        width={68}
-        m="8px"
+        width={90}
+        m="3px"
       />
     );
   });
@@ -89,8 +122,10 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
 
 
   return (
-    <Modal title={t('Select NFTs to UnStake')} onDismiss={onDismiss}>
+    <Modal minWidth="520px" bodyPadding='24px 24px 10px 24px' title={t('Select NFTs to UnStake')} headerBackground={theme.colors.gradients.bubblegum} onDismiss={onDismiss}>
+      <ModalBody maxWidth="620px">
 
+      <Wrapper>
       {nftList.length === 0 && !isLoading && !error ? (
         <Flex p="24px" flexDirection="column" alignItems="center">
           <NoNftsImage />
@@ -120,7 +155,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
           <Text mt={1}>NFTs will be listed shortly...</Text>
         </Flex>
       )}
-
+      </Wrapper>
 
       <ModalActions>
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
@@ -141,7 +176,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
           {pendingTx ? t('Confirming') : t('Confirm')}
         </Button>
       </ModalActions>
-
+      </ModalBody>
     </Modal>
   )
 }
