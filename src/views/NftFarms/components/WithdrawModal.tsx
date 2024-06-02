@@ -122,7 +122,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
 
 
   return (
-    <Modal minWidth="520px" bodyPadding='24px 24px 10px 24px' title={t('Select NFTs to UnStake')} headerBackground={theme.colors.gradients.bubblegum} onDismiss={onDismiss}>
+    <Modal minWidth="346px" bodyPadding='24px 24px 10px 24px' title={t('Select NFTs to UnStake')} headerBackground={theme.colors.gradients.bubblegum} onDismiss={onDismiss}>
       <ModalBody maxWidth="620px">
 
         <Wrapper>
