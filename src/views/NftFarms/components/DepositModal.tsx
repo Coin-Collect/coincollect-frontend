@@ -13,18 +13,35 @@ import useTheme from 'hooks/useTheme'
 
 
 const NftBox = styled(RoundedImage)`
+    width: 90px;
+    height: 90px;
     border-radius: 6px;
-    position: relative;
     background-color: #ffffff;
     &:hover {
         border: 2px solid #cac7c8;
     }
 `
 const SelectedNftBox = styled(RoundedImage)`
+    width: 90px;
+    height: 90px;
+    position: relative;
     border-radius: 6px;
     background-color: #f8bbd0;
     border: 2px solid #e91e63;
-`
+
+    &:after {
+        content: '✔';
+        position: absolute;
+        top: 20%;
+        left: 80%;
+        transform: translate(-50%, -50%);
+        font-size: 15px;
+        color: white;
+        background: rgba(233, 30, 99, 0.8);
+        border-radius: 50%;
+        padding: 5px;
+    }
+`;
 
 const Wrapper = styled(Flex)`
   background: ${props => props.theme.colors.background};
@@ -133,23 +150,24 @@ const DepositModal: React.FC<DepositModalProps> = ({
 
 
   return (
-    <Modal title={t('Select NFTs to Stake')} headerBackground={theme.colors.gradients.bubblegum} onDismiss={onDismiss}>
+    <Modal minWidth="520px" bodyPadding='24px 24px 10px 24px' title={t('Select NFTs to Stake')} headerBackground={theme.colors.gradients.bubblegum} onDismiss={onDismiss}>
       <ModalBody maxWidth="620px">
 
         {stakingLimit.gt(0) && (
-          <Text color="secondary" bold mb="5px" style={{ textAlign: 'center' }} fontSize="20px">
-            {t('Max stake: %amount% NFT', {
+          <Text color="white" mb="5px" style={{ textAlign: 'left' }} fontSize="18px">
+            {t('Selected: %selectedCount%/%amount%', {
+              selectedCount: selectedNftList.length,
               amount: stakingLimit.toNumber(),
-              token: lpLabel,
             })}
+            {isStakeLimitReached && (
+          <Text color="failure" fontSize="16px" style={{ display: 'inline' }} ml="10px">
+            {t('Stake limit reached! Please remove extra NFTs to proceed.')}
+          </Text>
+        )}
           </Text>
         )}
 
-        {isStakeLimitReached && (
-          <Text color="warning" fontSize="20px" style={{ textAlign: 'center' }} mb="10px">
-            {t('Max Stake Limit Reached!')}
-          </Text>
-        )}
+        
 
         <Wrapper>
           {nftList.length === 0 && !isLoading && !error ? (
@@ -205,9 +223,6 @@ const DepositModal: React.FC<DepositModalProps> = ({
             {pendingTx ? t('Confirming') : t('Confirm')}
           </Button>
         </ModalActions>
-        <LinkExternal href={addLiquidityUrl} style={{ alignSelf: 'center' }}>
-          {t('Get %symbol%', { symbol: tokenName })}
-        </LinkExternal>
       </ModalBody>
     </Modal>
   )
