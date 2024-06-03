@@ -136,7 +136,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
           </Text>
         </Text>
       ))}
-      <Text mt={1} small color='primary'>*Calculated based on the NFT with the highest <LightningIcon/>earning power</Text>
+      <Text mt={1} small color='primary'>*Calculated based on the NFT with the highest <LightningIcon />earning power</Text>
     </>,
     {
       placement: 'top',
@@ -221,9 +221,11 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
               {t('Earned')}
             </Text>
             {tooltipVisible && tooltip}
-            <Flex ref={targetRef}>
-              <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
-            </Flex>
+            {displayApr && (
+              <Flex ref={targetRef}>
+                <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
+              </Flex>
+            )}
           </Flex>
           <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} earningToken={farm.earningToken} />
           <Flex>
