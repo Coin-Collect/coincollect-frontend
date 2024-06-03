@@ -150,7 +150,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
               </Text>
             </Flex>
           ) : (
-            <Flex p="24px" flexDirection="column" alignItems="center">
+            <Flex p="24px" margin="0 auto" flexDirection="column" alignItems="center">
               <CircleLoader size="30px" />
               <Text mt={1}>NFTs will be listed shortly...</Text>
             </Flex>
