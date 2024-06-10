@@ -42,7 +42,7 @@ const drawerLinks: MenuItemsType[] = [
                 href: '/pools',
             },
             {
-                label: 'Quest(Soon)',
+                label: 'Quest (Soon)',
                 href: '/?q=soon',
             },
 

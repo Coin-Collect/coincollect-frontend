@@ -93,7 +93,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
     largeAvatars.push({ title: farm.lpSymbol.replace("CoinCollect",""), power: collectionPowers?.[i], avatar: farm["avatar"] ?? dataFromMinting?.avatar, link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? "/nfts/collections" });
 
     if (smallAvatars.length > 4) {
-      smallAvatars.push({ avatar: "https://cdn-icons-png.flaticon.com/512/2550/2550282.png" });
+      smallAvatars.push({ avatar: "https://coincollect.org/assets/images/logos/3dots.gif" });
       break;
     }
 

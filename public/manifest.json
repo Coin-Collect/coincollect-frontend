@@ -5,7 +5,7 @@
   "homepage_url": "https://app.coincollect.org",
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#1FC7D4",
+  "theme_color": "#e91e62",
   "background_color": "#e91e62",
   "orientation": "portrait",
   "icons": [
