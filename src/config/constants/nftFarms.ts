@@ -481,6 +481,100 @@ const nftFarms: SerializedNftFarmConfig[] = [
       mainLink: 'https://sapienx.app/',
     },
   },
+
+  {
+    pid: 21,
+    lpSymbol: "Lens Handles",
+    isCommunity: true,
+    nftAddresses: {
+        137: "0xe7E7EaD361f3AaCD73A61A9bD6C10cA17F38E945",
+        80001: "0xe7E7EaD361f3AaCD73A61A9bD6C10cA17F38E945"
+    },
+    contractAddresses: {
+        137: "Enter after deployment",
+        80001: "Enter after deployment"
+    },
+    tokenPerBlock: "0.00000300",
+    participantThreshold: 300,
+    isFinished: false,
+    earningToken: serializedTokens.usdt,
+    sideRewards: [
+        { token: "COLLECT", percentage: 50000 },
+        { token: "AVATAR", percentage: 194915254 }
+    ],
+    supportedCollectionPids: [],
+    mainCollectionWeight: 30,
+    performanceFee: "0",
+    projectLink: {
+        mainLink: "https://www.lens.xyz/"
+    },
+    banner: "https://coincollect.org/assets/images/collections/banners/lens.jpg",
+    avatar: "https://coincollect.org/assets/images/collections/logos/lens.jpg",
+    staticNftImage: "https://coincollect.org/assets/images/collections/logos/lens.jpg",
+    useApi: true
+},
+
+{
+  pid: 22,
+  lpSymbol: "Unstoppable Domain",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f",
+      80001: "0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000306",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.usdc,
+  sideRewards: [
+      { token: "COLLECT", percentage: 50833 },
+      { token: "AVATAR", percentage: 208333333 }
+  ],
+  supportedCollectionPids: [],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://unstoppabledomains.com/"
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/udomains.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/udomains.jpg",
+  useApi: true
+},
+
+{
+  pid: 23,
+  lpSymbol: "Uniswap V3 NFT",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000076",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 175000 }
+  ],
+  supportedCollectionPids: [],
+  mainCollectionWeight: 40,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/"
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/uniswap.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/uniswap.jpg",
+  useApi: true
+},
+
 /*
   {
     pid: 14,
