@@ -506,7 +506,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     mainCollectionWeight: 30,
     performanceFee: "0",
     projectLink: {
-        mainLink: "https://www.lens.xyz/"
+        mainLink: "https://www.lens.xyz/",
+        getNftLink: "https://www.lens.xyz/mint",
     },
     banner: "https://coincollect.org/assets/images/collections/banners/lens.jpg",
     avatar: "https://coincollect.org/assets/images/collections/logos/lens.jpg",
@@ -538,7 +539,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
   mainCollectionWeight: 30,
   performanceFee: "0",
   projectLink: {
-      mainLink: "https://unstoppabledomains.com/"
+      mainLink: "https://unstoppabledomains.com/",
+      getNftLink: "https://unstoppabledomains.com/search",
   },
   banner: "https://coincollect.org/assets/images/collections/banners/udomains.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/udomains.jpg",
@@ -568,7 +570,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
   mainCollectionWeight: 40,
   performanceFee: "0",
   projectLink: {
-      mainLink: "https://uniswap.org/"
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool",
   },
   banner: "https://coincollect.org/assets/images/collections/banners/uniswap.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/uniswap.jpg",
