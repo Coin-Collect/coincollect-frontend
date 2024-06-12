@@ -502,7 +502,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
         { token: "COLLECT", percentage: 50000 },
         { token: "AVATAR", percentage: 194915254 }
     ],
-    supportedCollectionPids: [],
+    supportedCollectionPids: [15,1,2,3,4],
+    collectionPowers: [1,3,5,10,15,30],
     mainCollectionWeight: 30,
     performanceFee: "0",
     projectLink: {
@@ -535,7 +536,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
       { token: "COLLECT", percentage: 50833 },
       { token: "AVATAR", percentage: 208333333 }
   ],
-  supportedCollectionPids: [],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
   mainCollectionWeight: 30,
   performanceFee: "0",
   projectLink: {
@@ -566,7 +568,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
   sideRewards: [
       { token: "COLLECT", percentage: 175000 }
   ],
-  supportedCollectionPids: [],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
   mainCollectionWeight: 40,
   performanceFee: "0",
   projectLink: {
