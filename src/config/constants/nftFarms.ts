@@ -581,6 +581,166 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
+{
+  pid: 24,
+  lpSymbol: "Crypto Unicorns",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000076",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 175000 }
+  ],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
+  mainCollectionWeight: 40,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/unicorns.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/unicorns.jpg",
+  useApi: true
+},
+
+{
+  pid: 25,
+  lpSymbol: "SmartCat Rewards",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000076",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 175000 }
+  ],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
+  mainCollectionWeight: 40,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/smartcats.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/smartcats.jpg",
+  useApi: true
+},
+
+{
+  pid: 26,
+  lpSymbol: "Meme Coins",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000076",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 175000 }
+  ],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
+  mainCollectionWeight: 40,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/uniswap.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/uniswap.jpg",
+  useApi: true
+},
+
+{
+  pid: 27,
+  lpSymbol: "Free Bitcoin",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000076",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 175000 }
+  ],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
+  mainCollectionWeight: 40,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/bitcoin.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/uniswap.jpg",
+  useApi: true
+},
+
+{
+  pid: 28,
+  lpSymbol: "Cyberpunk Citizenship",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "Enter after deployment",
+      80001: "Enter after deployment"
+  },
+  tokenPerBlock: "0.00000076",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 175000 }
+  ],
+  supportedCollectionPids: [15,1,2,3,4],
+  collectionPowers: [1,3,5,10,15,30],
+  mainCollectionWeight: 40,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/cyberpunk.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/cyberpunk.jpg",
+  useApi: true
+},
+
 /*
   {
     pid: 14,
