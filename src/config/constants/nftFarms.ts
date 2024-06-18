@@ -491,8 +491,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
         80001: "0xe7E7EaD361f3AaCD73A61A9bD6C10cA17F38E945"
     },
     contractAddresses: {
-        137: "Enter after deployment",
-        80001: "Enter after deployment"
+        137: "0x4c8B3A2f23C377bC90288a38068EEB23050Ae709",
+        80001: "0x4c8B3A2f23C377bC90288a38068EEB23050Ae709"
     },
     tokenPerBlock: "0.00000300",
     participantThreshold: 300,
