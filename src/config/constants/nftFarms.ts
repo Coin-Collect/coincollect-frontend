@@ -502,7 +502,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
         { token: "COLLECT", percentage: 50000 },
         { token: "AVATAR", percentage: 194915254 }
     ],
-    supportedCollectionPids: [15,1,2,3,4],
+    supportedCollectionPids: [1,2,3,4,15],
     collectionPowers: [3,5,10,15,1,30],
     mainCollectionWeight: 30,
     performanceFee: "0",
