@@ -502,17 +502,17 @@ const nftFarms: SerializedNftFarmConfig[] = [
         { token: "COLLECT", percentage: 50000 },
         { token: "AVATAR", percentage: 194915254 }
     ],
+    supportedCollectionPids: [],
     supportedCollectionPids: [15,1,2,3,4],
-    collectionPowers: [1,3,5,10,15,30],
+    collectionPowers: [3,5,10,15,1,30],
     mainCollectionWeight: 30,
     performanceFee: "0",
     projectLink: {
         mainLink: "https://www.lens.xyz/",
-        getNftLink: "https://www.lens.xyz/mint",
+        getNftLink: "https://www.lens.xyz/mint"
     },
     banner: "https://coincollect.org/assets/images/collections/banners/lens.jpg",
     avatar: "https://coincollect.org/assets/images/collections/logos/lens.jpg",
-    staticNftImage: "https://coincollect.org/assets/images/collections/logos/lens.jpg",
     useApi: true
 },
 
@@ -528,21 +528,22 @@ const nftFarms: SerializedNftFarmConfig[] = [
       137: "Enter after deployment",
       80001: "Enter after deployment"
   },
-  tokenPerBlock: "0.00000306",
+  tokenPerBlock: "0.00000308",
   participantThreshold: 300,
   isFinished: false,
-  earningToken: serializedTokens.usdc,
+  earningToken: serializedTokens.matic,
   sideRewards: [
-      { token: "COLLECT", percentage: 50833 },
-      { token: "AVATAR", percentage: 208333333 }
+      { token: "COLLECT", percentage: 50413 },
+      { token: "AVATAR", percentage: 206611570 }
   ],
+  supportedCollectionPids: [],
   supportedCollectionPids: [15,1,2,3,4],
-  collectionPowers: [1,3,5,10,15,30],
+  collectionPowers: [3,5,10,15,1,30],
   mainCollectionWeight: 30,
   performanceFee: "0",
   projectLink: {
-      mainLink: "https://unstoppabledomains.com/",
-      getNftLink: "https://unstoppabledomains.com/search",
+      mainLink: "https://taskon.xyz/space/553258",
+      getNftLink: "https://app.uniswap.org/pool"
   },
   banner: "https://coincollect.org/assets/images/collections/banners/udomains.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/udomains.jpg",
