@@ -55,9 +55,10 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
   // Todo: In the future, I plan to add the mainNftPid value to supportedNfts.
   const firstFarmOfMainNft = nftFarmsConfig.find((nftFarm) => nftFarm.nftAddresses?.[137] === nftFarmData.nftAddresses?.[137])
   const supportedCollectionPids = nftFarmData["supportedCollectionPids"] ? [firstFarmOfMainNft.pid, ...nftFarmData["supportedCollectionPids"]] : [firstFarmOfMainNft.pid]
-  const supportedNftStakeFarms = nftFarmsConfig.filter(
-    (farm) => supportedCollectionPids.includes(farm.pid)
-  )
+
+  const supportedNftStakeFarms = supportedCollectionPids
+  .map(pid => nftFarmsConfig.find(farm => farm.pid === pid))
+  .filter(farm => farm !== undefined);
 
   // Todo: Duplicate with CollectionSelectModal, solve in hook level
   const collectionPowers = nftFarmData["collectionPowers"] ?? supportedNftStakeFarms.map((collection) => {
@@ -121,7 +122,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
       >
 
 
-        {smallAvatars.map((avatar, index) => (
+        {smallAvatars.reverse().map((avatar, index) => (
           <CollectionAvatar
             key={index}
             src={avatar["avatar"]}

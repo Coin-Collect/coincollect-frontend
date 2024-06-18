@@ -96,9 +96,9 @@ export default function CollectionSelectModal({
 
 
   const supportedCollectionPids = mainNftStakeFarm[0]["supportedCollectionPids"]
-  const supportedNftStakeFarms = nftFarms.filter(
-    (farm) => supportedCollectionPids.includes(farm.pid)
-  )
+  const supportedNftStakeFarms = supportedCollectionPids
+  .map(pid => nftFarms.find(farm => farm.pid === pid))
+  .filter(farm => farm !== undefined);
 
 
   const collectionList = [mainNftStakeFarmReplaced, ...supportedNftStakeFarms]
