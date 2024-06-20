@@ -31,14 +31,14 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
           // If staticNftImage exists, use that image directly
           tokenIdsNumber = tokenIds.map((id) => {
             return {
-              tokenId: id.toNumber(),
+              tokenId: id.toString(),
               collectionAddress,
               image: nftPool["staticNftImage"]
             };
           });
         } else if (nftPool["useApi"]) {
           tokenIdsNumber = nftData.map(nft => ({
-            tokenId: nft.tokenId.toNumber(),
+            tokenId: nft.tokenId.toString(),
             collectionAddress,
             image: nft.media["thumbnail"]
           }));
