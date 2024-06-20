@@ -22,7 +22,8 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
 
     const getNfts = async () => {
       try {
-        const tokenIds = nftPool["useApi"] ? await walletOfOwnerApi(account, collectionAddress) : await collectionContract.walletOfOwner(account);
+        const nftData = nftPool["useApi"] ? await walletOfOwnerApi(account, collectionAddress) : await collectionContract.walletOfOwner(account);
+        const tokenIds = nftPool["useApi"] ? nftData.map(nft => nft.tokenId) : nftData;
     
         let tokenIdsNumber = [];
     
@@ -35,6 +36,12 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
               image: nftPool["staticNftImage"]
             };
           });
+        } else if (nftPool["useApi"]) {
+          tokenIdsNumber = nftData.map(nft => ({
+            tokenId: nft.tokenId.toNumber(),
+            collectionAddress,
+            image: nft.media["thumbnail"]
+          }));
         } else {
           // If staticNftImage doesn't exist, get image from blockchain
           const imageCalls = tokenIds.map((id) => {

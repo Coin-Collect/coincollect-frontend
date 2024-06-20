@@ -71,7 +71,10 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
   const res = await fetch(fullUrl);
   if (res.ok) {
     const json = await res.json();
-    return json.ownedNfts.map(item => new BigNumber(item.id.tokenId));
+    return json.ownedNfts.map(item => ({
+      tokenId: new BigNumber(item.id.tokenId),
+      media: item.media[0]
+    }));
   }
   console.error('Failed to fetch NFTs', res.statusText);
   return null;
