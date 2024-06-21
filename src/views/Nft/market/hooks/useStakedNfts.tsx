@@ -68,7 +68,7 @@ export const useStakedNfts = (selectedPid: number) => {
         try {
           //@ts-ignore
           const tokenURI = rawTokenURIs[index][0];
-          meta = await axios(tokenURI);
+          meta = await axios(tokenURI.replace("ipfs://", `${IPFS_GATEWAY}/`));
         } catch (error) {
           console.log('IPFS link is broken!', error);
         }
