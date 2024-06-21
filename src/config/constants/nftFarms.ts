@@ -524,8 +524,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: "0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f"
   },
   contractAddresses: {
-      137: "Enter after deployment",
-      80001: "Enter after deployment"
+      137: "0x5719716f0f6d9a546ea94902a1edb808ee543fdc",
+      80001: "0x5719716f0f6d9a546ea94902a1edb808ee543fdc"
   },
   tokenPerBlock: "0.00000306",
   participantThreshold: 300,
@@ -535,13 +535,13 @@ const nftFarms: SerializedNftFarmConfig[] = [
       { token: "COLLECT", percentage: 50833 },
       { token: "AVATAR", percentage: 175000000 }
   ],
-  supportedCollectionPids: [],
+  supportedCollectionPids: [1,2,3,4,15],
   collectionPowers: [30,3,5,10,15,1],
   mainCollectionWeight: 30,
   performanceFee: "0",
   projectLink: {
-      mainLink: "https://www.lens.xyz/",
-      getNftLink: "https://www.lens.xyz/mint"
+      mainLink: "https://unstoppabledomains.com/",
+      getNftLink: "https://unstoppabledomains.com/explore"
   },
   banner: "https://coincollect.org/assets/images/collections/banners/udomains.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/udomains.jpg",
