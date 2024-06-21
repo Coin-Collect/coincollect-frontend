@@ -1026,11 +1026,11 @@ export const mainnetTokens = defineTokens({
     'https://yearn.finance/',
   ),
   uni: new Token(
-    MAINNET,
-    '0xBf5140A22578168FD562DCcF235E5D43A02ce9B1',
+    POLYGON_MAINNET,
+    '0xb33EaAd8d922B1083446DC23f610c2567fB5180f',
     18,
     'UNI',
-    'Binance-Peg Uniswap Token',
+    'Polygon-Peg Uniswap Token',
     'https://uniswap.org/',
   ),
   fil: new Token(
