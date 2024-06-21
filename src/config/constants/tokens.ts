@@ -1027,7 +1027,7 @@ export const mainnetTokens = defineTokens({
   ),
   uni: new Token(
     POLYGON_MAINNET,
-    '0xb33EaAd8d922B1083446DC23f610c2567fB5180f',
+    '0xb33eaad8d922b1083446dc23f610c2567fb5180f',
     18,
     'UNI',
     'Polygon-Peg Uniswap Token',
