@@ -548,6 +548,39 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
+{
+  pid: 23,
+  lpSymbol: "UniSwap V3 NFT",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+      80001: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+  },
+  contractAddresses: {
+      137: "0xb570cc5749273c6079b7de34331a5396a98e6a26",
+      80001: "0xb570cc5749273c6079b7de34331a5396a98e6a26"
+  },
+  tokenPerBlock: "0.00000033",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.uni,
+  sideRewards: [
+      { token: "COLLECT", percentage: 769230 }
+  ],
+  supportedCollectionPids: [1,2,3,4,15],
+  collectionPowers: [30,3,5,10,15,1],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://uniswap.org/",
+      getNftLink: "https://app.uniswap.org/pool?chain=polygon"
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/uniswap.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/uniswap.jpg",
+  useApi: true
+},
+
+
 /*
   {
     pid: 14,
