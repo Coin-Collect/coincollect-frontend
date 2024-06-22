@@ -79,31 +79,33 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
   let smallAvatars = [];
   let largeAvatars = [];
   let collectBadgeAdded = false;
+  let avatar;
   for (let i = 0; i < supportedNftStakeFarms.length; i++) {
     let farm = supportedNftStakeFarms[i];
     const dataFromMinting = mintingConfig.find((collection) => collection.stake_pid === farm.pid)
+    avatar = null;
 
     if (farm.pid <= 4) {
       if (!collectBadgeAdded) {
-        smallAvatars.push({ avatar: "/logo.png" });
+        avatar = { avatar: "/logo.png" };
         collectBadgeAdded = true;
       }
     } else {
-      smallAvatars.push({ avatar: farm["avatar"] ?? dataFromMinting?.avatar });
+      avatar = { avatar: farm["avatar"] ?? dataFromMinting?.avatar };
     }
     largeAvatars.push({ title: farm.lpSymbol.replace("CoinCollect",""), power: collectionPowers?.[i], avatar: farm["avatar"] ?? dataFromMinting?.avatar, link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? "/nfts/collections" });
 
-    if (smallAvatars.length > 4) {
-      smallAvatars.reverse();
-      smallAvatars.push({ avatar: "https://coincollect.org/assets/images/logos/3dots.gif" });
-      break;
+    if (smallAvatars.length <= 4 && avatar) {
+      smallAvatars.push(avatar);
     }
 
   }
 
-  if (smallAvatars.length <= 4) {
+  
     smallAvatars.reverse();
-  }
+    if (smallAvatars.length > 4) {
+      smallAvatars.push({ avatar: "https://coincollect.org/assets/images/logos/3dots.gif" });
+    }
 
   const [onPresentAllowedNftsModal] = useModal(
     <AllowedNftsModal
