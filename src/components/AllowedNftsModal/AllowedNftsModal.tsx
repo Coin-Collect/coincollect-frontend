@@ -67,6 +67,8 @@ const Wrapper = styled(Flex)`
   background: ${props => props.theme.colors.background};
   padding: 30px 5px 15px 5px;
   border-radius: 16px;
+  max-height: 500px;
+  overflow-y: auto;
 `;
 
 const MessageTextLink = styled(Link)`
