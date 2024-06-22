@@ -189,6 +189,15 @@ export const mainnetTokens = defineTokens({
     'Binance BTC',
     'https://bitcoin.org/',
   ),
+  wbtc: new Token(
+    MAINNET,
+    '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
+    18,
+    'BTC',
+    'Polygon BTC',
+    'https://bitcoin.org/',
+  ),
+
   ust: new Token(
     MAINNET,
     '0x23396cF899Ca06c4472205fC903bDB4de249D6fC',
