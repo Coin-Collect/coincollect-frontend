@@ -94,10 +94,15 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
     largeAvatars.push({ title: farm.lpSymbol.replace("CoinCollect",""), power: collectionPowers?.[i], avatar: farm["avatar"] ?? dataFromMinting?.avatar, link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? "/nfts/collections" });
 
     if (smallAvatars.length > 4) {
+      smallAvatars.reverse();
       smallAvatars.push({ avatar: "https://coincollect.org/assets/images/logos/3dots.gif" });
       break;
     }
 
+  }
+
+  if (smallAvatars.length <= 4) {
+    smallAvatars.reverse();
   }
 
   const [onPresentAllowedNftsModal] = useModal(
@@ -122,7 +127,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
       >
 
 
-        {smallAvatars.reverse().map((avatar, index) => (
+        {smallAvatars.map((avatar, index) => (
           <CollectionAvatar
             key={index}
             src={avatar["avatar"]}
