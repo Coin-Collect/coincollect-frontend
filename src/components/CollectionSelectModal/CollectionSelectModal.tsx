@@ -139,7 +139,7 @@ export default function CollectionSelectModal({
   const { theme } = useTheme()
 
   const config = {
-    [SelectCollectionModalView.select]: { title: t('Select Collection'), onBack: undefined },
+    [SelectCollectionModalView.select]: { title: t(`Select from ${collectionList.length} collection`), onBack: undefined },
   }
 
   return (
@@ -161,7 +161,7 @@ export default function CollectionSelectModal({
         </Title>
         <Wrapper>
           <CollectionList
-            height={280}
+            height={245}
             collections={collectionList}
             onCurrencySelect={handleCurrencySelect}
             allowance={allowance}
