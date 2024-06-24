@@ -624,7 +624,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
       137: "Enter after deployment",
       80001: "Enter after deployment"
   },
-  tokenPerBlock: "0.00000000",
+  tokenPerBlock: "0.0000000031",
   participantThreshold: 300,
   isFinished: false,
   earningToken: serializedTokens.weth,
