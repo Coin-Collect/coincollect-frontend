@@ -79,7 +79,7 @@ const Hero = () => {
             {/*!account && <ConnectWalletButton mr="8px" />*/}
 
             <NextLinkFromReactRouter to="/nftpools">
-              <Button mr="8px" variant='primary'>{t('.𖥔 ݁ ˖ Explore')}</Button>
+              <Button mr="8px" variant='primary'>{t('✧˖° Explore')}</Button>
             </NextLinkFromReactRouter>
             <NextLinkFromReactRouter to="/nfts/collections">
               <Button variant='secondary'>{t('Mint NFT')}</Button>
