@@ -267,6 +267,23 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
 
 
         {/* ======Dummy Collections====== */}
+
+        <CollectionCard
+          key="dummy"
+          bgSrc="https://coincollect.org/assets/images/partners/questgalaxy/questgalaxySM.jpg"
+          avatarSrc="https://coincollect.org/assets/images/partners/questgalaxy/qlogo.jpg"
+          collectionName="QuestGalaxy"
+          url="https://twitter.com/questgalaxycom"
+        >
+          <Flex alignItems="center">
+            <Text fontSize="12px" color="textSubtle">
+              MaxSupply
+            </Text>
+            <BNBAmountLabel amount={5000} />
+          </Flex>
+        </CollectionCard>
+
+
         <CollectionCard
           key="dummy"
           bgSrc="https://coincollect.org/assets/images/partners/cyberpunk/bannersm-min.png"
@@ -278,7 +295,7 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
             <Text fontSize="12px" color="textSubtle">
               MaxSupply
             </Text>
-            <BNBAmountLabel amount={1000} />
+            <BNBAmountLabel amount={4000} />
           </Flex>
         </CollectionCard>
 
