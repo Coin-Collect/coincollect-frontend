@@ -581,6 +581,40 @@ const nftFarms: SerializedNftFarmConfig[] = [
 },
 
 {
+  pid: 25,
+  lpSymbol: "FREE ETHEREUM",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247",
+      80001: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247"
+  },
+  contractAddresses: {
+      137: "0xd561b4d1ed1349d784adc3848abec70faa802789",
+      80001: "0xd561b4d1ed1349d784adc3848abec70faa802789"
+  },
+  tokenPerBlock: "0.0000000010",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.weth,
+  sideRewards: [
+      { token: "COLLECT", percentage: 250000000 }
+  ],
+  supportedCollectionPids: [1,2,3,4,5,11,12,14,16,17,19,20],
+  collectionPowers: [30,5,10,15,20,10,10,10,10,10,10,10,10],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+    mainLink: 'https://opensea.io/collection/key2web3/drop',
+    getNftLink: "https://opensea.io/collection/key2web3/overview"
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/ethereum.jpg",
+  avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
+  useApi: true
+},
+
+/*
+
+{
   pid: 24,
   lpSymbol: "FREE BITCOIN",
   isCommunity: true,
@@ -612,73 +646,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
-{
-  pid: 25,
-  lpSymbol: "FREE ETHEREUM",
-  isCommunity: true,
-  nftAddresses: {
-      137: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247",
-      80001: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247"
-  },
-  contractAddresses: {
-      137: "Enter after deployment",
-      80001: "Enter after deployment"
-  },
-  tokenPerBlock: "0.0000000031",
-  participantThreshold: 300,
-  isFinished: false,
-  earningToken: serializedTokens.weth,
-  sideRewards: [
-      { token: "COLLECT", percentage: 250000000 }
-  ],
-  supportedCollectionPids: [1,2,3,4,5,11,12,14,16,17,19,20],
-  collectionPowers: [10,5,5,5,5,5,5,5,5,5,5,5,5],
-  mainCollectionWeight: 10,
-  performanceFee: "0",
-  projectLink: {
-    mainLink: 'https://opensea.io/collection/key2web3/drop',
-      getNftLink: "https://opensea.io/collection/key2web3/overview"
-  },
-  banner: "https://coincollect.org/assets/images/collections/banners/ethereum.jpg",
-  avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
-  useApi: true
-},
 
-{
-  pid: 26,
-  lpSymbol: "MEME COINS",
-  isCommunity: true,
-  nftAddresses: {
-      137: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247",
-      80001: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247"
-  },
-  contractAddresses: {
-      137: "Enter after deployment",
-      80001: "Enter after deployment"
-  },
-  tokenPerBlock: "0.00381944",
-  participantThreshold: 300,
-  isFinished: false,
-  earningToken: serializedTokens.collect,
-  sideRewards: [
-      { token: "SHIB", percentage: 5400 },
-      { token: "BONK", percentage: 5000 },
-      { token: "ELON", percentage: 300000 }
-  ],
-  supportedCollectionPids: [1,2,3,4,5,11,12,14,16,17,19,20],
-  collectionPowers: [10,5,5,5,5,5,5,5,5,5,5,5,5],
-  mainCollectionWeight: 10,
-  performanceFee: "0",
-  projectLink: {
-    mainLink: 'https://opensea.io/collection/key2web3/drop',
-    getNftLink: "https://opensea.io/collection/key2web3/overview"
-  },
-  banner: "https://coincollect.org/assets/images/collections/banners/meme.jpg",
-  avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
-  useApi: true
-},
-
-/*
   {
     pid: 14,
     lpSymbol: 'GALXE Pass',
