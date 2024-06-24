@@ -646,6 +646,40 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
+{
+  pid: 27,
+  lpSymbol: "CyberPunk Citizenship",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0x0B647808326686c568703521326D672D2B891341",
+      80001: "0x0B647808326686c568703521326D672D2B891341"
+  },
+  contractAddresses: {
+      137: "0x95001802a960bcfebaa6c16fd65f7a6f1bdb0d32",
+      80001: "0x95001802a960bcfebaa6c16fd65f7a6f1bdb0d32"
+  },
+  tokenPerBlock: "0.0127314815",
+  participantThreshold: 15000,
+  isFinished: false,
+  earningToken: serializedTokens.collect,
+  sideRewards: [
+      { token: "BLITZ", percentage: 5400 },
+      { token: "Z", percentage: 165 }
+  ],
+  supportedCollectionPids: [1,2,3,4],
+  collectionPowers: [30,3,5,10,15],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://cyberpunk3.com/",
+      getNftLink: "https://opensea.io/collection/cyberpunk-citizenship/overview"
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/cyberpunk.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/cyberpunk.jpg",
+  useApi: true
+}
+
+
 /*
 
 {
