@@ -581,7 +581,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
 },
 
 {
-  pid: 25,
+  pid: 24,
   lpSymbol: "FREE ETHEREUM",
   isCommunity: true,
   nftAddresses: {
@@ -613,7 +613,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
 },
 
 {
-  pid: 26,
+  pid: 25,
   lpSymbol: "MEME COINS",
   isCommunity: true,
   nftAddresses: {
@@ -647,7 +647,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
 },
 
 {
-  pid: 27,
+  pid: 26,
   lpSymbol: "CyberPunk Citizenship",
   isCommunity: true,
   nftAddresses: {
