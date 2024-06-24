@@ -198,6 +198,15 @@ export const mainnetTokens = defineTokens({
     'https://bitcoin.org/',
   ),
 
+  weth: new Token(
+    MAINNET,
+    '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+    18,
+    'ETH',
+    'Polygon ETH',
+    'https://weth.io/',
+  ),
+  
   ust: new Token(
     MAINNET,
     '0x23396cF899Ca06c4472205fC903bDB4de249D6fC',
