@@ -191,7 +191,8 @@ const getClaimInfoApi = async (account) => {
   const nativeTargetNfts = nativeTargetNftsRaw.flat();
 
   const apiTargetNfts = await Promise.all(apiClaims.map(async (claim, index) => {
-    const tokenIds = await walletOfOwnerApi(account, claim.targetCollectionAddress);
+    const nftData = await walletOfOwnerApi(account, claim.targetCollectionAddress);
+    const tokenIds = nftData.map(nft => nft["tokenId"])
     return tokenIds;
   }))
 
