@@ -22,7 +22,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
 
     const getNfts = async () => {
       try {
-        const nftData = nftPool["useApi"] ? await walletOfOwnerApi(account, collectionAddress) : await collectionContract.walletOfOwner(account);
+        const nftData = nftPool["useApi"] ? await walletOfOwnerApi(account, [collectionAddress]) : await collectionContract.walletOfOwner(account);
         const tokenIds = nftPool["useApi"] ? nftData.map(nft => nft.tokenId) : nftData;
     
         let tokenIdsNumber = [];

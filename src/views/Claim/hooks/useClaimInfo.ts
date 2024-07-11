@@ -190,11 +190,19 @@ const getClaimInfoApi = async (account) => {
   const nativeTargetNftsRaw = await multicallPolygonv2<any>(coinCollectNftAbi, nativeClaimsTargetNftCalls);
   const nativeTargetNfts = nativeTargetNftsRaw.flat();
 
-  const apiTargetNfts = await Promise.all(apiClaims.map(async (claim, index) => {
-    const nftData = await walletOfOwnerApi(account, claim.targetCollectionAddress);
-    const tokenIds = nftData.map(nft => nft["tokenId"])
+  //=========apiTargetNfts==========
+  const collectionAddresses: string[] = apiClaims.map(claim => claim.targetCollectionAddress);
+  const nftData = await walletOfOwnerApi(account, collectionAddresses);
+  const groupedNftData = collectionAddresses.reduce<Record<string, any[]>>((acc, address) => {
+    acc[address] = nftData.filter(nft => nft.collectionAddress === address);
+    return acc;
+  }, {});
+
+  const apiTargetNfts = apiClaims.map(claim => {
+    const tokenIds = groupedNftData[claim.targetCollectionAddress]?.map(nft => nft.tokenId) || [];
     return tokenIds;
-  }))
+  });
+  //=========/apiTargetNfts==========
 
 
   let targetNFTs: CollectionInfo[] = [];
