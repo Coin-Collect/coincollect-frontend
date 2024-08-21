@@ -10,6 +10,7 @@ import { multicallPolygonv1, multicallPolygonv2 } from 'utils/multicall'
 import sousChefABI from 'config/abi/sousChef.json'
 import sousChefV2 from '../../config/abi/sousChefV2.json'
 import chunk from 'lodash/chunk'
+import { simplePolygonRpcProvider } from 'utils/providers'
 
 const smartNftStakeFarms = farmsConfig.filter((f) => f.contractAddresses)
 const startEndBlockCalls = smartNftStakeFarms.flatMap((nftFarmConfig) => {
@@ -85,6 +86,9 @@ export const fetchNftPoolsStakingLimits = async (
 
 const fetchFarms = async (farmsToFetch: SerializedNftFarmConfig[], currentBlock: number) => {
   
+  if (!currentBlock) {
+    currentBlock = await simplePolygonRpcProvider.getBlockNumber()
+  }
 
   const blockLimits = await fetchNftFarmsBlockLimits()
   
