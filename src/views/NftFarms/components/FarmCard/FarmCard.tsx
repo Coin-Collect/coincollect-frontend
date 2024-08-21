@@ -140,6 +140,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
             stakingLimitEndBlock={farm.stakingLimitEndBlock}
             lpLabel={lpLabel}
             addLiquidityUrl={apyModalLink}
+            isFinished={farm.isFinished}
             projectLink={farmConfig.projectLink}
           />
         )}
