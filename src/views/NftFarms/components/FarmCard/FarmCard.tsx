@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import BigNumber from 'bignumber.js'
 import styled from 'styled-components'
-import { Card, Flex, Text, Skeleton } from '@pancakeswap/uikit'
+import { Card, Flex, Text, Skeleton, CardRibbon } from '@pancakeswap/uikit'
 import { DeserializedNftFarm } from 'state/types'
 import { getPolygonScanLink } from 'utils'
 import { useTranslation } from 'contexts/Localization'
@@ -66,7 +66,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const { stakedBalance } = farm.userData || {}
 
   return (
-    <StyledCard isActive={isPromotedFarm}>
+    <StyledCard ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />} isActive={isPromotedFarm}>
       <FarmCardInnerContainer>
         <CardHeadingWithBanner
           lpLabel={lpLabel}
