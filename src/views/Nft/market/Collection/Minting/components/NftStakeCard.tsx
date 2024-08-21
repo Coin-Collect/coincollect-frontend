@@ -3,6 +3,7 @@ import {
   Card,
   CardBody,
   CardHeader,
+  CardRibbon,
   ExpandableButton,
   Flex,
   Skeleton,
@@ -167,6 +168,7 @@ const NftStakeCardBody = ({ farm, account }) => {
             stakingLimitEndBlock={farm.stakingLimitEndBlock}
             lpLabel={lpLabel}
             addLiquidityUrl={null}
+            isFinished={farm.isFinished}
             projectLink={projectLink}
           />
         )}
@@ -202,6 +204,7 @@ const NftStakeCardMobile = ({ farm }) => {
 }
 
 const NftStakeCard = ({ farm, account }) => {
+  const { t } = useTranslation()
   const { isMd, isXs, isSm } = useMatchBreakpoints()
   const isSmallerThanTablet = isMd || isXs || isSm
 
@@ -210,7 +213,7 @@ const NftStakeCard = ({ farm, account }) => {
   }
 
   return (
-    <StyledCard isActive>
+    <StyledCard isActive ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />}>
       <PoolCardHeader isStaking={true}>
         <PoolCardHeaderTitle
           title={`Do you have ${farm.lpSymbol}?`}
