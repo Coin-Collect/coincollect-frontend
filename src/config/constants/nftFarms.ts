@@ -677,7 +677,41 @@ const nftFarms: SerializedNftFarmConfig[] = [
   banner: "https://coincollect.org/assets/images/collections/banners/cyberpunk.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/cyberpunk.jpg",
   useApi: true
+},
+
+
+{
+  pid: 27,
+  lpSymbol: "SmartCats Rewards",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0xD5cA946AC1c1F24Eb26dae9e1A53ba6a02bd97Fe",
+      80001: "0xD5cA946AC1c1F24Eb26dae9e1A53ba6a02bd97Fe"
+  },
+  contractAddresses: {
+      137: "0xEF744aFD23f054eDA40cb3cEEFAf54119c811Da4",
+      80001: "0xEF744aFD23f054eDA40cb3cEEFAf54119c811Da4"
+  },
+  tokenPerBlock: "0.0017440386",
+  participantThreshold: 3000,
+  isFinished: false,
+  earningToken: serializedTokens.collect,
+  sideRewards: [
+      { token: "AVATAR", percentage: 40000 }
+  ],
+  supportedCollectionPids: [1,2,3,4,15],
+  collectionPowers: [30,3,5,10,15,1],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+    mainLink: "https://www.smartlayer.network/smartcat",
+    getNftLink: "https://opensea.io/collection/smart-cat-reward",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/smartcats.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/smartcat.jpg",
+  useApi: true
 }
+
 
 
 /*
