@@ -679,7 +679,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
-
 {
   pid: 27,
   lpSymbol: "SmartCats Rewards",
@@ -689,8 +688,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: "0xD5cA946AC1c1F24Eb26dae9e1A53ba6a02bd97Fe"
   },
   contractAddresses: {
-      137: "0xEF744aFD23f054eDA40cb3cEEFAf54119c811Da4",
-      80001: "0xEF744aFD23f054eDA40cb3cEEFAf54119c811Da4"
+      137: "0xd190d8AC310eE6D710aCA931F6Bd85E5d1424985",
+      80001: "0xd190d8AC310eE6D710aCA931F6Bd85E5d1424985"
   },
   tokenPerBlock: "0.0017440386",
   participantThreshold: 3000,
@@ -711,7 +710,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   avatar: "https://coincollect.org/assets/images/collections/logos/smartcat.jpg",
   useApi: true
 }
-
 
 
 /*
