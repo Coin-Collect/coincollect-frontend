@@ -709,6 +709,38 @@ const nftFarms: SerializedNftFarmConfig[] = [
   banner: "https://coincollect.org/assets/images/collections/banners/smartcats.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/smartcat.jpg",
   useApi: true
+},
+
+
+{
+  pid: 28,
+  lpSymbol: "LotShare NFT",
+  isCommunity: false,
+  nftAddresses: {
+      137: "0x2E1cF0960Fc9Ece56f53bf58351d175cd1867b2c",
+      80001: "0x2E1cF0960Fc9Ece56f53bf58351d175cd1867b2c"
+  },
+  contractAddresses: {
+      137: "0x843ae8cAcaDC5C672004b2C9d1dBD07e85895D39",
+      80001: "0x843ae8cAcaDC5C672004b2C9d1dBD07e85895D39"
+  },
+  tokenPerBlock: "0.0034880771",
+  participantThreshold: 750,
+  isFinished: false,
+  earningToken: serializedTokens.collect,
+  sideRewards: [
+      { token: "LOT", percentage: 1 }
+  ],
+  supportedCollectionPids: [1,2,3,4],
+  collectionPowers: [15,1,3,6,12],
+  mainCollectionWeight: 15,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://lotshare.app/",
+  },
+  banner: "https://coincollect.org/assets/images/clone/banners/bannerLotSm.png",
+  avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
+  useApi: true
 }
 
 
