@@ -741,7 +741,42 @@ const nftFarms: SerializedNftFarmConfig[] = [
   banner: "https://coincollect.org/assets/images/clone/banners/bannerLotSm.png",
   avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
   useApi: true
+},
+
+
+{
+  pid: 29,
+  lpSymbol: "Solana Rewards",
+  isCommunity: false,
+  nftAddresses: {
+      137: "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e",
+      80001: "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e"
+  },
+  contractAddresses: {
+      137: "",
+      80001: ""
+  },
+  tokenPerBlock: "0.0000000698",
+  participantThreshold: 2250,
+  isFinished: false,
+  earningToken: serializedTokens.sol,
+  sideRewards: [
+      { token: "WMATIC", percentage: 20000 },
+      { token: "COLLECT", percentage: 100000000 }
+  ],
+  supportedCollectionPids: [1,2,3,15],
+  collectionPowers: [15,3,5,10,1],
+  mainCollectionWeight: 15,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "mainLink here",
+      getNftLink: "getNftLink here",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/solana.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logo/solana.jpg",
+  useApi: true
 }
+
 
 
 /*
