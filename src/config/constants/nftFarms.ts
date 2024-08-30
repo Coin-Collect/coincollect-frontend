@@ -776,9 +776,43 @@ const nftFarms: SerializedNftFarmConfig[] = [
       getNftLink: "getNftLink here",
   },
   banner: "https://coincollect.org/assets/images/collections/banners/solana.jpg",
-  avatar: "https://coincollect.org/assets/images/collections/logo/solana.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/solana.jpg",
+  useApi: true
+},
+
+
+{
+  pid: 30,
+  lpSymbol: "SandBox Lands",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0x9d305a42A3975Ee4c1C57555BeD5919889DCE63F",
+      80001: "0x9d305a42A3975Ee4c1C57555BeD5919889DCE63F"
+  },
+  contractAddresses: {
+      137: "",
+      80001: ""
+  },
+  tokenPerBlock: "0.0000069762",
+  participantThreshold: 750,
+  isFinished: false,
+  earningToken: serializedTokens.unknown,
+  sideRewards: [
+      { token: "COLLECT", percentage: 25000 }
+  ],
+  supportedCollectionPids: [1,2,3,4,15],
+  collectionPowers: [30,3,5,10,15,1],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "mainLink here",
+      getNftLink: "getNftLink here",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/sandbox.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/sandbox.jpg",
   useApi: true
 }
+
 
 
 /*
