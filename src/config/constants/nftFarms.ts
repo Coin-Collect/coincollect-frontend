@@ -287,6 +287,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: {
       mainLink: 'https://galxe.com/CoinCollect',
+      getNftLink: "https://galxe.com/CoinCollect"
     },
     banner: "https://coincollect.org/assets/images/partners/galxe/galxeOATstake.png",
     avatar: "https://coincollect.org/assets/images/partners/galxe/oatLogo128.png",
@@ -343,6 +344,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: {
       mainLink: 'https://opensea.io/collection/key2web3/drop',
+      getNftLink: "https://opensea.io/collection/key2web3/drop"
+      
     },
     banner: "https://coincollect.org/assets/images/partners/key/keyBanner.gif",
     avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
@@ -424,6 +427,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     performanceFee: '0',
     projectLink: {
       mainLink: 'https://taskon.xyz/space/553258',
+      getNftLink: "https://taskon.xyz/space/553258"
     },
     banner: "https://coincollect.org/assets/images/partners/taskon/taskON.gif",
     avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
@@ -743,7 +747,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
-
 {
   pid: 29,
   lpSymbol: "Solana Rewards",
@@ -776,7 +779,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   avatar: "https://coincollect.org/assets/images/collections/logo/solana.jpg",
   useApi: true
 }
-
 
 
 /*
