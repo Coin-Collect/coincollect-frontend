@@ -103,6 +103,23 @@ export const mainnetTokens = defineTokens({
     'Z Token',
     'https://zidanogo.com/',
   ),
+  sol: new Token(
+    POLYGON_MAINNET,
+    '0xd93f7E271cB87c23AaA73edC008A79646d1F9912',
+    9,
+    'SOL',
+    'SOL Token',
+    'https://solana.com/',
+  ),
+  sand: new Token(
+    POLYGON_MAINNET,
+    '0xBbba073C31bF03b8ACf7c28EF0738DeCF3695683',
+    18,
+    'SAND',
+    'SAND Token',
+    'https://www.sandbox.game/',
+  ),
+
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
   cake: new Token(

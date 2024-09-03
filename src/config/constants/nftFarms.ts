@@ -747,6 +747,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
+
 {
   pid: 29,
   lpSymbol: "Solana Rewards",
@@ -756,16 +757,16 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e"
   },
   contractAddresses: {
-      137: "",
-      80001: ""
+      137: "0x3552C0d7B8C6617091D5CE1375e1Ba9256283D97",
+      80001: "0x3552C0d7B8C6617091D5CE1375e1Ba9256283D97"
   },
   tokenPerBlock: "0.0000000698",
-  participantThreshold: 2250,
+  participantThreshold: 750,
   isFinished: false,
   earningToken: serializedTokens.sol,
   sideRewards: [
-      { token: "WMATIC", percentage: 20000 },
-      { token: "COLLECT", percentage: 100000000 }
+      { token: "COLLECT", percentage: 30000000 },
+      { token: "WMATIC", percentage: 20000 }
   ],
   supportedCollectionPids: [1,2,3,15],
   collectionPowers: [15,3,5,10,1],
@@ -780,7 +781,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
-
 {
   pid: 30,
   lpSymbol: "SandBox Lands",
@@ -790,13 +790,13 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: "0x9d305a42A3975Ee4c1C57555BeD5919889DCE63F"
   },
   contractAddresses: {
-      137: "",
-      80001: ""
+      137: "0x474e3b8026a2596a6e763E188f961Fc94B3a15eB",
+      80001: "0x474e3b8026a2596a6e763E188f961Fc94B3a15eB"
   },
   tokenPerBlock: "0.0000069762",
   participantThreshold: 750,
   isFinished: false,
-  earningToken: serializedTokens.unknown,
+  earningToken: serializedTokens.sand,
   sideRewards: [
       { token: "COLLECT", percentage: 25000 }
   ],
@@ -805,14 +805,13 @@ const nftFarms: SerializedNftFarmConfig[] = [
   mainCollectionWeight: 30,
   performanceFee: "0",
   projectLink: {
-      mainLink: "mainLink here",
-      getNftLink: "getNftLink here",
+      mainLink: "https://www.sandbox.game/",
+      getNftLink: "https://opensea.io/collection/sandbox",
   },
   banner: "https://coincollect.org/assets/images/collections/banners/sandbox.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/sandbox.jpg",
   useApi: true
 }
-
 
 
 /*
