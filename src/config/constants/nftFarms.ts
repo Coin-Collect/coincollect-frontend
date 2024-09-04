@@ -747,7 +747,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
-
 {
   pid: 29,
   lpSymbol: "Solana Rewards",
@@ -757,8 +756,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e"
   },
   contractAddresses: {
-      137: "0x3552C0d7B8C6617091D5CE1375e1Ba9256283D97",
-      80001: "0x3552C0d7B8C6617091D5CE1375e1Ba9256283D97"
+      137: "0xa32336763fC39b7bAA5777e6cf5DdeD8Be3f3691",
+      80001: "0xa32336763fC39b7bAA5777e6cf5DdeD8Be3f3691"
   },
   tokenPerBlock: "0.0000000698",
   participantThreshold: 750,
@@ -780,6 +779,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   avatar: "https://coincollect.org/assets/images/collections/logos/solana.jpg",
   useApi: true
 },
+
 
 {
   pid: 30,
