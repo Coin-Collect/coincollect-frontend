@@ -75,6 +75,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://lotshare.app/',
     },
+    banner: "https://coincollect.org/assets/images/clone/banners/bannerLotSm.png",
+    avatar: "https://coincollect.org/assets/images/clone/banners/profileLot.png",
   },
   {
     pid: 6,
