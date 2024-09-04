@@ -508,7 +508,7 @@ const ifos: Minting[] = [
         description: ["While we prioritize security in AvatarsAI, it's always wise to exercise caution and conduct thorough research when investing. Consult with a financial advisor if needed."]
       }
     ],
-    
+
     poolUnlimited: {
       saleAmount: '6952 NFT',
       distributionRatio: 1,
@@ -578,7 +578,7 @@ const ifos: Minting[] = [
         description: ["We have an exciting roadmap that includes new beast types, gameplay features, and partnerships. Each season brings new adventures and opportunities for our community."]
       }
     ],
-    
+
     poolUnlimited: {
       saleAmount: '2876 NFT',
       distributionRatio: 1,
@@ -652,8 +652,8 @@ const ifos: Minting[] = [
         description: ["To acquire NitroClash car NFTs, you can mint new cars from CoinCollect or buy them from NFT marketplaces such as OpenSea, Element Market, and others. The choice is yours!"]
       }
     ],
-  
-    
+
+
     poolUnlimited: {
       saleAmount: '3800 NFT',
       distributionRatio: 1,
@@ -723,9 +723,9 @@ const ifos: Minting[] = [
         description: ["Join the PlaceDJ 2.0 community on platforms like Telegram and Twitter to connect with other users, share experiences, and stay updated on the latest features and developments in venue music streaming."]
       }
     ],
-    
-  
-    
+
+
+
     poolUnlimited: {
       saleAmount: '5832 NFT',
       distributionRatio: 1,
@@ -795,10 +795,10 @@ const ifos: Minting[] = [
         description: ["Engage with the Zidanogo community on social media platforms and our official Discord server to connect with fellow enthusiasts, share insights, and stay informed on the latest developments and opportunities."]
       }
     ],
-    
-    
-  
-    
+
+
+
+
     poolUnlimited: {
       saleAmount: '4181 NFT',
       distributionRatio: 1,
@@ -872,10 +872,10 @@ const ifos: Minting[] = [
         "description": ["Join the SapienX community on social media platforms and our official channels to connect with like-minded individuals, share experiences, and stay updated on the latest innovations and opportunities within the ecosystem."]
       }
     ],
-    
-    
-  
-    
+
+
+
+
     poolUnlimited: {
       saleAmount: '6854 NFT',
       distributionRatio: 1,
