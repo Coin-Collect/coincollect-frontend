@@ -188,7 +188,7 @@ const NftStakeCardMobile = ({ farm }) => {
       <CardHeader p="16px">
         <Flex justifyContent="space-between" alignItems="center">
           <PoolCardHeaderTitle
-            title={`Do you have ${farm.lpSymbol}?`}
+            title={`Do you have this NFT?`}
             subTitle="Stake now and start earning"
           />
           <ExpandableButton expanded={isExpanded} onClick={() => setIsExpanded((prev) => !prev)} />
