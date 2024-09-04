@@ -309,7 +309,7 @@ const ifos: Minting[] = [
   //============================LOT NFTS====================================
   {
     id: 'lotnfts',
-    stake_pid: 5,
+    stake_pid: 28,
     name: 'LotShare Prime NFT',
     description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
     address: getLotNftAddress(),
