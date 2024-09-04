@@ -216,7 +216,7 @@ const NftStakeCard = ({ farm, account }) => {
     <StyledCard isActive ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />}>
       <PoolCardHeader isStaking={true}>
         <PoolCardHeaderTitle
-          title={`Do you have ${farm.lpSymbol}?`}
+          title={`Do you have this NFT?`}
           subTitle="Stake now and start earning"
         />
         {/*<TokenPairImage {...vaultPoolConfig[pool.vaultKey].tokenImage} width={64} height={64} />*/}
