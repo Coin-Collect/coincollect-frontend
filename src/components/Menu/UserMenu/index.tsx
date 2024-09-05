@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useWeb3React, UnsupportedChainIdError } from '@web3-react/core'
 import {
   Flex,
   LogoutIcon,
@@ -22,15 +21,18 @@ import { FetchStatus } from 'config/constants/types'
 import WalletModal, { WalletView, LOW_MATIC_BALANCE } from './WalletModal'
 import ProfileUserMenuItem from './ProfileUserMenutItem'
 import WalletUserMenuItem from './WalletUserMenuItem'
+import useWeb3React from 'hooks/useWeb3React'
+import { isChainSupported } from 'utils/wagmi'
 
 const UserMenu = () => {
   const router = useRouter()
   const { t } = useTranslation()
-  const { account, error } = useWeb3React()
+  const { account, chainId } = useWeb3React()
   const { logout } = useAuth()
   const { hasPendingTransactions, pendingNumber } = usePendingTransactions()
   const { balance, fetchStatus } = useGetMaticBalance()
   const { isInitialized, isLoading, profile } = useProfile()
+
   const [onPresentWalletModal] = useModal(<WalletModal initialView={WalletView.WALLET_INFO} />)
   const [onPresentTransactionModal] = useModal(<WalletModal initialView={WalletView.TRANSACTIONS} />)
   const [onPresentWrongNetworkModal] = useModal(<WalletModal initialView={WalletView.WRONG_NETWORK} />)
@@ -39,7 +41,7 @@ const UserMenu = () => {
   const hasLowMaticBalance = fetchStatus === FetchStatus.Fetched && balance.lte(LOW_MATIC_BALANCE)
   const [userMenuText, setUserMenuText] = useState<string>('')
   const [userMenuVariable, setUserMenuVariable] = useState<UserMenuVariant>('default')
-  const isWrongNetwork: boolean = error && error instanceof UnsupportedChainIdError
+  const isWrongNetwork = account && !isChainSupported(chainId)
 
   useEffect(() => {
     if (hasPendingTransactions) {
