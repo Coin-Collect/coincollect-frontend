@@ -774,8 +774,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   mainCollectionWeight: 15,
   performanceFee: "0",
   projectLink: {
-      mainLink: "mainLink here",
-      getNftLink: "getNftLink here",
+    mainLink: 'https://app.coincollect.org',
   },
   banner: "https://coincollect.org/assets/images/collections/banners/solana.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/solana.jpg",
@@ -813,7 +812,42 @@ const nftFarms: SerializedNftFarmConfig[] = [
   banner: "https://coincollect.org/assets/images/collections/banners/sandbox.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/sandbox.jpg",
   useApi: true
+},
+
+
+{
+  pid: 31,
+  lpSymbol: "AAVEGOTCHI",
+  isCommunity: true,
+  nftAddresses: {
+      137: "0x86935F11C86623deC8a25696E1C19a8659CbF95d",
+      80001: "0x86935F11C86623deC8a25696E1C19a8659CbF95d"
+  },
+  contractAddresses: {
+      137: "",
+      80001: ""
+  },
+  tokenPerBlock: "0.0000000349",
+  participantThreshold: 300,
+  isFinished: false,
+  earningToken: serializedTokens.aave,
+  sideRewards: [
+      { token: "GHST", percentage: 3000 },
+      { token: "COLLECT", percentage: 2500000 }
+  ],
+  supportedCollectionPids: [1,2,3,4,15],
+  collectionPowers: [30,3,5,10,15,1],
+  mainCollectionWeight: 30,
+  performanceFee: "0",
+  projectLink: {
+      mainLink: "https://www.aavegotchi.com/",
+      getNftLink: "https://opensea.io/collection/aavegotchi-official-polygon",
+  },
+  banner: "https://coincollect.org/assets/images/collections/banners/gotchi.jpg",
+  avatar: "https://coincollect.org/assets/images/collections/logos/gotchi.jpg",
+  useApi: true
 }
+
 
 
 /*

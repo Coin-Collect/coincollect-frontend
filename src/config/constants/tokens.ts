@@ -119,6 +119,15 @@ export const mainnetTokens = defineTokens({
     'SAND Token',
     'https://www.sandbox.game/',
   ),
+  aave: new Token(
+    POLYGON_MAINNET,
+    '0xD6DF932A45C0f255f85145f286eA0b292B21C90B',
+    18,
+    'AAVE',
+    'AAVE Token',
+    'https://aave.com',
+  ),
+
 
   // bnb here points to the wbnb contract. Wherever the currency BNB is required, conditional checks for the symbol 'BNB' can be used
   bnb: new Token(MAINNET, '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', 18, 'BNB', 'BNB', 'https://www.binance.com/'),
