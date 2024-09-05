@@ -45,7 +45,7 @@ export default function useCatchTxError(): CatchTxErrorReturn {
           ? "Insufficient wallet balance for this transaction."
           : isLowGasPriceError(error)
             ? "The network may be congested. Try increasing the transaction speed from settings or try again later."
-            : error.data.message;
+            : error.message;
 
         toastError(
           t('Error'),
