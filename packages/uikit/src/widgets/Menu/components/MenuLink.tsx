@@ -1,4 +1,4 @@
-import NextLink from "next/link";
+import Link from "next/link";
 import React, { AnchorHTMLAttributes } from "react";
 import { OpenNewIcon } from "../../../components/Svg";
 
@@ -15,8 +15,10 @@ const MenuLink: React.FC<AnchorHTMLAttributes<HTMLAnchorElement>> = ({ href, ...
 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Tag: any = isHttpLink ? "a" : NextLink;
-  const props = { href };
+  const Tag: any = isHttpLink ? "a" : Link;
+  const props = isHttpLink 
+  ? { href, target: "_blank", rel: "noopener noreferrer" } 
+  : { href };
   return <Tag {...props} {...otherProps} />;
 };
 
