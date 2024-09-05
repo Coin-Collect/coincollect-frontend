@@ -12,7 +12,7 @@ import {
   useTooltip,
 } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
-import { AnimatedBalance as Balance } from 'components/Balance'
+import Balance from 'components/Balance'
 import { useTranslation } from 'contexts/Localization'
 import { useMemo } from 'react'
 import { usePriceCakeBusd } from 'state/farms/hooks'
