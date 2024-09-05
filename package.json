@@ -128,7 +128,7 @@
     "source-map-explorer": "^2.5.2",
     "start-server-and-test": "^1.14.0",
     "ts-node": "^9.1.1",
-    "turbo": "^1.1.4",
+    "turbo": "^1.13.4",
     "typechain": "^6.1.0"
   },
   "resolutions": {
