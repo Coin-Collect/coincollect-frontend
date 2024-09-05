@@ -34,6 +34,9 @@
       "last 1 safari version"
     ]
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "@binance-chain/bsc-connector": "^1.0.0",
     "@blocto/blocto-connector": "^0.2.3",
