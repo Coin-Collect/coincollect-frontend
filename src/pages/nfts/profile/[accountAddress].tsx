@@ -1,4 +1,4 @@
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { useRouter } from 'next/router'
 import { useProfileForAddress } from 'state/profile/hooks'
 import { NftProfileLayout } from 'views/Nft/market/Profile'

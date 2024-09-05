@@ -1,5 +1,5 @@
 import { Text, Flex, TooltipText, useTooltip, Skeleton, Heading } from '@pancakeswap/uikit'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { getCakeVaultEarnings } from 'views/Pools/helpers'
 import { useTranslation } from 'contexts/Localization'
 import Balance from 'components/Balance'

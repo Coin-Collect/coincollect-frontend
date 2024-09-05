@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import BigNumber from 'bignumber.js'
 import { Ifo, Minting, PoolIds } from 'config/constants/types'
 import { useCoinCollectNFTContract, useERC20, useIfoV2Contract } from 'hooks/useContract'

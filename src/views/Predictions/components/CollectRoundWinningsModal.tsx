@@ -16,7 +16,7 @@ import {
   ModalCloseButton,
   Skeleton,
 } from '@pancakeswap/uikit'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { useAppDispatch } from 'state'
 import { REWARD_RATE } from 'state/predictions/config'
 import { fetchNodeHistory, markAsCollected } from 'state/predictions'

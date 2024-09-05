@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { Contract } from '@ethersproject/contracts'
 import { MaxUint256 } from '@ethersproject/constants'
 import { useAppDispatch } from 'state'

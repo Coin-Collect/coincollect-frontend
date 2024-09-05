@@ -8,7 +8,7 @@ import {
   ExpandableButton,
   useMatchBreakpoints,
 } from '@pancakeswap/uikit'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import BigNumber from 'bignumber.js'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { Ifo, PoolIds } from 'config/constants/types'

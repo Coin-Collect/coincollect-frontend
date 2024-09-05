@@ -16,7 +16,7 @@ import {
   Checkbox,
 } from '@pancakeswap/uikit'
 import { parseISO, formatDistance } from 'date-fns'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { formatUnits } from '@ethersproject/units'
 import { API_PROFILE } from 'config/constants/endpoints'
 import useToast from 'hooks/useToast'

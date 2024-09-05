@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'contexts/Localization'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { useProfile } from 'state/profile/hooks'
 import { Flex, Box } from '@pancakeswap/uikit'
 import Image from 'next/image'

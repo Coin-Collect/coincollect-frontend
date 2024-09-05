@@ -11,7 +11,7 @@ import {
   useTooltip,
   WaitIcon,
 } from '@pancakeswap/uikit'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import styled from 'styled-components'
 import { useAppDispatch } from 'state'
 import { Bet, PredictionStatus } from 'state/types'

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'contexts/Localization'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 import { ToastDescriptionWithTx } from 'components/Toast'
 
@@ -45,7 +45,7 @@ export default function useCatchTxError(): CatchTxErrorReturn {
           ? "Insufficient wallet balance for this transaction."
           : isLowGasPriceError(error)
             ? "The network may be congested. Try increasing the transaction speed from settings or try again later."
-            : error.data.message;
+            : error.message;
 
         toastError(
           t('Error'),

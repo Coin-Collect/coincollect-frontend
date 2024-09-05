@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Box, Modal } from '@pancakeswap/uikit'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import { SnapshotCommand } from 'state/types'
 import { signMessage } from 'utils/web3React'

@@ -1,4 +1,4 @@
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import useSWR, { KeyedMutator } from 'swr'
 import { FetchStatus } from 'config/constants/types'
 import { useCoinCollectClaimRewardContract, useCoinCollectClaimRewardV2Contract } from 'hooks/useContract'
