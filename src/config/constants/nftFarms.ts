@@ -774,7 +774,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
   mainCollectionWeight: 15,
   performanceFee: "0",
   projectLink: {
-    mainLink: 'https://app.coincollect.org',
+    mainLink: 'https://solana.com/',
+    getNftLink: "https://app.coincollect.org/nfts/collections",
   },
   banner: "https://coincollect.org/assets/images/collections/banners/solana.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/solana.jpg",
@@ -824,8 +825,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
       80001: "0x86935F11C86623deC8a25696E1C19a8659CbF95d"
   },
   contractAddresses: {
-      137: "",
-      80001: ""
+      137: "0x00e6aD6bfb671887c05d7CEb4950F88e207CB5e8",
+      80001: "0x00e6aD6bfb671887c05d7CEb4950F88e207CB5e8"
   },
   tokenPerBlock: "0.0000000349",
   participantThreshold: 300,
@@ -840,14 +841,13 @@ const nftFarms: SerializedNftFarmConfig[] = [
   mainCollectionWeight: 30,
   performanceFee: "0",
   projectLink: {
-      mainLink: "https://www.aavegotchi.com/",
-      getNftLink: "https://opensea.io/collection/aavegotchi-official-polygon",
+    mainLink: "https://www.aavegotchi.com/",
+    getNftLink: "https://opensea.io/collection/aavegotchi-official-polygon",
   },
   banner: "https://coincollect.org/assets/images/collections/banners/gotchi.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/gotchi.jpg",
   useApi: true
 }
-
 
 
 /*
