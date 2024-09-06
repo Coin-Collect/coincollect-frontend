@@ -9,9 +9,9 @@ if (!projectId) throw new Error('Project ID is not defined')
 
 export const metadata = {
   name: 'CoinCollect',
-  description: 'AppKit Example',
+  description: 'Generate Passive Income through NFTs',
   url: 'https://app.coincollect.org/', // origin must match your domain & subdomain
-  icons: ['https://avatars.githubusercontent.com/u/37784886']
+  icons: ['https://coincollect.org/assets/images/logos/512logo-1.png']
 }
 
 // Create wagmiConfig
