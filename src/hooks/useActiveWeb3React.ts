@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { Web3Provider } from '@ethersproject/providers'
 import { simpleRpcProvider } from 'utils/providers'
 // eslint-disable-next-line import/no-unresolved
