@@ -11,7 +11,7 @@ import UNSUPPORTED_TOKEN_LIST from '../../config/constants/tokenLists/pancake-un
 
 // CAUTION: This declaration was inside @pancakeswap/sdk
 // TODO: Make customized clone of @pancakeswap/sdk
-declare enum ChainId {
+enum ChainId {
   MAINNET = 56,
   TESTNET = 97,
   POLYGON_MAINNET = 137,

@@ -1,60 +1,58 @@
+import { useMemo } from "react";
+import CountUp from "react-countup";
 import { Text, TextProps } from '@pancakeswap/uikit'
-import { useEffect, useRef } from 'react'
-import CountUp from 'react-countup'
-import styled, { keyframes } from 'styled-components'
 
-interface BalanceProps extends TextProps {
-  value: number
-  decimals?: number
-  unit?: string
-  isDisabled?: boolean
-  prefix?: string
-  onClick?: (event: React.MouseEvent<HTMLElement>) => void
+export interface BalanceProps extends TextProps {
+  value: number;
+  decimals?: number;
+  unit?: string;
+  isDisabled?: boolean;
+  prefix?: string;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
+  strikeThrough?: boolean;
+  startFromValue?: boolean;
 }
 
-const Balance: React.FC<BalanceProps> = ({
+const Balance: React.FC<React.PropsWithChildren<BalanceProps>> = ({
   value,
-  color = 'text',
+  color = "text",
   decimals = 3,
   isDisabled = false,
   unit,
   prefix,
   onClick,
+  strikeThrough,
+  startFromValue = false,
   ...props
 }) => {
-  const previousValue = useRef(0)
-
-  useEffect(() => {
-    previousValue.current = value
-  }, [value])
+  const prefixProp = useMemo(() => (prefix ? { prefix } : {}), [prefix]);
+  const suffixProp = useMemo(() => (unit ? { suffix: unit } : {}), [unit]);
+  const showDecimals = useMemo(() => value % 1 !== 0, [value]);
 
   return (
-    <Text color={isDisabled ? 'textDisabled' : color} onClick={onClick} {...props}>
-      <CountUp
-        start={previousValue.current}
-        end={value}
-        prefix={prefix}
-        suffix={unit}
-        decimals={decimals}
-        duration={1}
-        separator=","
-      />
-    </Text>
-  )
-}
+    <CountUp
+      start={startFromValue ? value : 0}
+      preserveValue
+      delay={0}
+      end={value}
+      {...prefixProp}
+      {...suffixProp}
+      decimals={showDecimals ? decimals : 0}
+      duration={1}
+      separator=","
+    >
+      {({ countUpRef }) => (
+        <Text
+          color={isDisabled ? "textDisabled" : color}
+          style={strikeThrough ? { textDecoration: "line-through" } : undefined}
+          onClick={onClick}
+          {...props}
+        >
+          <span ref={countUpRef} />
+        </Text>
+      )}
+    </CountUp>
+  );
+};
 
-export default Balance
-
-const appear = keyframes`
-  from {
-    opacity:0;
-  }
-
-  to {
-    opacity:1;
-  }
-`
-
-export const AnimatedBalance = styled(Balance)`
-  animation: ${appear} 0.65s ease-in-out forwards;
-`
+export default Balance;

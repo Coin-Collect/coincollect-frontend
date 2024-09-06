@@ -23,7 +23,7 @@ import styled from "styled-components";
 import { NextLinkFromReactRouter } from "components/NextLink";
 import Row from "components/Layout/Row";
 import { multicallv2 } from "utils/multicall";
-import { useWeb3React } from "@web3-react/core";
+import  useWeb3React  from 'hooks/useWeb3React'
 import { isAddress } from 'utils'
 import useSWR from "swr";
 import { getCollectionApi } from "pages/nfts/collections/mint/[collectionAddress]";

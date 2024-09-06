@@ -17,7 +17,7 @@ import {
   ErrorIcon,
 } from '@pancakeswap/uikit'
 import styled from 'styled-components'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { Token } from '@coincollect/sdk'
 import { Ifo, PoolIds } from 'config/constants/types'
 import tokens from 'config/constants/tokens'

@@ -17,7 +17,7 @@ import {
   Box,
 } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { useAppDispatch } from 'state'
 
 import { BIG_TEN } from 'utils/bigNumber'

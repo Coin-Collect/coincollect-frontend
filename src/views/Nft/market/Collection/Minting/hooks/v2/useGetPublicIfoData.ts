@@ -12,7 +12,7 @@ import { BIG_ZERO } from 'utils/bigNumber'
 import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
 import { PublicIfoData } from '../../types'
 import { getStatus } from '../helpers'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { formatEther } from '@ethersproject/units'
 
 // https://github.com/pancakeswap/pancake-contracts/blob/master/projects/ifo/contracts/IFOV2.sol#L431

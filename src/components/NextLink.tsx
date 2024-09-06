@@ -18,7 +18,7 @@ const A = styled.a``
  */
 export const NextLinkFromReactRouter = forwardRef<any, LinkProps>(
   ({ to, replace, children, prefetch, ...props }, ref) => (
-    <NextLink href={to as string} replace={replace} passHref prefetch={prefetch}>
+    <NextLink legacyBehavior href={to as string} replace={replace} passHref prefetch={prefetch}>
       <A ref={ref} {...props}>
         {children}
       </A>

@@ -162,9 +162,9 @@ export const FeaturedSection: React.FC = () => {
         </Flex>
         <CardWrapper ref={scrollWrapper}>
           {
-            articlesData?.map((d) => (
+            articlesData?.map((d, index) => (
               
-                <NewsCard>
+                <NewsCard key={index}>
                   <NextLinkFromReactRouter to="/nftpools">
                   <ImageBox>
                     <img src={d.imgUrl} alt="" />

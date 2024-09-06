@@ -3,7 +3,7 @@ import { mainnetTokens, testnetTokens } from './tokens'
 
 // CAUTION: This declaration was inside @pancakeswap/sdk
 // TODO: Make customized clone of @pancakeswap/sdk
-declare enum ChainId {
+enum ChainId {
   MAINNET = 56,
   TESTNET = 97,
   POLYGON_MAINNET = 137,

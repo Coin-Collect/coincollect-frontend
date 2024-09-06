@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { Flex } from '@pancakeswap/uikit'
 import orderBy from 'lodash/orderBy'
 import Page from 'components/Layout/Page'

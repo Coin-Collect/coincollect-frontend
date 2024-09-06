@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Card, Heading, Table, Th, useMatchBreakpoints } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import Container from 'components/Layout/Container'
 import { useAppDispatch } from 'state'
 import { fetchAddressResult } from 'state/predictions'

@@ -1,4 +1,4 @@
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { FetchStatus } from 'config/constants/types'
 import { useCallback } from 'react'
 import { getNftApi, getNftsMarketData } from 'state/nftMarket/helpers'

@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 import { Button, Text, Link, HelpIcon } from '@pancakeswap/uikit'
 import { setupNetwork } from 'utils/wallet'
-import { useWeb3React } from '@web3-react/core'
+import useWeb3React from 'hooks/useWeb3React'
 import { InjectedConnector } from '@web3-react/injected-connector'
 
 const StyledLink = styled(Link)`

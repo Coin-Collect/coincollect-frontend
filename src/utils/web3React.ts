@@ -1,5 +1,5 @@
 import { InjectedConnector } from '@web3-react/injected-connector'
-import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
+// import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
 import { AbstractConnector } from '@web3-react/abstract-connector'
 import { BscConnector } from '@binance-chain/bsc-connector'
 import { ConnectorNames } from '@pancakeswap/uikit'
@@ -17,12 +17,14 @@ const chainId = parseInt(CHAIN_ID, 10)
 
 const injected = new InjectedConnector({ supportedChainIds: [chainId] })
 
+/*
 const walletconnect = new WalletConnectConnector({
   rpc: { [chainId]: rpcUrl },
   qrcode: true,
   // @ts-ignore
   pollingInterval: POLLING_INTERVAL,
 })
+*/
 
 const bscConnector = new BscConnector({ supportedChainIds: [chainId] })
 const okxConnector = new OkxConnector({ supportedChainIds: [chainId] })
@@ -32,7 +34,7 @@ const bitKeepConnector = new BitKeepConnector({ supportedChainIds: [chainId] })
 // @ts-ignore
 export const connectorsByName: { [connectorName in ConnectorNames]: any } = {
   [ConnectorNames.Injected]: injected,
-  [ConnectorNames.WalletConnect]: walletconnect,
+  //[ConnectorNames.WalletConnect]: walletconnect,
   [ConnectorNames.BSC]: bscConnector,
   [ConnectorNames.OKX]: okxConnector,
   [ConnectorNames.BitKeep]: bitKeepConnector,
