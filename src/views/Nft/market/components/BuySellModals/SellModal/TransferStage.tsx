@@ -27,7 +27,7 @@ const TransferStage: React.FC<TransferStageProps> = ({
   const transferAddressEqualsConnectedAddress = transferAddress.toLowerCase() === account.toLowerCase()
   const getErrorText = () => {
     if (isInvalidTransferAddress) {
-      return t('That’s not a Matic wallet address.')
+      return t('That’s not a Pol wallet address.')
     }
     if (transferAddressEqualsConnectedAddress) {
       return t('This address is the one that is currently connected')
