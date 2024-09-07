@@ -29,7 +29,7 @@ if (!projectId) throw new Error('Project ID is not defined')
     metadata,
     wagmiConfig: config,
     projectId,
-    enableAnalytics: true, // Optional - defaults to your Cloud configuration
+    enableAnalytics: false, // Optional - defaults to your Cloud configuration
     defaultChain: polygon,
     themeVariables: {
       '--w3m-accent': '#E91E63',
