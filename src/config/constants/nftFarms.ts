@@ -767,7 +767,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
   earningToken: serializedTokens.sol,
   sideRewards: [
       { token: "COLLECT", percentage: 30000000 },
-      { token: "WPOL", percentage: 20000 }
+      { token: "WMATIC", percentage: 20000 }
   ],
   supportedCollectionPids: [1,2,3,15],
   collectionPowers: [15,3,5,10,1],
