@@ -39,7 +39,11 @@ if (!projectId) throw new Error('Project ID is not defined')
         address: '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148',
         image: 'https://static.cx.metamask.io/api/v1/tokenIcons/137/0x56633733fc8baf9f730ad2b6b9956ae22c6d4148.png'
       }
-    }
+    },
+    featuredWalletIds: [
+      'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
+      '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0'
+    ]
   })
 
 const Providers: React.FC<{ store: Store }> = ({ children, store }) => {
