@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { Erc20, Erc20Interface } from "../Erc20";
 
 const _abi = [
@@ -227,7 +227,7 @@ const _abi = [
     name: "Transfer",
     type: "event",
   },
-];
+] as const;
 
 export class Erc20__factory {
   static readonly abi = _abi;

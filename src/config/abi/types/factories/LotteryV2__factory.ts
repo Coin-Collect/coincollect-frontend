@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { LotteryV2, LotteryV2Interface } from "../LotteryV2";
 
 const _abi = [
@@ -927,7 +927,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class LotteryV2__factory {
   static readonly abi = _abi;

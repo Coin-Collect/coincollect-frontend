@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { Masterchef, MasterchefInterface } from "../Masterchef";
 
 const _abi = [
@@ -586,7 +586,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class Masterchef__factory {
   static readonly abi = _abi;

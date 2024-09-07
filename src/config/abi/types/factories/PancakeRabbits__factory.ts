@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   PancakeRabbits,
   PancakeRabbitsInterface,
@@ -627,7 +627,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class PancakeRabbits__factory {
   static readonly abi = _abi;

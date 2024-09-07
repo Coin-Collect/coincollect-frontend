@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { IfoV1, IfoV1Interface } from "../IfoV1";
 
 const _abi = [
@@ -353,7 +353,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class IfoV1__factory {
   static readonly abi = _abi;

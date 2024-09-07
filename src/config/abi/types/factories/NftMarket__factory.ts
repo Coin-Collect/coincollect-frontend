@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { NftMarket, NftMarketInterface } from "../NftMarket";
 
 const _abi = [
@@ -1023,7 +1023,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class NftMarket__factory {
   static readonly abi = _abi;

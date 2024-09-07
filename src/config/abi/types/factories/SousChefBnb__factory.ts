@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { SousChefBnb, SousChefBnbInterface } from "../SousChefBnb";
 
 const _abi = [
@@ -483,7 +483,7 @@ const _abi = [
     stateMutability: "payable",
     type: "receive",
   },
-];
+] as const;
 
 export class SousChefBnb__factory {
   static readonly abi = _abi;

@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   TradingCompetitionV2,
   TradingCompetitionV2Interface,
@@ -667,7 +667,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class TradingCompetitionV2__factory {
   static readonly abi = _abi;

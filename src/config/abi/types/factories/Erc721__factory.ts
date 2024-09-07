@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { Erc721, Erc721Interface } from "../Erc721";
 
 const _abi = [
@@ -359,7 +359,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class Erc721__factory {
   static readonly abi = _abi;

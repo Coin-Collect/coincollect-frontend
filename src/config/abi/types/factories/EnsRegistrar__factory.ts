@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { EnsRegistrar, EnsRegistrarInterface } from "../EnsRegistrar";
 
 const _abi = [
@@ -427,7 +427,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class EnsRegistrar__factory {
   static readonly abi = _abi;

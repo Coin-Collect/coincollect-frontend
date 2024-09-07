@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { BunnyFactory, BunnyFactoryInterface } from "../BunnyFactory";
 
 const _abi = [
@@ -308,7 +308,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class BunnyFactory__factory {
   static readonly abi = _abi;

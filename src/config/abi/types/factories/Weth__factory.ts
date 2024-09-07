@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { Contract, Signer, utils } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import type { Provider } from "@ethersproject/providers";
 import type { Weth, WethInterface } from "../Weth";
 
 const _abi = [
@@ -284,7 +284,7 @@ const _abi = [
     name: "Withdrawal",
     type: "event",
   },
-];
+] as const;
 
 export class Weth__factory {
   static readonly abi = _abi;
