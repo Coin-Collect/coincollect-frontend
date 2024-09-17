@@ -1,8 +1,8 @@
-const MINUTE_IN_SECONDS = 60
+export const MINUTE_IN_SECONDS = 60
 const HOUR_IN_SECONDS = 3600
-const DAY_IN_SECONDS = 86400
+export const DAY_IN_SECONDS = 86400
 const MONTH_IN_SECONDS = 2629800
-const YEAR_IN_SECONDS = 31557600
+export const YEAR_IN_SECONDS = 31557600
 
 /**
  * Format number of seconds into year, month, day, hour, minute, seconds
@@ -18,6 +18,11 @@ const getTimePeriods = (seconds: number) => {
     hours: 0,
     minutes: 0,
     seconds: 0,
+    totalDays: 0,
+  }
+
+  if (delta >= DAY_IN_SECONDS) {
+    timeLeft.totalDays = Math.floor(delta / DAY_IN_SECONDS)
   }
 
   if (delta >= YEAR_IN_SECONDS) {
