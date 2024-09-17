@@ -11,7 +11,7 @@ import farmsConfig from 'config/constants/nftFarms'
 import isArchivedPid from 'utils/farmHelpers'
 import type { AppState } from 'state'
 import priceHelperLpsConfig from 'config/constants/priceHelperLps'
-import fetchFarms, { fetchNftFarmsBlockLimits, fetchNftPoolsStakingLimits } from './fetchFarms'
+import fetchFarms, { fetchNftPoolsStakingLimits } from './fetchFarms'
 import getFarmsPrices from './getFarmsPrices'
 import {
   fetchFarmUserEarnings,
@@ -22,6 +22,7 @@ import {
 import { SerializedNftFarmsState, SerializedNftFarm } from '../types'
 import { fetchMasterChefFarmPoolLength } from './fetchMasterChefData'
 import { BIG_ZERO } from 'utils/bigNumber'
+import { getViemClients } from 'utils/viem'
 
 const noAccountFarmConfig = farmsConfig.map((farm) => ({
   ...farm,
@@ -46,17 +47,17 @@ export const nonArchivedFarms = farmsConfig.filter(({ pid }) => !isArchivedPid(p
 // Main Function for Farm Data and Price Calculation
 export const fetchFarmsPublicDataAsync = createAsyncThunk<
   [SerializedNftFarm[], number],
-  {pids: number[]; currentBlock: number},
+  {pids: number[]; currentBlock: number; chainId: number},
   {
     state: AppState
   }
 >(
   'nftFarms/fetchFarmsPublicDataAsync',
-  async ({pids, currentBlock}) => {
+  async ({pids, currentBlock, chainId}) => {
 
     const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
 
-    const farms = await fetchFarms(farmsToFetch, currentBlock)
+    const farms = await fetchFarms(farmsToFetch, currentBlock, chainId)
 
     // const farmsWithPrices = getFarmsPrices(farms) TODO: Remove related file
     
@@ -142,26 +143,26 @@ const serializeLoadingKey = (
 }
 
 // Copied from pool state
-export const fetchNftPoolsStakingLimitsAsync = () => async (dispatch, getState) => {
+export const fetchNftPoolsStakingLimitsAsync = (chainId: ChainId) => async (dispatch, getState) => {
   const poolsWithStakingLimit = getState()
     .nftFarms.data.filter(({ stakingLimit }) => stakingLimit !== null && stakingLimit !== undefined)
     .map((pool) => pool.pid)
 
   try {
-    const stakingLimits = await fetchNftPoolsStakingLimits(poolsWithStakingLimit)
+    const stakingLimits = await fetchNftPoolsStakingLimits({ poolsWithStakingLimit, chainId, provider: getViemClients })
 
     const stakingLimitData = farmsConfig.map((pool) => {
       if (poolsWithStakingLimit.includes(pool.pid)) {
         return { pid: pool.pid }
       }
-      const { stakingLimit, numberBlocksForUserLimit } = stakingLimits[pool.pid] || {
+      const { stakingLimit, numberSecondsForUserLimit } = stakingLimits[pool.pid] || {
         stakingLimit: BIG_ZERO,
-        numberBlocksForUserLimit: 0,
+        numberSecondsForUserLimit: 0,
       }
       return {
         pid: pool.pid,
         stakingLimit: stakingLimit.toJSON(),
-        numberBlocksForUserLimit,
+        numberSecondsForUserLimit,
       }
     })
 

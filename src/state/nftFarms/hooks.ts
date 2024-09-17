@@ -10,6 +10,7 @@ import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceAmount } from 'utils/formatBalance'
 import { fetchFarmsPublicDataAsync, fetchFarmUserDataAsync, fetchNftPoolsStakingLimitsAsync, nonArchivedFarms } from '.'
 import { DeserializedNftFarm, DeserializedNftFarmsState, DeserializedNftFarmUserData, SerializedNftFarm, State } from '../types'
+import { useActiveChainId } from 'hooks/useActiveChainId'
 
 const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFarmUserData => {
   return {
@@ -21,7 +22,24 @@ const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFar
 }
 
 const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
-  const { nftAddresses, contractAddresses, lpSymbol, pid, dual, multiplier, isCommunity, tokenPerBlock, startBlock, endBlock, participantThreshold, isFinished, numberBlocksForUserLimit, stakingLimit, earningToken, performanceFee } = farm
+  const { 
+    nftAddresses, 
+    contractAddresses, 
+    lpSymbol, 
+    pid, 
+    dual, 
+    multiplier, 
+    isCommunity, 
+    tokenPerBlock, 
+    startTimestamp, 
+    endTimestamp, 
+    participantThreshold, 
+    isFinished, 
+    numberSecondsForUserLimit, 
+    stakingLimit, 
+    earningToken, 
+    performanceFee 
+  } = farm
   return {
     nftAddresses,
     contractAddresses,
@@ -31,11 +49,11 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     multiplier,
     isCommunity: isCommunity ?? false,
     tokenPerBlock,
-    startBlock,
-    endBlock,
+    startTimestamp,
+    endTimestamp,
     participantThreshold,
     isFinished,
-    stakingLimitEndBlock: numberBlocksForUserLimit + startBlock,
+    stakingLimitEndTimestamp: (numberSecondsForUserLimit || 0) + (startTimestamp || 0),
     stakingLimit: new BigNumber(stakingLimit),
     earningToken: earningToken ? deserializeToken(earningToken) : null,
     sideRewards: farm.sideRewards,
@@ -55,14 +73,15 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
 export const usePollFarmsWithUserData = (includeArchive = false) => {
   const dispatch = useAppDispatch()
   const { account } = useWeb3React()
+  const { chainId } = useActiveChainId()
 
   useSlowRefreshEffect((currentBlock) => {
     const farmsToFetch = includeArchive ? nftFarmsConfig : nonArchivedFarms
     const pids = farmsToFetch.map((farmToFetch) => farmToFetch.pid)
 
     batch(() => {
-      dispatch(fetchFarmsPublicDataAsync({pids, currentBlock}))
-      dispatch(fetchNftPoolsStakingLimitsAsync())
+      dispatch(fetchFarmsPublicDataAsync({pids, currentBlock, chainId}))
+      dispatch(fetchNftPoolsStakingLimitsAsync(chainId))
     })
 
     if (account) {

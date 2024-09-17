@@ -162,10 +162,10 @@ const NftStakeCardBody = ({ farm, account }) => {
             bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
             earningToken={farm.earningToken}
             totalStaked={farm.totalStaked}
-            startBlock={farm.startBlock}
-            endBlock={farm.endBlock}
+            startTimestamp={farm.startTimestamp}
+            endTimestamp={farm.endTimestamp}
             stakingLimit={farm.stakingLimit}
-            stakingLimitEndBlock={farm.stakingLimitEndBlock}
+            stakingLimitEndTimestamp={farm.stakingLimitEndTimestamp}
             lpLabel={lpLabel}
             addLiquidityUrl={null}
             isFinished={farm.isFinished}

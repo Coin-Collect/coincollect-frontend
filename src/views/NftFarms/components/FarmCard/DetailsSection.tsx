@@ -9,6 +9,7 @@ import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
 import MaxStakeRow from 'views/NftFarms/components/MaxStakeRow'
 import { Token } from '@coincollect/sdk'
 import { ProjectLink } from 'config/constants/types'
+import { TimeCountdownDisplay } from '../Cells/EndsInCell'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
@@ -18,10 +19,10 @@ export interface ExpandableSectionProps {
   lpLabel?: string
   addLiquidityUrl?: string
   totalStaked?: BigNumber
-  startBlock?: number
-  endBlock?: number
+  startTimestamp?: number
+  endTimestamp?: number
   stakingLimit?: BigNumber
-  stakingLimitEndBlock?: number
+  stakingLimitEndTimestamp?: number
   isFinished?: boolean
   projectLink?: ProjectLink
 }
@@ -46,10 +47,10 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   totalStaked,
   lpLabel,
   addLiquidityUrl,
-  startBlock,
-  endBlock,
+  startTimestamp,
+  endTimestamp,
   stakingLimit,
-  stakingLimitEndBlock,
+  stakingLimitEndTimestamp,
   isFinished,
   projectLink,
 }) => {
@@ -64,8 +65,8 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
     placement: 'bottom',
   })
 
-  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
-    getNftFarmBlockInfo(startBlock, endBlock, isFinished, currentBlock)
+  const { shouldShowBlockCountdown, timeUntilStart, timeRemaining, hasPoolStarted, timeToDisplay } =
+    getNftFarmBlockInfo(startTimestamp, endTimestamp, isFinished, currentBlock)
 
   return (
     <Wrapper>
@@ -91,23 +92,16 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           currentBlock={currentBlock}
           hasPoolStarted={hasPoolStarted}
           stakingLimit={stakingLimit}
-          stakingLimitEndBlock={stakingLimitEndBlock}
+          stakingLimitEndTimestamp={stakingLimitEndTimestamp || 0}
           stakingTokenSymbol={lpLabel}
+          endTimestamp={endTimestamp || 0}
         />
       )}
       {shouldShowBlockCountdown && (
         <Flex mb="2px" justifyContent="space-between" alignItems="center">
           <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
-          {blocksRemaining || blocksUntilStart ? (
-            <Flex alignItems="center">
-              <Link external href={getPolygonScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
-                <Balance small value={blocksToDisplay} decimals={0} color="primary" />
-                <Text small ml="4px" color="primary" textTransform="lowercase">
-                  {t('Blocks')}
-                </Text>
-                <TimerIcon ml="4px" color="primary" />
-              </Link>
-            </Flex>
+          {timeRemaining || timeUntilStart ? (
+            <TimeCountdownDisplay timestamp={(hasPoolStarted ? endTimestamp : startTimestamp) || 0} />
           ) : (
             <Skeleton width="54px" height="21px" />
           )}

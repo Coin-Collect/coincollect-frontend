@@ -88,9 +88,9 @@ export interface SerializedNftFarm extends SerializedNftFarmConfig {
   totalShares?: SerializedBigNumber
   tokenPriceVsQuote?: SerializedBigNumber
   poolWeight?: SerializedBigNumber
-  startBlock?: number
-  endBlock?: number
-  numberBlocksForUserLimit?: number
+  startTimestamp?: number
+  endTimestamp?: number
+  numberSecondsForUserLimit?: number
   stakingLimit?: string
   sideRewards?: any
   userData?: SerializedNftFarmUserData
@@ -106,9 +106,9 @@ export interface DeserializedNftFarm extends DeserializedNftFarmConfig {
   totalShares?: BigNumber
   tokenPriceVsQuote?: BigNumber
   poolWeight?: BigNumber
-  startBlock?: number
-  endBlock?: number
-  stakingLimitEndBlock?: number
+  startTimestamp?: number
+  endTimestamp?: number
+  stakingLimitEndTimestamp?: number
   stakingLimit?: BigNumber
   sideRewards?: any
   userData?: DeserializedNftFarmUserData
