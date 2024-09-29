@@ -54,7 +54,7 @@ export const fetchUserBalances = async (account) => {
     {},
   )
 
-  // MATIC pools
+  // POL pools
   const bnbBalance = await simplePolygonRpcProvider.getBalance(account)
   const bnbBalances = bnbPools.reduce(
     (acc, pool) => ({ ...acc, [pool.sousId]: new BigNumber(bnbBalance.toString()).toJSON() }),

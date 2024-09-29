@@ -37,13 +37,13 @@ const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowMaticBalance, onDismiss }
       {hasLowMaticBalance && (
         <Message variant="warning" mb="24px">
           <Box>
-            <Text fontWeight="bold">{t('MATIC Balance Low')}</Text>
-            <Text as="p">{t('You need MATIC for transaction fees.')}</Text>
+            <Text fontWeight="bold">{t('POL Balance Low')}</Text>
+            <Text as="p">{t('You need POL for transaction fees.')}</Text>
           </Box>
         </Message>
       )}
       <Flex alignItems="center" justifyContent="space-between">
-        <Text color="textSubtle">{t('MATIC Balance')}</Text>
+        <Text color="textSubtle">{t('POL Balance')}</Text>
         {fetchStatus !== FetchStatus.Fetched ? (
           <Skeleton height="22px" width="60px" />
         ) : (

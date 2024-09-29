@@ -67,7 +67,7 @@ const getFarmQuoteTokenPrice = (
     return BIG_ONE
   }
 
-  if (farm.quoteToken.symbol === 'WMATIC') {
+  if (farm.quoteToken.symbol === 'WPOL') {
     return bnbPriceBusd
   }
 
@@ -75,7 +75,7 @@ const getFarmQuoteTokenPrice = (
     return BIG_ZERO
   }
 
-  if (quoteTokenFarm.quoteToken.symbol === 'WMATIC') {
+  if (quoteTokenFarm.quoteToken.symbol === 'WPOL') {
     return quoteTokenFarm.tokenPriceVsQuote ? bnbPriceBusd.times(quoteTokenFarm.tokenPriceVsQuote) : BIG_ZERO
   }
 

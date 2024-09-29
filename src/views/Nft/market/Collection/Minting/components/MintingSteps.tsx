@@ -235,7 +235,7 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
         return (
           <CardBody>
             <Heading as="h4" color="secondary" mb="16px">
-              {t('Add Some MATIC')}
+              {t('Add Some POL')}
             </Heading>
             <Text color="textSubtle" small mb="16px">
               {t('You’ll need an active PancakeSwap Profile to take part in an IFO!')}

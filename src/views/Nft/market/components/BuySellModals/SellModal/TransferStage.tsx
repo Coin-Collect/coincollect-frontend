@@ -66,7 +66,7 @@ const TransferStage: React.FC<TransferStageProps> = ({
         <Input
           scale="sm"
           isWarning={isInvalidTransferAddress || transferAddressEqualsConnectedAddress}
-          placeholder={t('Paste MATIC address')}
+          placeholder={t('Paste POL address')}
           value={transferAddress}
           onChange={(e) => setTransferAddress(e.target.value)}
         />
