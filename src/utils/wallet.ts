@@ -55,8 +55,8 @@ export const setupNetwork = async () => {
             chainId: `0x${chainId.toString(16)}`,
             chainName: chainId == 137 ? 'Polygon Mainnet' : 'Mumbai Testnet',
             nativeCurrency: {
-              name: 'Matic',
-              symbol: 'MATIC',
+              name: 'Pol',
+              symbol: 'POL',
               decimals: 18,
             },
             rpcUrls: chainId == 137 ? maticNodes : mumbaiNodes,

@@ -63,7 +63,7 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, publicIfoData, walle
       isLoading={userPoolCharacteristics.isPendingTx}
       endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
     >
-      {t('Mint for ') + (cost - discountAmount) + ' MATIC'}
+      {t('Mint for ') + (cost - discountAmount) + ' POL'}
     </Button>
   )
 }
