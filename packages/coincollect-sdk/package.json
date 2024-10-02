@@ -3,25 +3,8 @@
   "license": "MIT",
   "version": "2.4.3",
   "description": "🛠 An SDK for building applications on top of CoinCollect.",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "repository": "https://github.com/coin-collect/coincollect-sdk.git",
-  "keywords": [
-    "coincollect",
-    "matic"
-  ],
-  "module": "dist/sdk.esm.js",
-  "scripts": {
-    "prepare": "npm run build",
-    "lint": "tsdx lint src test",
-    "build": "tsdx build",
-    "start": "tsdx watch",
-    "test": "tsdx test",
-    "prepublishOnly": "tsdx build"
-  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "dependencies": {
     "big.js": "^5.2.2",
     "decimal.js-light": "^2.5.0",
@@ -45,15 +28,6 @@
     "@ethersproject/solidity": "^5.0.2",
     "@types/big.js": "^4.0.5",
     "@types/jest": "^24.0.25",
-    "babel-plugin-transform-jsbi-to-bigint": "^1.3.1",
-    "tsdx": "^0.12.3"
-  },
-  "engines": {
-    "node": ">=10"
-  },
-  "prettier": {
-    "printWidth": 120,
-    "semi": false,
-    "singleQuote": true
+    "babel-plugin-transform-jsbi-to-bigint": "^1.3.1"
   }
 }
