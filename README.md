@@ -13,7 +13,7 @@
   
   *Empowering the future of decentralized finance with cutting-edge technology*
   
-  [🌟 Live Demo](http://localhost:3001) • [📖 Documentation](#documentation) • [🤝 Contributing](#contributing) • [💬 Community](#community)
+  [🌟 Live APP](https://app.coincollect.org/) • [📖 Documentation](#documentation) • [🤝 Contributing](#contributing) • [💬 Community](#community)
   
 </div>
 
