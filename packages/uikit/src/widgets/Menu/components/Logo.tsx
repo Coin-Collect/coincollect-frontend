@@ -26,6 +26,13 @@ const StyledLink = styled("a")`
       display: none;
     }
   }
+  .mobile-video {
+    width: 40px;
+    height: 40px;
+    ${({ theme }) => theme.mediaQueries.nav} {
+      display: none;
+    }
+  }
   .desktop-icon {
     width: 160px;
     display: none;
@@ -51,7 +58,14 @@ const Logo: React.FC<Props> = ({ isPushed, togglePush, isDark, href }) => {
   const isAbsoluteUrl = href.startsWith("http");
   const innerLogo = (
     <>
-      <LogoIcon className="mobile-icon" />
+      <video 
+        className="mobile-video" 
+        src="/logo-video_transparent.webm" 
+        autoPlay 
+        loop 
+        muted 
+        playsInline
+      />
       <LogoWithTextIcon className="desktop-icon" isDark={isDark} />
     </>
   );

@@ -95,11 +95,16 @@ const Hero = () => {
           position="relative"
         >
           <BunnyWrapper>
-            <picture>
-              <source type="image/webp" srcSet={getSrcSet(imagePath, imageSrc, '.webp')} />
-              <source type="image/png" srcSet={getSrcSet(imagePath, imageSrc)} />
-              <img src={`${imagePath}${imageSrc}.png`} alt={t('Lunar bunny')} />
-            </picture>
+            <video 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              style={{ width: '100%', height: 'auto' }}
+            >
+              <source src="/sheep.webm" type="video/webm" />
+              Your browser does not support the video tag.
+            </video>
           </BunnyWrapper>
           
         </Flex>

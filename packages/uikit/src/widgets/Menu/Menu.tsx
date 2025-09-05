@@ -19,6 +19,7 @@ import Panel from "./components/Panel";
 const Wrapper = styled.div`
   position: relative;
   width: 100%;
+  overflow-x: hidden;
 `;
 
 const StyledNav = styled.nav`
@@ -55,6 +56,7 @@ const TopBannerContainer = styled.div<{ height: number }>`
 const BodyWrapper = styled(Box)`
   position: relative;
   display: flex;
+  overflow-x: hidden;
 `;
 
 const Inner = styled.div<{ isPushed: boolean; showMenu: boolean }>`
@@ -67,6 +69,18 @@ const Inner = styled.div<{ isPushed: boolean; showMenu: boolean }>`
     margin-left: ${({ isPushed }) => `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px`};
     max-width: ${({ isPushed }) => `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)`};
   }
+`;
+
+const Overlay = styled.div<{ isPushed: boolean; isMobile: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  display: ${({ isPushed, isMobile }) => (isPushed && isMobile ? 'block' : 'none')};
+  transition: opacity 0.2s;
 `;
 
 const Menu: React.FC<NavProps> = ({
@@ -187,6 +201,11 @@ const Menu: React.FC<NavProps> = ({
           </Flex>
         )}
         <BodyWrapper mt={!subLinks ? `${totalTopMenuHeight + 1}px` : "0"}>
+          <Overlay 
+            isPushed={isPushed} 
+            isMobile={isMobile} 
+            onClick={() => setIsPushed(false)}
+          />
           <Panel
             isPushed={isPushed}
             isMobile={isMobile}
