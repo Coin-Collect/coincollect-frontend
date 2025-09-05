@@ -187,10 +187,10 @@ Please read our [Contributing Guidelines](./CONTRIBUTING.md) for detailed inform
   
   **Join our thriving community of DeFi enthusiasts!**
   
-  [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289DA?logo=discord&logoColor=white)](https://discord.gg/coincollect)
-  [![Twitter](https://img.shields.io/badge/Twitter-Follow%20Us-1DA1F2?logo=twitter&logoColor=white)](https://twitter.com/coincollect)
-  [![Telegram](https://img.shields.io/badge/Telegram-Join%20Group-26A5E4?logo=telegram&logoColor=white)](https://t.me/coincollect)
-  [![Medium](https://img.shields.io/badge/Medium-Read%20Blog-12100E?logo=medium&logoColor=white)](https://medium.com/@coincollect)
+  [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/CoinCollectOrg)
+  [![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/FW9dnRFZk9)
+  [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/CoinCollectOrg)
+  [![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/coincollectapp)
   
 </div>
 
