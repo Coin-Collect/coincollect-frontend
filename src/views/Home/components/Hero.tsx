@@ -20,6 +20,17 @@ const flyingAnim = () => keyframes`
   }
 `
 
+const titleFadeIn = () => keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`
+
 
 const BgWrapper = styled.div`
   z-index: -1;
@@ -43,6 +54,10 @@ const BunnyWrapper = styled.div`
   animation: ${flyingAnim} 3.5s ease-in-out infinite;
 `
 
+const AnimatedTitle = styled(Heading)`
+  animation: ${titleFadeIn} 1.2s ease-out;
+`
+
 
 const imagePath = '/images/home/lunar-bunny/'
 const imageSrc = 'bunny'
@@ -63,16 +78,16 @@ const Hero = () => {
         flexDirection={['column-reverse', null, null, 'row']}
         alignItems={['center', null, null, 'center']}
         justifyContent="center"
-        mt={['50px', null, 0]}
+        mt={['5px', null, 0]}
         id="homepage-hero"
       >
 
         <Flex flex="1" flexDirection="column">
-          <Heading scale="xxl" color="secondary" mb="24px">
-            {t('The moon is made of pancakes.')}
-          </Heading>
+          <AnimatedTitle scale="xxl" color="secondary" mb="24px">
+            {t('Earn with NFTs, Effortlessly')}
+          </AnimatedTitle>
           <Heading scale="md" mb="24px">
-            {t('Trade, earn, and win crypto on the most popular decentralized platform in the galaxy.')}
+            {t('Collect coins. Stake, farm, and trade with full flexibility')}
           </Heading>
 
           <Flex>
@@ -100,7 +115,7 @@ const Hero = () => {
               loop 
               muted 
               playsInline
-              style={{ width: '100%', height: 'auto' }}
+              style={{ width: '100%', height: 'auto', marginTop: '0px' }}
             >
               <source src="/sheep.webm" type="video/webm" />
               Your browser does not support the video tag.
