@@ -1,5 +1,5 @@
 import { useTranslation } from 'contexts/Localization'
-import { Box, ChevronRightIcon, Flex, Text, useMatchBreakpoints, Image } from '@pancakeswap/uikit'
+import { Box, ChevronRightIcon, Flex, Text, useMatchBreakpoints, Image, Button } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
 import  StaticImageData  from 'next/image'
 import { useRouter } from 'next/router'
@@ -142,6 +142,40 @@ export const Title = styled.div`
   color: ${({ theme }) => theme.colors.secondary};
 `
 
+export const StyledButton = styled(Button)`
+  margin-left: 12px;
+  margin-right: 12px;
+  margin-bottom: 24px;
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  border-radius: 16px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryBright};
+    transform: translateY(-2px);
+  }
+`
+
+export const SecondaryButton = styled(Button)`
+  margin-left: 12px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+`
+
+export const ButtonContainer = styled(Flex)`
+  margin-left: 12px;
+  margin-bottom: 24px;
+  gap: 0px;
+`
+
 
 const useNftGameBlockData = () => {
   const { t } = useTranslation()
@@ -149,7 +183,7 @@ const useNftGameBlockData = () => {
     return [
       {
         title: t('Unlock Your Journey'),
-        description: t('Mint your KEY to open the door to the metaverse and web3 wonders'),
+        description: t('Mint your KEY to enter the metaverse'),
         ctaTitle: t('Mint Now'),
         image: `/images/home/key/1s.png`,
         defaultImage: `/images/home/key/1.png`,
@@ -157,7 +191,7 @@ const useNftGameBlockData = () => {
       },
       {
         title: t('Reap Your Rewards'),
-        description: t('Use your KEY to claim exciting rewards and enhance your digital experience'),
+        description: t('Claim rewards and enhance your experience'),
         ctaTitle: t('Claim Rewards'),
         image: `/images/home/key/2s.png`,
         defaultImage: `/images/home/key/2.png`,
@@ -165,7 +199,7 @@ const useNftGameBlockData = () => {
       },
       {
         title: t('Stake for Growth'),
-        description: t('Stake your KEY to earn and grow in the decentralized digital realm'),
+        description: t('Stake your KEY to earn and grow'),
         ctaTitle: t('Stake Now'),
         image: `/images/home/key/3s.png`,
         defaultImage: `/images/home/key/3.png`,
@@ -244,8 +278,21 @@ const EcoSystemSection: React.FC = () => {
               Mint, Stake & Earn Rewards
             </Text>
             <Text mb={24} pl={12} fontSize="14px" lineHeight="120%" fontWeight={800} color={theme.colors.text}>
-            KEY is the easiest way to enter web3 and the metaverse, offering access to rewards, staking, and enhanced digital experiences. Mint a KEY to explore and thrive in the decentralized realm.
+            Your gateway to web3 and the metaverse. Mint, stake, and earn rewards in the decentralized realm.
             </Text>
+            <ButtonContainer>
+              <StyledButton
+                onClick={() => window.open('https://ghostalien.questgalaxy.com/', '_blank', 'noopener noreferrer')}
+              >
+                Play Game
+              </StyledButton>
+              <SecondaryButton
+              variant="secondary"
+              onClick={() => window.open('https://key2web3.com/', '_blank', 'noopener,noreferrer')}
+            >
+              Visit Website
+            </SecondaryButton>
+            </ButtonContainer>
             <FeatureBoxesWrapper>
               {nftGameBlockData.map((item) => (
                 <FeatureBox
@@ -258,7 +305,7 @@ const EcoSystemSection: React.FC = () => {
                   width={100 / 5}
                   ctaTitle={item.ctaTitle}
                   path={item.path}
-                  onClick={item.path.startsWith("http") ? () => window.open(item.path, '_blank', 'noopener noreferrer') : null}
+                  onClick={item.path.startsWith("http") ? () => { window.open(item.path, '_blank', 'noopener noreferrer') } : undefined}
                 />
               ))}
             </FeatureBoxesWrapper>
