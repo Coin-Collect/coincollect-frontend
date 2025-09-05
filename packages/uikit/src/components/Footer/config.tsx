@@ -109,14 +109,9 @@ export const socials: SocialLinkType[] = [
     href: "https://discord.gg/FW9dnRFZk9",
   },
   {
-    label: "Youtube",
-    icon: "Youtube",
-    href: "https://www.youtube.com/@CoinCollectApp",
-  },
-  {
     label: "Medium",
     icon: "Medium",
-    href: "https://medium.com/@coincollectapp",
+    href: "https://medium.com/coincollectapp",
   },
 ];
 

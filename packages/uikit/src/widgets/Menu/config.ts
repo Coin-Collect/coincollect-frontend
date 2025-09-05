@@ -184,14 +184,9 @@ export const socials: { label?: string, icon: string, items?: { label?: string, 
     href: "https://www.instagram.com/coincollectorg/",
   },
   {
-    label: "Youtube",
-    icon: "YoutubeIcon",
-    href: "https://www.youtube.com/@CoinCollectApp",
-  },
-  {
     label: "Medium",
     icon: "MediumIcon",
-    href: "https://medium.com/@coincollectapp",
+    href: "https://medium.com/coincollectapp",
   },
 ];
 
