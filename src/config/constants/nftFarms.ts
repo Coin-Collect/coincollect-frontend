@@ -847,7 +847,42 @@ const nftFarms: SerializedNftFarmConfig[] = [
   banner: "https://coincollect.org/assets/images/collections/banners/gotchi.jpg",
   avatar: "https://coincollect.org/assets/images/collections/logos/gotchi.jpg",
   useApi: true
-}
+},
+
+
+    {
+        pid: 32,
+        lpSymbol: "Brawlers Revenge",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0x7121D40FDe5F2a82674262b8601DEcd9E066C936",
+            80001: "0x7121D40FDe5F2a82674262b8601DEcd9E066C936"
+        },
+        contractAddresses: {
+            137: "0x78a304C79fAfFdcC9575B4758006D85cB7Ad05a3",
+            80001: "0x78a304C79fAfFdcC9575B4758006D85cB7Ad05a3"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "BLITZ", percentage: 3000 },
+            { token: "ELON", percentage: 48876 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "mainLink here",
+            getNftLink: "getNftLink here",
+        },
+        banner: "/images/poolBanners/partners/1.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
+    }
+       
 
 
 /*

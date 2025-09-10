@@ -25,6 +25,37 @@ import Balance from 'components/Balance'
 const Action = styled.div`
   padding-top: 16px;
 `
+
+const StyledActionButton = styled(Button)`
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  height: 48px;
+  background: ${({ theme, variant }) => 
+    variant === 'primary' 
+      ? `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryBright} 100%)`
+      : theme.colors.tertiary
+  };
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
 }
@@ -41,14 +72,14 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
-  const [collectionOption, setCollectionOption] = useState(null)
-  const [task, setTask] = useState(null)
+  const [collectionOption, setCollectionOption] = useState<number | null>(null)
+  const [task, setTask] = useState<string | null>(null)
   const { pid, nftAddresses } = farm
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
   const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
   const earnLabel = farm.earningToken ? farm.earningToken.symbol : t('COLLECT')
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
-  const atLeastOneApproved = allowance.some((allowance) => allowance)
+  const atLeastOneApproved = allowance?.some((allowance) => allowance) ?? false
   const isApproved = account && atLeastOneApproved
   const dispatch = useAppDispatch()
 
@@ -67,7 +98,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const nftContract = useErc721CollectionContract(nftAddress)
 
 
-  const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress)
+  const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress || undefined)
 
 
   const handleApprove = useCallback(async () => {
@@ -76,7 +107,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     })
     if (receipt?.status) {
       toastSuccess(t('Contract Enabled'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      dispatch(fetchFarmUserDataAsync({ account: account!, pids: [pid] }) as any)
 
       if (smartNftPoolAddress) {
         // Open stake panel automatically
@@ -157,19 +188,19 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
           {t('Your NFTs have been staked in the pool')}
         </ToastDescriptionWithTx>
       );
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
+      dispatch(fetchFarmUserDataAsync({ account: account!, pids: [pid] }) as any);
     }
   };
   const [onPresentDeposit] = useModal(
     <DepositModal
-      max={tokenBalance}
-      stakingLimit={farm.stakingLimit}
-      stakedBalance={stakedBalance}
+      max={tokenBalance ?? new BigNumber(0)}
+      stakingLimit={farm.stakingLimit ?? new BigNumber(0)}
+      stakedBalance={stakedBalance || new BigNumber(0)}
       onConfirm={handleStake}
       tokenName={farm.lpSymbol}
       lpPrice={new BigNumber(0)}
       lpLabel={lpLabel}
-      apr={farm.apr}
+      apr={farm.apr || 0}
       addLiquidityUrl={addLiquidityUrl}
       cakePrice={cakePrice}
       pid={collectionOption ? collectionOption : pid}
@@ -181,22 +212,23 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
 
   const renderApprovalOrStakeButton = () => {
     return stakedBalance?.eq(0) || pendingTx ? (
-      <Button mt="8px"
+      <StyledActionButton mt="8px"
         width="100%"
+        variant="primary"
         isLoading={pendingTx}
         endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
         onClick={smartNftPoolAddress ? onPresentCollectionModal : handleApprove}
         disabled={farm.isFinished}
       >
         {smartNftPoolAddress ? pendingTx ? task === "approve" ? "Confirming" : "Staking" : t('Click to Stake Now') : t('Enable Contract')}
-      </Button>
+      </StyledActionButton>
     ) : (
       <StakeAction
         stakedBalance={stakedBalance}
         tokenBalance={tokenBalance}
         stakingLimit={farm.stakingLimit}
         tokenName={farm.lpSymbol}
-        pid={collectionOption ?? 0 > 0 ? collectionOption : pid}
+        pid={collectionOption && collectionOption > 0 ? collectionOption : pid}
         mainPid={pid}
         apr={farm.apr}
         lpLabel={lpLabel}

@@ -27,8 +27,54 @@ const MultiplierTag = styled(Tag)`
   margin-left: 4px;
 `
 
+const BannerContainer = styled.div`
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.02);
+  }
+`
+
 const StyledImage = styled(Image)`
-  border-radius: 8px;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+`
+
+const BannerOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  pointer-events: none;
+`
+
+const StatusBadge = styled.div<{ status?: 'active' | 'finished' }>`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: ${({ theme, status }) => 
+    status === 'finished' 
+      ? `${theme.colors.failure}E6`
+      : `${theme.colors.success}E6`
+  };
+  color: white;
+  backdrop-filter: blur(4px);
 `
 
 const CollectionAvatar = styled(ProfileAvatar)`
@@ -48,20 +94,20 @@ const TextWithCursor = styled(Text)`
 const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, isCommunity, nftToken, pid, disabled = false }) => {
   const collectionData = mintingConfig.find((collection) => collection.stake_pid === pid)
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
-  const banner = nftFarmData["banner"] ? nftFarmData["banner"] : collectionData?.banner.small
+  const banner = nftFarmData?.["banner"] ? nftFarmData["banner"] : collectionData?.banner.small
   //const avatar = nftFarmData["avatar"] ? nftFarmData["avatar"] : collectionData?.avatar
 
   // This expression is used to access the avatar and other information of the main NFT of the pool.
   // Todo: In the future, I plan to add the mainNftPid value to supportedNfts.
-  const firstFarmOfMainNft = nftFarmsConfig.find((nftFarm) => nftFarm.nftAddresses?.[137] === nftFarmData.nftAddresses?.[137])
-  const supportedCollectionPids = nftFarmData["supportedCollectionPids"] ? [firstFarmOfMainNft.pid, ...nftFarmData["supportedCollectionPids"]] : [firstFarmOfMainNft.pid]
+  const firstFarmOfMainNft = nftFarmsConfig.find((nftFarm) => nftFarm.nftAddresses?.[137] === nftFarmData?.nftAddresses?.[137])
+  const supportedCollectionPids = nftFarmData?.["supportedCollectionPids"] ? [firstFarmOfMainNft?.pid, ...nftFarmData["supportedCollectionPids"]].filter(Boolean) : [firstFarmOfMainNft?.pid].filter(Boolean)
 
   const supportedNftStakeFarms = supportedCollectionPids
   .map(pid => nftFarmsConfig.find(farm => farm.pid === pid))
-  .filter(farm => farm !== undefined);
+  .filter(farm => farm !== undefined) as any[];
 
   // Todo: Duplicate with CollectionSelectModal, solve in hook level
-  const collectionPowers = nftFarmData["collectionPowers"] ?? supportedNftStakeFarms.map((collection) => {
+  const collectionPowers = nftFarmData?.["collectionPowers"] ?? supportedNftStakeFarms.map((collection) => {
     switch (collection.pid) {
       case 1:
         return 1;
@@ -76,10 +122,10 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
     }
   })
 
-  let smallAvatars = [];
-  let largeAvatars = [];
+  let smallAvatars: any[] = [];
+  let largeAvatars: any[] = [];
   let collectBadgeAdded = false;
-  let avatar;
+  let avatar: any;
   for (let i = 0; i < supportedNftStakeFarms.length; i++) {
     let farm = supportedNftStakeFarms[i];
     const dataFromMinting = mintingConfig.find((collection) => collection.stake_pid === farm.pid)
@@ -117,7 +163,13 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
   return (
     <CardBody p="0px">
       <Flex justifyContent="center">
-        <StyledImage src={banner} height={125} width={375} />
+        <BannerContainer>
+          <StyledImage src={banner} alt={`${lpLabel} banner`} height={125} width={375} />
+          <BannerOverlay />
+          <StatusBadge status={disabled ? 'finished' : 'active'}>
+            {disabled ? 'Finished' : 'Active'}
+          </StatusBadge>
+        </BannerContainer>
       </Flex>
       <Flex
         position="relative"
@@ -129,7 +181,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
       >
 
 
-        {smallAvatars.map((avatar, index) => (
+        {(smallAvatars as any[]).map((avatar: any, index: number) => (
           <CollectionAvatar
             key={index}
             src={avatar["avatar"]}

@@ -24,6 +24,19 @@ const StyledCard = styled(Card)`
   align-self: baseline;
   max-width: 100%;
   margin: 0 0 24px 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08);
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+  
   ${({ theme }) => theme.mediaQueries.sm} {
     max-width: 350px;
     margin: 0 12px 46px;
@@ -40,6 +53,41 @@ const ExpandingWrapper = styled.div`
   padding: 24px;
   border-top: 2px solid ${({ theme }) => theme.colors.cardBorder};
   overflow: hidden;
+`
+
+const MetricText = styled(Text)<{ metricType?: 'high' | 'medium' | 'low' | 'reward' }>`
+  color: ${({ theme, metricType }) => {
+    switch (metricType) {
+      case 'high':
+        return theme.colors.success;
+      case 'medium':
+        return theme.colors.warning;
+      case 'low':
+        return theme.colors.failure;
+      case 'reward':
+        return theme.colors.primary;
+      default:
+        return theme.colors.text;
+    }
+  }};
+  font-weight: ${({ metricType }) => metricType ? '600' : 'inherit'};
+`
+
+const RewardBadge = styled.div<{ rewardType?: 'primary' | 'secondary' }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: ${({ theme, rewardType }) => 
+    rewardType === 'primary' 
+      ? `${theme.colors.primary}20`
+      : `${theme.colors.secondary}20`
+  };
+  border: 1px solid ${({ theme, rewardType }) => 
+    rewardType === 'primary' 
+      ? `${theme.colors.primary}40`
+      : `${theme.colors.secondary}40`
+  };
 `
 
 interface FarmCardProps {
@@ -64,6 +112,15 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
   const farmConfig = nftFarmsConfig.filter((farmConfig) => farmConfig.pid == farm.pid)[0]
   const { stakedBalance } = farm.userData || {}
+  
+  // Helper function to determine APR color based on value
+  const getAprMetricType = (aprValue: string) => {
+    const numericApr = parseFloat(aprValue.replace('%', ''))
+    if (numericApr >= 100) return 'high'
+    if (numericApr >= 50) return 'medium'
+    if (numericApr > 0) return 'low'
+    return undefined
+  }
 
   return (
     <StyledCard ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />} isActive={isPromotedFarm}>
@@ -82,9 +139,9 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
     {sideRewards.length === 0 ? (
       <Flex justifyContent="space-between" alignItems="center">
         <Text>{t('Daily Reward')}:</Text>
-        <Text bold style={{ display: 'flex', alignItems: 'center' }}>
+        <MetricText bold metricType={farm.apr ? getAprMetricType(displayApr) : undefined} style={{ display: 'flex', alignItems: 'center' }}>
           {farm.apr ? displayApr : <Skeleton height={24} width={80} />}
-        </Text>
+        </MetricText>
       </Flex>
     ) : (
       <>
@@ -92,13 +149,21 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
           <Text>{t('Daily Rewards')}</Text>
         </Flex>
         <Flex justifyContent="space-between">
-            <Text>{earnLabel}</Text>
-            <Text bold>{farm.apr ? displayApr : <Skeleton height={24} width={80} />}</Text>
+          <RewardBadge rewardType="primary">
+            <MetricText fontSize="12px" metricType="reward">{earnLabel}</MetricText>
+          </RewardBadge>
+          <MetricText bold metricType={farm.apr ? getAprMetricType(displayApr) : undefined}>
+            {farm.apr ? displayApr : <Skeleton height={24} width={80} />}
+          </MetricText>
         </Flex>
         {sideRewards.map((reward, index) => (
           <Flex key={index} justifyContent="space-between">
-            <Text>{reward.token}</Text>
-            <Text bold><Balance value={Number(displayApr) * (reward.percentage / 100)} /></Text>
+            <RewardBadge rewardType="secondary">
+              <MetricText fontSize="12px" metricType="reward">{reward.token}</MetricText>
+            </RewardBadge>
+            <MetricText bold metricType="medium">
+              <Balance value={Number(displayApr) * (reward.percentage / 100)} />
+            </MetricText>
           </Flex>
         ))}
       </>
