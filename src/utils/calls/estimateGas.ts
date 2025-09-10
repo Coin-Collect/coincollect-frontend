@@ -1,5 +1,6 @@
 import { Contract, Overrides, PayableOverrides } from '@ethersproject/contracts'
 import { BigNumber } from '@ethersproject/bignumber'
+import { DEFAULT_GAS_LIMIT } from 'config'
 import { TransactionResponse } from '@ethersproject/providers'
 
 /**
@@ -43,9 +44,28 @@ export const callWithEstimateGas = async (
   overrides: PayableOverrides = {},
   gasMarginPer10000 = 1000,
 ): Promise<TransactionResponse> => {
-  const gasEstimation = estimateGas(contract, methodName, methodArgs, overrides, gasMarginPer10000)
+  let gasLimit: BigNumber | undefined
+
+  try {
+    gasLimit = await estimateGas(contract, methodName, methodArgs, overrides, gasMarginPer10000)
+  } catch (err) {
+    // Fallback on unpredictable gas errors by providing a conservative manual gas limit
+    // Heuristic: base + per-item cost for any array args
+    const arrayArgLengths = methodArgs
+      .filter((arg) => Array.isArray(arg))
+      .reduce((sum: number, arr: any[]) => sum + arr.length, 0)
+
+    const base = BigNumber.from(DEFAULT_GAS_LIMIT) // 200k default
+    const perItem = BigNumber.from(120000) // add ~120k per array item
+    const heuristic = arrayArgLengths > 0 ? base.add(perItem.mul(arrayArgLengths)) : base.mul(2) // 400k when no arrays
+
+    // Cap fallback to prevent excessive limits
+    const cap = BigNumber.from(2_500_000)
+    gasLimit = heuristic.gt(cap) ? cap : heuristic
+  }
+
   const tx = await contract[methodName](...methodArgs, {
-    gasLimit: gasEstimation,
+    gasLimit,
     ...overrides,
   })
   return tx
