@@ -33,8 +33,8 @@ const BannerContainer = styled.div`
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: transform 0.3s ease;
-  width: 450px;
-  height: 180px;
+  width: 550px;
+  height: 220px;
   
   &:hover {
     transform: scale(1.02);
@@ -83,13 +83,13 @@ const StatusBadge = styled.div<{ status?: 'active' | 'finished' }>`
 `
 
 const CollectionAvatar = styled(ProfileAvatar)`
-  left: 0;
   position: absolute;
-  top: 30px;
-  border: 1px white solid;
+  z-index: 3;
+  border: 2px white solid;
   width: 30px;
   height: 30px;
   cursor: pointer !important;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 `
 
 const TextWithCursor = styled(Text)`
@@ -169,40 +169,39 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
     <CardBody p="0px">
       <Flex justifyContent="center">
         <BannerContainer>
-          <StyledImage src={banner} alt={`${lpLabel} banner`} height={180} width={450} />
+          <StyledImage src={banner} alt={`${lpLabel} banner`} height={220} width={550} />
           <BannerOverlay />
           <StatusBadge status={disabled ? 'finished' : 'active'}>
             {disabled ? 'Finished' : 'Active'}
           </StatusBadge>
+          
+          {/* Collection Avatars Overlay */}
+          {(smallAvatars as any[]).map((avatar: any, index: number) => (
+            <CollectionAvatar
+              key={index}
+              src={avatar["avatar"]}
+              width={50}
+              height={50}
+              style={{ left: `${8 + index * 15}px`, top: '8px' }}
+              onClick={onPresentAllowedNftsModal}
+            />
+          ))}
+          
+          {/* Title and Tag Overlay */}
+          <Flex
+            position="absolute"
+            bottom="8px"
+            left="8px"
+            right="8px"
+            flexDirection="column"
+            alignItems="flex-start"
+          >
+            <Heading color="white" as="h3" mb={'4px'} style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+              {lpLabel}
+            </Heading>
+            {isCommunity ? <CommunityTag variant='success' scale='sm' /> : <PartnerTag variant='textSubtle' scale='sm' />}
+          </Flex>
         </BannerContainer>
-      </Flex>
-      <Flex
-        position="relative"
-        height="65px"
-        justifyContent="center"
-        alignItems="flex-end"
-        py="8px"
-        flexDirection="column"
-      >
-
-
-        {(smallAvatars as any[]).map((avatar: any, index: number) => (
-          <CollectionAvatar
-            key={index}
-            src={avatar["avatar"]}
-            width={50}
-            height={50}
-            style={{ left: `${index * 15}px` }}
-            onClick={onPresentAllowedNftsModal}
-          />
-        ))}
-        <TextWithCursor onClick={onPresentAllowedNftsModal} color='gold' fontSize={14} style={{ position: 'absolute', left: '0px', top: '8px' }}>Allowed NFTs ▿</TextWithCursor>
-
-
-        <Heading color={disabled ? 'textDisabled' : 'body'} as="h3" mb={'8px'}>
-          {lpLabel}
-        </Heading>
-        {isCommunity ? <CommunityTag variant='success' mb='2px' scale='sm' /> : <PartnerTag variant='textSubtle' mb='2px' scale='sm' />}
       </Flex>
     </CardBody>
   )

@@ -94,7 +94,7 @@ const NftStakeCardBody = ({ farm, account }) => {
   const projectLink = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]["projectLink"]
   const isSmartNftStakePool = Boolean(farm.contractAddresses)
   const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()))
-  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold, mainCollectionWeight)
+  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0, totalLiquidityWithThreshold, mainCollectionWeight)
 
   return (
     <>
@@ -167,7 +167,7 @@ const NftStakeCardBody = ({ farm, account }) => {
             stakingLimit={farm.stakingLimit}
             stakingLimitEndTimestamp={farm.stakingLimitEndTimestamp}
             lpLabel={lpLabel}
-            addLiquidityUrl={null}
+            addLiquidityUrl={undefined}
             isFinished={farm.isFinished}
             projectLink={projectLink}
           />
