@@ -18,8 +18,17 @@ const assignError = (maybeError: any) => {
 }
 
 export const isUserRejected = (err) => {
-  // provider user rejected error code
-  return typeof err === 'object' && 'code' in err && err.code === 4001
+  // Detect common user-rejection patterns across wallets/providers
+  if (typeof err !== 'object' || !err) return false
+  const code = (err as any).code
+  const msg = String((err as any).message || '').toLowerCase()
+  return (
+    code === 4001 || // EIP-1193 userRejectedRequest
+    code === 'ACTION_REJECTED' || // Ethers v5
+    msg.includes('user rejected') ||
+    msg.includes('user denied') ||
+    msg.includes('rejected by user')
+  )
 }
 
 const ENABLED_LOG = false

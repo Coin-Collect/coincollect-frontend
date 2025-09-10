@@ -33,26 +33,11 @@ export const unstakeNftFarm = async (
   isSmartNftPool
 ) => {
   const stakeParams = isSmartNftPool ? [collectionAddresses, tokenIds] : [pid, tokenIds];
-  try {
-    return await callWithEstimateGas(masterChefContract, 'unstakeAll', stakeParams, {
-      gasPrice,
-    })
-  } catch (err) {
-    // Final fallback with a larger manual gas limit sized by number of NFTs
-    const perItem = 160000
-    const base = 300000
-    const cap = 3_000_000
-    const len = Array.isArray(tokenIds) ? tokenIds.length : 1
-    const manualGasLimit = Math.min(base + perItem * len, cap)
-
-    return masterChefContract.unstakeAll(
-      ...stakeParams,
-      {
-        gasPrice,
-        gasLimit: manualGasLimit,
-      },
-    )
-  }
+  // Single attempt; callWithEstimateGas already has a safe fallback for estimation failures.
+  // Avoids re-opening wallet on user-rejected signature.
+  return callWithEstimateGas(masterChefContract, 'unstakeAll', stakeParams, {
+    gasPrice,
+  })
 }
 
 export const harvestNftFarm = async (masterChefContract, pid, gasPrice, isSmartNftPool) => {

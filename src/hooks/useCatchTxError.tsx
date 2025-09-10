@@ -32,7 +32,7 @@ const isLowGasPriceError = (err: TxError): boolean => err?.data?.message.include
 export default function useCatchTxError(): CatchTxErrorReturn {
   const { library } = useWeb3React()
   const { t } = useTranslation()
-  const { toastError, toastSuccess } = useToast()
+  const { toastError, toastSuccess, toastInfo } = useToast()
   const [loading, setLoading] = useState(false)
 
   const handleNormalError = useCallback(
@@ -98,55 +98,56 @@ export default function useCatchTxError(): CatchTxErrorReturn {
 
         return receipt
       } catch (error: any) {
-        if (!isUserRejected(error)) {
-          if (!tx) {
-            handleNormalError(error)
-          } else {
-            library
-              .call(tx, tx.blockNumber)
-              .then(() => {
+        if (isUserRejected(error)) {
+          // Friendly notification on user cancellation
+          toastInfo(t('Transaction cancelled'), t('You rejected the request in your wallet.'))
+        } else if (!tx) {
+          handleNormalError(error)
+        } else {
+          library
+            .call(tx, tx.blockNumber)
+            .then(() => {
+              handleTxError(error, tx)
+            })
+            .catch((err: any) => {
+              if (isGasEstimationError(err)) {
                 handleTxError(error, tx)
-              })
-              .catch((err: any) => {
-                if (isGasEstimationError(err)) {
-                  handleTxError(error, tx)
+              } else {
+                logError(err)
+
+                let recursiveErr = err
+
+                let reason: string | undefined
+
+                // for MetaMask
+                if (recursiveErr?.data?.message) {
+                  reason = recursiveErr?.data?.message
                 } else {
-                  logError(err)
-
-                  let recursiveErr = err
-
-                  let reason: string | undefined
-
-                  // for MetaMask
-                  if (recursiveErr?.data?.message) {
-                    reason = recursiveErr?.data?.message
-                  } else {
-                    // for other wallets
-                    // Reference
-                    // https://github.com/Uniswap/interface/blob/ac962fb00d457bc2c4f59432d7d6d7741443dfea/src/hooks/useSwapCallback.tsx#L216-L222
-                    while (recursiveErr) {
-                      reason = recursiveErr.reason ?? recursiveErr.message ?? reason
-                      recursiveErr = recursiveErr.error ?? recursiveErr.data?.originalError
-                    }
+                  // for other wallets
+                  // Reference
+                  // https://github.com/Uniswap/interface/blob/ac962fb00d457bc2c4f59432d7d6d7741443dfea/src/hooks/useSwapCallback.tsx#L216-L222
+                  while (recursiveErr) {
+                    reason = recursiveErr.reason ?? recursiveErr.message ?? reason
+                    recursiveErr = recursiveErr.error ?? recursiveErr.data?.originalError
                   }
-
-                  const REVERT_STR = 'execution reverted: '
-                  const indexInfo = reason?.indexOf(REVERT_STR)
-                  const isRevertedError = indexInfo >= 0
-
-                  if (isRevertedError) reason = reason.substring(indexInfo + REVERT_STR.length)
-
-                  toastError(
-                    'Failed',
-                    <ToastDescriptionWithTx txHash={tx.hash}>
-                      {isRevertedError
-                        ? `Transaction failed with error: ${reason}`
-                        : 'Transaction failed. For detailed error message:'}
-                    </ToastDescriptionWithTx>,
-                  )
                 }
-              })
-          }
+
+                const REVERT_STR = 'execution reverted: '
+                const indexInfo = reason?.indexOf(REVERT_STR)
+                const isRevertedError = indexInfo >= 0
+
+                if (isRevertedError) reason = reason.substring(indexInfo + REVERT_STR.length)
+
+                toastError(
+                  'Failed',
+                  <ToastDescriptionWithTx txHash={tx.hash}>
+                    {isRevertedError
+                      ? `Transaction failed with error: ${reason}`
+                      : 'Transaction failed. For detailed error message:'}
+                  </ToastDescriptionWithTx>,
+                )
+              }
+            })
         }
       } finally {
         setLoading(false)
