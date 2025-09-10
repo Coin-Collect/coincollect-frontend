@@ -33,6 +33,8 @@ const BannerContainer = styled.div`
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: transform 0.3s ease;
+  width: 450px;
+  height: 180px;
   
   &:hover {
     transform: scale(1.02);
@@ -42,6 +44,9 @@ const BannerContainer = styled.div`
 const StyledImage = styled(Image)`
   border-radius: 12px;
   transition: transform 0.3s ease;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
 `
 
 const BannerOverlay = styled.div`
@@ -164,7 +169,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
     <CardBody p="0px">
       <Flex justifyContent="center">
         <BannerContainer>
-          <StyledImage src={banner} alt={`${lpLabel} banner`} height={125} width={375} />
+          <StyledImage src={banner} alt={`${lpLabel} banner`} height={180} width={450} />
           <BannerOverlay />
           <StatusBadge status={disabled ? 'finished' : 'active'}>
             {disabled ? 'Finished' : 'Active'}
