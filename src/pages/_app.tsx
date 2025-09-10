@@ -1,4 +1,4 @@
-import { ResetCSS } from '@pancakeswap/uikit'
+import { ResetCSS, useTooltip } from '@pancakeswap/uikit'
 import Script from 'next/script'
 import BigNumber from 'bignumber.js'
 import EasterEgg from 'components/EasterEgg'
@@ -150,6 +150,17 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
   // Use the layout defined at the page level, if available
   const Layout = Component.Layout || Fragment
   const assistantUrl = process.env.NEXT_PUBLIC_AI_ASSISTANT_URL || 'https://chatgpt.com/g/g-68be838798b88191be7523dce0b90b2c-coincollect-wizard'
+  
+  const { targetRef, tooltip, tooltipVisible } = useTooltip(
+    <div>
+      Meet Wizard, your AI assistant here to help you navigate CoinCollect.
+      <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>
+        AI Assistant powered by OpenAI, created by SapienX
+      </div>
+    </div>,
+    { placement: 'top' }
+  )
+  
   return (
     <ProductionErrorBoundary>
       <Menu>
@@ -160,6 +171,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       <EasterEgg iterations={2} />
       <ToastListener />
       <WizardLink
+        ref={targetRef}
         href={assistantUrl}
         target={assistantUrl.startsWith('http') ? '_blank' : undefined}
         rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
@@ -168,6 +180,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       >
         <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
       </WizardLink>
+      {tooltipVisible && tooltip}
       {/* TODO: Activate later
       <SubgraphHealthIndicator />
       */}

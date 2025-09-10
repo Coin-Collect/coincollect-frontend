@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { ButtonMenu, ButtonMenuItem, LinkExternal, Flex, Svg, Image, Button } from '@pancakeswap/uikit'
+import { ButtonMenu, ButtonMenuItem, LinkExternal, Flex, Svg, Image, Button, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 
 const Wrapper = styled.div<{ $isSide: boolean }>`
@@ -80,6 +80,11 @@ const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) 
           </Svg>
         </BubbleWrapper>
         <Image src="/images/help.png" alt="Get some help" width={160} height={108} />
+      </Flex>
+      <Flex mt="16px" justifyContent="center" width="100%">
+        <Text fontSize="12px" color="textSubtle" textAlign="center">
+          {t('AI Assistant powered by OpenAI, created by SapienX')}
+        </Text>
       </Flex>
     </Wrapper>
   )
