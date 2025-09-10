@@ -50,7 +50,7 @@ const FarmCardInnerContainer = styled(Flex)`
 `
 
 const ExpandingWrapper = styled.div`
-  padding: 24px;
+  padding: 12px;
   border-top: 2px solid ${({ theme }) => theme.colors.cardBorder};
   overflow: hidden;
 `
@@ -76,8 +76,9 @@ const MetricText = styled(Text)<{ metricType?: 'high' | 'medium' | 'low' | 'rewa
 const RewardBadge = styled.div<{ rewardType?: 'primary' | 'secondary' }>`
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 2px 4px;
+  margin-bottom: 4px;
+  border-radius: 6px;
   background: ${({ theme, rewardType }) => 
     rewardType === 'primary' 
       ? `${theme.colors.primary}20`
