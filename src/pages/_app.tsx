@@ -155,7 +155,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
     <div>
       Meet Wizard, your AI assistant here to help you navigate CoinCollect.
       <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>
-        AI Assistant powered by OpenAI, created by SapienX
+        AI Assistant powered by OpenAI, created by <a href="https://sapienx.app/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>SapienX</a>
       </div>
     </div>,
     { placement: 'top' }
