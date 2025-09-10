@@ -252,12 +252,14 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
             <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
               {t('Earned')}
             </Text>
-            {tooltipVisible && tooltip}
             {displayApr && (
-              <Flex ref={targetRef}>
-                <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
+              <Flex>
+                <span ref={targetRef}>
+                  <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
+                </span>
               </Flex>
             )}
+            {tooltipVisible && tooltip}
           </Flex>
           <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} earningToken={farm.earningToken} />
           <Flex>
