@@ -981,7 +981,41 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/partners/8.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+
+    {
+        pid: 37,
+        lpSymbol: "Web3 Quest",
+        isCommunity: true,
+        nftAddresses: {
+            137: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247",
+            80001: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247"
+        },
+        contractAddresses: {
+            137: "0x612018430dAc5565B5dcf744a792E5679f6995de",
+            80001: "0x612018430dAc5565B5dcf744a792E5679f6995de"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "BONK", percentage: 212 },
+            { token: "SHIB", percentage: 383 }
+        ],
+        supportedCollectionPids: [1,2,3,4],
+        collectionPowers: [30,3,5,10,15],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "mainLink here",
+            getNftLink: "getNftLink here",
+        },
+        banner: "/images/poolBanners/1.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
     }
+    
     
     
 /*
