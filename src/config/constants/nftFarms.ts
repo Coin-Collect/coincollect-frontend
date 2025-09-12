@@ -913,6 +913,40 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/partners/3.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+    
+
+    {
+        pid: 34,
+        lpSymbol: "The Egg Hunter",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0x446f52447C1bf0613b782A0A9707100655EF6A28",
+            80001: "0x446f52447C1bf0613b782A0A9707100655EF6A28"
+        },
+        contractAddresses: {
+            137: "0x51c11ec23e14568b1c5c7d486018054FB22E22dE",
+            80001: "0x51c11ec23e14568b1c5c7d486018054FB22E22dE"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "HUNT", percentage: 37500 },
+            { token: "ELON", percentage: 48876 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "mainLink here",
+            getNftLink: "getNftLink here",
+        },
+        banner: "/images/poolBanners/partners/7.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
     }
     
 
