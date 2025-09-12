@@ -947,9 +947,43 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/partners/7.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+    
+  
+    {
+        pid: 36,
+        lpSymbol: "Airdrop Animals",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0x334a3EBA14Bf369132B7A77CA0B09cfd0761D9d2",
+            80001: "0x334a3EBA14Bf369132B7A77CA0B09cfd0761D9d2"
+        },
+        contractAddresses: {
+            137: "0x6F29340Bc1e2Bea6aE4fD089e42326e37EF068A9",
+            80001: "0x6F29340Bc1e2Bea6aE4fD089e42326e37EF068A9"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "Z", percentage: 150 },
+            { token: "ELON", percentage: 97752 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "mainLink here",
+            getNftLink: "getNftLink here",
+        },
+        banner: "/images/poolBanners/partners/8.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
     }
     
-
+    
 /*
 
 {
