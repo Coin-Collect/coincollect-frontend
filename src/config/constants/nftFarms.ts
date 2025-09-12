@@ -849,7 +849,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
   useApi: true
 },
 
-
     {
         pid: 32,
         lpSymbol: "Brawlers Revenge",
@@ -881,9 +880,41 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/partners/1.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
-    }
+    },
        
-
+    {
+        pid: 33,
+        lpSymbol: "Avatar Heroes",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5",
+            80001: "0x7B1Ead5f2d144D6F8b0eDD3090cB7713A615C3C5"
+        },
+        contractAddresses: {
+            137: "0x71e6AfbB66E0dAE219843eBac23A53a65Fb88837",
+            80001: "0x71e6AfbB66E0dAE219843eBac23A53a65Fb88837"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "AVATAR", percentage: 75000 },
+            { token: "ELON", percentage: 97752 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "mainLink here",
+            getNftLink: "getNftLink here",
+        },
+        banner: "/images/poolBanners/partners/3.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
+    }
+    
 
 /*
 
