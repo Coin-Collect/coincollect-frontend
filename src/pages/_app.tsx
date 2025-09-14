@@ -11,7 +11,7 @@ import useSentryUser from 'hooks/useSentryUser'
 import useUserAgent from 'hooks/useUserAgent'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import { Fragment } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { PersistGate } from 'redux-persist/integration/react'
 import { useStore, persistor } from 'state'
 import { usePollBlockNumber } from 'state/block/hooks'
@@ -151,6 +151,20 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
   const Layout = Component.Layout || Fragment
   const assistantUrl = process.env.NEXT_PUBLIC_AI_ASSISTANT_URL || 'https://chatgpt.com/g/g-68be838798b88191be7523dce0b90b2c-coincollect-wizard'
   
+  // Detect if device is mobile to conditionally show tooltip
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window)
+    }
+    
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
+    return () => window.removeEventListener('resize', checkIsMobile)
+  }, [])
+  
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <div>
       Meet Wizard, your AI assistant here to help you navigate CoinCollect.
@@ -171,7 +185,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       <EasterEgg iterations={2} />
       <ToastListener />
       <WizardLink
-        ref={targetRef}
+        ref={isMobile ? undefined : targetRef}
         href={assistantUrl}
         target={assistantUrl.startsWith('http') ? '_blank' : undefined}
         rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
@@ -180,7 +194,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       >
         <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
       </WizardLink>
-      {tooltipVisible && tooltip}
+      {!isMobile && tooltipVisible && tooltip}
       {/* TODO: Activate later
       <SubgraphHealthIndicator />
       */}
