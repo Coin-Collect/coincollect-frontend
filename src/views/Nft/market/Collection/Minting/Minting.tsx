@@ -41,11 +41,13 @@ import { useContext } from 'react'
 import { FarmsPageLayout, FarmsContext } from 'views/NftFarms'
 import FarmCard from 'views/NftFarms/components/FarmCard/FarmCard'
 import { getDisplayApr } from 'views/NftFarms/Farms'
+import BigNumber from 'bignumber.js'
+import { getNftFarmApr } from 'utils/apr'
+import nftFarmsConfig from 'config/constants/nftFarms'
 import { useFarmFromLpSymbol, useFarmFromPid, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
 import useStakeFarms from "views/NftFarms/hooks/useStakeFarms";
 import { StyledCard } from "../../../../../../packages/uikit/src/components/Card/StyledCard";
 import FlexLayout from "components/Layout/Flex";
-import NftStakeCard from "./components/NftStakeCard";
 import PoolCard from "views/Pools/components/PoolCard";
 import NewestForCollection from "../../Home/NewestForCollection";
 import IfoAchievement from "./components/MintingCard/Achievement";
@@ -84,6 +86,22 @@ export default function Minting() {
 
   usePollFarmsWithUserData()
   const farm = useFarmFromPid(minting.stake_pid)
+
+  // Compute APR to match nftpools FarmCard expectations
+  const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]?.mainCollectionWeight
+  const isSmartNftStakePool = Boolean(farm.contractAddresses)
+  const totalStaked = farm.totalStaked
+  const totalShares = farm.totalShares
+  const totalLiquidityWithThreshold = new BigNumber(
+    Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()),
+  )
+  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(
+    new BigNumber(farm.poolWeight),
+    farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
+    totalLiquidityWithThreshold,
+    mainCollectionWeight,
+  )
+  const farmWithApr = { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
 
   return (
     <>
@@ -124,7 +142,13 @@ export default function Minting() {
 
           <MintingLayoutWrapper>
 
-            <NftStakeCard farm={farm} account={account} />
+            <FarmCard
+              farm={farmWithApr}
+              displayApr={getDisplayApr(farmWithApr.apr)}
+              cakePrice={cakePrice}
+              account={account}
+              removed={false}
+            />
             <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
 
           </MintingLayoutWrapper>

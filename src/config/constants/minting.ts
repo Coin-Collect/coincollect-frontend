@@ -18,7 +18,7 @@ const ifos: Minting[] = [
   //============================Free Mint NFTS====================================
   {
     id: 'coincollectfreenfts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Starter NFT',
     description: 'CoinCollect Starter NFTs are most valuable FREE utility NFTs on the market. Starter NFT is a gift and a lifetime privilege to our community. Starter NFTs earn new tokens from pools and airdrops. it also has a chance on whitelists',
     address: getCoinCollectNftAddress(),
@@ -90,7 +90,7 @@ const ifos: Minting[] = [
   //============================Bronze NFTS====================================
   {
     id: 'coincollectbronzefts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Bronze NFT',
     description: 'CoinCollect Bronze NFTs are the cheapest valuable utility NFTs that has all the features of Starter NFTs also 5x more powerful than Starter NFTs. Bronze NFTs earn more than Starter NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectBronzeNftAddress(),
@@ -163,7 +163,7 @@ const ifos: Minting[] = [
   //============================Silver NFTS====================================
   {
     id: 'coincollectsilverfts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Silver NFT',
     description: 'CoinCollect Silver NFTs are the medium powerful utility NFTs that has all the features of Bronze NFTs also 15x more powerful than Starter NFTs. Silver NFTs earn more than Bronze NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectSilverNftAddress(),
@@ -236,7 +236,7 @@ const ifos: Minting[] = [
   //============================Gold NFTS====================================
   {
     id: 'coincollectgoldfts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Gold NFT',
     description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectGoldNftAddress(),
@@ -381,7 +381,7 @@ const ifos: Minting[] = [
   //============================BlitzBrawler NFTS====================================
   {
     id: 'blitzbrawlernfts',
-    stake_pid: 11,
+    stake_pid: 32,
     name: 'BlitzBrawler Player',
     description: 'BlitzBrawler combines football with blockchain, allowing users to collect unique NFT brawlers to build teams and compete in tournaments. Features include staking, renting, trading, or selling NFTs.',
     address: getBlitzBrawlerNftAddress(),
@@ -453,7 +453,7 @@ const ifos: Minting[] = [
   //============================AvatarsAI NFTS====================================
   {
     id: 'avatarsainfts',
-    stake_pid: 12,
+    stake_pid: 33,
     name: 'AvatarsAI Heroes',
     description: 'AvatarsAI ignites a fierce battle in the digital realm. Heroes and villains, armed with unique powers, strive for control over the AI-driven blockchain universe. The stakes are high, alliances shift, and every decision echoes in a thrilling fight for dominion. Join the adventure at AvatarsAI.',
     address: getAvatarsAiNftAddress(),
@@ -527,7 +527,7 @@ const ifos: Minting[] = [
   //============================BeastHunter NFTS====================================
   {
     id: 'beasthunternfts',
-    stake_pid: 14,
+    stake_pid: 34,
     name: 'Beast Hunter',
     description: 'Unleash the power of your Hunters in BeastHunter! Build an unbeatable team, capture rare beasts, and explore dynamic worlds.',
     address: getBeastHunterNftAddress(),
@@ -744,7 +744,7 @@ const ifos: Minting[] = [
   //============================Zidanogo NFTS====================================
   {
     id: 'zidanogonfts',
-    stake_pid: 19,
+    stake_pid: 36,
     name: 'Zidanogo GentleMals',
     description: 'Zidanogo introduces 4181 GentleMals NFTs, showcasing sophisticated animal characters. Each NFT is a unique collectible granting access to exclusive platform airdrops.',
     address: getZidanogoNftAddress(),
