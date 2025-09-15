@@ -97,9 +97,17 @@ const TextWithCursor = styled(Text)`
 `
 
 const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, multiplier, isCommunity, nftToken, pid, disabled = false }) => {
-  const collectionData = mintingConfig.find((collection) => collection.stake_pid === pid)
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
-  const banner = nftFarmData?.["banner"] ? nftFarmData["banner"] : collectionData?.banner.small
+  // Prefer explicit banner on farm; otherwise look up by stake_pid; finally try by collection address
+  const collectionDataByPid = mintingConfig.find((collection) => collection.stake_pid === pid)
+  const farmAddr137 = nftFarmData?.nftAddresses?.[137]?.toLowerCase()
+  const collectionDataByAddress = farmAddr137
+    ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr137)
+    : undefined
+  const banner =
+    nftFarmData?.["banner"] ||
+    collectionDataByPid?.banner?.small ||
+    collectionDataByAddress?.banner?.small
   //const avatar = nftFarmData["avatar"] ? nftFarmData["avatar"] : collectionData?.avatar
 
   // This expression is used to access the avatar and other information of the main NFT of the pool.
@@ -133,7 +141,11 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
   let avatar: any;
   for (let i = 0; i < supportedNftStakeFarms.length; i++) {
     let farm = supportedNftStakeFarms[i];
-    const dataFromMinting = mintingConfig.find((collection) => collection.stake_pid === farm.pid)
+    const dataFromMintingByPid = mintingConfig.find((collection) => collection.stake_pid === farm.pid)
+    const farmAddr = farm?.nftAddresses?.[137]?.toLowerCase()
+    const dataFromMintingByAddress = farmAddr
+      ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr)
+      : undefined
     avatar = null;
 
     if (farm.pid <= 4) {
@@ -142,9 +154,10 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
         collectBadgeAdded = true;
       }
     } else {
-      avatar = { avatar: farm["avatar"] ?? dataFromMinting?.avatar };
+      // Prefer explicit farm avatar, else use minting avatar by pid, else by address
+      avatar = { avatar: farm["avatar"] ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar };
     }
-    largeAvatars.push({ title: farm.lpSymbol.replace("CoinCollect",""), power: collectionPowers?.[i], avatar: farm["avatar"] ?? dataFromMinting?.avatar, link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? "/nfts/collections" });
+    largeAvatars.push({ title: farm.lpSymbol.replace("CoinCollect",""), power: collectionPowers?.[i], avatar: farm["avatar"] ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar, link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? "/nfts/collections" });
 
     if (smallAvatars.length <= 4 && avatar) {
       smallAvatars.push(avatar);
