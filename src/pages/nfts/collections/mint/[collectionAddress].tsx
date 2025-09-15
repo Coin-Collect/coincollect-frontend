@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 
 import PageLoader from 'components/Loader/PageLoader'
 import { getCollection } from 'state/nftMarket/helpers'
+import { mintingConfig } from 'config/constants'
 import { API_NFT } from 'config/constants/endpoints'
 import Minting from 'views/Nft/market/Collection/Minting/Minting'
 
@@ -44,26 +45,61 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   }
 
   try {
+    // Try API first
     const collectionData = await getCollectionApi(collectionAddress)
-    
 
-    if (collectionData) {
-      return {
-        props: {
-          fallback: {
-            [unstable_serialize(['minting', 'collections', collectionAddress.toLowerCase()])]: { ...collectionData },
-          },
-        },
-        revalidate: 60, // 6 hours
-      }
-    }
+    // Fallback to config-derived minimal data to avoid 404 and allow client SWR to hydrate
+    const minting = mintingConfig.find((m) => m.address?.toLowerCase() === collectionAddress.toLowerCase())
+    const minimal = minting
+      ? {
+          address: minting.address,
+          name: minting.name,
+          description: minting.description ?? '',
+          symbol: minting.symbol,
+          totalSupply: minting.totalSupply ?? 0,
+          maxSupply: minting.totalSupply ?? 0,
+          cost: minting.lastPrice ?? 0,
+          status: minting.status ?? 'live',
+          avatar: minting.avatar,
+          banner: { large: minting.banner?.large ?? '', small: minting.banner?.small ?? '' },
+          attributes: [],
+        }
+      : null
+
+    const resolved = collectionData || minimal || {}
+
     return {
-      notFound: true,
+      props: {
+        fallback: {
+          [unstable_serialize(['minting', 'collections', collectionAddress.toLowerCase()])]: resolved,
+        },
+      },
       revalidate: 60,
     }
   } catch (error) {
+    // On failure, still provide minimal fallback if possible
+    const minting = mintingConfig.find((m) => m.address?.toLowerCase() === String(collectionAddress).toLowerCase())
+    const minimal = minting
+      ? {
+          address: minting.address,
+          name: minting.name,
+          description: minting.description ?? '',
+          symbol: minting.symbol,
+          totalSupply: minting.totalSupply ?? 0,
+          maxSupply: minting.totalSupply ?? 0,
+          cost: minting.lastPrice ?? 0,
+          status: minting.status ?? 'live',
+          avatar: minting.avatar,
+          banner: { large: minting.banner?.large ?? '', small: minting.banner?.small ?? '' },
+          attributes: [],
+        }
+      : {}
     return {
-      notFound: true,
+      props: {
+        fallback: {
+          [unstable_serialize(['minting', 'collections', String(collectionAddress).toLowerCase()])]: minimal,
+        },
+      },
       revalidate: 60,
     }
   }
@@ -80,5 +116,4 @@ export const getCollectionApi = async (collectionAddress: string): Promise<any> 
   console.error(`API: Failed to fetch NFT collection ${collectionAddress}`, res.statusText)
   return null
 }
-
 

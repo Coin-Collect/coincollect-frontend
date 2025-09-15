@@ -23,6 +23,7 @@ import Menu from '../components/Menu'
 import BlockCountry from '../components/BlockCountry'
 import Providers from '../Providers'
 import GlobalStyle from '../style/Global'
+import React from 'react'
 import styled from 'styled-components'
 
 // This config is required for number formatting
@@ -41,7 +42,7 @@ function GlobalHooks() {
   return null
 }
 
-const WizardLink = styled.a`
+const WizardLinkBase = styled.a`
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -73,7 +74,7 @@ const WizardLink = styled.a`
   }
 `
 
-const WizardVideo = styled.video`
+const WizardVideoBase = styled.video`
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -184,16 +185,25 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       </Menu>
       <EasterEgg iterations={2} />
       <ToastListener />
-      <WizardLink
-        ref={isMobile ? undefined : targetRef}
-        href={assistantUrl}
-        target={assistantUrl.startsWith('http') ? '_blank' : undefined}
-        rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
-        aria-label="Open AI Assistant"
-        title={assistantUrl === '#' ? 'AI Assistant coming soon' : 'Chat with our AI Assistant'}
-      >
-        <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
-      </WizardLink>
+      {/**
+       * Type-friendly wrappers for styled-components to accept anchor and video attributes.
+       */}
+      {(() => {
+        const WizardLink = WizardLinkBase as unknown as any
+        const WizardVideo = WizardVideoBase as unknown as any
+        return (
+          <WizardLink
+            ref={isMobile ? undefined : targetRef}
+            href={assistantUrl}
+            target={assistantUrl.startsWith('http') ? '_blank' : undefined}
+            rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
+            aria-label="Open AI Assistant"
+            title={assistantUrl === '#' ? 'AI Assistant coming soon' : 'Chat with our AI Assistant'}
+          >
+            <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
+          </WizardLink>
+        )
+      })()}
       {!isMobile && tooltipVisible && tooltip}
       {/* TODO: Activate later
       <SubgraphHealthIndicator />

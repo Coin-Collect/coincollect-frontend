@@ -35,7 +35,7 @@
     ]
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@binance-chain/bsc-connector": "^1.0.0",
@@ -109,9 +109,9 @@
     "@types/lodash": "^4.14.178",
     "@types/multicodec": "^1.0.0",
     "@types/node": "^13.13.5",
-    "@types/react": "^17.0.5",
+    "@types/react": "^18.2.0",
     "@types/react-datepicker": "^3.1.8",
-    "@types/react-dom": "^17.0.4",
+    "@types/react-dom": "^18.2.0",
     "@types/react-redux": "^7.1.16",
     "@types/react-transition-group": "^4.4.1",
     "@types/react-window": "^1.8.3",
@@ -131,9 +131,5 @@
     "ts-node": "^9.1.1",
     "turbo": "^1.13.4",
     "typechain": "^8.3.2"
-  },
-  "resolutions": {
-    "@types/react": "17.0.5",
-    "@types/react-dom": "17.0.5"
   }
 }

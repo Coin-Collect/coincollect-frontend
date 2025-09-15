@@ -1,8 +1,14 @@
+import React from 'react'
 import styled from 'styled-components'
 import { ButtonMenu, ButtonMenuItem, LinkExternal, Flex, Svg, Image, Button, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 
-const Wrapper = styled.div<{ $isSide: boolean }>`
+interface WrapperProps {
+  $isSide: boolean
+  children?: React.ReactNode
+}
+
+const Wrapper = styled.div<WrapperProps>`
   width: 100%;
   height: ${({ $isSide }) => ($isSide ? '100%' : 'auto')};
   display: flex;
@@ -39,6 +45,7 @@ type FooterVariant = 'default' | 'side'
 const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) => {
   const { t } = useTranslation()
   const isSide = variant === 'side'
+  const TextAny = Text as unknown as React.ComponentType<any>
   return (
     <Wrapper $isSide={isSide}>
       <Flex flexDirection={isSide ? 'column' : ['column', 'column', 'row']} alignItems="center">
@@ -82,9 +89,9 @@ const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) 
         <Image src="/images/help.png" alt="Get some help" width={160} height={108} />
       </Flex>
       <Flex mt="16px" justifyContent="center" width="100%">
-        <Text fontSize="12px" color="textSubtle" textAlign="center">
+        <TextAny fontSize="12px" color="textSubtle" textAlign="center">
           {t('AI Assistant powered by OpenAI, created by SapienX')}
-        </Text>
+        </TextAny>
       </Flex>
     </Wrapper>
   )

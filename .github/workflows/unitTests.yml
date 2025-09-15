@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node: [14]
+        node: [22]
 
     name: Unit tests (Jest)
 
@@ -22,9 +22,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 14.x
+          node-version-file: .nvmrc
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
