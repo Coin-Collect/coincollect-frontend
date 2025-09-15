@@ -597,7 +597,7 @@ const ifos: Minting[] = [
   //============================Nitro NFTS====================================
   {
     id: 'nitronfts',
-    stake_pid: 16,
+    stake_pid: 38,
     name: 'NitroClash',
     description: 'Choose from 5000+ customizable NFT cars, earn $NITRO tokens, and dominate tracks across the universe.',
     address: getNitroNftAddress(),
@@ -672,7 +672,7 @@ const ifos: Minting[] = [
   //============================PlaceDJ NFTS====================================
   {
     id: 'placedjnfts',
-    stake_pid: 17,
+    stake_pid: 40,
     name: 'PlaceDJ 2.0',
     description: 'PlaceDJ 2.0 offers over 5832 unique NFTs for license-free AI music streams, revolutionizing venue soundscapes with exclusive NFT benefits.',
     address: getPlaceDjNftAddress(),
@@ -817,7 +817,7 @@ const ifos: Minting[] = [
   //============================SapienX NFTS====================================
   {
     id: 'sapienxnfts',
-    stake_pid: 20,
+    stake_pid: 41,
     name: 'SapienX AI',
     description: 'SapienX, developed and operated by AI, is governed by a DAO and has 6854 NFTs and the $X token, creating AI tools that elevate humans to superhuman levels.',
     address: getSapienXNftAddress(),

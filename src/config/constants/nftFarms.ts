@@ -1014,75 +1014,118 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/1.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+
+
+    {
+        pid: 38,
+        lpSymbol: "Nitro Racers",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0xB2e4ab09684a4850d3271C53D39D68C9afA4785E",
+            80001: "0xB2e4ab09684a4850d3271C53D39D68C9afA4785E"
+        },
+        contractAddresses: {
+            137: "0xa7D278D2765dA84833a006C8b425Fd97287c2c15",
+            80001: "0xa7D278D2765dA84833a006C8b425Fd97287c2c15"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "NITRO", percentage: 7500 },
+            { token: "ELON", percentage: 48876 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://nitroclash.net/",
+            getNftLink: "/nfts/collections/mint/0xB2e4ab09684a4850d3271C53D39D68C9afA4785E",
+        },
+        banner: "/images/poolBanners/partners/9.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
+    },
+
+
+    {
+        pid: 40,
+        lpSymbol: "PlaceDJ Music",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0x79C55f7f25b16D33A9C3352a332cbe6F375f7076",
+            80001: "0x79C55f7f25b16D33A9C3352a332cbe6F375f7076"
+        },
+        contractAddresses: {
+            137: "0x1E6c3789AF3121978B399a2eA8355E2E4d36174F",
+            80001: "0x1E6c3789AF3121978B399a2eA8355E2E4d36174F"
+        },
+        tokenPerBlock: "0.0000627854",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.dj,
+        sideRewards: [
+            { token: "COLLECT", percentage: 2222 },
+            { token: "ELON", percentage: 1086130 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://placedj.com/",
+            getNftLink: "/nfts/collections/mint/0x79C55f7f25b16D33A9C3352a332cbe6F375f7076",
+        },
+        banner: "/images/poolBanners/partners/10.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
+    },
+
+
+
+    {
+        pid: 41,
+        lpSymbol: "SapienX Agents",
+        isCommunity: false,
+        nftAddresses: {
+            137: "0x589C351d8836177BfD0F6d8A5f7Bd3aA9DfBB70C",
+            80001: "0x589C351d8836177BfD0F6d8A5f7Bd3aA9DfBB70C"
+        },
+        contractAddresses: {
+            137: "0xF02B0b82e2963e9dac0C38091134A54B0A5e5146",
+            80001: "0xF02B0b82e2963e9dac0C38091134A54B0A5e5146"
+        },
+        tokenPerBlock: "0.0000003837",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.usdt,
+        sideRewards: [
+            { token: "COLLECT", percentage: 400000 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://sapienx.app/",
+            getNftLink: "/nfts/collections/mint/0x589C351d8836177BfD0F6d8A5f7Bd3aA9DfBB70C",
+        },
+        banner: "/images/poolBanners/partners/12.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
     }
+    
+
+
     
     
     
 /*
 
-{
-  pid: 24,
-  lpSymbol: "FREE BITCOIN",
-  isCommunity: true,
-  nftAddresses: {
-      137: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247",
-      80001: "0x6EA79A316d4DeDf58Bca7abf8e13cC6f16358247"
-  },
-  contractAddresses: {
-      137: "Enter after deployment",
-      80001: "Enter after deployment"
-  },
-  tokenPerBlock: "0.0000001",
-  participantThreshold: 300,
-  isFinished: false,
-  earningToken: serializedTokens.wbtc,
-  sideRewards: [
-      { token: "COLLECT", percentage: 4761904761 }
-  ],
-  supportedCollectionPids: [1,2,3,4,5,11,12,14,16,17,19,20],
-  collectionPowers: [10,5,5,5,5,5,5,5,5,5,5,5,5],
-  mainCollectionWeight: 10,
-  performanceFee: "0",
-  projectLink: {
-      mainLink: "https://www.lens.xyz/",
-      getNftLink: "https://www.lens.xyz/mint"
-  },
-  banner: "https://coincollect.org/assets/images/collections/banners/bitcoin.jpg",
-  avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
-  useApi: true
-},
-
-
-  {
-    pid: 14,
-    lpSymbol: 'GALXE Pass',
-    nftAddresses: {
-      137: '0x72Fdf59AeB9980F5a11F86599a513dE450159Ff6',
-      80001: '0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63'
-    },
-    contractAddresses: {
-      137: '0x46E7bD1a244C858760F01AaD55d24eEeB0ce2C0C',
-      80001: '0xa1b97Dd70b64A654C31e0D8941077F95149EE17b',
-    },
-    tokenPerBlock: '0.026',
-    participantThreshold: 15000, // Weight(15) x Target Nft Count(1000)
-    isFinished: false,
-    earningToken: serializedTokens.collect,
-    sideRewards: [
-      {token: 'AVATAR', percentage: 49000},
-      {token: 'BLITZ', percentage: 4900},
-    ],
-    supportedCollectionPids: [1,2,3,4],
-    mainCollectionWeight: '15',
-    performanceFee: '0',
-    projectLink: {
-      mainLink: 'https://avatarsai.net/',
-    },
-    banner: "https://coincollect.org/assets/images/partners/galxe/galxePASSstake.png",
-    avatar: "https://coincollect.org/assets/images/partners/galxe/galxeLogo.png",
-    staticNftImage: "https://coincollect.org/assets/images/partners/galxe/GalxeClaim.png",
-    useApi: true,
-  },
+   
 */
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
