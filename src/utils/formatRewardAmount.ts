@@ -9,7 +9,7 @@ const toSuperscript = (value: number) =>
     .map((digit) => SUPERSCRIPTS[Number(digit)] ?? digit)
     .join('')
 
-export const formatRewardAmount = (amount?: BigNumber | null, decimalsToShow = 3) => {
+const formatRewardAmount = (amount?: BigNumber | null, decimalsToShow = 3) => {
   if (!amount || amount.isNaN()) {
     return `0.${'0'.repeat(decimalsToShow)}`
   }

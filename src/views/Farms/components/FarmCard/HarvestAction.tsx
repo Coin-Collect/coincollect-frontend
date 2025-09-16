@@ -6,6 +6,7 @@ import { useTranslation } from 'contexts/Localization'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
+import AnimatedValue from 'components/AnimatedValue'
 
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/farms'
@@ -13,6 +14,7 @@ import { usePriceCakeBusd } from 'state/farms/hooks'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceAmount } from 'utils/formatBalance'
 import useHarvestFarm from '../../hooks/useHarvestFarm'
+import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
 
 interface FarmCardActionsProps {
   earnings?: BigNumber
@@ -28,13 +30,15 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
   const cakePrice = usePriceCakeBusd()
   const dispatch = useAppDispatch()
   const rawEarningsBalance = account ? getBalanceAmount(earnings) : BIG_ZERO
-  const displayBalance = rawEarningsBalance.toFixed(3, BigNumber.ROUND_DOWN)
-  const earningsBusd = rawEarningsBalance ? rawEarningsBalance.multipliedBy(cakePrice).toNumber() : 0
+  const { displayValue, baseValue, isAnimating } = useAnimatedRewardValue(rawEarningsBalance)
+  const earningsBusd = baseValue.multipliedBy(cakePrice).toNumber()
 
   return (
     <Flex mb="8px" justifyContent="space-between" alignItems="center">
       <Flex flexDirection="column" alignItems="flex-start">
-        <Heading color={rawEarningsBalance.eq(0) ? 'textDisabled' : 'text'}>{displayBalance}</Heading>
+        <Heading color={rawEarningsBalance.eq(0) ? 'textDisabled' : 'text'}>
+          <AnimatedValue $animate={isAnimating}>{displayValue}</AnimatedValue>
+        </Heading>
         {earningsBusd > 0 && (
           <Balance fontSize="12px" color="textSubtle" decimals={2} value={earningsBusd} unit=" USD" prefix="~" />
         )}

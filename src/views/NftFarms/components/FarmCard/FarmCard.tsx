@@ -12,7 +12,7 @@ import CardHeadingWithBanner from './CardHeadingWithBanner'
 import CardActionsContainer from './CardActionsContainer'
 import ApyButton from './ApyButton'
 import nftFarmsConfig from 'config/constants/nftFarms'
-import formatRewardAmount from 'views/NftFarms/utils/formatRewardAmount'
+import formatRewardAmount from 'utils/formatRewardAmount'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number

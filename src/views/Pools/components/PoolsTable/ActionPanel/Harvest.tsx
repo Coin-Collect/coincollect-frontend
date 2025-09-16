@@ -2,11 +2,14 @@ import { Button, Text, useModal, Flex, Skeleton, Heading } from '@pancakeswap/ui
 import BigNumber from 'bignumber.js'
 import useWeb3React from 'hooks/useWeb3React'
 import { PoolCategory } from 'config/constants/types'
-import { formatNumber, getBalanceNumber, getFullDisplayBalance } from 'utils/formatBalance'
+import { getBalanceAmount, getFullDisplayBalance } from 'utils/formatBalance'
 import { useTranslation } from 'contexts/Localization'
 import Balance from 'components/Balance'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { DeserializedPool } from 'state/types'
+import AnimatedValue from 'components/AnimatedValue'
+import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
+import formatRewardAmount from 'utils/formatRewardAmount'
 
 import { ActionContainer, ActionTitles, ActionContent } from './styles'
 import CollectModal from '../../PoolCard/Modals/CollectModal'
@@ -27,11 +30,14 @@ const HarvestAction: React.FunctionComponent<HarvestActionProps> = ({
   const { account } = useWeb3React()
 
   const earnings = userData?.pendingReward ? new BigNumber(userData.pendingReward) : BIG_ZERO
-  const earningTokenBalance = getBalanceNumber(earnings, earningToken.decimals)
-  const earningTokenDollarBalance = getBalanceNumber(earnings.multipliedBy(earningTokenPrice), earningToken.decimals)
-  const hasEarnings = earnings.gt(0)
+  const tokenAmount = getBalanceAmount(earnings, earningToken.decimals)
+  const { displayValue, baseValue, isAnimating, collapsedValue } = useAnimatedRewardValue(tokenAmount, {
+    disabled: !account || !userDataLoaded,
+  })
+  const earningTokenDollarBalance = baseValue.multipliedBy(earningTokenPrice).toNumber()
+  const hasEarnings = baseValue.gt(0)
   const fullBalance = getFullDisplayBalance(earnings, earningToken.decimals)
-  const formattedBalance = formatNumber(earningTokenBalance, 3, 3)
+  const formattedBalance = formatRewardAmount(baseValue)
   const isCompoundPool = sousId === 0
   const isBnbPool = poolCategory === PoolCategory.BINANCE
 
@@ -63,7 +69,9 @@ const HarvestAction: React.FunctionComponent<HarvestActionProps> = ({
       <ActionContainer>
         <ActionTitles>{actionTitle}</ActionTitles>
         <ActionContent>
-          <Heading>0</Heading>
+          <Heading color="textDisabled">
+            <AnimatedValue>{collapsedValue}</AnimatedValue>
+          </Heading>
           <Button disabled>{isCompoundPool ? t('Collect') : t('Harvest')}</Button>
         </ActionContent>
       </ActionContainer>
@@ -89,7 +97,9 @@ const HarvestAction: React.FunctionComponent<HarvestActionProps> = ({
           <>
             {hasEarnings ? (
               <>
-                <Balance lineHeight="1" bold fontSize="20px" decimals={5} value={earningTokenBalance} />
+                <Heading as="div" scale="lg" color="text">
+                  <AnimatedValue $animate={isAnimating}>{displayValue}</AnimatedValue>
+                </Heading>
                 {earningTokenPrice > 0 && (
                   <Balance
                     display="inline"
@@ -104,7 +114,9 @@ const HarvestAction: React.FunctionComponent<HarvestActionProps> = ({
               </>
             ) : (
               <>
-                <Heading color="textDisabled">0</Heading>
+                <Heading color="textDisabled">
+                  <AnimatedValue>{collapsedValue}</AnimatedValue>
+                </Heading>
                 <Text fontSize="12px" color="textDisabled">
                   0 USD
                 </Text>

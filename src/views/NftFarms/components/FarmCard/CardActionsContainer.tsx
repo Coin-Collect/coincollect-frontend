@@ -20,7 +20,7 @@ import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSe
 import DepositModal from '../DepositModal'
 import useStakeFarms from 'views/NftFarms/hooks/useStakeFarms'
 import { getDisplayApr } from 'views/NftFarms/Farms'
-import formatRewardAmount from 'views/NftFarms/utils/formatRewardAmount'
+import formatRewardAmount from 'utils/formatRewardAmount'
 
 const Action = styled.div`
   padding-top: 16px;
