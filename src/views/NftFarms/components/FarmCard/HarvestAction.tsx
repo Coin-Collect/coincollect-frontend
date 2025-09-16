@@ -22,11 +22,11 @@ const pulse = keyframes`
   0% {
     transform: scale(1);
   }
-  30% {
-    transform: scale(1.05);
+  20% {
+    transform: scale(1.18);
   }
   60% {
-    transform: scale(0.98);
+    transform: scale(1.05);
   }
   100% {
     transform: scale(1);
@@ -35,10 +35,12 @@ const pulse = keyframes`
 
 const AnimatedValue = styled.span<{ $animate: boolean }>`
   display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.2s ease;
   ${({ $animate }) =>
     $animate &&
     css`
-      animation: ${pulse} 0.9s ease;
+      animation: ${pulse} 1s ease;
     `}
 `
 
@@ -60,26 +62,77 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
   const dispatch = useAppDispatch()
   const rawEarningsBalance = account ? getBalanceAmount(earnings, earningToken?.decimals) : BIG_ZERO
   const [animateValue, setAnimateValue] = useState(false)
-  const previousBalanceRef = useRef('')
+  const [animatedAmount, setAnimatedAmount] = useState<BigNumber>(rawEarningsBalance)
+  const previousBalanceValueRef = useRef<BigNumber>(rawEarningsBalance)
+  const animationFrameRef = useRef<number | null>(null)
   const earningsKey = rawEarningsBalance.toFixed(18)
+  const animationDuration = 1000
 
   useEffect(() => {
-    if (previousBalanceRef.current && previousBalanceRef.current !== earningsKey) {
-      setAnimateValue(true)
+    const previousValue = previousBalanceValueRef.current
+
+    if (!previousValue) {
+      previousBalanceValueRef.current = rawEarningsBalance
+      setAnimatedAmount(rawEarningsBalance)
+      return
     }
 
-    previousBalanceRef.current = earningsKey
+    if (rawEarningsBalance.eq(previousValue)) {
+      return
+    }
+
+    setAnimateValue(true)
+
+    const startValue = animateValue ? animatedAmount : previousValue
+    const endValue = rawEarningsBalance
+    const startTime = performance.now()
+
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current)
+    }
+
+    previousBalanceValueRef.current = startValue
+
+    const tick = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / animationDuration, 1)
+      const currentValue = startValue.plus(endValue.minus(startValue).multipliedBy(progress))
+      setAnimatedAmount(currentValue)
+
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(tick)
+      } else {
+        if (animationFrameRef.current !== null) {
+          cancelAnimationFrame(animationFrameRef.current)
+        }
+        animationFrameRef.current = null
+        previousBalanceValueRef.current = endValue
+        setAnimateValue(false)
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(tick)
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }
   }, [earningsKey])
 
   useEffect(() => {
-    if (!animateValue) return
+    if (!animateValue) {
+      setAnimatedAmount(rawEarningsBalance)
+      previousBalanceValueRef.current = rawEarningsBalance
+    }
+  }, [animateValue, rawEarningsBalance])
 
-    const timer = setTimeout(() => setAnimateValue(false), 900)
-    return () => clearTimeout(timer)
-  }, [animateValue])
-
-  const displayBalance = formatRewardAmount(rawEarningsBalance)
-  const earningsBusd = rawEarningsBalance ? rawEarningsBalance.multipliedBy(cakePrice).toNumber() : 0
+  const collapsedDisplay = formatRewardAmount(rawEarningsBalance)
+  const expandedDisplay = animatedAmount.toFixed(8, BigNumber.ROUND_DOWN)
+  const rewardBaseAmount = animateValue ? animatedAmount : rawEarningsBalance
+  const displayBalance = animateValue ? expandedDisplay : collapsedDisplay
+  const earningsBusd = rewardBaseAmount.multipliedBy(cakePrice).toNumber()
 
   return (
     <Flex mb="8px" justifyContent="space-between" alignItems="center">
@@ -104,7 +157,9 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
             <Text mr={10}>{reward.token}:</Text>
             <Text bold>
               <AnimatedValue $animate={animateValue}>
-                {formatRewardAmount(rawEarningsBalance.multipliedBy(reward.percentage).dividedBy(100))}
+                {animateValue
+                  ? rewardBaseAmount.multipliedBy(reward.percentage).dividedBy(100).toFixed(8, BigNumber.ROUND_DOWN)
+                  : formatRewardAmount(rewardBaseAmount.multipliedBy(reward.percentage).dividedBy(100))}
               </AnimatedValue>
             </Text>
           </Flex>
