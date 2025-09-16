@@ -273,7 +273,8 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
           bgSrc="https://coincollect.org/assets/images/partners/questgalaxy/questgalaxySM.jpg"
           avatarSrc="https://coincollect.org/assets/images/partners/questgalaxy/qlogo.jpg"
           collectionName="QuestGalaxy"
-          url="https://twitter.com/questgalaxycom"
+          url="https://questgalaxy.com/"
+          openInNewTab
         >
           <Flex alignItems="center">
             <Text fontSize="12px" color="textSubtle">
@@ -289,7 +290,8 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
           bgSrc="https://coincollect.org/assets/images/partners/cyberpunk/bannersm-min.png"
           avatarSrc="https://coincollect.org/assets/images/partners/cyberpunk/logo300-min.png"
           collectionName="CyberPunk Space"
-          url="https://twitter.com/cyberpunk_space"
+          url="https://cyberpunk3.com/"
+          openInNewTab
         >
           <Flex alignItems="center">
             <Text fontSize="12px" color="textSubtle">

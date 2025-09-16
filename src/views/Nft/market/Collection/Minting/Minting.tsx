@@ -62,7 +62,9 @@ const BackLink = styled(NextLinkFromReactRouter)`
   display: inline-flex;
   font-weight: 600;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.25;
   text-decoration: none;
   backdrop-filter: blur(6px);
   transition: color 200ms ease;
@@ -139,7 +141,7 @@ export default function Minting() {
           avatar={<AvatarImage src={avatar} />}
           topLeftOverlay={
             <BackLink to={`${nftsBaseUrl}/collections`}>
-              <ChevronLeftIcon color="currentColor" width="24px" />
+              <ChevronLeftIcon color="currentColor" width="20px" />
               {t('Back')}
             </BackLink>
           }

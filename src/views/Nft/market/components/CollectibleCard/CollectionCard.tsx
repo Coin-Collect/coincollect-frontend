@@ -10,6 +10,7 @@ interface HotCollectionCardProps {
   collectionName: string
   url?: string
   disabled?: boolean
+  openInNewTab?: boolean
 }
 
 export const CollectionAvatar = styled(ProfileAvatar)`
@@ -52,6 +53,7 @@ const CollectionCard: React.FC<HotCollectionCardProps> = ({
   collectionName,
   url,
   disabled,
+  openInNewTab,
   children,
 }) => {
   const renderBody = () => (
@@ -77,7 +79,13 @@ const CollectionCard: React.FC<HotCollectionCardProps> = ({
   return (
     <StyledHotCollectionCard disabled={disabled} data-test="hot-collection-card">
       {url ? (
-        <NextLinkFromReactRouter to={url}>{renderBody()}</NextLinkFromReactRouter>
+        <NextLinkFromReactRouter
+          to={url}
+          target={openInNewTab ? '_blank' : undefined}
+          rel={openInNewTab ? 'noopener noreferrer' : undefined}
+        >
+          {renderBody()}
+        </NextLinkFromReactRouter>
       ) : (
         <div style={{ cursor: 'default' }}>{renderBody()}</div>
       )}
