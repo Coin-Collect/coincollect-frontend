@@ -126,7 +126,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
   const { t } = useTranslation()
   const { theme } = useTheme()
 
-  const isStakeLimitReached = stakingLimit.toNumber() > 0 && stakedBalance.toNumber() + selectedNftList.length > stakingLimit.toNumber()
+  const stakingLimitNumber = stakingLimit.toNumber()
+  const stakedCount = stakedBalance.toNumber()
+  const totalSelectedCount = stakedCount + selectedNftList.length
+  const remainingSlots = Math.max(stakingLimitNumber - totalSelectedCount, 0)
+  const isStakeLimitReached = stakingLimitNumber > 0 && totalSelectedCount > stakingLimitNumber
 
   
 
@@ -210,16 +214,18 @@ const DepositModal: React.FC<DepositModalProps> = ({
               </Flex>
               <SelectionCountChip $error={isStakeLimitReached}>
                 {t('%selectedCount%/%amount%', {
-                  selectedCount: selectedNftList.length,
-                  amount: stakingLimit.toNumber(),
+                  selectedCount: totalSelectedCount,
+                  amount: stakingLimitNumber,
                 })}
               </SelectionCountChip>
             </Flex>
             <Text color={isStakeLimitReached ? 'failure' : 'textSubtle'} fontSize="14px">
               {isStakeLimitReached
                 ? t('Stake limit reached! Please remove extra NFTs to proceed.')
-                : t('You can stake up to %amount% NFTs at a time.', {
-                    amount: stakingLimit.toNumber(),
+                : t('This selection brings you to %total%/%amount%. Slots remaining: %remaining%.', {
+                    total: totalSelectedCount,
+                    amount: stakingLimitNumber,
+                    remaining: remainingSlots,
                   })}
             </Text>
           </SelectionInfo>
