@@ -1085,7 +1085,6 @@ const nftFarms: SerializedNftFarmConfig[] = [
     },
 
 
-
     {
         pid: 41,
         lpSymbol: "SapienX Agents",
@@ -1095,15 +1094,16 @@ const nftFarms: SerializedNftFarmConfig[] = [
             80001: "0x589C351d8836177BfD0F6d8A5f7Bd3aA9DfBB70C"
         },
         contractAddresses: {
-            137: "0xF02B0b82e2963e9dac0C38091134A54B0A5e5146",
-            80001: "0xF02B0b82e2963e9dac0C38091134A54B0A5e5146"
+            137: "0xA9268579f8B811c0250fC6101B3d09dE822dF77D",
+            80001: "0xA9268579f8B811c0250fC6101B3d09dE822dF77D"
         },
-        tokenPerBlock: "0.0000003837",
+        tokenPerBlock: "0.0013953006",
         participantThreshold: 1500,
         isFinished: false,
-        earningToken: serializedTokens.usdt,
+        earningToken: serializedTokens.collect,
         sideRewards: [
-            { token: "COLLECT", percentage: 400000 }
+            { token: "ELON", percentage: 48873 },
+            { token: "AVATAR", percentage: 74996 }
         ],
         supportedCollectionPids: [1,2,3,4,15],
         collectionPowers: [30,3,5,10,15,1],
@@ -1117,9 +1117,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
     }
-    
-
-
+  
     
     
     
