@@ -11,8 +11,8 @@ import DetailsSection from './DetailsSection'
 import CardHeadingWithBanner from './CardHeadingWithBanner'
 import CardActionsContainer from './CardActionsContainer'
 import ApyButton from './ApyButton'
-import Balance from 'components/Balance'
 import nftFarmsConfig from 'config/constants/nftFarms'
+import formatRewardAmount from 'views/NftFarms/utils/formatRewardAmount'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
@@ -113,10 +113,14 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
   const farmConfig = nftFarmsConfig.filter((farmConfig) => farmConfig.pid == farm.pid)[0]
   const { stakedBalance } = farm.userData || {}
+  const dailyRewardAmount = farm.apr !== undefined && farm.apr !== null ? new BigNumber(farm.apr) : new BigNumber(0)
+  const dailyRewardDisplay = displayApr ?? formatRewardAmount(dailyRewardAmount)
   
   // Helper function to determine APR color based on value
-  const getAprMetricType = (aprValue: string) => {
-    const numericApr = parseFloat(aprValue.replace('%', ''))
+  const getAprMetricType = (aprValue?: BigNumber | null) => {
+    if (!aprValue) return undefined
+
+    const numericApr = aprValue.toNumber()
     if (numericApr >= 100) return 'high'
     if (numericApr >= 50) return 'medium'
     if (numericApr > 0) return 'low'
@@ -140,8 +144,8 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
     {sideRewards.length === 0 ? (
       <Flex justifyContent="space-between" alignItems="center">
         <Text>{t('Daily Reward')}:</Text>
-        <MetricText bold metricType={farm.apr ? getAprMetricType(displayApr) : undefined} style={{ display: 'flex', alignItems: 'center' }}>
-          {farm.apr ? displayApr : <Skeleton height={24} width={80} />}
+        <MetricText bold metricType={displayApr !== null ? getAprMetricType(dailyRewardAmount) : undefined} style={{ display: 'flex', alignItems: 'center' }}>
+          {displayApr !== null ? dailyRewardDisplay : <Skeleton height={24} width={80} />}
         </MetricText>
       </Flex>
     ) : (
@@ -153,8 +157,8 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
           <RewardBadge rewardType="primary">
             <MetricText fontSize="12px" metricType="reward">{earnLabel}</MetricText>
           </RewardBadge>
-          <MetricText bold metricType={farm.apr ? getAprMetricType(displayApr) : undefined}>
-            {farm.apr ? displayApr : <Skeleton height={24} width={80} />}
+          <MetricText bold metricType={displayApr !== null ? getAprMetricType(dailyRewardAmount) : undefined}>
+            {displayApr !== null ? dailyRewardDisplay : <Skeleton height={24} width={80} />}
           </MetricText>
         </Flex>
         {sideRewards.map((reward, index) => (
@@ -163,7 +167,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
               <MetricText fontSize="12px" metricType="reward">{reward.token}</MetricText>
             </RewardBadge>
             <MetricText bold metricType="medium">
-              <Balance value={Number(displayApr) * (reward.percentage / 100)} />
+              {formatRewardAmount(dailyRewardAmount.multipliedBy(reward.percentage).dividedBy(100))}
             </MetricText>
           </Flex>
         ))}

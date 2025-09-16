@@ -23,6 +23,7 @@ import SearchInput from 'components/SearchInput'
 import Select, { OptionProps } from 'components/Select/Select'
 import Loading from 'components/Loading'
 import { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
+import formatRewardAmount from './utils/formatRewardAmount'
 import Table from './components/FarmTable/FarmTable'
 import FarmTabButtons from './components/FarmTabButtons'
 import { RowProps } from './components/FarmTable/Row'
@@ -111,10 +112,11 @@ const StyledImage = styled(Image)`
 const NUMBER_OF_FARMS_VISIBLE = 12
 
 export const getDisplayApr = (cakeRewardsApr?: number) => {
-  if (cakeRewardsApr) {
-    return cakeRewardsApr.toLocaleString('en-US', { maximumFractionDigits: 8 })
+  if (cakeRewardsApr === undefined || cakeRewardsApr === null) {
+    return null
   }
-  return null
+
+  return formatRewardAmount(new BigNumber(cakeRewardsApr))
 }
 
 const Farms: React.FC = ({ children }) => {

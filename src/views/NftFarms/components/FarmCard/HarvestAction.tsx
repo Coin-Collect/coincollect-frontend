@@ -6,6 +6,8 @@ import { useTranslation } from 'contexts/Localization'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
+import styled, { css, keyframes } from 'styled-components'
+import { useEffect, useRef, useState } from 'react'
 
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
@@ -14,6 +16,31 @@ import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceAmount } from 'utils/formatBalance'
 import useHarvestFarm from '../../hooks/useHarvestFarm'
 import { Token } from '@coincollect/sdk'
+import formatRewardAmount from 'views/NftFarms/utils/formatRewardAmount'
+
+const pulse = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  60% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+`
+
+const AnimatedValue = styled.span<{ $animate: boolean }>`
+  display: inline-block;
+  ${({ $animate }) =>
+    $animate &&
+    css`
+      animation: ${pulse} 0.9s ease;
+    `}
+`
 
 interface FarmCardActionsProps {
   earnings?: BigNumber
@@ -32,7 +59,26 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
   const cakePrice = usePriceCakeBusd()
   const dispatch = useAppDispatch()
   const rawEarningsBalance = account ? getBalanceAmount(earnings, earningToken?.decimals) : BIG_ZERO
-  const displayBalance = rawEarningsBalance.toFixed(10, BigNumber.ROUND_DOWN)
+  const [animateValue, setAnimateValue] = useState(false)
+  const previousBalanceRef = useRef('')
+  const earningsKey = rawEarningsBalance.toFixed(18)
+
+  useEffect(() => {
+    if (previousBalanceRef.current && previousBalanceRef.current !== earningsKey) {
+      setAnimateValue(true)
+    }
+
+    previousBalanceRef.current = earningsKey
+  }, [earningsKey])
+
+  useEffect(() => {
+    if (!animateValue) return
+
+    const timer = setTimeout(() => setAnimateValue(false), 900)
+    return () => clearTimeout(timer)
+  }, [animateValue])
+
+  const displayBalance = formatRewardAmount(rawEarningsBalance)
   const earningsBusd = rawEarningsBalance ? rawEarningsBalance.multipliedBy(cakePrice).toNumber() : 0
 
   return (
@@ -41,11 +87,13 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
       {sideRewards.length > 0 ? (
         <Flex justifyContent="space-between">
           <Text mr={10}>{earnLabel}:</Text>
-          <Text bold>{displayBalance}</Text>
+          <Text bold>
+            <AnimatedValue $animate={animateValue}>{displayBalance}</AnimatedValue>
+          </Text>
         </Flex>
       ) : (
         <Heading color={rawEarningsBalance.eq(0) ? 'textDisabled' : 'text'}>
-          {displayBalance}
+          <AnimatedValue $animate={animateValue}>{displayBalance}</AnimatedValue>
         </Heading>
       )}
         {earningsBusd > 0 && (
@@ -54,7 +102,11 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
         {sideRewards.map((reward, index) => (
           <Flex key={index} justifyContent="space-between">
             <Text mr={10}>{reward.token}:</Text>
-            <Text bold>{(Number(displayBalance) * (reward.percentage / 100)).toFixed(6)}</Text>
+            <Text bold>
+              <AnimatedValue $animate={animateValue}>
+                {formatRewardAmount(rawEarningsBalance.multipliedBy(reward.percentage).dividedBy(100))}
+              </AnimatedValue>
+            </Text>
           </Flex>
         ))}
       </Flex>
