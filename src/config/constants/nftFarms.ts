@@ -1116,7 +1116,43 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/partners/12.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+
+
+    {
+        pid: 42,
+        lpSymbol: "Binance Earn",
+        isCommunity: true,
+        nftAddresses: {
+            137: "0x0B647808326686c568703521326D672D2B891341",
+            80001: "0x0B647808326686c568703521326D672D2B891341"
+        },
+        contractAddresses: {
+            137: "0x5f1DEFbdAD59eA2a8E10105757E4537CDA426aCE",
+            80001: "0x5f1DEFbdAD59eA2a8E10105757E4537CDA426aCE"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "NITRO", percentage: 2500 },
+            { token: "BLITZ", percentage: 1000 },
+            { token: "Z", percentage: 50 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://cyberpunk3.com/",
+            getNftLink: "https://opensea.io/collection/cyberpunk-citizenship ",
+        },
+        banner: "/images/poolBanners/24.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
     }
+    
   
     
     

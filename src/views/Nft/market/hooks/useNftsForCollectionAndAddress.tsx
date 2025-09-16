@@ -11,6 +11,28 @@ import { multicallPolygonv1 } from 'utils/multicall'
 import erc721ABI from 'config/abi/erc721.json'
 import { walletOfOwnerApi } from 'state/nftMarket/helpers'
 
+const FALLBACK_IMAGE = '/images/nfts/no-profile-md.png'
+
+const normalizeIpfsUri = (uri?: string | null) => {
+  if (!uri) {
+    return undefined
+  }
+
+  if (uri.startsWith('ipfs://ipfs/')) {
+    return uri.replace('ipfs://ipfs/', `${IPFS_GATEWAY}/`)
+  }
+
+  if (uri.startsWith('ipfs://')) {
+    return uri.replace('ipfs://', `${IPFS_GATEWAY}/`)
+  }
+
+  if (uri.startsWith('ipfs/')) {
+    return uri.replace('ipfs/', `${IPFS_GATEWAY}/`)
+  }
+
+  return uri
+}
+
 
 export const useNftsForCollectionAndAddress = (selectedPid: number) => {
     const { account } = useWeb3React()
@@ -33,14 +55,14 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             return {
               tokenId: id.toString(),
               collectionAddress,
-              image: nftPool["staticNftImage"]
+              image: normalizeIpfsUri(nftPool["staticNftImage"]) ?? FALLBACK_IMAGE
             };
           });
         } else if (nftPool["useApi"]) {
           tokenIdsNumber = nftData.map(nft => ({
             tokenId: nft.tokenId.toString(),
             collectionAddress,
-            image: nft.media["thumbnail"]
+            image: normalizeIpfsUri(nft.media?.["thumbnail"]) ?? FALLBACK_IMAGE
           }));
         } else {
           // If staticNftImage doesn't exist, get image from blockchain
@@ -51,30 +73,32 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
               params: [id.toNumber()]
             };
           });
-    
+
           const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls);
-    
+
           tokenIdsNumber = await Promise.all(tokenIds.map(async (id, index) => {
             try {
               const tokenURI = rawTokenURIs[index][0];
-              const meta = await axios.get(tokenURI);
+              const metadataUrl = normalizeIpfsUri(tokenURI) ?? tokenURI
+              const meta = await axios.get(metadataUrl);
+              const rawImage = meta.data?.image ?? meta.data?.image_url ?? meta.data?.imageUrl
+              const image = normalizeIpfsUri(rawImage) ?? FALLBACK_IMAGE
               return {
                 tokenId: id.toNumber(),
                 collectionAddress,
-                image: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`)
+                image,
               };
             } catch (error) {
               console.log('IPFS link is broken!', error);
               return {
                 tokenId: id.toNumber(),
                 collectionAddress,
-                image: 'images/nfts/no-profile-md.png'
+                image: FALLBACK_IMAGE,
               };
             }
           }));
         }
-    
-        console.log("promise done");
+
         return tokenIdsNumber;
       } catch (error) {
         console.log('Error fetching NFTs:', error);
