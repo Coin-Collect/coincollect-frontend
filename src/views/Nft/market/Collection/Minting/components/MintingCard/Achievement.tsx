@@ -12,7 +12,6 @@ import {
   CmcIcon,
 } from '@pancakeswap/uikit'
 
-import { useTranslation } from 'contexts/Localization'
 import { PublicIfoData } from '../../types'
 import { Minting } from 'config/constants/types'
 import { getPolygonScanLink } from 'utils'
@@ -35,61 +34,84 @@ const SmartContractIcon: React.FC<SvgProps> = (props) => {
 interface Props {
   ifo: Minting
   publicIfoData: PublicIfoData
+  variant?: 'default' | 'compact'
+  iconColor?: SvgProps['color']
+  hoverColor?: SvgProps['color']
 }
 
-const Container = styled(Flex)`
-  justify-content: space-between;
-  flex-direction: column;
+const IconLink = styled(Link)<{ $color: SvgProps['color']; $hoverColor?: SvgProps['color'] }>`
   align-items: center;
-  text-align: left;
-  gap: 16px;
+  color: ${({ theme, $color }) => theme.colors?.[$color as string] ?? $color};
+  display: inline-flex;
+  transition: color 200ms ease;
 
-  ${({ theme }) => theme.mediaQueries.md} {
-    flex-direction: row;
-    align-items: initial;
+  svg {
+    fill: currentColor;
+    transition: fill 200ms ease;
+  }
+
+  &:hover {
+    color: ${({ theme, $hoverColor, $color }) => ($hoverColor ? theme.colors?.[$hoverColor as string] ?? $hoverColor : theme.colors.primary)};
   }
 `
 
-const IfoAchievement: React.FC<Props> = ({ ifo, publicIfoData }) => {
-  const { t } = useTranslation()
+const IfoAchievement: React.FC<Props> = ({
+  ifo,
+  publicIfoData: _publicIfoData,
+  variant = 'default',
+  iconColor = 'textSubtle',
+  hoverColor,
+}) => {
+  const gap = variant === 'compact' ? '12px' : '16px'
+  const paddingLeft = variant === 'default' ? '4px' : '0'
+  const resolvedHoverColor = hoverColor ?? iconColor
 
-  return (
-        <Flex flexDirection="column" ml="8px">
-          <FlexGap gap="16px" pl="4px">
-            <Link external href={ifo.articleUrl}>
-              <LanguageIcon color="textSubtle" />
-            </Link>
-            <Link external href={getPolygonScanLink(ifo.address, 'address')}>
-              <SmartContractIcon color="textSubtle" />
-            </Link>
-            {ifo.twitterUrl && (
-              <Link external href={ifo.twitterUrl}>
-                <TwitterIcon color="textSubtle" />
-              </Link>
-            )}
-            {ifo.telegramUrl && (
-              <Link external href={ifo.telegramUrl}>
-                <TelegramIcon color="textSubtle" />
-              </Link>
-            )}
-            {ifo.discordUrl && (
-              <Link external href={ifo.discordUrl}>
-                <DiscordIcon color="textSubtle" />
-              </Link>
-            )}
-            {ifo.cmcUrl && (
-              <Link external href={ifo.cmcUrl}>
-                <CmcIcon color="textSubtle" />
-              </Link>
-            )}
-            {ifo.openSeaUrl && (
-              <Link external href={ifo.openSeaUrl}>
-                <OpenSeaIcon color="textSubtle" />
-              </Link>
-            )}
-          </FlexGap>
-        </Flex>
+  const iconLinks = (
+    <FlexGap gap={gap} pl={paddingLeft} alignItems="center">
+      <IconLink external href={ifo.articleUrl} $color={iconColor} $hoverColor={resolvedHoverColor}>
+        <LanguageIcon color="currentColor" />
+      </IconLink>
+      <IconLink
+        external
+        href={getPolygonScanLink(ifo.address, 'address')}
+        $color={iconColor}
+        $hoverColor={resolvedHoverColor}
+      >
+        <SmartContractIcon color="currentColor" />
+      </IconLink>
+      {ifo.twitterUrl && (
+        <IconLink external href={ifo.twitterUrl} $color={iconColor} $hoverColor={resolvedHoverColor}>
+          <TwitterIcon color="currentColor" />
+        </IconLink>
+      )}
+      {ifo.telegramUrl && (
+        <IconLink external href={ifo.telegramUrl} $color={iconColor} $hoverColor={resolvedHoverColor}>
+          <TelegramIcon color="currentColor" />
+        </IconLink>
+      )}
+      {ifo.discordUrl && (
+        <IconLink external href={ifo.discordUrl} $color={iconColor} $hoverColor={resolvedHoverColor}>
+          <DiscordIcon color="currentColor" />
+        </IconLink>
+      )}
+      {ifo.cmcUrl && (
+        <IconLink external href={ifo.cmcUrl} $color={iconColor} $hoverColor={resolvedHoverColor}>
+          <CmcIcon color="currentColor" />
+        </IconLink>
+      )}
+      {ifo.openSeaUrl && (
+        <IconLink external href={ifo.openSeaUrl} $color={iconColor} $hoverColor={resolvedHoverColor}>
+          <OpenSeaIcon color="currentColor" />
+        </IconLink>
+      )}
+    </FlexGap>
   )
+
+  if (variant === 'compact') {
+    return <Flex alignItems="center">{iconLinks}</Flex>
+  }
+
+  return <Flex flexDirection="column" ml="8px">{iconLinks}</Flex>
 }
 
 export default IfoAchievement
