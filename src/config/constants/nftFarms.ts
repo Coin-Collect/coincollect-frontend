@@ -1151,10 +1151,42 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/24.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+
+    {
+        pid: 43,
+        lpSymbol: "DappRadar Rewards",
+        isCommunity: true,
+        nftAddresses: {
+            137: "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e",
+            80001: "0x117D6870e6dE9faBcB40C34CceDD5228C63e3a1e"
+        },
+        contractAddresses: {
+            137: "0x4c359a45eCFFb51A8c6024fee217bE3b5AFE791E",
+            80001: "0x4c359a45eCFFb51A8c6024fee217bE3b5AFE791E"
+        },
+        tokenPerBlock: "0.0003139269",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.radar,
+        sideRewards: [
+            { token: "COLLECT", percentage: 222 }
+        ],
+        supportedCollectionPids: [1,2,3,15,26],
+        collectionPowers: [30,3,5,10,1,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://dappradar.com/",
+            getNftLink: "/nfts/collections/",
+        },
+        banner: "/images/poolBanners/18.webp",
+        avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
+        useApi: true
     }
     
-  
     
+
     
     
 /*

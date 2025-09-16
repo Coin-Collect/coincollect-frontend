@@ -87,6 +87,14 @@ export const mainnetTokens = defineTokens({
     'NITRO Token',
     'https://nitroclash.net/',
   ),
+  radar: new Token(
+    POLYGON_MAINNET,
+    '0xdCb72AE4d5dc6Ae274461d57E65dB8D50d0a33AD',
+    18,
+    'RADAR',
+    'DappRadar Token',
+    'https://dappradar.com/',
+  ),
   dj: new Token(
     POLYGON_MAINNET,
     '0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816',

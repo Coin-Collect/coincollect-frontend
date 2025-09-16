@@ -67,9 +67,14 @@ function CollectionRow({
   const { account } = useActiveWeb3React()
   const key = collectionKey(collection)
   const balance = collection.userData.tokenBalance.toNumber()
-  const collectionData = mintingConfig.find((mintCollection) => mintCollection.stake_pid === collection.pid)
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === collection.pid)
-  const avatar = nftFarmData["avatar"] ? nftFarmData["avatar"] : collectionData?.avatar
+  const collectionDataByPid = mintingConfig.find((mintCollection) => mintCollection.stake_pid === collection.pid)
+  const farmAddr137 = collection?.nftAddresses?.[137]?.toLowerCase()
+  const collectionDataByAddress = farmAddr137
+    ? mintingConfig.find((mintCollection) => mintCollection.address?.toLowerCase() === farmAddr137)
+    : undefined
+  const defaultAvatar = collection.pid <= 4 ? '/logo.png' : '/images/nfts/no-profile-md.png'
+  const avatar = nftFarmData?.["avatar"] ?? collectionDataByPid?.avatar ?? collectionDataByAddress?.avatar ?? defaultAvatar
   
 
   // only show add or remove buttons if not on selected list
