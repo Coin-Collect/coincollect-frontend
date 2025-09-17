@@ -58,15 +58,22 @@ const BodyWrapper = styled(Box)`
   overflow-x: hidden;
 `;
 
-const Inner = styled.div<{ isPushed: boolean; showMenu: boolean }>`
+const Inner = styled.div<{ isPushed: boolean; showMenu: boolean; shouldOffset: boolean }>`
   flex-grow: 1;
   transition: margin-top 0.2s;
   transform: translate3d(0, 0, 0);
   max-width: 100%;
 
+  margin-left: ${({ shouldOffset, isPushed }) =>
+    shouldOffset ? `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px` : "0"};
+  max-width: ${({ shouldOffset, isPushed }) =>
+    shouldOffset ? `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)` : "100%"};
+
   ${({ theme }) => theme.mediaQueries.nav} {
-    margin-left: ${({ isPushed }) => `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px`};
-    max-width: ${({ isPushed }) => `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)`};
+    margin-left: ${({ shouldOffset, isPushed }) =>
+      shouldOffset ? `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px` : "0"};
+    max-width: ${({ shouldOffset, isPushed }) =>
+      shouldOffset ? `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)` : "100%"};
   }
 `;
 
@@ -107,6 +114,7 @@ const Menu: React.FC<NavProps> = ({
   const [showMenu, setShowMenu] = useState(true);
   const [isPushed, setIsPushed] = useState(false);
   const refPrevOffset = useRef(typeof window === "undefined" ? 0 : window.pageYOffset);
+  const shouldOffsetContent = !isMobile;
 
   useEffect(() => {
     if (isDesktop) {
@@ -238,7 +246,7 @@ const Menu: React.FC<NavProps> = ({
             pushNav={setIsPushed}
             links={drawerLinks}
           /> 
-          <Inner isPushed={isPushed} showMenu={showMenu}>
+          <Inner isPushed={isPushed} showMenu={showMenu} shouldOffset={shouldOffsetContent}>
             {children}
             <Footer
               items={footerLinks}
