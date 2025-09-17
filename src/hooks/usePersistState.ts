@@ -17,9 +17,14 @@ const defaultOptions = {
  */
 const usePersistState = (initialValue: any, userOptions: UsePersistStateOptions) => {
   const { localStorageKey, hydrate, dehydrate } = { ...defaultOptions, ...userOptions }
+  const isBrowser = typeof window !== 'undefined'
   const [value, setValue] = useState(() => {
+    if (!isBrowser) {
+      return initialValue
+    }
+
     try {
-      const valueFromLS = localStorage.getItem(localStorageKey)
+      const valueFromLS = window.localStorage.getItem(localStorageKey)
 
       return valueFromLS ? hydrate(JSON.parse(valueFromLS)) : initialValue
     } catch (error) {
@@ -28,8 +33,12 @@ const usePersistState = (initialValue: any, userOptions: UsePersistStateOptions)
   })
 
   useEffect(() => {
-    localStorage.setItem(localStorageKey, JSON.stringify(dehydrate(value)))
-  }, [value, localStorageKey, dehydrate])
+    if (!isBrowser) {
+      return
+    }
+
+    window.localStorage.setItem(localStorageKey, JSON.stringify(dehydrate(value)))
+  }, [value, localStorageKey, dehydrate, isBrowser])
 
   return [value, setValue]
 }

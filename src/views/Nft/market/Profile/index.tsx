@@ -41,6 +41,7 @@ const NftProfile: FC = ({ children }) => {
     revalidateOnReconnect: true,
   })
   const { achievements, isFetching: isAchievementsFetching } = useAchievementsForAddress(accountAddress)
+  const achievementsCount = achievements?.length ?? 0
   const {
     nfts: userNfts,
     isLoading: isNftLoading,
@@ -90,7 +91,7 @@ const NftProfile: FC = ({ children }) => {
           }}
         />
         <TabMenuWrapper>
-          <TabMenu />
+          <TabMenu achievementsCount={achievementsCount} isAchievementsLoading={isAchievementsFetching} />
         </TabMenuWrapper>
       </MarketPageHeader>
       <Page style={{ minHeight: 'auto' }}>{children}</Page>

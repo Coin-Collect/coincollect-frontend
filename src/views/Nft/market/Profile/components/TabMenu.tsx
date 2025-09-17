@@ -24,11 +24,20 @@ const Tab = styled.button<{ $active: boolean }>`
   transition: background-color 0.3s ease-out;
 `
 
-const TabMenu = () => {
+interface TabMenuProps {
+  achievementsCount?: number
+  isAchievementsLoading?: boolean
+}
+
+const TabMenu: React.FC<TabMenuProps> = ({ achievementsCount = 0, isAchievementsLoading = false }) => {
   const { t } = useTranslation()
   const { pathname, query } = useRouter()
   const { accountAddress } = query
   const [achievementsActive, setIsAchievementsActive] = useState(pathname.includes('achievements'))
+
+  const achievementsLabel = !isAchievementsLoading && achievementsCount > 0
+    ? t('Achievements (%count%)', { count: achievementsCount })
+    : t('Achievements')
 
   useEffect(() => {
     setIsAchievementsActive(pathname.includes('achievements'))
@@ -44,16 +53,14 @@ const TabMenu = () => {
       >
         NFTs
       </Tab>
-      {/* TODO: Activate later
       <Tab
         onClick={() => setIsAchievementsActive(true)}
         $active={achievementsActive}
         as={NextLinkFromReactRouter}
         to={`${nftsBaseUrl}/profile/${accountAddress}/achievements`}
       >
-        {t('Achievements')}
+        {achievementsLabel}
       </Tab>
-    */}
     </Flex>
   )
 }
