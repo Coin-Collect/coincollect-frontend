@@ -11,6 +11,7 @@ import ProfileHeader from './components/ProfileHeader'
 import NoNftsImage from '../components/Activity/NoNftsImage'
 import useNftsForAddress from '../hooks/useNftsForAddress'
 import TabMenu from './components/TabMenu'
+import useProfileDashboardData from './hooks/useProfileDashboardData'
 
 const TabMenuWrapper = styled(Box)`
   position: absolute;
@@ -46,6 +47,7 @@ const NftProfile: FC = ({ children }) => {
     isLoading: isNftLoading,
     refresh: refreshUserNfts,
   } = useNftsForAddress(accountAddress, profile, isProfileValidating)
+  const dashboardData = useProfileDashboardData(invalidAddress ? undefined : accountAddress)
 
   if (invalidAddress) {
     return (
@@ -88,6 +90,7 @@ const NftProfile: FC = ({ children }) => {
             await refreshProfile()
             refreshUserNfts()
           }}
+          dashboardData={dashboardData}
         />
         <TabMenuWrapper>
           <TabMenu />

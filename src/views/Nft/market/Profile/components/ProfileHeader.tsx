@@ -1,11 +1,14 @@
 import { NextLinkFromReactRouter as ReactRouterLink } from 'components/NextLink'
-import { BscScanIcon, Flex, IconButton, Link, Button, useModal } from '@pancakeswap/uikit'
+import styled from 'styled-components'
+import { AutoRenewIcon, BscScanIcon, Flex, IconButton, Link, Button, useModal } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { getBscScanLink, getPolygonScanLink } from 'utils'
-import { formatNumber } from 'utils/formatBalance'
+import { formatNumber, getBalanceNumber } from 'utils/formatBalance'
+import { BIG_ZERO } from 'utils/bigNumber'
 import truncateHash from 'utils/truncateHash'
 import { Achievement, Profile } from 'state/types'
 import useWeb3React from 'hooks/useWeb3React'
+import type { ProfileDashboardData } from '../hooks/useProfileDashboardData'
 import EditProfileAvatar from './EditProfileAvatar'
 import BannerHeader from '../../components/BannerHeader'
 import StatBox, { StatBoxItem } from '../../components/StatBox'
@@ -15,14 +18,26 @@ import AvatarImage from '../../components/BannerHeader/AvatarImage'
 
 interface HeaderProps {
   accountPath: string
-  profile: Profile
-  achievements: Achievement[]
-  nftCollected: number
+  profile?: Profile | null
+  achievements?: Achievement[] | null
+  nftCollected?: number
   isAchievementsLoading: boolean
   isNftLoading: boolean
   isProfileLoading: boolean
   onSuccess?: () => void
+  dashboardData?: ProfileDashboardData
 }
+
+const ActionsWrapper = styled(Flex)`
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+
+  ${({ theme }) => theme.mediaQueries.sm} {
+    justify-content: flex-end;
+  }
+`
 
 // Account and profile passed down as the profile could be used to render _other_ users' profiles.
 const ProfileHeader: React.FC<HeaderProps> = ({
@@ -34,6 +49,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   isNftLoading,
   isProfileLoading,
   onSuccess,
+  dashboardData,
 }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
@@ -47,18 +63,53 @@ const ProfileHeader: React.FC<HeaderProps> = ({
     />,
     false,
   )
-  
-  // CAUTION: Profile details disabled here
-  profile = null
 
   const isConnectedAccount = account?.toLowerCase() === accountPath?.toLowerCase()
-  const numNftCollected = !isNftLoading ? (nftCollected ? formatNumber(nftCollected, 0, 0) : '-') : null
-  const numPoints = !isProfileLoading ? (profile?.points ? formatNumber(profile.points, 0, 0) : '-') : null
-  const numAchievements = !isAchievementsLoading
-    ? achievements?.length
-      ? formatNumber(achievements.length, 0, 0)
-      : '-'
-    : null
+  const hasNftCollectedValue = nftCollected !== undefined && nftCollected !== null
+  const numNftCollected = isNftLoading
+    ? null
+    : hasNftCollectedValue
+    ? formatNumber(nftCollected, 0, 0)
+    : '-'
+  const numPoints = isProfileLoading
+    ? null
+    : profile?.points !== undefined && profile?.points !== null
+    ? formatNumber(Number(profile.points), 0, 0)
+    : '-'
+  const numAchievements = isAchievementsLoading
+    ? null
+    : achievements !== undefined && achievements !== null
+    ? formatNumber(achievements.length, 0, 0)
+    : '-'
+
+  const dashboardLoading = dashboardData?.isLoading ?? false
+  const hasDashboardData = Boolean(dashboardData && isConnectedAccount)
+  const formattedPendingRewards = hasDashboardData
+    ? dashboardLoading
+      ? null
+      : `${formatNumber(getBalanceNumber(dashboardData?.pendingRewards ?? BIG_ZERO, 18), 2, 2)} COLLECT`
+    : '-'
+  const formattedStakedNfts = hasDashboardData
+    ? dashboardLoading
+      ? null
+      : formatNumber((dashboardData?.stakedBalance ?? BIG_ZERO).toNumber(), 0, 0)
+    : '-'
+
+  const statItems = [
+    { title: t('NFT Collected'), stat: numNftCollected },
+    { title: t('Points'), stat: numPoints },
+    { title: t('Achievements'), stat: numAchievements },
+  ]
+
+  if (hasDashboardData) {
+    statItems.push(
+      { title: t('Pending rewards'), stat: formattedPendingRewards },
+      { title: t('Staked NFTs'), stat: formattedStakedNfts },
+    )
+  }
+
+  const showHarvestAll = hasDashboardData && typeof dashboardData?.onHarvestAll === 'function'
+  const harvestDisabled = dashboardLoading || dashboardData?.isHarvestingAll || !dashboardData?.canHarvest
 
   const avatarImage = profile?.nft?.image?.thumbnail || '/images/nfts/no-profile-md.png'
 
@@ -175,11 +226,26 @@ const ProfileHeader: React.FC<HeaderProps> = ({
     <>
       <BannerHeader bannerImage={getBannerImage()} bannerAlt={t('User team banner')} avatar={getAvatar()} />
       <MarketPageTitle pb="48px" title={getTitle()} description={renderDescription()}>
-        <StatBox>
-          <StatBoxItem title={t('NFT Collected')} stat={numNftCollected} />
-          <StatBoxItem title={t('Points')} stat={numPoints} />
-          <StatBoxItem title={t('Achievements')} stat={numAchievements} />
-        </StatBox>
+        <Flex flexDirection="column" width="100%" gridGap="16px">
+          <StatBox>
+            {statItems.map((item) => (
+              <StatBoxItem key={item.title} title={item.title} stat={item.stat} />
+            ))}
+          </StatBox>
+          {showHarvestAll && (
+            <ActionsWrapper>
+              <Button
+                width={['100%', null, null, 'auto']}
+                onClick={() => dashboardData?.onHarvestAll?.()}
+                disabled={harvestDisabled}
+                isLoading={dashboardData?.isHarvestingAll}
+                endIcon={dashboardData?.isHarvestingAll ? <AutoRenewIcon spin color="currentColor" /> : null}
+              >
+                {dashboardData?.isHarvestingAll ? t('Harvesting') : t('Harvest All Rewards')}
+              </Button>
+            </ActionsWrapper>
+          )}
+        </Flex>
       </MarketPageTitle>
     </>
   )

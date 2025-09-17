@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { useTranslation } from 'contexts/Localization'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import styled from 'styled-components'
@@ -27,33 +26,32 @@ const Tab = styled.button<{ $active: boolean }>`
 const TabMenu = () => {
   const { t } = useTranslation()
   const { pathname, query } = useRouter()
-  const { accountAddress } = query
-  const [achievementsActive, setIsAchievementsActive] = useState(pathname.includes('achievements'))
+  const accountAddress = typeof query.accountAddress === 'string' ? query.accountAddress : ''
+  const profileBasePath = accountAddress ? `${nftsBaseUrl}/profile/${accountAddress}` : `${nftsBaseUrl}/profile`
+  const isOverview = pathname?.includes('/overview')
 
-  useEffect(() => {
-    setIsAchievementsActive(pathname.includes('achievements'))
-  }, [pathname])
+  const tabs = [
+    {
+      key: 'overview',
+      label: t('Overview'),
+      href: `${profileBasePath}/overview`,
+      isActive: isOverview,
+    },
+    {
+      key: 'nfts',
+      label: t('NFTs'),
+      href: profileBasePath,
+      isActive: !isOverview,
+    },
+  ]
 
   return (
     <Flex>
-      <Tab
-        onClick={() => setIsAchievementsActive(false)}
-        $active={!achievementsActive}
-        as={NextLinkFromReactRouter}
-        to={`${nftsBaseUrl}/profile/${accountAddress}`}
-      >
-        NFTs
-      </Tab>
-      {/* TODO: Activate later
-      <Tab
-        onClick={() => setIsAchievementsActive(true)}
-        $active={achievementsActive}
-        as={NextLinkFromReactRouter}
-        to={`${nftsBaseUrl}/profile/${accountAddress}/achievements`}
-      >
-        {t('Achievements')}
-      </Tab>
-    */}
+      {tabs.map((tab) => (
+        <Tab key={tab.key} $active={tab.isActive} as={NextLinkFromReactRouter} to={tab.href}>
+          {tab.label}
+        </Tab>
+      ))}
     </Flex>
   )
 }
