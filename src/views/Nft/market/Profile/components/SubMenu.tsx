@@ -11,6 +11,10 @@ const SubMenuComponent: React.FC = () => {
 
   const ItemsConfig = [
     {
+      label: t('Overview'),
+      href: `${nftsBaseUrl}/profile/${accountAddress}/overview`,
+    },
+    {
       label: t('Items'),
       href: `${nftsBaseUrl}/profile/${accountAddress}`,
     },

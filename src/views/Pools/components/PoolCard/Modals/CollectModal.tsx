@@ -33,6 +33,7 @@ interface CollectModalProps {
   isBnbPool: boolean
   isCompoundPool?: boolean
   onDismiss?: () => void
+  onTxSuccess?: () => void
 }
 
 const CollectModal: React.FC<CollectModalProps> = ({
@@ -44,6 +45,7 @@ const CollectModal: React.FC<CollectModalProps> = ({
   isBnbPool,
   isCompoundPool = false,
   onDismiss,
+  onTxSuccess,
 }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
@@ -70,7 +72,7 @@ const CollectModal: React.FC<CollectModalProps> = ({
       if (shouldCompound) {
         return onStake(fullBalance, earningToken.decimals)
       }
-      
+
       // Harvest
       return onReward()
     })
@@ -93,6 +95,7 @@ const CollectModal: React.FC<CollectModalProps> = ({
       dispatch(updateUserStakedBalance(sousId, account))
       dispatch(updateUserPendingReward(sousId, account))
       dispatch(updateUserBalance(sousId, account))
+      onTxSuccess?.()
       onDismiss?.()
     }
   }

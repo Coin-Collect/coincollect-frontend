@@ -19,9 +19,10 @@ import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
 interface FarmCardActionsProps {
   earnings?: BigNumber
   pid?: number
+  onHarvestSuccess?: () => void
 }
 
-const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
+const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, onHarvestSuccess }) => {
   const { account } = useWeb3React()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
@@ -57,6 +58,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
               </ToastDescriptionWithTx>,
             )
             dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+            onHarvestSuccess?.()
           }
         }}
       >

@@ -24,9 +24,17 @@ interface FarmCardActionsProps {
   earnLabel?: string
   sideRewards?: any
   earningToken?: Token
+  onHarvestSuccess?: () => void
 }
 
-const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabel, sideRewards, earningToken }) => {
+const HarvestAction: React.FC<FarmCardActionsProps> = ({
+  earnings,
+  pid,
+  earnLabel,
+  sideRewards,
+  earningToken,
+  onHarvestSuccess,
+}) => {
   const { account } = useWeb3React()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
@@ -83,6 +91,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
               </ToastDescriptionWithTx>,
             )
             dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+            onHarvestSuccess?.()
           }
         }}
       >

@@ -28,9 +28,7 @@ const NftProfilePage = () => {
   
   return (
     <>
-      {/* TODO: Activate Later
       <SubMenu />
-      */}
       {isConnectedProfile ? (
         <UserNfts
           nfts={nfts}
