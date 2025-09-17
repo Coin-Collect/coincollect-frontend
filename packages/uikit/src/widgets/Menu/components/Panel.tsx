@@ -38,9 +38,29 @@ const StyledPanel = styled.div<{ isPushed: boolean; showMenu: boolean; showPhish
 `;
 
 const Panel: React.FC<Props> = (props) => {
-  const { isPushed, showMenu, showPhishingWarningBanner } = props;
+  const { isPushed, showMenu, showPhishingWarningBanner, isMobile, pushNav } = props;
+
+  const handleMouseEnter = () => {
+    if (!isMobile) {
+      pushNav(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobile) {
+      pushNav(false);
+    }
+  };
+
   return (
-    <StyledPanel isPushed={isPushed} showMenu={showMenu} showPhishingWarningBanner={showPhishingWarningBanner}>
+    <StyledPanel
+      isPushed={isPushed}
+      showMenu={showMenu}
+      showPhishingWarningBanner={showPhishingWarningBanner}
+      data-menu-panel="true"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <PanelBody {...props} />
       <PanelFooter {...props} />
     </StyledPanel>

@@ -1,11 +1,10 @@
 import throttle from "lodash/throttle";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import BottomNav from "../../components/BottomNav";
 import { Box } from "../../components/Box";
 import Flex from "../../components/Box/Flex";
 import Footer from "../../components/Footer";
-import MenuItems from "../../components/MenuItems/MenuItems";
 import { SubMenuItems } from "../../components/SubMenuItems";
 import { useMatchBreakpoints } from "../../hooks";
 import CakePrice from "../../components/CakePrice/CakePrice";
@@ -106,8 +105,26 @@ const Menu: React.FC<NavProps> = ({
 }) => {
   const { isMobile, isDesktop } = useMatchBreakpoints();
   const [showMenu, setShowMenu] = useState(true);
-  const [isPushed, setIsPushed] = useState(isDesktop);
+  const [isPushed, setIsPushed] = useState(false);
   const refPrevOffset = useRef(typeof window === "undefined" ? 0 : window.pageYOffset);
+
+  useEffect(() => {
+    if (isDesktop) {
+      setIsPushed(false);
+    }
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsPushed(false);
+    }
+  }, [isMobile]);
+
+  const handleTogglePush = useCallback(() => {
+    if (isMobile) {
+      setIsPushed((prevState: boolean) => !prevState);
+    }
+  }, [isMobile]);
 
   const topBannerHeight = isMobile ? TOP_BANNER_HEIGHT_MOBILE : TOP_BANNER_HEIGHT;
 
@@ -159,9 +176,10 @@ const Menu: React.FC<NavProps> = ({
                 isDark={isDark} 
                 href={homeLink?.href ?? "/"} 
                 isPushed={isPushed}
-                togglePush={() => setIsPushed((prevState: boolean) => !prevState)}
+                isMobile={isMobile}
+                togglePush={handleTogglePush}
+                pushNav={setIsPushed}
               />
-              {!isMobile && <MenuItems items={links} activeItem={activeItem} activeSubItem={activeSubItem} ml="24px" />}
             </Flex>
             <Flex alignItems="center" height="100%">
               

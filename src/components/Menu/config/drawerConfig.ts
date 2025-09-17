@@ -3,76 +3,55 @@ import { MenuItemsType } from "@pancakeswap/uikit";
 
 const drawerLinks: MenuItemsType[] = [
     {
-        label: 'NFTs',
+        label: 'Collections',
         icon: 'NftIcon',
-        href: '/nfts',
-        initialOpenState: true,
-        items: [
-            {
-                label: 'Collections',
-                href: '/nfts/collections',
-            },
-            {
-                label: 'NFT Stake',
-                href: '/nftpools',
-            },
-            {
-                label: 'Claim Rewards',
-                href: '/claim',
-            },
-            {
-                label: 'Marketplace',
-                href: 'https://market.coincollect.org/',
-            },            
-
-        ],
+        href: '/nfts/collections',
     },
     {
-        label: 'Yield',
+        label: 'NFT Stake',
+        icon: 'PoolIcon',
+        href: '/nftpools',
+    },
+    {
+        label: 'Claim Rewards',
+        icon: 'PrizeIcon',
+        href: '/claim',
+    },
+    {
+        label: 'Marketplace',
+        icon: 'OpenNewIcon',
+        href: 'https://market.coincollect.org/',
+    },
+    {
+        label: 'Farms',
         icon: 'FarmIcon',
         href: '/farms',
-        initialOpenState: true,
-        items: [
-            {
-                label: 'Farms',
-                href: '/farms',
-            },
-            {
-                label: 'Stake',
-                href: '/pools',
-            },
-            {
-                label: 'Quest (Soon)',
-                href: '/?q=soon',
-            },
-
-        ],
     },
-
     {
-        label: 'Trade',
-        icon: 'TradeIcon',
-        href: '/farms',
-        initialOpenState: true,
-        items: [
-            {
-                label: 'Swap',
-                href: '/swap',
-            },
-            {
-                label: 'Liquidity',
-                href: '/liquidity',
-            },
-        ],
+        label: 'Stake',
+        icon: 'EarnIcon',
+        href: '/pools',
     },
-
-
-
+    {
+        label: 'Quest (Soon)',
+        icon: 'LightningIcon',
+        href: '/?q=soon',
+    },
+    {
+        label: 'Swap',
+        icon: 'SwapIcon',
+        href: '/swap',
+    },
+    {
+        label: 'Liquidity',
+        icon: 'SyncAltIcon',
+        href: '/liquidity',
+    },
     {
         label: 'More',
         icon: 'InfoIcon',
         href: '/more',
-        initialOpenState: true,
+        initialOpenState: false,
         items: [
             {
                 label: 'CoinMarketCap',
@@ -81,7 +60,7 @@ const drawerLinks: MenuItemsType[] = [
             {
                 label: 'CoinGecko',
                 href: 'https://www.coingecko.com/en/coins/coincollect',
-            }, 
+            },
             {
                 label: 'OpenSea',
                 href: 'https://opensea.io/web3Community/created',
@@ -97,7 +76,6 @@ const drawerLinks: MenuItemsType[] = [
 
         ],
     },
-
 
 ];
 
