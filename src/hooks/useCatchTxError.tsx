@@ -15,19 +15,99 @@ export type CatchTxErrorReturn = {
 }
 
 type ErrorData = {
-  code: number
-  message: string
+  code?: number
+  message?: string
+  originalError?: any
 }
 
-type TxError = {
-  data: ErrorData
-  error: string
+type TxError = Error & {
+  code?: number | string
+  data?: ErrorData
+  error?: any
+  reason?: string
+  shortMessage?: string
+}
+
+const getErrorMessage = (error?: TxError | string, depth = 0): string => {
+  if (!error || depth > 5) {
+    return ''
+  }
+
+  if (typeof error === 'string') {
+    return error
+  }
+
+  const potentialMessages = [
+    error?.data?.message,
+    error?.data?.originalError?.message,
+    error?.error?.message,
+    error?.shortMessage,
+    error?.reason,
+    error?.message,
+  ]
+
+  for (const potentialMessage of potentialMessages) {
+    if (typeof potentialMessage === 'string' && potentialMessage.trim().length > 0) {
+      return potentialMessage
+    }
+  }
+
+  if (error?.error) {
+    const nestedMessage = getErrorMessage(error.error, depth + 1)
+
+    if (nestedMessage) {
+      return nestedMessage
+    }
+  }
+
+  if (error?.data?.originalError) {
+    const nestedMessage = getErrorMessage(error.data.originalError, depth + 1)
+
+    if (nestedMessage) {
+      return nestedMessage
+    }
+  }
+
+  return ''
+}
+
+const messageIncludes = (err: TxError | undefined, search: string): boolean => {
+  if (!err) {
+    return false
+  }
+
+  const message = getErrorMessage(err)
+
+  return message.toLowerCase().includes(search.toLowerCase())
 }
 
 // -32000 is insufficient funds for gas * price + value
 const isGasEstimationError = (err: TxError): boolean => err?.data?.code === -32000
-const isBalanceError = (err: TxError): boolean => err?.data?.message.includes("insufficient funds") || err?.data?.message.includes("gas required exceeds allowance")
-const isLowGasPriceError = (err: TxError): boolean => err?.data?.message.includes("max fee per gas")
+const isBalanceError = (err: TxError): boolean =>
+  messageIncludes(err, 'insufficient funds') || messageIncludes(err, 'gas required exceeds allowance')
+const isLowGasPriceError = (err: TxError): boolean => messageIncludes(err, 'max fee per gas')
+
+const sanitizeErrorMessage = (message: string): string => {
+  if (!message) {
+    return ''
+  }
+
+  let sanitizedMessage = message
+
+  const seeMoreIndex = sanitizedMessage.indexOf(' [ See:')
+
+  if (seeMoreIndex >= 0) {
+    sanitizedMessage = sanitizedMessage.substring(0, seeMoreIndex)
+  }
+
+  const errorIndex = sanitizedMessage.indexOf(' (error=')
+
+  if (errorIndex >= 0) {
+    sanitizedMessage = sanitizedMessage.substring(0, errorIndex)
+  }
+
+  return sanitizedMessage.trim()
+}
 
 export default function useCatchTxError(): CatchTxErrorReturn {
   const { library } = useWeb3React()
@@ -36,23 +116,36 @@ export default function useCatchTxError(): CatchTxErrorReturn {
   const [loading, setLoading] = useState(false)
 
   const handleNormalError = useCallback(
-    (error) => {
+    (error?: TxError) => {
       logError(error)
 
-      if (error) {
+      if (!error) {
+        toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+        return
+      }
 
-        const reason = isBalanceError(error)
-          ? "Insufficient wallet balance for this transaction."
-          : isLowGasPriceError(error)
-            ? "The network may be congested. Try increasing the transaction speed from settings or try again later."
-            : error.message;
+      const errorCode = typeof error?.code === 'string' ? error.code.toUpperCase() : ''
 
+      if (isBalanceError(error) || errorCode === 'INSUFFICIENT_FUNDS') {
+        toastError(
+          t('Not enough POL'),
+          t('Your wallet does not have enough POL to cover the mint cost and gas fees. Please add more POL and try again.'),
+        )
+        return
+      }
+
+      if (isLowGasPriceError(error)) {
         toastError(
           t('Error'),
-          t('%reason%', {
-            reason,
-          }),
+          t('The network may be congested. Try increasing the transaction speed from settings or try again later.'),
         )
+        return
+      }
+
+      const fallbackMessage = sanitizeErrorMessage(getErrorMessage(error))
+
+      if (fallbackMessage) {
+        toastError(t('Error'), fallbackMessage)
       } else {
         toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
       }
