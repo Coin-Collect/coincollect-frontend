@@ -6,7 +6,7 @@ import { useTranslation } from 'contexts/Localization'
 import { useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
 import { DeserializedNftFarm } from 'state/types'
@@ -19,6 +19,7 @@ import nftFarmsConfig from 'config/constants/nftFarms'
 import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSelectModal'
 import DepositModal from '../DepositModal'
 import useStakeFarms from 'views/NftFarms/hooks/useStakeFarms'
+import { FarmsContext } from 'views/NftFarms'
 import { getDisplayApr } from 'views/NftFarms/Farms'
 import formatRewardAmount from 'utils/formatRewardAmount'
 
@@ -78,6 +79,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { allowance, tokenBalance, stakedBalance, earnings } = farm.userData || {}
   const smartNftPoolAddress = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
   const earnLabel = farm.earningToken ? farm.earningToken.symbol : t('COLLECT')
+  const { registerStakeModal, unregisterStakeModal } = useContext(FarmsContext)
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
   const atLeastOneApproved = allowance?.some((allowance) => allowance) ?? false
   const isApproved = account && atLeastOneApproved
@@ -146,6 +148,24 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       pid={pid}
     />,
   )
+
+  useEffect(() => {
+    if (!registerStakeModal) {
+      return
+    }
+    const stakeHandler = smartNftPoolAddress ? onPresentCollectionModal : onPresentDeposit
+    registerStakeModal(pid, stakeHandler)
+    return () => {
+      unregisterStakeModal?.(pid, stakeHandler)
+    }
+  }, [
+    pid,
+    registerStakeModal,
+    unregisterStakeModal,
+    onPresentDeposit,
+    onPresentCollectionModal,
+    smartNftPoolAddress,
+  ])
 
   const displayApr = getDisplayApr(farm.apr)
   const dailyRewardAmount = farm.apr !== undefined && farm.apr !== null ? new BigNumber(farm.apr) : new BigNumber(0)

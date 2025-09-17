@@ -145,8 +145,10 @@ interface NftFarmConfigBaseProps {
   participantThreshold?: number
   isFinished?: boolean
   performanceFee?: string
-  supportedCollectionPids?:number[]
-  collectionPowers?:number[]
+  supportedCollectionPids?: number[]
+  collectionPowers?: number[]
+  banner?: string
+  avatar?: string
   dual?: {
     rewardPerBlock: number
     earnLabel: string

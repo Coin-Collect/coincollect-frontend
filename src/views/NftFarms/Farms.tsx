@@ -120,7 +120,8 @@ export const getDisplayApr = (cakeRewardsApr?: number) => {
 }
 
 const Farms: React.FC = ({ children }) => {
-  const { pathname } = useRouter()
+  const router = useRouter()
+  const { pathname } = router
   const { t } = useTranslation()
   const { data: farmsLP, userDataLoaded } = useFarms()
   const cakePrice = usePriceCakeBusd()
@@ -130,6 +131,44 @@ const Farms: React.FC = ({ children }) => {
   const [sortOption, setSortOption] = useState('latest')
   const { observerRef, isIntersecting } = useIntersectionObserver()
   const chosenFarmsLength = useRef(0)
+  const stakeModalCallbacksRef = useRef<Record<number, () => void>>({})
+  const [requestedStakePid, setRequestedStakePid] = useState<number | null>(null)
+
+  const clearStakeQuery = useCallback(() => {
+    if (!router.isReady) {
+      return
+    }
+    const { modal, pid, ...rest } = router.query
+    if (modal || pid) {
+      router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true })
+    }
+  }, [router])
+
+  useEffect(() => {
+    if (!router.isReady) {
+      return
+    }
+    const { modal, pid } = router.query
+    if (modal === 'stake') {
+      const pidValue = Array.isArray(pid) ? pid[0] : pid
+      const parsedPid = Number(pidValue)
+      if (!Number.isNaN(parsedPid)) {
+        setRequestedStakePid(parsedPid)
+      }
+    }
+  }, [router.isReady, router.query])
+
+  useEffect(() => {
+    if (requestedStakePid === null) {
+      return
+    }
+    const handler = stakeModalCallbacksRef.current[requestedStakePid]
+    if (handler) {
+      handler()
+      setRequestedStakePid(null)
+      clearStakeQuery()
+    }
+  }, [requestedStakePid, clearStakeQuery])
 
   const isArchived = pathname.includes('archived')
   const isInactive = pathname.includes('history')
@@ -342,8 +381,47 @@ const Farms: React.FC = ({ children }) => {
     setSortOption(option.value)
   }
 
+  const registerStakeModal = useCallback(
+    (pid: number, handler: () => void) => {
+      stakeModalCallbacksRef.current[pid] = handler
+      if (requestedStakePid === pid) {
+        handler()
+        setRequestedStakePid(null)
+        clearStakeQuery()
+      }
+    },
+    [requestedStakePid, clearStakeQuery],
+  )
+
+  const unregisterStakeModal = useCallback((pid: number, handler: () => void) => {
+    const currentHandler = stakeModalCallbacksRef.current[pid]
+    if (currentHandler === handler) {
+      delete stakeModalCallbacksRef.current[pid]
+    }
+  }, [])
+
+  const openStakeModal = useCallback(
+    (pid: number) => {
+      const handler = stakeModalCallbacksRef.current[pid]
+      if (handler) {
+        handler()
+        clearStakeQuery()
+        return
+      }
+      setRequestedStakePid(pid)
+      router.push(
+        { pathname: router.pathname, query: { ...router.query, modal: 'stake', pid: String(pid) } },
+        undefined,
+        { shallow: true },
+      )
+    },
+    [clearStakeQuery, router],
+  )
+
   return (
-    <FarmsContext.Provider value={{ chosenFarmsMemoized }}>
+    <FarmsContext.Provider
+      value={{ chosenFarmsMemoized, registerStakeModal, unregisterStakeModal, openStakeModal }}
+    >
       <PageHeader>
         <Box mb="32px" mt="16px">
           <CommunityCollectionsBanner />
@@ -433,6 +511,13 @@ const Farms: React.FC = ({ children }) => {
   )
 }
 
-export const FarmsContext = createContext({ chosenFarmsMemoized: [] })
+interface FarmsContextValue {
+  chosenFarmsMemoized: NftFarmWithStakedValue[]
+  registerStakeModal?: (pid: number, handler: () => void) => void
+  unregisterStakeModal?: (pid: number, handler: () => void) => void
+  openStakeModal?: (pid: number) => void
+}
+
+export const FarmsContext = createContext<FarmsContextValue>({ chosenFarmsMemoized: [] })
 
 export default Farms

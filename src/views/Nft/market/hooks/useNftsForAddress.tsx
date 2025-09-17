@@ -27,13 +27,13 @@ const useNftsForAddress = (account: string, profile: Profile, isProfileFetching:
     return null
   }, [profileNftTokenId, profileNftCollectionAddress, hasProfileNft])
 
-  const { status, data, mutate } = useSWR(
+  const { status, data, mutate, error } = useSWR(
     !isProfileFetching && !isEmpty(collections) && isAddress(account) ? [account, 'userNfts'] : null,
     async () => getCompleteAccountNftData(account, collections, profileNftWithCollectionAddress),
     { use: [laggyMiddleware] },
   )
 
-  return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, refresh: mutate }
+  return { nfts: data ?? [], isLoading: status !== FetchStatus.Fetched, refresh: mutate, error }
 }
 
 export default useNftsForAddress

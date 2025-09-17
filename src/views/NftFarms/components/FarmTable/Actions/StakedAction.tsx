@@ -7,7 +7,7 @@ import { useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
 import { useFarmUser, useLpTokenPrice, usePriceCakeBusd } from 'state/nftFarms/hooks'
@@ -22,6 +22,7 @@ import WithdrawModal from '../../WithdrawModal'
 import { ActionContainer, ActionContent, ActionTitles } from './styles'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSelectModal'
+import { FarmsContext } from 'views/NftFarms'
 
 const IconButtonWrapper = styled.div`
   display: flex;
@@ -58,6 +59,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   const router = useRouter()
   const lpPrice = useLpTokenPrice(lpSymbol)
   const cakePrice = usePriceCakeBusd()
+  const { registerStakeModal, unregisterStakeModal } = useContext(FarmsContext)
 
   const atLeastOneApproved = allowance.some((allowance) => allowance)
   const isApproved = account && atLeastOneApproved
@@ -180,6 +182,24 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
       pid={pid}
     />,
   )
+
+  useEffect(() => {
+    if (!registerStakeModal) {
+      return
+    }
+    const stakeHandler = smartNftPoolAddress ? onPresentCollectionModal : onPresentDeposit
+    registerStakeModal(pid, stakeHandler)
+    return () => {
+      unregisterStakeModal?.(pid, stakeHandler)
+    }
+  }, [
+    pid,
+    registerStakeModal,
+    unregisterStakeModal,
+    onPresentDeposit,
+    onPresentCollectionModal,
+    smartNftPoolAddress,
+  ])
 
   if (!account) {
     return (
