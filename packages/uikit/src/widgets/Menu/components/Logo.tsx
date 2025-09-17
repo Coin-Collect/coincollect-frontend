@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import styled from "styled-components";
 import Flex from "../../../components/Box/Flex";
 import MenuButton from "./MenuButton";
-import { Text } from "../../../components/Text";
 import { HamburgerIcon, HamburgerCloseIcon } from "../../../components/Svg";
 import { MenuContext } from "../context";
 
@@ -21,18 +20,24 @@ const StyledLink = styled("a")`
   text-decoration: none;
 `;
 
-const LogoVideo = styled.video`
+const LogoVideo = styled.video<React.VideoHTMLAttributes<HTMLVideoElement>>`
   width: 40px;
   height: 40px;
   border-radius: 12px;
   object-fit: cover;
 `;
 
-const LogoText = styled(Text)<{ isPushed: boolean }>`
+interface LogoTextProps extends React.HTMLAttributes<HTMLSpanElement> {
+  isPushed: boolean;
+}
+
+const LogoText = styled.span<LogoTextProps & { isDark: boolean }>`
   margin-left: ${({ isPushed }) => (isPushed ? "12px" : "0")};
   font-size: 18px;
+  font-weight: 700;
   white-space: nowrap;
   display: ${({ isPushed }) => (isPushed ? "block" : "none")};
+  color: ${({ isDark, theme }) => (isDark ? theme.colors.contrast : theme.colors.text)};
 `;
 
 const Logo: React.FC<Props> = ({ isPushed, togglePush, isMobile, pushNav, href, isDark: _isDark }) => {
@@ -66,7 +71,7 @@ const Logo: React.FC<Props> = ({ isPushed, togglePush, isMobile, pushNav, href, 
         playsInline
         aria-label="CoinCollect animated logo"
       />
-      <LogoText bold isPushed={isPushed}>
+      <LogoText isPushed={isPushed} isDark={_isDark}>
         CoinCollect
       </LogoText>
     </>
@@ -75,7 +80,7 @@ const Logo: React.FC<Props> = ({ isPushed, togglePush, isMobile, pushNav, href, 
   return (
     <Flex alignItems="center" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {isMobile && (
-        <MenuButton aria-label="Toggle menu" onClick={togglePush} mr="24px">
+        <MenuButton aria-label="Toggle menu" onClick={togglePush} mr="12px">
           {isPushed ? (
             <HamburgerCloseIcon width="24px" color="textSubtle" />
           ) : (
