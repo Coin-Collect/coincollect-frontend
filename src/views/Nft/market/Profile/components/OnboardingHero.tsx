@@ -1,0 +1,668 @@
+import { useMemo } from 'react'
+import styled, { keyframes } from 'styled-components'
+import { Box, Flex, Heading, Text } from '@pancakeswap/uikit'
+import { useTranslation } from 'contexts/Localization'
+import { NftLocation, NftToken } from 'state/nftMarket/types'
+
+type HeroCardConfig = {
+  key: string
+  badge: string
+  title: string
+  description: string
+  metric: string
+  gradient: string
+  iconGradient: string
+  icon: JSX.Element
+}
+
+type NftPreview = {
+  key: string
+  name: string
+  utility: string
+  status: string
+  accent: string
+  collection?: string
+}
+
+type GameCardConfig = {
+  key: string
+  title: string
+  description: string
+  gradient: string
+  glow: string
+}
+
+interface OnboardingHeroProps {
+  totalNfts: number
+  stakedPoolCount: number
+  claimableCount: number
+  walletNfts: NftToken[]
+}
+
+const float = keyframes`
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+`
+
+const pulse = keyframes`
+  0% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+`
+
+const shine = keyframes`
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+`
+
+const Wrapper = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-bottom: 56px;
+`
+
+const HeroGrid = styled.div`
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+`
+
+const HeroCard = styled(Box)<{ gradient: string }>`
+  position: relative;
+  padding: 26px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: ${({ gradient }) => gradient};
+  border: 1px solid rgba(148, 163, 255, 0.2);
+  box-shadow: 0 28px 48px rgba(76, 29, 149, 0.35);
+  backdrop-filter: blur(22px);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  min-height: 240px;
+
+  &:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(45, 212, 191, 0.4), transparent 60%);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.18) 45%, transparent 90%);
+    transform: translateX(-120%);
+    animation: ${shine} 12s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  &:hover {
+    transform: translateY(-10px) scale(1.01);
+    box-shadow: 0 40px 80px rgba(129, 140, 248, 0.45);
+  }
+`
+
+const CardContent = styled(Flex)`
+  position: relative;
+  z-index: 1;
+  flex-direction: column;
+  height: 100%;
+`
+
+const HeroBadge = styled(Text)`
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(129, 140, 248, 0.24));
+  color: #c7d2fe;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+`
+
+const HeroIcon = styled(Box)<{ gradient: string }>`
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+  background: ${({ gradient }) => gradient};
+  box-shadow: 0 0 32px rgba(34, 211, 238, 0.45);
+  animation: ${float} 6s ease-in-out infinite;
+
+  &:before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent 60%);
+    animation: ${pulse} 5s ease-in-out infinite;
+  }
+
+  svg {
+    position: relative;
+    z-index: 1;
+  }
+`
+
+const HeroMetric = styled(Text)`
+  margin-top: auto;
+  font-weight: 600;
+  color: #fcd34d;
+`
+
+const SectionHeader = styled(Flex)`
+  flex-direction: column;
+  gap: 8px;
+`
+
+const SectionSubtitle = styled(Text)`
+  color: rgba(226, 232, 240, 0.72);
+  max-width: 640px;
+`
+
+const NftScroller = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+
+  @media (min-width: 968px) {
+    grid-auto-columns: minmax(230px, 260px);
+  }
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, rgba(129, 140, 248, 0.65), rgba(45, 212, 191, 0.65));
+    border-radius: 999px;
+  }
+`
+
+const NftCard = styled(Box)<{ accent: string }>`
+  position: relative;
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.66);
+  border: 1px solid rgba(148, 163, 255, 0.18);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 38px rgba(30, 64, 175, 0.45);
+  scroll-snap-align: start;
+  min-height: 220px;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+
+  &:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: ${({ accent }) => accent};
+    opacity: 0.65;
+    filter: blur(36px);
+    z-index: 0;
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 52px rgba(56, 189, 248, 0.35);
+  }
+`
+
+const NftImagePlaceholder = styled(Box)`
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.75), rgba(45, 212, 191, 0.75));
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 26px rgba(56, 189, 248, 0.35);
+
+  &:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.65), transparent 60%);
+    opacity: 0.55;
+  }
+`
+
+const UtilityTag = styled(Text)`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(56, 189, 248, 0.2));
+  color: #67e8f9;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+`
+
+const CardInner = styled(Flex)`
+  position: relative;
+  z-index: 1;
+  flex-direction: column;
+  height: 100%;
+`
+
+const GameGrid = styled.div`
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+`
+
+const GameCard = styled(Box)<{ gradient: string; glow: string }>`
+  position: relative;
+  padding: 24px;
+  border-radius: 24px;
+  background: ${({ gradient }) => gradient};
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+  min-height: 200px;
+  box-shadow: 0 24px 46px rgba(14, 165, 233, 0.35);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+
+  &:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: ${({ glow }) => glow};
+    opacity: 0.8;
+    filter: blur(32px);
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.24), transparent 55%);
+    mix-blend-mode: screen;
+    opacity: 0.7;
+  }
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 32px 60px rgba(59, 130, 246, 0.45);
+  }
+`
+
+const GameLabel = styled(Text)`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.25);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+`
+
+const GameCardContent = styled(Flex)`
+  position: relative;
+  z-index: 1;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+`
+
+const MintIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M16 4L6 8.5V14C6 20.4 10.4 26.3 16 28C21.6 26.3 26 20.4 26 14V8.5L16 4Z"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.9"
+    />
+    <path
+      d="M16 11V19"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 15H20"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+const ClaimIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M8 12L16 6L24 12V22C24 23.1046 23.1046 24 22 24H10C8.89543 24 8 23.1046 8 22V12Z"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.9"
+    />
+    <path
+      d="M12 16L15 19L20 14"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+const StakeIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M8 18C8 13.5817 11.5817 10 16 10C20.4183 10 24 13.5817 24 18"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.9"
+    />
+    <path
+      d="M10 18H22"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 22H20"
+      stroke="white"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCount, claimableCount, walletNfts }) => {
+  const { t } = useTranslation()
+
+  const heroCards = useMemo<HeroCardConfig[]>(
+    () => [
+      {
+        key: 'mint',
+        badge: t('Mint Card'),
+        title: t('Gateway to Web3'),
+        description: t('Mint your KEY NFT to unlock quests, airdrops, and the CoinCollect multiverse.'),
+        metric:
+          totalNfts > 0
+            ? t('%count% collectible(s) discovered', { count: totalNfts })
+            : t('Mint your first KEY and begin the journey.'),
+        gradient: 'linear-gradient(145deg, rgba(122, 32, 224, 0.85), rgba(16, 47, 94, 0.8))',
+        iconGradient: 'linear-gradient(145deg, rgba(129, 140, 248, 0.85), rgba(34, 211, 238, 0.9))',
+        icon: <MintIcon />,
+      },
+      {
+        key: 'claim',
+        badge: t('Claim Card'),
+        title: t('Stream Your Rewards'),
+        description: t('Claim token flows, partner drops, and daily boosts powered by your NFTs.'),
+        metric:
+          claimableCount > 0
+            ? t('%count% reward pool(s) ready to claim', { count: claimableCount })
+            : t('Connect eligible NFTs to reveal claimable rewards.'),
+        gradient: 'linear-gradient(145deg, rgba(20, 83, 136, 0.9), rgba(59, 130, 246, 0.68))',
+        iconGradient: 'linear-gradient(145deg, rgba(45, 212, 191, 0.85), rgba(125, 211, 252, 0.85))',
+        icon: <ClaimIcon />,
+      },
+      {
+        key: 'stake',
+        badge: t('Stake Card'),
+        title: t('Amplify Your Earnings'),
+        description: t('Stake into futuristic pools, grow passive rewards, and level up your dashboard.'),
+        metric:
+          stakedPoolCount > 0
+            ? t('Staking in %count% pool(s)', { count: stakedPoolCount })
+            : t('Stake NFTs to activate passive Collect earnings.'),
+        gradient: 'linear-gradient(145deg, rgba(17, 94, 89, 0.9), rgba(22, 163, 74, 0.65))',
+        iconGradient: 'linear-gradient(145deg, rgba(74, 222, 128, 0.85), rgba(45, 212, 191, 0.85))',
+        icon: <StakeIcon />,
+      },
+    ],
+    [t, totalNfts, claimableCount, stakedPoolCount],
+  )
+
+  const nftPreviewItems = useMemo<NftPreview[]>(() => {
+    if (walletNfts.length > 0) {
+      const showcase = walletNfts.slice(0, 6).map((nft, index) => {
+        const isClaimCard = index % 2 === 0
+        const status = isClaimCard ? t('Claim Rewards Ready') : t('Stakeable Utility')
+        const utility = isClaimCard
+          ? t('Eligible for seasonal drops and reward streams.')
+          : t('Boost APR in featured staking pools.')
+
+        let accent = 'linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(45, 212, 191, 0.45))'
+        if (nft.location === NftLocation.FORSALE) {
+          accent = 'linear-gradient(135deg, rgba(244, 114, 182, 0.6), rgba(147, 51, 234, 0.45))'
+        } else if (nft.location === NftLocation.PROFILE) {
+          accent = 'linear-gradient(135deg, rgba(56, 189, 248, 0.6), rgba(129, 140, 248, 0.45))'
+        }
+
+        return {
+          key: `${nft.collectionAddress}-${nft.tokenId}`,
+          name: nft.name || t('Collectible #%id%', { id: nft.tokenId }),
+          utility,
+          status,
+          accent,
+          collection: nft.collectionName,
+        }
+      })
+
+      if (showcase.length >= 4) {
+        return showcase
+      }
+
+      return [
+        ...showcase,
+        ...Array.from({ length: 4 - showcase.length }).map((_, fillerIndex) => ({
+          key: `placeholder-${fillerIndex}`,
+          name: t('Mystery NFT'),
+          utility: t('Preview coming soon'),
+          status: t('Connect more wallets to display.'),
+          accent: 'linear-gradient(135deg, rgba(129, 140, 248, 0.6), rgba(236, 72, 153, 0.45))',
+        })),
+      ]
+    }
+
+    return [
+      {
+        key: 'placeholder-1',
+        name: t('Genesis Key NFT'),
+        utility: t('Claim OG rewards and unlock partner drops.'),
+        status: t('Claim Rewards Ready'),
+        accent: 'linear-gradient(135deg, rgba(129, 140, 248, 0.6), rgba(45, 212, 191, 0.45))',
+      },
+      {
+        key: 'placeholder-2',
+        name: t('Vault Guardian NFT'),
+        utility: t('Stake into cosmic pools for boosted APR.'),
+        status: t('Stakeable Utility'),
+        accent: 'linear-gradient(135deg, rgba(56, 189, 248, 0.6), rgba(59, 130, 246, 0.45))',
+      },
+      {
+        key: 'placeholder-3',
+        name: t('Metaverse Avatar'),
+        utility: t('Unlocks access to partner experiences.'),
+        status: t('Utility Highlight'),
+        accent: 'linear-gradient(135deg, rgba(147, 51, 234, 0.6), rgba(236, 72, 153, 0.45))',
+      },
+      {
+        key: 'placeholder-4',
+        name: t('Loot Hunter NFT'),
+        utility: t('Bridge rewards directly into your wallet.'),
+        status: t('Claim Rewards Ready'),
+        accent: 'linear-gradient(135deg, rgba(250, 204, 21, 0.6), rgba(59, 130, 246, 0.45))',
+      },
+    ]
+  }, [walletNfts, t])
+
+  const gameCards = useMemo<GameCardConfig[]>(
+    () => [
+      {
+        key: 'key',
+        title: t('KEY NFT'),
+        description: t('Unlock portals, decrypt puzzles, and access multi-chain missions.'),
+        gradient: 'linear-gradient(145deg, rgba(34, 197, 94, 0.42), rgba(45, 212, 191, 0.35))',
+        glow: 'radial-gradient(circle, rgba(45, 212, 191, 0.55), transparent 70%)',
+      },
+      {
+        key: 'lootbox',
+        title: t('Lootbox NFT'),
+        description: t('Spin into randomized power-ups and seasonal tournament boosts.'),
+        gradient: 'linear-gradient(145deg, rgba(129, 140, 248, 0.45), rgba(236, 72, 153, 0.4))',
+        glow: 'radial-gradient(circle, rgba(236, 72, 153, 0.55), transparent 70%)',
+      },
+      {
+        key: 'cyberpunk',
+        title: t('Cyberpunk NFT'),
+        description: t('Deploy in arcade battles with neon shields and adaptive traits.'),
+        gradient: 'linear-gradient(145deg, rgba(59, 130, 246, 0.45), rgba(14, 116, 144, 0.4))',
+        glow: 'radial-gradient(circle, rgba(59, 130, 246, 0.55), transparent 70%)',
+      },
+    ],
+    [t],
+  )
+
+  return (
+    <Wrapper>
+      <HeroGrid>
+        {heroCards.map((card) => (
+          <HeroCard key={card.key} gradient={card.gradient}>
+            <CardContent>
+              <HeroBadge>{card.badge}</HeroBadge>
+              <HeroIcon gradient={card.iconGradient}>{card.icon}</HeroIcon>
+              <Heading scale="lg" color="white" mb="12px">
+                {card.title}
+              </Heading>
+              <Text color="rgba(226, 232, 240, 0.85)" mb="18px">
+                {card.description}
+              </Text>
+              <HeroMetric>{card.metric}</HeroMetric>
+            </CardContent>
+          </HeroCard>
+        ))}
+      </HeroGrid>
+
+      <Box>
+        <SectionHeader>
+          <Heading scale="lg" color="white">
+            {t('Owned NFTs Spotlight')}
+          </Heading>
+          <SectionSubtitle>
+            {t('Showcasing NFTs across your wallets with quick-glance utility tags for claiming rewards or staking into pools.')}
+          </SectionSubtitle>
+        </SectionHeader>
+        <Box mt="24px">
+          <NftScroller>
+            {nftPreviewItems.map((item) => (
+              <NftCard key={item.key} accent={item.accent}>
+                <CardInner>
+                  <NftImagePlaceholder />
+                  <UtilityTag>{item.status}</UtilityTag>
+                  <Heading scale="md" color="white">
+                    {item.name}
+                  </Heading>
+                  <Text mt="8px" color="rgba(226, 232, 240, 0.78)">
+                    {item.utility}
+                  </Text>
+                  {item.collection && (
+                    <Text mt="12px" fontSize="12px" color="rgba(148, 163, 255, 0.88)">
+                      {t('Collection: %name%', { name: item.collection })}
+                    </Text>
+                  )}
+                </CardInner>
+              </NftCard>
+            ))}
+          </NftScroller>
+        </Box>
+      </Box>
+
+      <Box>
+        <SectionHeader>
+          <Heading scale="lg" color="white">
+            {t('Playable Game NFTs')}
+          </Heading>
+          <SectionSubtitle>
+            {t('Special NFTs radiating with game-ready energy. Slot them into CoinCollect mini-games and seasonal quests.')}
+          </SectionSubtitle>
+        </SectionHeader>
+        <Box mt="24px">
+          <GameGrid>
+            {gameCards.map((card) => (
+              <GameCard key={card.key} gradient={card.gradient} glow={card.glow}>
+                <GameCardContent>
+                  <GameLabel>{t('Playable in Games')}</GameLabel>
+                  <Heading scale="md" color="white">
+                    {card.title}
+                  </Heading>
+                  <Text color="rgba(226, 232, 240, 0.82)">{card.description}</Text>
+                </GameCardContent>
+              </GameCard>
+            ))}
+          </GameGrid>
+        </Box>
+      </Box>
+    </Wrapper>
+  )
+}
+
+export default OnboardingHero

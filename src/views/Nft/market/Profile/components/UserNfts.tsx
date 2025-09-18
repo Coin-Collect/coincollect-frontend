@@ -26,6 +26,7 @@ import { groupNftsByCollection, INITIAL_COLLECTION_BATCH, CollectionGroup } from
 import { useClaimInfo } from 'views/Claim/hooks/useClaimInfo'
 import claimConfig from 'config/constants/claim'
 import ClaimCard from 'views/Claim/components/ClaimCard'
+import OnboardingHero from './OnboardingHero'
 
 const REWARD_TOKEN_DECIMALS = new BigNumber(10).pow(18)
 
@@ -241,6 +242,12 @@ const UserNfts: React.FC<UserNftsProps> = ({
 
   return (
     <>
+      <OnboardingHero
+        totalNfts={walletNfts.length}
+        stakedPoolCount={poolCount}
+        claimableCount={claimableClaims.length}
+        walletNfts={walletNfts}
+      />
       <Flex mb="24px" justifyContent="center">
         <ButtonMenu
           scale="sm"
