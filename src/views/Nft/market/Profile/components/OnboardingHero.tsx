@@ -262,26 +262,21 @@ const SectionSubtitle = styled(Text)`
   max-width: 640px;
 `
 
-const NftScroller = styled.div`
+const SpotlightGrid = styled.div`
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(260px, 1fr);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 20px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scroll-snap-type: x mandatory;
 
-  @media (min-width: 968px) {
-    grid-auto-columns: minmax(260px, 300px);
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  &::-webkit-scrollbar {
-    height: 6px;
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  &::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, rgba(129, 140, 248, 0.65), rgba(45, 212, 191, 0.65));
-    border-radius: 999px;
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 `
 
@@ -781,7 +776,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
 
       <Box>
         <SectionHeader>
-          <Heading scale="lg" color="white">
+          <Heading scale="lg" color="text">
             {t('Owned NFTs Spotlight')}
           </Heading>
           <SectionSubtitle>
@@ -789,8 +784,8 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
           </SectionSubtitle>
         </SectionHeader>
         <Box mt="24px">
-          <NftScroller>
-            {nftPreviewItems.map((item) => {
+          <SpotlightGrid>
+            {nftPreviewItems.slice(0, 4).map((item) => {
               const statusCta = statusButtonMap[item.status]
               const defaultCta = {
                 path: '/nfts/collections',
@@ -844,13 +839,13 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
                 </SpotlightCard>
               )
             })}
-          </NftScroller>
+          </SpotlightGrid>
         </Box>
       </Box>
 
       <Box>
         <SectionHeader>
-          <Heading scale="lg" color="white">
+          <Heading scale="lg" color="text">
             {t('Playable Game NFTs')}
           </Heading>
           <SectionSubtitle>
