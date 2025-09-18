@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import {
   Box,
@@ -20,6 +20,7 @@ import GridPlaceholder from '../../components/GridPlaceholder'
 import ProfileNftModal from '../../components/ProfileNftModal'
 import NoNftsImage from '../../components/Activity/NoNftsImage'
 import SellModal from '../../components/BuySellModals/SellModal'
+import { groupNftsByCollection, INITIAL_COLLECTION_BATCH, CollectionGroup } from '../utils/groupNftsByCollection'
 
 interface ProfileNftProps {
   nft: NftToken | null
@@ -79,9 +80,53 @@ const UserNfts: React.FC<UserNftsProps> = ({
   )
   const { t } = useTranslation()
 
-  const walletHasNfts = walletNfts.length > 0
-  const walletIsEmpty = walletNfts.length === 0 && !isWalletLoading
+  const groupedWalletCollections = useMemo<CollectionGroup[]>(
+    () => groupNftsByCollection(walletNfts),
+    [walletNfts],
+  )
+
+  const walletHasNfts = groupedWalletCollections.length > 0
+  const walletIsEmpty = !walletHasNfts && !isWalletLoading
   const poolCount = stakedFarms.length
+
+  const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    setVisibleCounts((prev) => {
+      const next: Record<string, number> = {}
+
+      groupedWalletCollections.forEach((group) => {
+        const current = prev[group.key]
+        const defaultCount = Math.min(group.nfts.length, INITIAL_COLLECTION_BATCH)
+        next[group.key] = Math.min(group.nfts.length, current ?? defaultCount)
+      })
+
+      return next
+    })
+  }, [groupedWalletCollections])
+
+  const handleCollectionLoadMore = useCallback(
+    (collectionKey: string) => {
+      setVisibleCounts((prev) => {
+        const group = groupedWalletCollections.find((item) => item.key === collectionKey)
+        if (!group) {
+          return prev
+        }
+
+        const current = prev[collectionKey] ?? Math.min(group.nfts.length, INITIAL_COLLECTION_BATCH)
+        const nextCount = Math.min(group.nfts.length, current + INITIAL_COLLECTION_BATCH)
+
+        if (nextCount === current) {
+          return prev
+        }
+
+        return { ...prev, [collectionKey]: nextCount }
+      })
+
+      onRefreshWallet()
+    },
+    [groupedWalletCollections, onRefreshWallet],
+  )
 
   const stakedSummaryText = useMemo(() => {
     if (poolCount === 0) {
@@ -154,30 +199,58 @@ const UserNfts: React.FC<UserNftsProps> = ({
             </Text>
           </Flex>
         ) : walletHasNfts ? (
-          <Grid
-            gridGap="16px"
-            gridTemplateColumns={['1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)', null, 'repeat(4, 1fr)']}
-            alignItems="start"
-          >
-            {walletNfts.map((nft) => {
-              const { marketData, location } = nft
+          groupedWalletCollections.map((group) => {
+            const groupName = group.collectionName ?? t('Unknown collection')
+            const visibleCount = visibleCounts[group.key] ?? Math.min(group.nfts.length, INITIAL_COLLECTION_BATCH)
+            const displayedNfts = group.nfts.slice(0, visibleCount)
+            const hasMore = visibleCount < group.nfts.length
 
-              return (
-                <CollectibleActionCard
-                  isUserNft
-                  onClick={() => handleCollectibleClick(nft, location)}
-                  key={`${nft.tokenId}-${nft.name}`}
-                  nft={nft}
-                  currentAskPrice={
-                    marketData?.currentAskPrice &&
-                    marketData?.isTradable &&
-                    parseFloat(marketData.currentAskPrice)
-                  }
-                  nftLocation={location}
-                />
-              )
-            })}
-          </Grid>
+            if (displayedNfts.length === 0) {
+              return null
+            }
+
+            return (
+              <Box key={group.key} mb="32px">
+                <Flex justifyContent="space-between" alignItems="center" mb="16px">
+                  <Heading scale="md">{groupName}</Heading>
+                  <Text color="textSubtle">
+                    {t('%count% NFT(s)', { count: group.nfts.length })}
+                  </Text>
+                </Flex>
+                <Grid
+                  gridGap="16px"
+                  gridTemplateColumns={['1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)', null, 'repeat(4, 1fr)']}
+                  alignItems="start"
+                >
+                  {displayedNfts.map((nft) => {
+                    const { marketData, location } = nft
+
+                    return (
+                      <CollectibleActionCard
+                        isUserNft
+                        onClick={() => handleCollectibleClick(nft, location)}
+                        key={`${group.key}-${nft.tokenId}`}
+                        nft={nft}
+                        currentAskPrice={
+                          marketData?.currentAskPrice &&
+                          marketData?.isTradable &&
+                          parseFloat(marketData.currentAskPrice)
+                        }
+                        nftLocation={location}
+                      />
+                    )
+                  })}
+                </Grid>
+                {hasMore && (
+                  <Flex justifyContent="center" mt="16px">
+                    <Button scale="sm" variant="secondary" onClick={() => handleCollectionLoadMore(group.key)}>
+                      {t('Load more')}
+                    </Button>
+                  </Flex>
+                )}
+              </Box>
+            )
+          })
         ) : (
           <GridPlaceholder />
         )}
