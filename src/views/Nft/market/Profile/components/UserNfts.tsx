@@ -23,6 +23,11 @@ import ProfileNftModal from '../../components/ProfileNftModal'
 import NoNftsImage from '../../components/Activity/NoNftsImage'
 import SellModal from '../../components/BuySellModals/SellModal'
 import { groupNftsByCollection, INITIAL_COLLECTION_BATCH, CollectionGroup } from '../utils/groupNftsByCollection'
+import { useClaimInfo } from 'views/Claim/hooks/useClaimInfo'
+import claimConfig from 'config/constants/claim'
+import ClaimCard from 'views/Claim/components/ClaimCard'
+
+const REWARD_TOKEN_DECIMALS = new BigNumber(10).pow(18)
 
 interface ProfileNftProps {
   nft: NftToken | null
@@ -51,6 +56,7 @@ enum NftFilter {
   ALL = 0,
   UNSTAKED = 1,
   STAKED = 2,
+  CLAIM = 3,
 }
 
 const getDisplayApr = (apr?: number | null) => {
@@ -100,6 +106,46 @@ const UserNfts: React.FC<UserNftsProps> = ({
   const [activeFilter, setActiveFilter] = useState<NftFilter>(NftFilter.ALL)
   const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({})
 
+  const claimInfo = useClaimInfo()
+
+  const claimableClaims = useMemo(() => {
+    if (!claimInfo?.data) {
+      return []
+    }
+
+    return claimInfo.data
+      .map((claimDetail, index) => ({
+        index,
+        config: claimConfig[index],
+        detail: claimDetail,
+      }))
+      .filter(({ config, detail }) => {
+        if (!config || !detail) {
+          return false
+        }
+
+        if (config.isFinished) {
+          return false
+        }
+
+        if ((detail.remainingClaims ?? 0) <= 0) {
+          return false
+        }
+
+        if ((detail.userWeight ?? 0) === 0) {
+          return false
+        }
+
+        const requiredReward = new BigNumber(config.baseAmount ?? 0)
+          .times(detail.userWeight ?? 1)
+          .times(REWARD_TOKEN_DECIMALS)
+
+        const rewardBalance = new BigNumber(detail.rewardBalance ?? 0)
+
+        return rewardBalance.gte(requiredReward)
+      })
+  }, [claimInfo?.data])
+
   useEffect(() => {
     setVisibleCounts((prev) => {
       const next: Record<string, number> = {}
@@ -139,6 +185,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
 
   const showUnstaked = activeFilter === NftFilter.ALL || activeFilter === NftFilter.UNSTAKED
   const showStaked = activeFilter === NftFilter.ALL || activeFilter === NftFilter.STAKED
+  const showClaimRewards = activeFilter === NftFilter.ALL || activeFilter === NftFilter.CLAIM
 
   const stakedSummaryText = useMemo(() => {
     if (poolCount === 0) {
@@ -204,6 +251,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
           <ButtonMenuItem>{t('All')}</ButtonMenuItem>
           <ButtonMenuItem>{t('Unstaked NFTs')}</ButtonMenuItem>
           <ButtonMenuItem>{t('Staked Pools')}</ButtonMenuItem>
+          <ButtonMenuItem>{t('Claim Rewards')}</ButtonMenuItem>
         </ButtonMenu>
       </Flex>
 
@@ -321,6 +369,50 @@ const UserNfts: React.FC<UserNftsProps> = ({
               </Text>
               <Button as="a" href="/nftpools" mt="16px" variant="primary">
                 {t('Explore NFT Pools')}
+              </Button>
+            </Flex>
+          )}
+        </Box>
+      )}
+
+      {showClaimRewards && (
+        <Box mt="48px">
+          <Flex flexDirection="column" mb="16px">
+            <Heading scale="lg">{t('Claim Reward Pools')}</Heading>
+            <Text mt="8px" color="textSubtle">
+              {t('Check active reward pools and claim any available token distributions tied to your NFTs.')}
+            </Text>
+          </Flex>
+          {claimInfo.isLoading ? (
+            <Flex py="40px" flexDirection="column" alignItems="center">
+              <Spinner size={56} color="primary" />
+              <Text mt="16px" color="textSubtle">
+                {t('Fetching your claimable rewards...')}
+              </Text>
+            </Flex>
+          ) : claimableClaims.length > 0 ? (
+            <FlexLayout>
+              {claimableClaims.map(({ index, config }) => (
+                <ClaimCard
+                  key={`${config.cid ?? 'claim'}-${index}`}
+                  claimId={index}
+                  claim={config}
+                  claimData={claimInfo}
+                  account={account}
+                />
+              ))}
+            </FlexLayout>
+          ) : (
+            <Flex p="24px" flexDirection="column" alignItems="center" textAlign="center">
+              <NoNftsImage />
+              <Text pt="8px" bold>
+                {t('No claimable rewards at the moment')}
+              </Text>
+              <Text mt="8px" color="textSubtle" maxWidth="360px">
+                {t('Keep an eye on new campaigns or visit the Claim page to explore upcoming reward pools.')}
+              </Text>
+              <Button as="a" href="/claim" mt="16px" variant="primary">
+                {t('Go to Claim Page')}
               </Button>
             </Flex>
           )}
