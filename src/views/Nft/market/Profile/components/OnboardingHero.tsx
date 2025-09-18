@@ -342,6 +342,37 @@ const UtilityTag = styled(Text)`
   margin-bottom: 12px;
 `
 
+const UtilityButton = styled(Button).attrs({ type: 'button', scale: 'sm' })<{ $background: string; $hover: string }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background-image: ${({ $background }) => $background};
+  background-size: 120% 120%;
+  background-position: 0 0;
+  border: none;
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.28);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-position 0.25s ease;
+
+  &:hover {
+    background-image: ${({ $hover }) => $hover};
+    background-position: 100% 0;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+  }
+`
+
 const CardInner = styled(Flex)`
   position: relative;
   z-index: 1;
@@ -627,6 +658,22 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
     ]
   }, [walletNfts, t])
 
+  const statusButtonMap = useMemo<Record<string, { path: string; gradient: string; hover: string }>>(
+    () => ({
+      [t('Claim Rewards Ready')]: {
+        path: '/claim',
+        gradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(37, 99, 235, 0.85))',
+        hover: 'linear-gradient(135deg, rgba(125, 211, 252, 1), rgba(59, 130, 246, 0.95))',
+      },
+      [t('Stakeable Utility')]: {
+        path: '/nftpools',
+        gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.9), rgba(34, 197, 94, 0.85))',
+        hover: 'linear-gradient(135deg, rgba(134, 239, 172, 1), rgba(52, 211, 153, 0.95))',
+      },
+    }),
+    [t],
+  )
+
   const gameCards = useMemo<GameCardConfig[]>(
     () => [
       {
@@ -696,25 +743,38 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         </SectionHeader>
         <Box mt="24px">
           <NftScroller>
-            {nftPreviewItems.map((item) => (
-              <NftCard key={item.key} accent={item.accent}>
-                <CardInner>
-                  <NftImagePlaceholder />
-                  <UtilityTag>{item.status}</UtilityTag>
-                  <Heading scale="md" color="white">
-                    {item.name}
-                  </Heading>
-                  <Text mt="8px" color="rgba(226, 232, 240, 0.78)">
-                    {item.utility}
-                  </Text>
-                  {item.collection && (
-                    <Text mt="12px" fontSize="12px" color="rgba(148, 163, 255, 0.88)">
-                      {t('Collection: %name%', { name: item.collection })}
+            {nftPreviewItems.map((item) => {
+              const statusCta = statusButtonMap[item.status]
+              return (
+                <NftCard key={item.key} accent={item.accent}>
+                  <CardInner>
+                    <NftImagePlaceholder />
+                    {statusCta ? (
+                      <UtilityButton
+                        $background={statusCta.gradient}
+                        $hover={statusCta.hover}
+                        onClick={() => router.push(statusCta.path)}
+                      >
+                        {item.status}
+                      </UtilityButton>
+                    ) : (
+                      <UtilityTag>{item.status}</UtilityTag>
+                    )}
+                    <Heading scale="md" color="white">
+                      {item.name}
+                    </Heading>
+                    <Text mt="8px" color="rgba(226, 232, 240, 0.78)">
+                      {item.utility}
                     </Text>
-                  )}
-                </CardInner>
-              </NftCard>
-            ))}
+                    {item.collection && (
+                      <Text mt="12px" fontSize="12px" color="rgba(148, 163, 255, 0.88)">
+                        {t('Collection: %name%', { name: item.collection })}
+                      </Text>
+                    )}
+                  </CardInner>
+                </NftCard>
+              )
+            })}
           </NftScroller>
         </Box>
       </Box>
