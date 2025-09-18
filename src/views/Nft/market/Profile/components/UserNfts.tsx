@@ -3,6 +3,8 @@ import BigNumber from 'bignumber.js'
 import {
   Box,
   Button,
+  ButtonMenu,
+  ButtonMenuItem,
   Flex,
   Grid,
   Heading,
@@ -43,6 +45,12 @@ interface UserNftsProps {
   onRefreshWallet: () => void
   onSuccessSale: () => void
   onSuccessEditProfile: () => void
+}
+
+enum NftFilter {
+  ALL = 0,
+  UNSTAKED = 1,
+  STAKED = 2,
 }
 
 const getDisplayApr = (apr?: number | null) => {
@@ -89,6 +97,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
   const walletIsEmpty = !walletHasNfts && !isWalletLoading
   const poolCount = stakedFarms.length
 
+  const [activeFilter, setActiveFilter] = useState<NftFilter>(NftFilter.ALL)
   const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({})
 
   useEffect(() => {
@@ -127,6 +136,9 @@ const UserNfts: React.FC<UserNftsProps> = ({
     },
     [groupedWalletCollections, onRefreshWallet],
   )
+
+  const showUnstaked = activeFilter === NftFilter.ALL || activeFilter === NftFilter.UNSTAKED
+  const showStaked = activeFilter === NftFilter.ALL || activeFilter === NftFilter.STAKED
 
   const stakedSummaryText = useMemo(() => {
     if (poolCount === 0) {
@@ -182,121 +194,138 @@ const UserNfts: React.FC<UserNftsProps> = ({
 
   return (
     <>
-      <Box mb="48px">
-        <Flex flexDirection="column" mb="16px">
-          <Heading scale="lg">{t('Unstaked NFTs')}</Heading>
-          <Text mt="8px" color="textSubtle">
-            {walletHasNfts
-              ? t('These NFTs remain in your wallet and are ready to stake or list.')
-              : t('Bring your NFTs here to see them ready for action.')}
-          </Text>
-        </Flex>
-        {walletIsEmpty ? (
-          <Flex p="24px" flexDirection="column" alignItems="center">
-            <NoNftsImage />
-            <Text pt="8px" bold>
-              {t('No unstaked NFTs found')}
+      <Flex mb="24px" justifyContent="center">
+        <ButtonMenu
+          scale="sm"
+          variant="subtle"
+          activeIndex={activeFilter}
+          onItemClick={(index) => setActiveFilter(index as NftFilter)}
+        >
+          <ButtonMenuItem>{t('All')}</ButtonMenuItem>
+          <ButtonMenuItem>{t('Unstaked NFTs')}</ButtonMenuItem>
+          <ButtonMenuItem>{t('Staked Pools')}</ButtonMenuItem>
+        </ButtonMenu>
+      </Flex>
+
+      {showUnstaked && (
+        <Box mb="48px">
+          <Flex flexDirection="column" mb="16px">
+            <Heading scale="lg">{t('Unstaked NFTs')}</Heading>
+            <Text mt="8px" color="textSubtle">
+              {walletHasNfts
+                ? t('These NFTs remain in your wallet and are ready to stake or list.')
+                : t('Bring your NFTs here to see them ready for action.')}
             </Text>
           </Flex>
-        ) : walletHasNfts ? (
-          groupedWalletCollections.map((group) => {
-            const groupName = group.collectionName ?? t('Unknown collection')
-            const visibleCount = visibleCounts[group.key] ?? Math.min(group.nfts.length, INITIAL_COLLECTION_BATCH)
-            const displayedNfts = group.nfts.slice(0, visibleCount)
-            const hasMore = visibleCount < group.nfts.length
+          {walletIsEmpty ? (
+            <Flex p="24px" flexDirection="column" alignItems="center">
+              <NoNftsImage />
+              <Text pt="8px" bold>
+                {t('No unstaked NFTs found')}
+              </Text>
+            </Flex>
+          ) : walletHasNfts ? (
+            groupedWalletCollections.map((group) => {
+              const groupName = group.collectionName ?? t('Unknown collection')
+              const visibleCount = visibleCounts[group.key] ?? Math.min(group.nfts.length, INITIAL_COLLECTION_BATCH)
+              const displayedNfts = group.nfts.slice(0, visibleCount)
+              const hasMore = visibleCount < group.nfts.length
 
-            if (displayedNfts.length === 0) {
-              return null
-            }
+              if (displayedNfts.length === 0) {
+                return null
+              }
 
-            return (
-              <Box key={group.key} mb="32px">
-                <Flex justifyContent="space-between" alignItems="center" mb="16px">
-                  <Heading scale="md">{groupName}</Heading>
-                  <Text color="textSubtle">
-                    {t('%count% NFT(s)', { count: group.nfts.length })}
-                  </Text>
-                </Flex>
-                <Grid
-                  gridGap="16px"
-                  gridTemplateColumns={['1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)', null, 'repeat(4, 1fr)']}
-                  alignItems="start"
-                >
-                  {displayedNfts.map((nft) => {
-                    const { marketData, location } = nft
-
-                    return (
-                      <CollectibleActionCard
-                        isUserNft
-                        onClick={() => handleCollectibleClick(nft, location)}
-                        key={`${group.key}-${nft.tokenId}`}
-                        nft={nft}
-                        currentAskPrice={
-                          marketData?.currentAskPrice &&
-                          marketData?.isTradable &&
-                          parseFloat(marketData.currentAskPrice)
-                        }
-                        nftLocation={location}
-                      />
-                    )
-                  })}
-                </Grid>
-                {hasMore && (
-                  <Flex justifyContent="center" mt="16px">
-                    <Button scale="sm" variant="secondary" onClick={() => handleCollectionLoadMore(group.key)}>
-                      {t('Load more')}
-                    </Button>
+              return (
+                <Box key={group.key} mb="32px">
+                  <Flex justifyContent="space-between" alignItems="center" mb="16px">
+                    <Heading scale="md">{groupName}</Heading>
+                    <Text color="textSubtle">
+                      {t('%count% NFT(s)', { count: group.nfts.length })}
+                    </Text>
                   </Flex>
-                )}
-              </Box>
-            )
-          })
-        ) : (
-          <GridPlaceholder />
-        )}
-      </Box>
+                  <Grid
+                    gridGap="16px"
+                    gridTemplateColumns={['1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)', null, 'repeat(4, 1fr)']}
+                    alignItems="start"
+                  >
+                    {displayedNfts.map((nft) => {
+                      const { marketData, location } = nft
 
-      <Box>
-        <Flex flexDirection="column" mb="16px">
-          <Heading scale="lg">{t('Staked NFT Pools')}</Heading>
-          <Text mt="8px" color="textSubtle">
-            {stakedSummaryText}
-          </Text>
-        </Flex>
-        {isStakedLoading ? (
-          <Flex py="40px" flexDirection="column" alignItems="center">
-            <Spinner size={56} color="primary" />
-            <Text mt="16px" color="textSubtle">
-              {t('Loading your NFT pools...')}
+                      return (
+                        <CollectibleActionCard
+                          isUserNft
+                          onClick={() => handleCollectibleClick(nft, location)}
+                          key={`${group.key}-${nft.tokenId}`}
+                          nft={nft}
+                          currentAskPrice={
+                            marketData?.currentAskPrice &&
+                            marketData?.isTradable &&
+                            parseFloat(marketData.currentAskPrice)
+                          }
+                          nftLocation={location}
+                        />
+                      )
+                    })}
+                  </Grid>
+                  {hasMore && (
+                    <Flex justifyContent="center" mt="16px">
+                      <Button scale="sm" variant="secondary" onClick={() => handleCollectionLoadMore(group.key)}>
+                        {t('Load more')}
+                      </Button>
+                    </Flex>
+                  )}
+                </Box>
+              )
+            })
+          ) : (
+            <GridPlaceholder />
+          )}
+        </Box>
+      )}
+
+      {showStaked && (
+        <Box>
+          <Flex flexDirection="column" mb="16px">
+            <Heading scale="lg">{t('Staked NFT Pools')}</Heading>
+            <Text mt="8px" color="textSubtle">
+              {stakedSummaryText}
             </Text>
           </Flex>
-        ) : stakedFarms.length > 0 ? (
-          <FlexLayout>
-            {stakedFarms.map((farm) => (
-              <FarmCard
-                key={farm.pid}
-                farm={farm}
-                displayApr={getDisplayApr(farm.apr)}
-                removed={farm.isFinished}
-                account={account}
-              />
-            ))}
-          </FlexLayout>
-        ) : (
-          <Flex p="24px" flexDirection="column" alignItems="center" textAlign="center">
-            <NoNftsImage />
-            <Text pt="8px" bold>
-              {t('You are not staking any NFTs yet')}
-            </Text>
-            <Text mt="8px" color="textSubtle" maxWidth="360px">
-              {t('Stake NFTs in a pool to start earning rewards and unlock exclusive perks.')}
-            </Text>
-            <Button as="a" href="/nftpools" mt="16px" variant="primary">
-              {t('Explore NFT Pools')}
-            </Button>
-          </Flex>
-        )}
-      </Box>
+          {isStakedLoading ? (
+            <Flex py="40px" flexDirection="column" alignItems="center">
+              <Spinner size={56} color="primary" />
+              <Text mt="16px" color="textSubtle">
+                {t('Loading your NFT pools...')}
+              </Text>
+            </Flex>
+          ) : stakedFarms.length > 0 ? (
+            <FlexLayout>
+              {stakedFarms.map((farm) => (
+                <FarmCard
+                  key={farm.pid}
+                  farm={farm}
+                  displayApr={getDisplayApr(farm.apr)}
+                  removed={farm.isFinished}
+                  account={account}
+                />
+              ))}
+            </FlexLayout>
+          ) : (
+            <Flex p="24px" flexDirection="column" alignItems="center" textAlign="center">
+              <NoNftsImage />
+              <Text pt="8px" bold>
+                {t('You are not staking any NFTs yet')}
+              </Text>
+              <Text mt="8px" color="textSubtle" maxWidth="360px">
+                {t('Stake NFTs in a pool to start earning rewards and unlock exclusive perks.')}
+              </Text>
+              <Button as="a" href="/nftpools" mt="16px" variant="primary">
+                {t('Explore NFT Pools')}
+              </Button>
+            </Flex>
+          )}
+        </Box>
+      )}
     </>
   )
 }

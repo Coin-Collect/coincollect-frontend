@@ -12,6 +12,7 @@ import StatBox, { StatBoxItem } from '../../components/StatBox'
 import MarketPageTitle from '../../components/MarketPageTitle'
 import EditProfileModal from './EditProfileModal'
 import AvatarImage from '../../components/BannerHeader/AvatarImage'
+import useUserStakedNftFarms from '../hooks/useUserStakedNftFarms'
 
 interface HeaderProps {
   accountPath: string
@@ -52,8 +53,12 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   profile = null
 
   const isConnectedAccount = account?.toLowerCase() === accountPath?.toLowerCase()
+  const { stakedFarms, isLoading: isStakedFarmsLoading } = useUserStakedNftFarms(isConnectedAccount)
+
   const numNftCollected = !isNftLoading ? (nftCollected ? formatNumber(nftCollected, 0, 0) : '-') : null
-  const numPoints = !isProfileLoading ? (profile?.points ? formatNumber(profile.points, 0, 0) : '-') : null
+  const numStakedPools = isConnectedAccount
+    ? (isStakedFarmsLoading ? null : formatNumber(stakedFarms.length, 0, 0))
+    : '-'
   const numAchievements = !isAchievementsLoading
     ? achievements?.length
       ? formatNumber(achievements.length, 0, 0)
@@ -176,9 +181,9 @@ const ProfileHeader: React.FC<HeaderProps> = ({
       <BannerHeader bannerImage={getBannerImage()} bannerAlt={t('User team banner')} avatar={getAvatar()} />
       <MarketPageTitle pb="48px" title={getTitle()} description={renderDescription()}>
         <StatBox>
-          <StatBoxItem title={t('NFT Collected')} stat={numNftCollected} />
-          <StatBoxItem title={t('Points')} stat={numPoints} />
-          <StatBoxItem title={t('Achievements')} stat={numAchievements} />
+          <StatBoxItem title={t('NFT Collected')} stat={numNftCollected ?? '-'} />
+          <StatBoxItem title={t('Pools')} stat={numStakedPools ?? '-'} />
+          <StatBoxItem title={t('Achievements')} stat={numAchievements ?? '-'} />
         </StatBox>
       </MarketPageTitle>
     </>
