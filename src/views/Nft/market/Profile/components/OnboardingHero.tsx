@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Box, Button, Flex, Heading, Text } from '@pancakeswap/uikit'
+import { Box, Button, Flex, Heading, Text, Image } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { NftLocation, NftToken } from 'state/nftMarket/types'
 import { useRouter } from 'next/router'
@@ -27,6 +27,7 @@ type NftPreview = {
   status: string
   accent: string
   collection?: string
+  token?: NftToken
 }
 
 type GameCardConfig = {
@@ -310,15 +311,29 @@ const NftCard = styled(Box)<{ accent: string }>`
   }
 `
 
-const NftImagePlaceholder = styled(Box)`
+const NftImageWrapper = styled(Box)`
   width: 72px;
   height: 72px;
   border-radius: 20px;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.75), rgba(45, 212, 191, 0.75));
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.75), rgba(45, 212, 191, 0.65));
   box-shadow: 0 0 26px rgba(56, 189, 248, 0.35);
+
+  img,
+  video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    display: block;
+  }
+`
+
+const NftImageFallback = styled(Box)`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.75), rgba(45, 212, 191, 0.75));
 
   &:after {
     content: '';
@@ -607,6 +622,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
           status,
           accent,
           collection: nft.collectionName,
+          token: nft,
         }
       })
 
@@ -622,6 +638,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
           utility: t('Preview coming soon'),
           status: t('Connect more wallets to display.'),
           accent: 'linear-gradient(135deg, rgba(129, 140, 248, 0.6), rgba(236, 72, 153, 0.45))',
+          token: undefined,
         })),
       ]
     }
@@ -633,6 +650,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         utility: t('Claim OG rewards and unlock partner drops.'),
         status: t('Claim Rewards Ready'),
         accent: 'linear-gradient(135deg, rgba(129, 140, 248, 0.6), rgba(45, 212, 191, 0.45))',
+        token: undefined,
       },
       {
         key: 'placeholder-2',
@@ -640,6 +658,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         utility: t('Stake into cosmic pools for boosted APR.'),
         status: t('Stakeable Utility'),
         accent: 'linear-gradient(135deg, rgba(56, 189, 248, 0.6), rgba(59, 130, 246, 0.45))',
+        token: undefined,
       },
       {
         key: 'placeholder-3',
@@ -647,6 +666,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         utility: t('Unlocks access to partner experiences.'),
         status: t('Utility Highlight'),
         accent: 'linear-gradient(135deg, rgba(147, 51, 234, 0.6), rgba(236, 72, 153, 0.45))',
+        token: undefined,
       },
       {
         key: 'placeholder-4',
@@ -654,6 +674,7 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         utility: t('Bridge rewards directly into your wallet.'),
         status: t('Claim Rewards Ready'),
         accent: 'linear-gradient(135deg, rgba(250, 204, 21, 0.6), rgba(59, 130, 246, 0.45))',
+        token: undefined,
       },
     ]
   }, [walletNfts, t])
@@ -748,7 +769,20 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
               return (
                 <NftCard key={item.key} accent={item.accent}>
                   <CardInner>
-                    <NftImagePlaceholder />
+                    <NftImageWrapper>
+                      {item.token?.image ? (
+                        <Image
+                          src={item.token.image.gif || item.token.image.thumbnail || item.token.image.original}
+                          alt={item.name}
+                          width={72}
+                          height={72}
+                          loading="lazy"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <NftImageFallback />
+                      )}
+                    </NftImageWrapper>
                     {statusCta ? (
                       <UtilityButton
                         $background={statusCta.gradient}
