@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { isAddress } from 'utils'
 import { useAchievementsForAddress, useProfileForAddress } from 'state/profile/hooks'
@@ -11,6 +11,8 @@ import ProfileHeader from './components/ProfileHeader'
 import NoNftsImage from '../components/Activity/NoNftsImage'
 import useNftsForAddress from '../hooks/useNftsForAddress'
 import TabMenu from './components/TabMenu'
+import useWeb3React from 'hooks/useWeb3React'
+import { nftsBaseUrl } from '../constants'
 
 const TabMenuWrapper = styled(Box)`
   position: absolute;
@@ -25,10 +27,24 @@ const TabMenuWrapper = styled(Box)`
 `
 
 const NftProfile: FC = ({ children }) => {
-  const accountAddress = useRouter().query.accountAddress as string
+  const router = useRouter()
+  const accountAddress = router.query.accountAddress as string
+  const { account } = useWeb3React()
   const { t } = useTranslation()
 
   const invalidAddress = !accountAddress || isAddress(accountAddress) === false
+  const hasConnectedRef = useRef(false)
+
+  useEffect(() => {
+    if (account) {
+      hasConnectedRef.current = true
+      return
+    }
+
+    if (hasConnectedRef.current && !account) {
+      router.replace(nftsBaseUrl)
+    }
+  }, [account, router])
 
   const {
     profile,
