@@ -26,6 +26,7 @@ import { groupNftsByCollection, INITIAL_COLLECTION_BATCH, CollectionGroup } from
 import { useClaimInfo } from 'views/Claim/hooks/useClaimInfo'
 import claimConfig from 'config/constants/claim'
 import ClaimCard from 'views/Claim/components/ClaimCard'
+import OnboardingHero from './OnboardingHero'
 
 const REWARD_TOKEN_DECIMALS = new BigNumber(10).pow(18)
 
@@ -102,6 +103,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
   const walletHasNfts = groupedWalletCollections.length > 0
   const walletIsEmpty = !walletHasNfts && !isWalletLoading
   const poolCount = stakedFarms.length
+  const nftCount = walletNfts.length
 
   const [activeFilter, setActiveFilter] = useState<NftFilter>(NftFilter.ALL)
   const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({})
@@ -241,6 +243,12 @@ const UserNfts: React.FC<UserNftsProps> = ({
 
   return (
     <>
+      <OnboardingHero
+        totalNfts={walletNfts.length}
+        stakedPoolCount={poolCount}
+        claimableCount={claimableClaims.length}
+        walletNfts={walletNfts}
+      />
       <Flex mb="24px" justifyContent="center">
         <ButtonMenu
           scale="sm"
@@ -249,16 +257,16 @@ const UserNfts: React.FC<UserNftsProps> = ({
           onItemClick={(index) => setActiveFilter(index as NftFilter)}
         >
           <ButtonMenuItem>{t('All')}</ButtonMenuItem>
-          <ButtonMenuItem>{t('Unstaked NFTs')}</ButtonMenuItem>
-          <ButtonMenuItem>{t('Staked Pools')}</ButtonMenuItem>
-          <ButtonMenuItem>{t('Claim Rewards')}</ButtonMenuItem>
+          <ButtonMenuItem>{t('NFTs (%count%)', { count: nftCount })}</ButtonMenuItem>
+          <ButtonMenuItem>{t('Pools (%count%)', { count: poolCount })}</ButtonMenuItem>
+          <ButtonMenuItem>{t('Rewards (%count%)', { count: claimableClaims.length })}</ButtonMenuItem>
         </ButtonMenu>
       </Flex>
 
       {showUnstaked && (
         <Box mb="48px">
           <Flex flexDirection="column" mb="16px">
-            <Heading scale="lg">{t('Unstaked NFTs')}</Heading>
+            <Heading scale="lg">{t('NFTs (%count%)', { count: nftCount })}</Heading>
             <Text mt="8px" color="textSubtle">
               {walletHasNfts
                 ? t('These NFTs remain in your wallet and are ready to stake or list.')
@@ -334,7 +342,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
       {showStaked && (
         <Box>
           <Flex flexDirection="column" mb="16px">
-            <Heading scale="lg">{t('Staked NFT Pools')}</Heading>
+            <Heading scale="lg">{t('Pools (%count%)', { count: poolCount })}</Heading>
             <Text mt="8px" color="textSubtle">
               {stakedSummaryText}
             </Text>
@@ -378,7 +386,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
       {showClaimRewards && (
         <Box mt="48px">
           <Flex flexDirection="column" mb="16px">
-            <Heading scale="lg">{t('Claim Reward Pools')}</Heading>
+            <Heading scale="lg">{t('Rewards (%count%)', { count: claimableClaims.length })}</Heading>
             <Text mt="8px" color="textSubtle">
               {t('Check active reward pools and claim any available token distributions tied to your NFTs.')}
             </Text>

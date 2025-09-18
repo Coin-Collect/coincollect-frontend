@@ -72,24 +72,8 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   const isClaimInfoLoading = claimInfo?.isLoading
   const numClaimableRewards = isClaimInfoLoading ? null : formatNumber(claimableCount, 0, 0)
 
-  const avatarImage = profile?.nft?.image?.thumbnail || '/images/nfts/no-profile-md.png'
-
-  const getBannerImage = () => {
-    const imagePath = '/images/teams'
-    if (profile) {
-      switch (profile.teamId) {
-        case 1:
-          return `${imagePath}/storm-banner.png`
-        case 2:
-          return `${imagePath}/flippers-banner.png`
-        case 3:
-          return `${imagePath}/cakers-banner.png`
-        default:
-          break
-      }
-    }
-    return `${imagePath}/no-team-banner.png`
-  }
+  const avatarImage = profile?.nft?.image?.thumbnail || '/logo-video_transparent.webm'
+  const bannerMedia = '/dashboard.webm'
 
   const getAvatar = () => {
     const getImage = () => {
@@ -162,7 +146,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <BannerHeader bannerImage={getBannerImage()} bannerAlt={t('User team banner')} avatar={getAvatar()} />
+      <BannerHeader bannerImage={bannerMedia} bannerAlt={t('User dashboard banner')} avatar={getAvatar()} />
       <MarketPageTitle pb="48px" title={getTitle() || ''} description={renderDescription()} accountPath={accountPath}>
         <StatBox>
           <StatBoxItem title={t('NFT Collected')} stat={numNftCollected ?? '-'} />

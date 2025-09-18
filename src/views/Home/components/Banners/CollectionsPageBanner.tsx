@@ -1,5 +1,6 @@
 import { useTranslation } from 'contexts/Localization'
 import { Button, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
+import useWeb3React from 'hooks/useWeb3React'
 import {
   BackgroundGraphic,
   BannerActionContainer,
@@ -47,12 +48,16 @@ const StyledButtonLinkAction = styled(ButtonLinkAction)`
 export const CollectionsPageBanner = () => {
   const { t } = useTranslation()
   const { isMobile, isTablet } = useMatchBreakpoints()
+  const { account } = useWeb3React()
+
+  const primaryCtaPath = account ? '/nfts/profile' : '/nftpools/community-collections'
+  const primaryCtaLabel = account ? t('Dashboard') : isMobile ? t('Explore') : t('Community Collections')
 
   const readWhitepaperAction = (
-    <NextLinkFromReactRouter to='/nftpools/community-collections'>
+    <NextLinkFromReactRouter to={primaryCtaPath}>
       <Button scale={['xs', 'sm', 'md']}>
         <Text color="white" bold fontSize={["14px", "14px", "16px"]}>
-          {isMobile ? t('Explore') : t('Community Collections')}
+          {primaryCtaLabel}
         </Text>
       </Button>
     </NextLinkFromReactRouter>
