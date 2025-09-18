@@ -22,17 +22,26 @@ export const CardWrapper = styled.div`
 `
 export const ImageBox = styled.div`
   position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   transition: filter 0.25s linear;
   .default {
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+  .hover {
     display: none;
   }
   ${({ theme }) => theme.mediaQueries.lg} {
-    .default {
-      display: block;
-      position: relative;
-      z-index: 1;
-    }
+    width: 72px;
+    height: 72px;
     .hover {
+      display: block;
       transition: opacity 0.25s ease-in-out;
       position: absolute;
       top: 0;
@@ -40,94 +49,75 @@ export const ImageBox = styled.div`
       opacity: 0;
       z-index: 2;
     }
-    // filter: invert(38%) sepia(97%) saturate(433%) hue-rotate(215deg) brightness(83%) contrast(86%);
   }
 `
 
-export const ItemWrapper = styled(Flex)<{ $flexBasis: number }>`
-  align-items: left;
+export const ItemWrapper = styled(Flex)`
+  align-items: flex-start;
   justify-content: space-between;
   flex-direction: column;
-  flex-grow: 1;
   gap: 12px;
   cursor: pointer;
+  width: 100%;
+  max-width: 100%;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => (theme.isDark ? 'rgba(24, 15, 45, 0.92)' : 'rgba(255, 255, 255, 0.95)')};
+  box-shadow: 0 12px 32px rgba(31, 47, 86, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
   .cta > * {
     transition: color 0.25s ease-in-out;
     path {
       transition: fill 0.25s ease-in-out;
     }
   }
-  padding: 4px;
+
   &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px rgba(31, 47, 86, 0.16);
+
     .cta > * {
       color: ${({ theme }) => theme.colors.primary};
       path {
         fill: ${({ theme }) => theme.colors.primary};
       }
     }
+
     ${ImageBox} {
       .hover {
         opacity: 1;
       }
-      // filter: invert(0%) sepia(0%) saturate(100%) hue-rotate(0deg) brightness(100%) contrast(100%);
     }
   }
-  flex-basis: calc(50% - 24px);
 
-  &.type-a {
-    height: 246px;
-    &.adjust-height {
-      margin-top: 20px;
-      height: 220px;
-    }
-    ${({ theme }) => theme.mediaQueries.sm} {
-      &.adjust-height {
-        margin-top: 0px;
-        height: 246px;
-      }
-      flex-basis: calc(33.3% - 48px);
-    }
-    ${({ theme }) => theme.mediaQueries.xl} {
-      height: 286px;
-      &.adjust-height {
-        margin-top: 0px;
-        height: 286px;
-      }
-      &.higher {
-        height: 292px;
-        &.adjust-height {
-          margin-top: 0px;
-          height: 292px;
-        }
-      }
-    }
-    ${({ theme }) => theme.mediaQueries.xxl} {
-      flex-basis: ${({ $flexBasis }) => $flexBasis}%;
-    }
-  }
-  &.type-b {
-    height: 263px;
-    ${({ theme }) => theme.mediaQueries.lg} {
-      flex-basis: ${({ $flexBasis }) => $flexBasis}%;
-    }
-    ${({ theme }) => theme.mediaQueries.lg} {
-      height: 286px;
-    }
-    ${({ theme }) => theme.mediaQueries.xl} {
-      height: 256px;
-    }
-  }
   ${({ theme }) => theme.mediaQueries.sm} {
-    padding: 12px;
+    flex: 0 1 230px;
+    max-width: 260px;
+    padding: 20px;
   }
+
+  ${({ theme }) => theme.mediaQueries.lg} {
+    flex: 0 1 240px;
+    max-width: 280px;
+  }
+
   ${({ theme }) => theme.mediaQueries.xxl} {
-    flex-wrap: nowrap;
+    flex: 0 1 260px;
   }
 `
 
 export const FeatureBoxesWrapper = styled(Flex)`
   flex-wrap: wrap;
-  gap: 24px;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    justify-content: flex-start;
+  }
+
   ${({ theme }) => theme.mediaQueries.xxl} {
     flex-wrap: nowrap;
   }
@@ -140,6 +130,20 @@ export const Title = styled.div`
   line-height: 110%;
   padding-left: 12px;
   color: ${({ theme }) => theme.colors.secondary};
+`
+
+export const StepBadge = styled(Text)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 4px 12px;
+  color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => (theme.isDark ? 'rgba(118, 69, 217, 0.18)' : 'rgba(118, 69, 217, 0.12)')};
 `
 
 export const StyledButton = styled(Button)`
@@ -215,34 +219,33 @@ const FeatureBox: React.FC<{
   description: string
   image: string
   defaultImage: string
-  width: number
   ctaTitle: string
   className?: string
   path?: string
   onClick?: () => void
-}> = ({ title, description, image, defaultImage, ctaTitle, width, className, path, onClick }) => {
+  step: number
+}> = ({ title, description, image, defaultImage, ctaTitle, className, path, onClick, step }) => {
   const { theme } = useTheme()
   const { push } = useRouter()
   return (
-    <ItemWrapper
-      className={className}
-      $flexBasis={width}
-      onClick={onClick ? () => onClick() : () => path && push(path)}
-    >
-      <ImageBox>
-        <Image className="default" src={defaultImage} width={108} height={108} alt={title} />
-        <Image className="hover" src={image} width={108} height={108} alt={title} />
-      </ImageBox>
-      <Box>
-        <Text fontSize="20px" mb="8px" lineHeight="110%" fontWeight={600} color={theme.colors.text}>
-          {title}
-        </Text>
-        <Text fontSize="14px" lineHeight="120%" color={theme.colors.text}>
-          {description}
-        </Text>
-      </Box>
-      <Flex className="cta">
-        <Text fontSize="16px" fontWeight={600} color={theme.colors.textSubtle}>
+    <ItemWrapper className={className} onClick={onClick ? () => onClick() : () => path && push(path)}>
+      <StepBadge>Step {step}</StepBadge>
+      <Flex alignItems="center" width="100%" style={{ gap: 12 }}>
+        <ImageBox>
+          <Image className="default" src={defaultImage} width={72} height={72} alt={title} />
+          <Image className="hover" src={image} width={72} height={72} alt={title} />
+        </ImageBox>
+        <Box flex="1">
+          <Text fontSize="18px" mb="8px" lineHeight="120%" fontWeight={600} color={theme.colors.text}>
+            {title}
+          </Text>
+          <Text fontSize="13px" lineHeight="140%" color={theme.colors.textSubtle}>
+            {description}
+          </Text>
+        </Box>
+      </Flex>
+      <Flex className="cta" alignItems="center" justifyContent="space-between" width="100%">
+        <Text fontSize="14px" fontWeight={600} color={theme.colors.textSubtle}>
           {ctaTitle}
         </Text>
         <ChevronRightIcon color={theme.colors.textSubtle} />
@@ -294,7 +297,7 @@ const EcoSystemSection: React.FC = () => {
             </SecondaryButton>
             </ButtonContainer>
             <FeatureBoxesWrapper>
-              {nftGameBlockData.map((item) => (
+              {nftGameBlockData.map((item, index) => (
                 <FeatureBox
                   className={`type-a higher${item?.className ? ` ${item?.className}` : ''}`}
                   key={`${item.title}Block`}
@@ -302,10 +305,10 @@ const EcoSystemSection: React.FC = () => {
                   description={item.description}
                   defaultImage={item.defaultImage}
                   image={item.image}
-                  width={100 / 5}
                   ctaTitle={item.ctaTitle}
                   path={item.path}
                   onClick={item.path.startsWith("http") ? () => { window.open(item.path, '_blank', 'noopener noreferrer') } : undefined}
+                  step={index + 1}
                 />
               ))}
             </FeatureBoxesWrapper>

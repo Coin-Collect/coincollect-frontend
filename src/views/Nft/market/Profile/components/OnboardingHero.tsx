@@ -82,38 +82,45 @@ const Wrapper = styled(Box)`
   margin-bottom: 56px;
 `
 
-const HeroGrid = styled.div`
-  display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+const StepsRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 
-  @media (min-width: 576px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
   }
 
-  @media (min-width: 992px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  @media (min-width: 1200px) {
+    gap: 24px;
   }
 `
 
 const HeroCard = styled(Box)<{ gradient: string }>`
   position: relative;
-  padding: 26px;
-  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px;
+  border-radius: 22px;
   overflow: hidden;
+  width: 100%;
   background: ${({ gradient }) => gradient};
-  border: 1px solid rgba(148, 163, 255, 0.2);
-  box-shadow: 0 28px 48px rgba(76, 29, 149, 0.35);
+  border: 1px solid rgba(148, 163, 255, 0.24);
+  box-shadow: 0 18px 36px rgba(76, 29, 149, 0.3);
   backdrop-filter: blur(22px);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-  min-height: 240px;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  min-height: 188px;
 
   &:before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at top right, rgba(45, 212, 191, 0.4), transparent 60%);
-    opacity: 0.8;
+    inset: -12%;
+    background: radial-gradient(circle at top right, rgba(45, 212, 191, 0.38), transparent 65%);
+    opacity: 0.85;
     pointer-events: none;
   }
 
@@ -121,16 +128,25 @@ const HeroCard = styled(Box)<{ gradient: string }>`
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.18) 45%, transparent 90%);
-    transform: translateX(-120%);
-    animation: ${shine} 12s ease-in-out infinite;
+    background: linear-gradient(120deg, transparent 5%, rgba(255, 255, 255, 0.16) 45%, transparent 85%);
+    transform: translateX(-140%);
+    animation: ${shine} 14s ease-in-out infinite;
     pointer-events: none;
     mix-blend-mode: screen;
   }
 
   &:hover {
-    transform: translateY(-10px) scale(1.01);
-    box-shadow: 0 40px 80px rgba(129, 140, 248, 0.45);
+    transform: translateY(-6px);
+    box-shadow: 0 28px 52px rgba(129, 140, 248, 0.42);
+  }
+
+  @media (min-width: 768px) {
+    max-width: 260px;
+  }
+
+  @media (min-width: 1200px) {
+    max-width: 280px;
+    padding: 22px 26px;
   }
 `
 
@@ -138,36 +154,51 @@ const CardContent = styled(Flex)`
   position: relative;
   z-index: 1;
   flex-direction: column;
-  height: 100%;
+  gap: 12px;
+`
+
+const StepBadge = styled(Text)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #f9fafb;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  mix-blend-mode: screen;
 `
 
 const HeroBadge = styled(Text)`
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 4px 14px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(129, 140, 248, 0.24));
-  color: #c7d2fe;
-  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.32);
+  color: rgba(226, 232, 240, 0.8);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  margin-bottom: 20px;
 `
 
 const HeroIcon = styled(Box)<{ gradient: string }>`
-  width: 68px;
-  height: 68px;
-  border-radius: 22px;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 18px;
+  margin-bottom: 6px;
   position: relative;
   overflow: hidden;
   background: ${({ gradient }) => gradient};
-  box-shadow: 0 0 32px rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.45);
   animation: ${float} 6s ease-in-out infinite;
 
   &:before {
@@ -187,7 +218,10 @@ const HeroIcon = styled(Box)<{ gradient: string }>`
 const HeroMetric = styled(Text)`
   margin-top: auto;
   font-weight: 600;
-  color: #fcd34d;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(252, 211, 77, 0.95);
 `
 
 const SectionHeader = styled(Flex)`
@@ -584,23 +618,28 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
 
   return (
     <Wrapper>
-      <HeroGrid>
-        {heroCards.map((card) => (
+      <StepsRow>
+        {heroCards.map((card, index) => (
           <HeroCard key={card.key} gradient={card.gradient}>
             <CardContent>
-              <HeroBadge>{card.badge}</HeroBadge>
-              <HeroIcon gradient={card.iconGradient}>{card.icon}</HeroIcon>
-              <Heading scale="lg" color="white" mb="12px">
-                {card.title}
-              </Heading>
-              <Text color="rgba(226, 232, 240, 0.85)" mb="18px">
+              <Flex flexDirection="column" gap="6px">
+                <StepBadge>{t('Step %step%', { step: index + 1 })}</StepBadge>
+                <HeroBadge>{card.badge}</HeroBadge>
+              </Flex>
+              <Flex alignItems="center" gap="12px">
+                <HeroIcon gradient={card.iconGradient}>{card.icon}</HeroIcon>
+                <Heading scale="md" color="white" style={{ lineHeight: '130%' }}>
+                  {card.title}
+                </Heading>
+              </Flex>
+              <Text color="rgba(226, 232, 240, 0.82)" fontSize="13px" lineHeight="150%">
                 {card.description}
               </Text>
               <HeroMetric>{card.metric}</HeroMetric>
             </CardContent>
           </HeroCard>
         ))}
-      </HeroGrid>
+      </StepsRow>
 
       <Box>
         <SectionHeader>
