@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Box, Flex, Heading, Text } from '@pancakeswap/uikit'
+import { Box, Button, Flex, Heading, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { NftLocation, NftToken } from 'state/nftMarket/types'
+import { useRouter } from 'next/router'
 
 type HeroCardConfig = {
   key: string
@@ -13,6 +14,10 @@ type HeroCardConfig = {
   gradient: string
   iconGradient: string
   icon: JSX.Element
+  ctaPath: string
+  ctaGradient: string
+  ctaHover: string
+  ctaLabel: string
 }
 
 type NftPreview = {
@@ -161,30 +166,16 @@ const StepBadge = styled(Text)`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: fit-content;
-  padding: 4px 12px;
+  padding: 8px 20px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #f9fafb;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  background: rgba(255, 255, 255, 0.2);
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   mix-blend-mode: screen;
-`
-
-const HeroBadge = styled(Text)`
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.32);
-  color: rgba(226, 232, 240, 0.8);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  align-self: center;
 `
 
 const HeroIcon = styled(Box)<{ gradient: string }>`
@@ -215,13 +206,47 @@ const HeroIcon = styled(Box)<{ gradient: string }>`
   }
 `
 
-const HeroMetric = styled(Text)`
+const CardCta = styled(Button).attrs({ type: 'button' })<{ $background: string; $hover: string }>`
   margin-top: auto;
-  font-weight: 600;
+  width: 100%;
+  justify-content: center;
+  background-image: ${({ $background }) => $background};
+  background-size: 120% 120%;
+  background-position: 0 0;
+  background-color: transparent;
+  border: none;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 12px 16px;
+  white-space: normal;
+  text-align: center;
+  line-height: 150%;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-position 0.25s ease;
+
+  &:hover {
+    background-image: ${({ $hover }) => $hover};
+    background-position: 100% 0;
+    box-shadow: 0 18px 34px rgba(30, 64, 175, 0.35);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.28);
+  }
+`
+
+const MetricText = styled(Text)`
+  color: rgba(226, 232, 240, 0.68);
   font-size: 12px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(252, 211, 77, 0.95);
+  text-align: center;
 `
 
 const SectionHeader = styled(Flex)`
@@ -469,13 +494,14 @@ const StakeIcon = () => (
 
 const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCount, claimableCount, walletNfts }) => {
   const { t } = useTranslation()
+  const router = useRouter()
 
   const heroCards = useMemo<HeroCardConfig[]>(
     () => [
       {
         key: 'mint',
         badge: t('Mint Card'),
-        title: t('Gateway to Web3'),
+        title: t('Mint NFT'),
         description: t('Mint your KEY NFT to unlock quests, airdrops, and the CoinCollect multiverse.'),
         metric:
           totalNfts > 0
@@ -484,11 +510,15 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         gradient: 'linear-gradient(145deg, rgba(122, 32, 224, 0.85), rgba(16, 47, 94, 0.8))',
         iconGradient: 'linear-gradient(145deg, rgba(129, 140, 248, 0.85), rgba(34, 211, 238, 0.9))',
         icon: <MintIcon />,
+        ctaPath: '/nfts/collections',
+        ctaGradient: 'linear-gradient(135deg, rgba(167, 139, 250, 0.95), rgba(79, 70, 229, 0.88))',
+        ctaHover: 'linear-gradient(135deg, rgba(193, 181, 255, 1), rgba(99, 102, 241, 0.95))',
+        ctaLabel: t('MINT'),
       },
       {
         key: 'claim',
         badge: t('Claim Card'),
-        title: t('Stream Your Rewards'),
+        title: t('Claim Rewards'),
         description: t('Claim token flows, partner drops, and daily boosts powered by your NFTs.'),
         metric:
           claimableCount > 0
@@ -497,11 +527,15 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         gradient: 'linear-gradient(145deg, rgba(20, 83, 136, 0.9), rgba(59, 130, 246, 0.68))',
         iconGradient: 'linear-gradient(145deg, rgba(45, 212, 191, 0.85), rgba(125, 211, 252, 0.85))',
         icon: <ClaimIcon />,
+        ctaPath: '/claim',
+        ctaGradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.95), rgba(37, 99, 235, 0.85))',
+        ctaHover: 'linear-gradient(135deg, rgba(125, 211, 252, 1), rgba(59, 130, 246, 0.95))',
+        ctaLabel: t('CLAIM'),
       },
       {
         key: 'stake',
         badge: t('Stake Card'),
-        title: t('Amplify Your Earnings'),
+        title: t('Stake NFT'),
         description: t('Stake into futuristic pools, grow passive rewards, and level up your dashboard.'),
         metric:
           stakedPoolCount > 0
@@ -510,6 +544,10 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         gradient: 'linear-gradient(145deg, rgba(17, 94, 89, 0.9), rgba(22, 163, 74, 0.65))',
         iconGradient: 'linear-gradient(145deg, rgba(74, 222, 128, 0.85), rgba(45, 212, 191, 0.85))',
         icon: <StakeIcon />,
+        ctaPath: '/nftpools',
+        ctaGradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.9), rgba(45, 212, 191, 0.85))',
+        ctaHover: 'linear-gradient(135deg, rgba(134, 239, 172, 1), rgba(52, 211, 153, 0.95))',
+        ctaLabel: t('STAKE'),
       },
     ],
     [t, totalNfts, claimableCount, stakedPoolCount],
@@ -622,20 +660,26 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         {heroCards.map((card, index) => (
           <HeroCard key={card.key} gradient={card.gradient}>
             <CardContent>
-              <Flex flexDirection="column" gap="6px">
+              <Flex flexDirection="column" alignItems="center" gap="12px">
                 <StepBadge>{t('Step %step%', { step: index + 1 })}</StepBadge>
-                <HeroBadge>{card.badge}</HeroBadge>
-              </Flex>
-              <Flex alignItems="center" gap="12px">
-                <HeroIcon gradient={card.iconGradient}>{card.icon}</HeroIcon>
-                <Heading scale="md" color="white" style={{ lineHeight: '130%' }}>
+                <Heading scale="md" color="white" style={{ lineHeight: '130%', textAlign: 'center' }}>
                   {card.title}
                 </Heading>
               </Flex>
-              <Text color="rgba(226, 232, 240, 0.82)" fontSize="13px" lineHeight="150%">
+              <Flex alignItems="center" justifyContent="center" gap="12px">
+                <HeroIcon gradient={card.iconGradient}>{card.icon}</HeroIcon>
+              </Flex>
+              <Text color="rgba(226, 232, 240, 0.82)" fontSize="13px" lineHeight="150%" textAlign="center">
                 {card.description}
               </Text>
-              <HeroMetric>{card.metric}</HeroMetric>
+              <MetricText>{card.metric}</MetricText>
+              <CardCta
+                $background={card.ctaGradient}
+                $hover={card.ctaHover}
+                onClick={() => router.push(card.ctaPath)}
+              >
+                {card.ctaLabel}
+              </CardCta>
             </CardContent>
           </HeroCard>
         ))}
