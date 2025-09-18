@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Box, Button, Flex, Heading, Text, Image } from '@pancakeswap/uikit'
+import { Box, Button, CardBody as UICardBody, Flex, Heading, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { NftLocation, NftToken } from 'state/nftMarket/types'
 import { useRouter } from 'next/router'
+import NFTMedia, { AspectRatio } from 'views/Nft/market/components/NFTMedia'
+import { StyledCollectibleCard } from 'views/Nft/market/components/CollectibleCard/styles'
 
 type HeroCardConfig = {
   key: string
@@ -243,7 +245,7 @@ const CardCta = styled(Button).attrs({ type: 'button' })<{ $background: string; 
 `
 
 const MetricText = styled(Text)`
-  color: rgba(226, 232, 240, 0.68);
+  color: ${({ theme }) => theme.colors.textSubtle};
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -256,21 +258,21 @@ const SectionHeader = styled(Flex)`
 `
 
 const SectionSubtitle = styled(Text)`
-  color: rgba(226, 232, 240, 0.72);
+  color: ${({ theme }) => theme.colors.textSubtle};
   max-width: 640px;
 `
 
 const NftScroller = styled.div`
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(220px, 1fr);
+  grid-auto-columns: minmax(260px, 1fr);
   gap: 20px;
   overflow-x: auto;
   padding-bottom: 6px;
   scroll-snap-type: x mandatory;
 
   @media (min-width: 968px) {
-    grid-auto-columns: minmax(230px, 260px);
+    grid-auto-columns: minmax(260px, 300px);
   }
 
   &::-webkit-scrollbar {
@@ -283,116 +285,128 @@ const NftScroller = styled.div`
   }
 `
 
-const NftCard = styled(Box)<{ accent: string }>`
-  position: relative;
-  padding: 22px;
-  border-radius: 24px;
-  background: rgba(15, 23, 42, 0.66);
-  border: 1px solid rgba(148, 163, 255, 0.18);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 18px 38px rgba(30, 64, 175, 0.45);
+const SpotlightCard = styled(StyledCollectibleCard)<{ accent: string }>`
+  min-width: 260px;
+  max-width: 320px;
   scroll-snap-align: start;
-  min-height: 220px;
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
 
   &:before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: -40%;
     background: ${({ accent }) => accent};
-    opacity: 0.65;
-    filter: blur(36px);
+    opacity: 0.35;
+    filter: blur(80px);
     z-index: 0;
+    pointer-events: none;
   }
 
-  &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 28px 52px rgba(56, 189, 248, 0.35);
+  ${({ theme }) => theme.mediaQueries.md} {
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 28px 48px rgba(59, 130, 246, 0.28);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
   }
 `
 
-const NftImageWrapper = styled(Box)`
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  margin-bottom: 16px;
+const SpotlightBody = styled(UICardBody)`
   position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.75), rgba(45, 212, 191, 0.65));
-  box-shadow: 0 0 26px rgba(56, 189, 248, 0.35);
-
-  img,
-  video {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-    display: block;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+  z-index: 1;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
 `
 
-const NftImageFallback = styled(Box)`
+const SpotlightImageWrapper = styled(Box)`
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.28);
+`
+
+const SpotlightImageFallback = styled(Box)`
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.75), rgba(45, 212, 191, 0.75));
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.65), rgba(45, 212, 191, 0.5));
 
   &:after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.65), transparent 60%);
-    opacity: 0.55;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.45), transparent 60%);
+    opacity: 0.45;
   }
 `
 
-const UtilityTag = styled(Text)`
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
+const SpotlightStatusBadge = styled(Text)<{ $gradient: string }>`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(56, 189, 248, 0.2));
-  color: #67e8f9;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  margin-bottom: 12px;
+  background: ${({ $gradient }) => $gradient};
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
 `
 
-const UtilityButton = styled(Button).attrs({ type: 'button', scale: 'sm' })<{ $background: string; $hover: string }>`
+const SpotlightCollectionBadge = styled(Text)`
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  border-radius: ${({ theme }) => theme.radii.small};
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.45);
+`
+
+const UtilityButton = styled(Button).attrs({ type: 'button' })<{ $background: string; $hover: string }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 16px;
-  border-radius: 999px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 16px;
   background-image: ${({ $background }) => $background};
   background-size: 120% 120%;
   background-position: 0 0;
   border: none;
   color: #0f172a;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.28);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.32);
   transition: transform 0.25s ease, box-shadow 0.25s ease, background-position 0.25s ease;
+  margin-top: auto;
 
   &:hover {
     background-image: ${({ $hover }) => $hover};
     background-position: 100% 0;
     transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.35);
+    box-shadow: 0 24px 44px rgba(59, 130, 246, 0.35);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.25);
   }
-`
-
-const CardInner = styled(Flex)`
-  position: relative;
-  z-index: 1;
-  flex-direction: column;
-  height: 100%;
 `
 
 const GameGrid = styled.div`
@@ -679,17 +693,29 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
     ]
   }, [walletNfts, t])
 
-  const statusButtonMap = useMemo<Record<string, { path: string; gradient: string; hover: string }>>(
+  const statusButtonMap = useMemo<
+    Record<
+      string,
+      {
+        path: string
+        gradient: string
+        hover: string
+        label: string
+      }
+    >
+  >(
     () => ({
       [t('Claim Rewards Ready')]: {
         path: '/claim',
         gradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(37, 99, 235, 0.85))',
         hover: 'linear-gradient(135deg, rgba(125, 211, 252, 1), rgba(59, 130, 246, 0.95))',
+        label: t('Claim Rewards'),
       },
       [t('Stakeable Utility')]: {
         path: '/nftpools',
         gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.9), rgba(34, 197, 94, 0.85))',
         hover: 'linear-gradient(135deg, rgba(134, 239, 172, 1), rgba(52, 211, 153, 0.95))',
+        label: t('Stake NFTs'),
       },
     }),
     [t],
@@ -766,47 +792,56 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
           <NftScroller>
             {nftPreviewItems.map((item) => {
               const statusCta = statusButtonMap[item.status]
+              const defaultCta = {
+                path: '/nfts/collections',
+                gradient: 'linear-gradient(135deg, rgba(148, 163, 255, 0.9), rgba(129, 140, 248, 0.85))',
+                hover: 'linear-gradient(135deg, rgba(165, 180, 252, 1), rgba(129, 140, 248, 0.95))',
+                label: t('Explore NFTs'),
+              }
+              const actionCta = statusCta ?? defaultCta
               return (
-                <NftCard key={item.key} accent={item.accent}>
-                  <CardInner>
-                    <NftImageWrapper>
-                      {item.token?.image ? (
-                        <Image
-                          src={item.token.image.gif || item.token.image.thumbnail || item.token.image.original}
-                          alt={item.name}
-                          width={72}
-                          height={72}
-                          loading="lazy"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
+                <SpotlightCard key={item.key} accent={item.accent}>
+                  <SpotlightBody p="16px">
+                    <SpotlightImageWrapper>
+                      {item.token ? (
+                        <AspectRatio ratio={1}>
+                          <NFTMedia
+                            nft={item.token}
+                            width={320}
+                            height={320}
+                            borderRadius="18px"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        </AspectRatio>
                       ) : (
-                        <NftImageFallback />
+                        <AspectRatio ratio={1}>
+                          <SpotlightImageFallback />
+                        </AspectRatio>
                       )}
-                    </NftImageWrapper>
-                    {statusCta ? (
-                      <UtilityButton
-                        $background={statusCta.gradient}
-                        $hover={statusCta.hover}
-                        onClick={() => router.push(statusCta.path)}
-                      >
+                      <SpotlightStatusBadge $gradient={actionCta.gradient}>
                         {item.status}
-                      </UtilityButton>
-                    ) : (
-                      <UtilityTag>{item.status}</UtilityTag>
-                    )}
-                    <Heading scale="md" color="white">
+                      </SpotlightStatusBadge>
+                      {item.collection && (
+                        <SpotlightCollectionBadge>
+                          {t('Collection: %name%', { name: item.collection })}
+                        </SpotlightCollectionBadge>
+                      )}
+                    </SpotlightImageWrapper>
+                    <Heading scale="md" color="text">
                       {item.name}
                     </Heading>
-                    <Text mt="8px" color="rgba(226, 232, 240, 0.78)">
+                    <Text mt="8px" color="textSubtle">
                       {item.utility}
                     </Text>
-                    {item.collection && (
-                      <Text mt="12px" fontSize="12px" color="rgba(148, 163, 255, 0.88)">
-                        {t('Collection: %name%', { name: item.collection })}
-                      </Text>
-                    )}
-                  </CardInner>
-                </NftCard>
+                    <UtilityButton
+                      $background={actionCta.gradient}
+                      $hover={actionCta.hover}
+                      onClick={() => router.push(actionCta.path)}
+                    >
+                      {actionCta.label}
+                    </UtilityButton>
+                  </SpotlightBody>
+                </SpotlightCard>
               )
             })}
           </NftScroller>
