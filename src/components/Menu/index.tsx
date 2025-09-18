@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useRouter } from 'next/router'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { Menu as UikitMenu } from '@pancakeswap/uikit'
@@ -7,12 +8,14 @@ import PhishingWarningBanner from 'components/PhishingWarningBanner'
 import useTheme from 'hooks/useTheme'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import { usePhishingBannerManager } from 'state/user/hooks'
+import useWeb3React from 'hooks/useWeb3React'
 import config from './config/config'
 import UserMenu from './UserMenu'
 import GlobalSettings from './GlobalSettings'
 import { getActiveMenuItem, getActiveSubMenuItem } from './utils'
 import { footerLinks } from './config/footerConfig'
 import drawerLinks from "./config/drawerConfig"
+import { nftsBaseUrl } from 'views/Nft/market/constants'
 
 const Menu = (props) => {
   const { isDark, toggleTheme } = useTheme()
@@ -20,8 +23,26 @@ const Menu = (props) => {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { pathname } = useRouter()
   const [showPhishingWarningBanner] = usePhishingBannerManager()
+  const { account } = useWeb3React()
 
-  const activeMenuItem = getActiveMenuItem({ menuConfig: drawerLinks, pathname })
+  const dynamicDrawerLinks = useMemo(() => {
+    const baseLinks = [...drawerLinks]
+
+    if (account) {
+      const dashboardHref = `${nftsBaseUrl}/profile/${account.toLowerCase()}`
+      const dashboardLink = {
+        label: t('Dashboard'),
+        icon: 'HomeIcon',
+        href: dashboardHref,
+      }
+
+      return [dashboardLink, ...baseLinks]
+    }
+
+    return baseLinks
+  }, [account, t])
+
+  const activeMenuItem = getActiveMenuItem({ menuConfig: dynamicDrawerLinks, pathname })
   const activeSubMenuItem = getActiveSubMenuItem({ menuItem: activeMenuItem, pathname })
 
   return (
@@ -40,7 +61,7 @@ const Menu = (props) => {
       setLang={setLanguage}
       cakePriceUsd={cakePriceUsd.toNumber()}
       links={config(t)}
-      drawerLinks={drawerLinks}
+      drawerLinks={dynamicDrawerLinks}
       subLinks={activeMenuItem?.hideSubNav ? [] : activeMenuItem?.items}
       footerLinks={footerLinks(t)}
       activeItem={activeMenuItem?.href}
