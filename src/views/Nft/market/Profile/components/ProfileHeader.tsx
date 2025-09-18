@@ -13,6 +13,7 @@ import MarketPageTitle from '../../components/MarketPageTitle'
 import EditProfileModal from './EditProfileModal'
 import AvatarImage from '../../components/BannerHeader/AvatarImage'
 import useUserStakedNftFarms from '../hooks/useUserStakedNftFarms'
+import { useClaimInfo } from 'views/Claim/hooks/useClaimInfo'
 
 interface HeaderProps {
   accountPath: string
@@ -54,16 +55,22 @@ const ProfileHeader: React.FC<HeaderProps> = ({
 
   const isConnectedAccount = account?.toLowerCase() === accountPath?.toLowerCase()
   const { stakedFarms, isLoading: isStakedFarmsLoading } = useUserStakedNftFarms(isConnectedAccount)
+  const claimInfo = useClaimInfo()
 
   const numNftCollected = !isNftLoading ? (nftCollected ? formatNumber(nftCollected, 0, 0) : '-') : null
   const numStakedPools = isConnectedAccount
     ? (isStakedFarmsLoading ? null : formatNumber(stakedFarms.length, 0, 0))
     : '-'
-  const numAchievements = !isAchievementsLoading
-    ? achievements?.length
-      ? formatNumber(achievements.length, 0, 0)
-      : '-'
-    : null
+  const claimableCount = claimInfo?.data
+    ? claimInfo.data.filter((claim) => {
+        if (!claim) return false
+        if ((claim.remainingClaims ?? 0) <= 0) return false
+        if ((claim.userWeight ?? 0) === 0) return false
+        return (claim.rewardBalance ?? 0) > 0
+      }).length
+    : 0
+  const isClaimInfoLoading = claimInfo?.isLoading
+  const numClaimableRewards = isClaimInfoLoading ? null : formatNumber(claimableCount, 0, 0)
 
   const avatarImage = profile?.nft?.image?.thumbnail || '/images/nfts/no-profile-md.png'
 
@@ -183,7 +190,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
         <StatBox>
           <StatBoxItem title={t('NFT Collected')} stat={numNftCollected ?? '-'} />
           <StatBoxItem title={t('Pools')} stat={numStakedPools ?? '-'} />
-          <StatBoxItem title={t('Achievements')} stat={numAchievements ?? '-'} />
+          <StatBoxItem title={t('Claim Rewards')} stat={numClaimableRewards ?? '-'} />
         </StatBox>
       </MarketPageTitle>
     </>
