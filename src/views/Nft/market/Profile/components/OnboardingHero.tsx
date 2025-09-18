@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import { Box, Button, CardBody as UICardBody, Flex, Heading, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { NftLocation, NftToken } from 'state/nftMarket/types'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import NFTMedia, { AspectRatio } from 'views/Nft/market/components/NFTMedia'
 import { StyledCollectibleCard } from 'views/Nft/market/components/CollectibleCard/styles'
@@ -36,8 +37,10 @@ type GameCardConfig = {
   key: string
   title: string
   description: string
-  gradient: string
-  glow: string
+  imageSrc: string
+  accent: string
+  playPath: string
+  mintPath: string
 }
 
 interface OnboardingHeroProps {
@@ -414,63 +417,133 @@ const GameGrid = styled.div`
   }
 `
 
-const GameCard = styled(Box)<{ gradient: string; glow: string }>`
+const GameCard = styled(StyledCollectibleCard)<{ accent: string }>`
+  min-width: 260px;
+  max-width: 320px;
   position: relative;
-  padding: 24px;
-  border-radius: 24px;
-  background: ${({ gradient }) => gradient};
-  border: 1px solid rgba(96, 165, 250, 0.28);
-  backdrop-filter: blur(18px);
   overflow: hidden;
-  min-height: 200px;
-  box-shadow: 0 24px 46px rgba(14, 165, 233, 0.35);
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  box-shadow: 0 24px 46px rgba(14, 165, 233, 0.2);
+  opacity: 1;
 
   &:before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: ${({ glow }) => glow};
-    opacity: 0.8;
-    filter: blur(32px);
+    inset: -40%;
+    background: ${({ accent }) => accent};
+    opacity: 0.35;
+    filter: blur(90px);
+    z-index: 0;
+    pointer-events: none;
   }
 
-  &:after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(140deg, rgba(255, 255, 255, 0.24), transparent 55%);
-    mix-blend-mode: screen;
-    opacity: 0.7;
-  }
+  ${({ theme }) => theme.mediaQueries.md} {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 
-  &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 32px 60px rgba(59, 130, 246, 0.45);
+    &:hover {
+      cursor: default;
+      transform: translateY(-6px);
+      box-shadow: 0 32px 60px rgba(59, 130, 246, 0.32);
+      opacity: 1;
+    }
   }
+`
+
+const GameCardBody = styled(UICardBody)`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+  z-index: 1;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+`
+
+const GameImageWrapper = styled(Box)`
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.28);
 `
 
 const GameLabel = styled(Text)`
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 14px;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(129, 140, 248, 0.25);
-  color: #bfdbfe;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-  position: relative;
+  background: rgba(30, 64, 175, 0.75);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.35);
   z-index: 1;
 `
 
-const GameCardContent = styled(Flex)`
-  position: relative;
-  z-index: 1;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
+const GameButtonRow = styled(Flex)`
+  margin-top: auto;
+  gap: 8px;
+  flex-wrap: wrap;
+`
+
+const GamePlayButton = styled(Button).attrs({ type: 'button' })`
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+  border: none;
+  color: ${({ theme }) => theme.colors.invertedContrast};
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 16px 32px rgba(31, 199, 212, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  text-decoration: none;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 44px rgba(31, 199, 212, 0.4);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 12px 28px rgba(31, 199, 212, 0.28);
+    filter: brightness(0.95);
+  }
+`
+
+const GameMintButton = styled(Button).attrs({ type: 'button' })`
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.success};
+  border: none;
+  color: ${({ theme }) => theme.colors.invertedContrast};
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 14px 30px rgba(74, 222, 128, 0.32);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  text-decoration: none;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(74, 222, 128, 0.38);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.28);
+    filter: brightness(0.95);
+  }
 `
 
 const MintIcon = () => (
@@ -722,22 +795,28 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         key: 'key',
         title: t('KEY NFT'),
         description: t('Unlock portals, decrypt puzzles, and access multi-chain missions.'),
-        gradient: 'linear-gradient(145deg, rgba(34, 197, 94, 0.42), rgba(45, 212, 191, 0.35))',
-        glow: 'radial-gradient(circle, rgba(45, 212, 191, 0.55), transparent 70%)',
+        imageSrc: '/images/poolBanners/nfts/key.webp',
+        accent: 'linear-gradient(145deg, rgba(45, 212, 191, 0.4), rgba(34, 197, 94, 0.32))',
+        playPath: 'https://questgalaxy.com/ghostalien.html',
+        mintPath: 'https://opensea.io/collection/key2web3/overview',
       },
       {
         key: 'lootbox',
         title: t('Lootbox NFT'),
         description: t('Spin into randomized power-ups and seasonal tournament boosts.'),
-        gradient: 'linear-gradient(145deg, rgba(129, 140, 248, 0.45), rgba(236, 72, 153, 0.4))',
-        glow: 'radial-gradient(circle, rgba(236, 72, 153, 0.55), transparent 70%)',
+        imageSrc: '/images/poolBanners/nfts/lootbox.webp',
+        accent: 'linear-gradient(145deg, rgba(236, 72, 153, 0.38), rgba(129, 140, 248, 0.35))',
+        playPath: 'https://questgalaxy.com/ghostalien.html',
+        mintPath: 'https://opensea.io/collection/questgalaxy-lootbox/overview',
       },
       {
         key: 'cyberpunk',
         title: t('Cyberpunk NFT'),
         description: t('Deploy in arcade battles with neon shields and adaptive traits.'),
-        gradient: 'linear-gradient(145deg, rgba(59, 130, 246, 0.45), rgba(14, 116, 144, 0.4))',
-        glow: 'radial-gradient(circle, rgba(59, 130, 246, 0.55), transparent 70%)',
+        imageSrc: '/images/poolBanners/nfts/cyberpunk.webp',
+        accent: 'linear-gradient(145deg, rgba(59, 130, 246, 0.38), rgba(14, 165, 233, 0.32))',
+        playPath: 'https://questgalaxy.com/ghostalien.html',
+        mintPath: 'https://opensea.io/collection/cyberpunk-citizenship/overview',
       },
     ],
     [t],
@@ -855,14 +934,33 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         <Box mt="24px">
           <GameGrid>
             {gameCards.map((card) => (
-              <GameCard key={card.key} gradient={card.gradient} glow={card.glow}>
-                <GameCardContent>
-                  <GameLabel>{t('Playable in Games')}</GameLabel>
-                  <Heading scale="md" color="white">
+              <GameCard key={card.key} accent={card.accent}>
+                <GameCardBody p="16px">
+                  <GameImageWrapper>
+                    <AspectRatio ratio={16 / 9}>
+                      <Image
+                        src={card.imageSrc}
+                        alt={card.title}
+                        fill
+                        sizes="(min-width: 1200px) 320px, (min-width: 768px) 33vw, 100vw"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </AspectRatio>
+                    <GameLabel>{t('Playable in Games')}</GameLabel>
+                  </GameImageWrapper>
+                  <Heading scale="md" color="text">
                     {card.title}
                   </Heading>
-                  <Text color="rgba(226, 232, 240, 0.82)">{card.description}</Text>
-                </GameCardContent>
+                  <Text color="textSubtle">{card.description}</Text>
+                  <GameButtonRow>
+                    <GamePlayButton onClick={() => window.open(card.playPath, '_blank', 'noopener,noreferrer')}>
+                      Play
+                    </GamePlayButton>
+                    <GameMintButton onClick={() => window.open(card.mintPath, '_blank', 'noopener,noreferrer')}>
+                      {t('Mint')}
+                    </GameMintButton>
+                  </GameButtonRow>
+                </GameCardBody>
               </GameCard>
             ))}
           </GameGrid>
