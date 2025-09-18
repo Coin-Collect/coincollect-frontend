@@ -73,17 +73,41 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
   const queryParams = `?owner=${ownerAddress}&${contractAddressesParam}&pageSize=5`;
   const fullUrl = `${baseUrl}${queryParams}`;
 
-  const res = await fetch(fullUrl);
+  const res = await fetch(fullUrl)
   if (res.ok) {
-    const json = await res.json();
-    return json.ownedNfts.map(item => ({
-      tokenId: new BigNumber(item.id.tokenId),
-      media: item.media[0],
-      collectionAddress: item.contract.address
-    }));
+    const json = await res.json()
+    const formattedTokens = json.ownedNfts.reduce<Array<{
+      tokenId: BigNumber
+      media: string
+      collectionAddress: string
+    }>>((acc, item) => {
+      const rawTokenId = item?.id?.tokenId
+      if (!rawTokenId) {
+        return acc
+      }
+
+      const isHexToken = rawTokenId.startsWith('0x')
+      const formattedTokenId = isHexToken
+        ? new BigNumber(rawTokenId.slice(2), 16)
+        : new BigNumber(rawTokenId, 10)
+
+      if (!formattedTokenId || !formattedTokenId.isFinite()) {
+        return acc
+      }
+
+      acc.push({
+        tokenId: formattedTokenId,
+        media: item?.media?.[0],
+        collectionAddress: item?.contract?.address,
+      })
+
+      return acc
+    }, [])
+
+    return formattedTokens
   }
-  console.error('Failed to fetch NFTs', res.statusText);
-  return null;
+  console.error('Failed to fetch NFTs', res.statusText)
+  return null
 }
 
 export const getLastMintedNft = async (

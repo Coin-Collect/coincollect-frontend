@@ -1,22 +1,20 @@
 import { useMemo } from 'react'
 import isEmpty from 'lodash/isEmpty'
 import { useGetCollections } from 'state/nftMarket/hooks'
-import { ApiCollections, ApiResponseSpecificToken, NftLocation, NftToken, TokenIdWithCollectionAddress } from 'state/nftMarket/types'
+import { ApiCollections, NftLocation, NftToken, TokenIdWithCollectionAddress } from 'state/nftMarket/types'
 import { Profile } from 'state/types'
 import { isAddress } from 'utils'
 import useSWR from 'swr'
 import { FetchStatus } from 'config/constants/types'
 import { laggyMiddleware } from 'hooks/useSWRContract'
-import { range, uniq } from 'lodash'
-import { multicallPolygonv1 } from 'utils/multicall'
+import { multicallPolygonv2 } from 'utils/multicall'
 import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
-import erc721Abi from 'config/abi/erc721.json'
-import { attachMarketDataToWalletNfts, combineNftMarketAndMetadata, getNftsMarketData } from 'state/nftMarket/helpers'
-import { getCoinCollectNFTContract } from 'utils/contractHelpers'
-import { simplePolygonRpcProvider } from 'utils/providers'
+import { combineNftMarketAndMetadata, walletOfOwnerApi } from 'state/nftMarket/helpers'
 import axios from 'axios'
 import { IPFS_GATEWAY } from 'config'
 import erc721ABI from 'config/abi/erc721.json'
+import nftFarms from 'config/constants/nftFarms'
+import { ChainId } from '@coincollect/sdk'
 
 const useNftsForAddress = (account: string, profile: Profile, isProfileFetching: boolean) => {
   const { data: collections } = useGetCollections()
@@ -46,6 +44,39 @@ const useNftsForAddress = (account: string, profile: Profile, isProfileFetching:
 }
 
 export default useNftsForAddress
+
+
+type WalletTokenWithCollectionAddress = TokenIdWithCollectionAddress & { symbol?: string }
+
+type CollectionCandidate = {
+  address: string
+  symbol?: string
+}
+
+const ACTIVE_CHAIN_ID = (() => {
+  const envChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)
+  return Number.isFinite(envChainId) && envChainId > 0 ? envChainId : ChainId.POLYGON
+})()
+
+const normalizeIpfsUri = (uri?: string | null) => {
+  if (!uri) {
+    return undefined
+  }
+
+  if (uri.startsWith('ipfs://ipfs/')) {
+    return uri.replace('ipfs://ipfs/', `${IPFS_GATEWAY}/`)
+  }
+
+  if (uri.startsWith('ipfs://')) {
+    return uri.replace('ipfs://', `${IPFS_GATEWAY}/`)
+  }
+
+  if (uri.startsWith('ipfs/')) {
+    return uri.replace('ipfs/', `${IPFS_GATEWAY}/`)
+  }
+
+  return uri
+}
 
 
 const getCompleteAccountNftData = async (
@@ -91,60 +122,163 @@ const getCompleteAccountNftData = async (
 export const fetchWalletTokenIdsForCollections = async (
   account: string,
   collections: ApiCollections,
-): Promise<TokenIdWithCollectionAddress[]> => {
-  const balanceOfCalls = Object.values(collections).map((collection) => {
+): Promise<WalletTokenWithCollectionAddress[]> => {
+  const collectionList: CollectionCandidate[] = []
+  const collectionMetaByAddress = new Map<string, CollectionCandidate>()
+
+  Object.values(collections ?? {}).forEach((collection) => {
+    const collectionAddress = collection?.address
+    if (!collectionAddress) {
+      return
+    }
+    const normalizedAddress = collectionAddress.toLowerCase()
+    if (collectionMetaByAddress.has(normalizedAddress)) {
+      return
+    }
+    const candidate: CollectionCandidate = {
+      address: collectionAddress,
+      symbol: collection?.symbol,
+    }
+    collectionMetaByAddress.set(normalizedAddress, candidate)
+    collectionList.push(candidate)
+  })
+
+  nftFarms.forEach((farm) => {
+    const collectionAddress = farm?.nftAddresses?.[ACTIVE_CHAIN_ID]
+    if (!collectionAddress) {
+      return
+    }
+    const normalizedAddress = collectionAddress.toLowerCase()
+    if (collectionMetaByAddress.has(normalizedAddress)) {
+      return
+    }
+    const candidate: CollectionCandidate = {
+      address: collectionAddress,
+      symbol: farm?.lpSymbol,
+    }
+    collectionMetaByAddress.set(normalizedAddress, candidate)
+    collectionList.push(candidate)
+  })
+
+  if (collectionList.length === 0) {
+    return []
+  }
+
+  const tokenIdCalls = collectionList.map((collection) => {
     const { address: collectionAddress } = collection
+
     return {
       address: collectionAddress,
-      name: 'balanceOf',
+      name: 'walletOfOwner',
       params: [account],
     }
   })
 
-  const balanceOfCallsResultRaw = await multicallPolygonv1(erc721Abi, balanceOfCalls)
-  // TODO: Deploy multicallv2 and activate instead of v1
-  //const balanceOfCallsResultRaw = await multicallv2(erc721Abi, balanceOfCalls, { requireSuccess: false })
-  const balanceOfCallsResult = balanceOfCallsResultRaw.flat()
+  let tokenIdResultRaw
 
-  const tokenIdCalls = Object.values(collections)
-    .map((collection, index) => {
-      const balanceOf = balanceOfCallsResult[index]?.toNumber() ?? 0
-      const { address: collectionAddress } = collection
-
-      return [0].map((tokenIndex) => {
-        return {
-          address: collectionAddress,
-          name: 'walletOfOwner',
-          params: [account],
-        }
-      })
-    })
-    .flat()
-
-    let tokenIdResultRaw
   try {
-    tokenIdResultRaw = await multicallPolygonv1(coinCollectNftAbi, tokenIdCalls)
+    tokenIdResultRaw = await multicallPolygonv2(coinCollectNftAbi, tokenIdCalls, { requireSuccess: false })
   } catch (error) {
-    console.log(error)
+    console.error('Failed to fetch wallet NFT token IDs via multicall', error)
+    return []
   }
-  // TODO: Deploy multicallv2 and activate instead of v1
-  //const tokenIdResultRaw = await multicallv2(erc721Abi, tokenIdCalls, { requireSuccess: false })
-  const tokenIdResult = tokenIdResultRaw.flat()
 
   const nftLocation = NftLocation.WALLET
+  const fallbackCollections: CollectionCandidate[] = []
+  const fallbackAddresses = new Set<string>()
+  const seenTokens = new Set<string>()
 
-  const walletNfts = tokenIdResult.reduce((acc, tokenIdBn, index) => {
-    if (tokenIdBn) {
-      const { address: collectionAddress } = tokenIdCalls[index]
-      tokenIdBn.forEach((tokenId)=>{
-        acc.push({ tokenId: tokenId.toString(), collectionAddress, nftLocation, symbol: collections[index]["symbol"] })
-      })
-      
+  const walletNfts = tokenIdResultRaw.reduce<WalletTokenWithCollectionAddress[]>((acc, tokenIdResult, index) => {
+    if (!tokenIdResult) {
+      const fallbackMeta = collectionList[index]
+      if (fallbackMeta && !fallbackAddresses.has(fallbackMeta.address)) {
+        fallbackCollections.push(fallbackMeta)
+        fallbackAddresses.add(fallbackMeta.address)
+      }
+      return acc
     }
-  
+
+    const [tokenIds] = tokenIdResult as [Array<{ toString(): string }>]
+
+    if (!Array.isArray(tokenIds) || tokenIds.length === 0) {
+      const fallbackMeta = collectionList[index]
+      if (fallbackMeta && !fallbackAddresses.has(fallbackMeta.address)) {
+        fallbackCollections.push(fallbackMeta)
+        fallbackAddresses.add(fallbackMeta.address)
+      }
+      return acc
+    }
+
+    const { address: collectionAddress } = tokenIdCalls[index]
+    const collectionMeta = collectionList[index]
+
+    tokenIds.forEach((tokenIdBn) => {
+      if (!tokenIdBn) {
+        return
+      }
+
+      const tokenId = tokenIdBn.toString()
+
+      if (!tokenId) {
+        return
+      }
+
+      const dedupeKey = `${collectionAddress.toLowerCase()}-${tokenId}`
+      if (seenTokens.has(dedupeKey)) {
+        return
+      }
+
+      seenTokens.add(dedupeKey)
+
+      acc.push({
+        tokenId,
+        collectionAddress,
+        nftLocation,
+        symbol: collectionMeta?.['symbol'],
+      })
+    })
+
     return acc
   }, [])
-  
+
+  if (fallbackCollections.length > 0) {
+    try {
+      const fallbackTokens = await walletOfOwnerApi(
+        account,
+        fallbackCollections.map((collection) => collection.address),
+      )
+
+      if (Array.isArray(fallbackTokens)) {
+        fallbackTokens.forEach((token) => {
+          const tokenId = token?.tokenId?.toString?.()
+          const collectionAddress = token?.collectionAddress
+
+          if (!tokenId || !collectionAddress) {
+            return
+          }
+
+          const collectionMeta = collectionMetaByAddress.get(collectionAddress.toLowerCase())
+
+          const dedupeKey = `${collectionAddress.toLowerCase()}-${tokenId}`
+          if (seenTokens.has(dedupeKey)) {
+            return
+          }
+
+          seenTokens.add(dedupeKey)
+
+          walletNfts.push({
+            tokenId,
+            collectionAddress,
+            nftLocation,
+            symbol: collectionMeta?.symbol,
+          })
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch wallet NFT token IDs via API fallback', error)
+    }
+  }
+
   return walletNfts
 }
 
@@ -160,26 +294,38 @@ export const getNftsFromDifferentCollectionsApi = async (
     }
   })
 
-  const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls)
+  let rawTokenURIs
+
+  try {
+    rawTokenURIs = await multicallPolygonv2(erc721ABI, imageCalls, { requireSuccess: false })
+  } catch (error) {
+    console.error('Failed to fetch NFT metadata via multicall', error)
+    rawTokenURIs = []
+  }
   
   const items = await Promise.all(from.map(async (token, index) => {
 
     let meta = null;
     try {
-      //@ts-ignore
-      const tokenURI = rawTokenURIs[index][0];
-      meta = await axios.get(tokenURI)
+      const tokenUriResult = rawTokenURIs?.[index]
+      const tokenURI = Array.isArray(tokenUriResult) ? tokenUriResult[0] : null
+      const metadataUrl = normalizeIpfsUri(tokenURI) ?? tokenURI
+
+      if (!metadataUrl) {
+        throw new Error('Missing tokenURI')
+      }
+
+      meta = await axios.get(metadataUrl)
       return {
         tokenId: token.tokenId,
         name: meta.data.name,
-        //@ts-ignore
         collectionName: token.symbol,
         collectionAddress: token.collectionAddress,
         description: meta.data.description,
-        attributes: meta.data.attributes,
+        attributes: meta.data.attributes ?? [],
         image: {
-          original: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`),
-          thumbnail: meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`),
+          original: normalizeIpfsUri(meta.data.image) ?? meta.data.image,
+          thumbnail: normalizeIpfsUri(meta.data.image) ?? meta.data.image,
         }
       }
    } catch (error) {
@@ -187,11 +333,10 @@ export const getNftsFromDifferentCollectionsApi = async (
       return {
         tokenId: token.tokenId,
         name: "Name data cannot be fetched",
-        //@ts-ignore
         collectionName: token.symbol,
         collectionAddress: token.collectionAddress,
         description: "Description data cannot be fetched",
-        attributes: "Attribute data cannot be fetched",
+        attributes: [],
         image: {
           original: 'images/nfts/no-profile-md.png',
           thumbnail: 'images/nfts/no-profile-md.png',
