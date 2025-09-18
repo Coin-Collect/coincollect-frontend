@@ -1,4 +1,6 @@
 import sample from 'lodash/sample'
+import { ChainId } from '@coincollect/sdk'
+import { PUBLIC_NODES } from 'config/nodes'
 
 if (
   process.env.NODE_ENV !== 'production' &&
@@ -11,10 +13,17 @@ if (
 export const nodes = [process.env.NEXT_PUBLIC_NODE_1, process.env.NEXT_PUBLIC_NODE_2, process.env.NEXT_PUBLIC_NODE_3]
 
 // Array of available nodes to connect to
-export const maticNodes = [process.env.NEXT_PUBLIC_MATIC_NODE_1]
+export const maticNodes = (
+  [
+    process.env.NEXT_PUBLIC_MATIC_NODE_1,
+    process.env.NEXT_PUBLIC_MATIC_NODE_2,
+    process.env.NEXT_PUBLIC_MATIC_NODE_3,
+    ...(PUBLIC_NODES?.[ChainId.POLYGON] ?? []),
+  ].filter(Boolean) as string[]
+)
 
 // Array of available nodes to connect to
-export const mumbaiNodes = [process.env.NEXT_PUBLIC_MUMBAI_NODE_1]
+export const mumbaiNodes = [process.env.NEXT_PUBLIC_MUMBAI_NODE_1].filter(Boolean) as string[]
 
 const getNodeUrl = () => {
   // Use custom node if available (both for development and production)
@@ -32,11 +41,19 @@ export const getPolygonNodeUrl = () => {
     return process.env.NEXT_PUBLIC_POLYGON_NODE_PRODUCTION
   }
 
-  if (process.env.NEXT_PUBLIC_CHAIN_ID == "137") {
-    return sample(maticNodes)
+  if (process.env.NEXT_PUBLIC_CHAIN_ID == '137') {
+    const node = sample(maticNodes)
+    if (!node) {
+      throw Error('No Polygon RPC URLs configured')
+    }
+    return node
   }
 
-  return sample(mumbaiNodes)
+  const node = sample(mumbaiNodes)
+  if (!node) {
+    throw Error('No Mumbai RPC URLs configured')
+  }
+  return node
 }
 
 export default getNodeUrl
