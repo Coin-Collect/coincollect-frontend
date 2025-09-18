@@ -26,7 +26,9 @@ const createFallbackProvider = (urls: string[], network?: Networkish) => {
     stallTimeout: 1_500,
   }))
 
-  return new FallbackProvider(providerConfigs)
+  const quorum = Math.min(1, providerConfigs.length) || 1
+
+  return new FallbackProvider(providerConfigs, quorum)
 }
 
 export const simpleRpcProvider = new StaticJsonRpcProvider(RPC_URL)
