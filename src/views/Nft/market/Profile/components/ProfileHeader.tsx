@@ -17,7 +17,7 @@ import { useClaimInfo } from 'views/Claim/hooks/useClaimInfo'
 
 interface HeaderProps {
   accountPath: string
-  profile: Profile
+  profile: Profile | null
   achievements: Achievement[]
   nftCollected: number
   isAchievementsLoading: boolean
@@ -51,7 +51,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   )
   
   // CAUTION: Profile details disabled here
-  profile = null
+  // profile = null
 
   const isConnectedAccount = account?.toLowerCase() === accountPath?.toLowerCase()
   const { stakedFarms, isLoading: isStakedFarmsLoading } = useUserStakedNftFarms(isConnectedAccount)
@@ -92,28 +92,6 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   }
 
   const getAvatar = () => {
-    const getIconButtons = () => {
-      return (
-        // TODO: Share functionality once user profiles routed by ID
-        <Flex display="inline-flex">
-          {accountPath && (
-            <IconButton
-              as="a"
-              target="_blank"
-              style={{
-                width: 'fit-content',
-              }}
-              href={getPolygonScanLink(accountPath, 'address') || ''}
-              // @ts-ignore
-              alt={t('View PolygonScan for user address')}
-            >
-              <BscScanIcon width="20px" color="primary" />
-            </IconButton>
-          )}
-        </Flex>
-      )
-    }
-
     const getImage = () => {
       return (
         <>
@@ -136,7 +114,6 @@ const ProfileHeader: React.FC<HeaderProps> = ({
     return (
       <>
         {getImage()}
-        {getIconButtons()}
       </>
     )
   }
@@ -186,7 +163,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   return (
     <>
       <BannerHeader bannerImage={getBannerImage()} bannerAlt={t('User team banner')} avatar={getAvatar()} />
-      <MarketPageTitle pb="48px" title={getTitle()} description={renderDescription()}>
+      <MarketPageTitle pb="48px" title={getTitle() || ''} description={renderDescription()} accountPath={accountPath}>
         <StatBox>
           <StatBoxItem title={t('NFT Collected')} stat={numNftCollected ?? '-'} />
           <StatBoxItem title={t('Pools')} stat={numStakedPools ?? '-'} />
