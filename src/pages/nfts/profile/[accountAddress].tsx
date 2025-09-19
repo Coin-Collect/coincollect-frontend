@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import useWeb3React from 'hooks/useWeb3React'
 import { useRouter } from 'next/router'
 import { useProfileForAddress } from 'state/profile/hooks'
@@ -6,6 +7,7 @@ import SubMenu from 'views/Nft/market/Profile/components/SubMenu'
 import UnconnectedProfileNfts from 'views/Nft/market/Profile/components/UnconnectedProfileNfts'
 import UserNfts from 'views/Nft/market/Profile/components/UserNfts'
 import useCoinCollectNftsForAddress from 'views/Nft/market/hooks/useCoinCollectNftsForAddress'
+import useUserStakedNftFarms from 'views/Nft/market/Profile/hooks/useUserStakedNftFarms'
 
 const NftProfilePage = () => {
   const { account } = useWeb3React()
@@ -14,7 +16,6 @@ const NftProfilePage = () => {
   const {
     profile,
     isValidating: isProfileFetching,
-    refresh: refreshProfile,
   } = useProfileForAddress(accountAddress, {
     revalidateIfStale: true,
     revalidateOnFocus: true,
@@ -25,6 +26,15 @@ const NftProfilePage = () => {
     isLoading: isNftLoading,
     refresh: refreshUserNfts,
   } = useCoinCollectNftsForAddress(accountAddress, profile, isProfileFetching)
+  const {
+    stakedFarms,
+    isLoading: isStakedFarmsLoading,
+    totalStakedBalance,
+  } = useUserStakedNftFarms(isConnectedProfile)
+
+  const handleRefreshUserNfts = useCallback(() => {
+    refreshUserNfts()
+  }, [refreshUserNfts])
   
   return (
     <>
@@ -33,13 +43,14 @@ const NftProfilePage = () => {
       */}
       {isConnectedProfile ? (
         <UserNfts
-          nfts={nfts}
-          isLoading={isNftLoading}
-          onSuccessSale={refreshUserNfts}
-          onSuccessEditProfile={async () => {
-            await refreshProfile()
-            refreshUserNfts()
-          }}
+          account={account}
+          walletNfts={nfts}
+          isWalletLoading={isNftLoading}
+          stakedFarms={stakedFarms}
+          isStakedLoading={isStakedFarmsLoading}
+          totalStakedBalance={totalStakedBalance}
+          onRefreshWallet={handleRefreshUserNfts}
+          onSuccessSale={handleRefreshUserNfts}
         />
       ) : (
         <UnconnectedProfileNfts nfts={nfts} isLoading={isNftLoading} />

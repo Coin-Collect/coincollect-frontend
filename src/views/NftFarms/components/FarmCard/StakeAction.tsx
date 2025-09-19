@@ -33,6 +33,7 @@ interface FarmCardActionsProps {
   lpLabel?: string
   onClickStake?: any
   pendingTx?: boolean
+  isFinished?: boolean
 }
 
 const IconButtonWrapper = styled.div`
@@ -57,6 +58,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   lpLabel,
   onClickStake,
   pendingTx,
+  isFinished,
 }) => {
   const { t } = useTranslation()
   const { onStake } = useStakeFarms(mainPid)
@@ -126,12 +128,14 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   )
 
   const renderStakingButtons = () => {
+    const stakingDisabled = ['history', 'archived'].some((item) => router.pathname.includes(item)) || isFinished
+
     return stakedBalance.eq(0) ? (
       <Button
         onClick={onClickStake ?? onPresentDeposit}
         endIcon={pendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
         isLoading={pendingTx}
-        disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
+        disabled={stakingDisabled}
       >
         {pendingTx ? t('Confirming') : t('Stake NFT')}
       </Button>
@@ -143,7 +147,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
         <IconButton
           variant="tertiary"
           onClick={onClickStake ?? onPresentDeposit}
-          disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
+          disabled={stakingDisabled}
         >
           <AddIcon color="primary" width="14px" />
         </IconButton>

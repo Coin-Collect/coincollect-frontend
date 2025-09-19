@@ -81,6 +81,7 @@ export interface Minting {
   status: string
   address: string
   symbol: string
+  chainId?: number
   totalSupply: number
   avatar: string
   banner: {large: string, small: string}

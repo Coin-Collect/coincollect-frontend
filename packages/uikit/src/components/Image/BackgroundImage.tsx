@@ -10,7 +10,15 @@ const StyledBackgroundImage = styled(Wrapper)`
   background-size: contain;
 `;
 
-const BackgroundImage: React.FC<BackgroundImageProps> = ({ loadingPlaceholder, src, width, height, ...props }) => {
+const BackgroundImage: React.FC<BackgroundImageProps> = ({
+  loadingPlaceholder,
+  src,
+  width,
+  height,
+  onLoad,
+  onError,
+  ...props
+}) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const placeholder = loadingPlaceholder || <Placeholder />;
@@ -28,10 +36,18 @@ const BackgroundImage: React.FC<BackgroundImageProps> = ({ loadingPlaceholder, s
             if (src) {
               // Load the image via an image element so we can show a placeholder until the image is downloaded
               const img = document.createElement("img");
-              img.onload = () => {
+              img.onload = (event) => {
                 div.style.backgroundImage = `url("${src}")`;
                 setIsLoaded(true);
+                if (onLoad) {
+                  onLoad(event as unknown as React.SyntheticEvent<HTMLImageElement, Event>);
+                }
               };
+              if (onError) {
+                img.onerror = (event) => {
+                  onError(event as unknown as React.SyntheticEvent<HTMLImageElement, Event>);
+                };
+              }
               img.src = src;
             }
 
@@ -46,7 +62,7 @@ const BackgroundImage: React.FC<BackgroundImageProps> = ({ loadingPlaceholder, s
         observer.disconnect();
       }
     };
-  }, [src, setIsLoaded]);
+  }, [src, setIsLoaded, onLoad, onError]);
 
   return (
     <StyledBackgroundImage ref={ref} width={width} height={height} {...props}>

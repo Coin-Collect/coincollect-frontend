@@ -1,10 +1,20 @@
+import { ComponentProps } from 'react'
 import styled from 'styled-components'
 import { Flex, Image } from '@pancakeswap/uikit'
+import { useNftFallbackSource } from 'utils/nftFallback'
 
-export const RoundedImage = styled(Image)`
+type ImageComponentProps = ComponentProps<typeof Image>
+
+const StyledRoundedImage = styled(Image)`
   border-radius: ${({ theme }) => theme.radii.small};
   overflow: hidden;
 `
+
+export const RoundedImage = ({ src, onError, ...props }: ImageComponentProps) => {
+  const { currentSrc, handleError } = useNftFallbackSource(src, onError)
+
+  return <StyledRoundedImage src={currentSrc} onError={handleError} {...props} />
+}
 
 export const Divider = styled.div`
   margin: 16px 0;

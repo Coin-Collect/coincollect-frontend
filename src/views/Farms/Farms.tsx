@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useMemo, useRef, createContext } from 'react'
 import BigNumber from 'bignumber.js'
 import useWeb3React from 'hooks/useWeb3React'
-import { Image, Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex, Box } from '@pancakeswap/uikit'
+import { Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex, Box } from '@pancakeswap/uikit'
 import { ChainId } from '@coincollect/sdk'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import styled from 'styled-components'
@@ -98,10 +98,12 @@ const ViewControls = styled.div`
   }
 `
 
-const StyledImage = styled(Image)`
+const StyledVideo = styled.video`
   margin-left: auto;
   margin-right: auto;
   margin-top: 58px;
+  border-radius: 16px;
+  display: block;
 `
 const NUMBER_OF_FARMS_VISIBLE = 12
 
@@ -418,7 +420,15 @@ const Farms: React.FC = ({ children }) => {
           </Flex>
         )}
         <div ref={observerRef} />
-        <StyledImage src="/images/decorations/3dpan.png" alt="Pancake illustration" width={120} height={103} />
+        <StyledVideo
+          src="/sheep.webm"
+          width={120}
+          height={103}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
       </Page>
     </FarmsContext.Provider>
   )

@@ -238,6 +238,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         addLiquidityUrl={addLiquidityUrl}
         onClickStake={smartNftPoolAddress ? onPresentCollectionModal : null}
         pendingTx={pendingTx}
+        isFinished={farm.isFinished}
       />
     )
   }

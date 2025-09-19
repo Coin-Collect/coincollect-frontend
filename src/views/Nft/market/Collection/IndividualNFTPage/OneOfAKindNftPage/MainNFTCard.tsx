@@ -6,7 +6,6 @@ import { NftToken } from 'state/nftMarket/types'
 import { multiplyPriceByAmount } from 'utils/prices'
 import { formatNumber } from 'utils/formatBalance'
 import NFTMedia from 'views/Nft/market/components/NFTMedia'
-import EditProfileModal from 'views/Nft/market/Profile/components/EditProfileModal'
 import BuyModal from '../../../components/BuySellModals/BuyModal'
 import SellModal from '../../../components/BuySellModals/SellModal'
 import { nftsBaseUrl } from '../../../constants'
@@ -15,11 +14,10 @@ import { CollectionLink, Container } from '../shared/styles'
 interface MainNFTCardProps {
   nft: NftToken
   isOwnNft: boolean
-  nftIsProfilePic: boolean
   onSuccess: () => void
 }
 
-const MainNFTCard: React.FC<MainNFTCardProps> = ({ nft, isOwnNft, nftIsProfilePic, onSuccess }) => {
+const MainNFTCard: React.FC<MainNFTCardProps> = ({ nft, isOwnNft, onSuccess }) => {
   const { t } = useTranslation()
   const bnbBusdPrice = useBNBBusdPrice()
 
@@ -29,12 +27,10 @@ const MainNFTCard: React.FC<MainNFTCardProps> = ({ nft, isOwnNft, nftIsProfilePi
   const [onPresentSellModal] = useModal(
     <SellModal variant={nft.marketData?.isTradable ? 'edit' : 'sell'} nftToSell={nft} onSuccessSale={onSuccess} />,
   )
-  const [onEditProfileModal] = useModal(<EditProfileModal />, false)
 
   const ownerButtons = (
     <Flex flexDirection={['column', 'column', 'row']}>
       <Button
-        disabled={nftIsProfilePic}
         minWidth="168px"
         mr="16px"
         width={['100%', null, 'max-content']}
@@ -43,17 +39,6 @@ const MainNFTCard: React.FC<MainNFTCardProps> = ({ nft, isOwnNft, nftIsProfilePi
       >
         {nft.marketData?.isTradable ? t('Adjust price') : t('List for sale')}
       </Button>
-      {!nft.marketData?.isTradable && (
-        <Button
-          minWidth="168px"
-          variant="secondary"
-          width={['100%', null, 'max-content']}
-          mt="24px"
-          onClick={onEditProfileModal}
-        >
-          {nftIsProfilePic ? t('Change Profile Pic') : t('Set as Profile Pic')}
-        </Button>
-      )}
     </Flex>
   )
 
@@ -90,13 +75,6 @@ const MainNFTCard: React.FC<MainNFTCardProps> = ({ nft, isOwnNft, nftIsProfilePi
                 </Flex>
               ) : (
                 <Text>{t('Not for sale')}</Text>
-              )}
-              {nftIsProfilePic && (
-                <Text color="failure">
-                  {t(
-                    'This NFT is your profile picture, you must change it to some other NFT if you want to sell this one.',
-                  )}
-                </Text>
               )}
               {isOwnNft && ownerButtons}
               {!isOwnNft && (

@@ -80,14 +80,19 @@ const Pools: React.FC = () => {
         
         {cardLayout}
         <div ref={observerRef} />
-        <Image
-          mx="auto"
-          mt="12px"
-          src="/images/decorations/3d-syrup-bunnies.png"
-          alt="Collect illustration"
-          width={192}
-          height={184.5}
-        />
+        <Box mx="auto" mt="12px" width="192px" height="184.5px">
+          <Box
+            as="video"
+            src="/sheep.webm"
+            autoPlay
+            loop
+            muted
+            playsInline
+            width="100%"
+            height="100%"
+            style={{ borderRadius: '16px', objectFit: 'cover' }}
+          />
+        </Box>
       </Page>
     </>
   )
