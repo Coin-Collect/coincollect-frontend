@@ -28,7 +28,8 @@ const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss, onSuc
   const { t } = useTranslation()
   const { theme } = useTheme()
 
-  const itemPageUrlId = nft.collectionAddress === pancakeBunniesAddress ? nft.attributes[0].value : nft.tokenId
+  const itemPageUrlId =
+    nft.collectionAddress === pancakeBunniesAddress ? nft.attributes?.[0]?.value ?? nft.tokenId : nft.tokenId
 
   return (
     <StyledModal title={t('Details')} onDismiss={onDismiss} headerBackground={theme.colors.gradients.cardHeader}>
