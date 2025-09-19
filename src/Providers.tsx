@@ -3,7 +3,6 @@ import { Provider } from 'react-redux'
 import { SWRConfig } from 'swr'
 import { ThemeProvider } from 'styled-components'
 import { useThemeManager } from 'state/user/hooks'
-import { getLibrary } from 'utils/web3React'
 import { LanguageProvider } from 'contexts/Localization'
 import { ToastsProvider } from 'contexts/ToastsContext'
 import { fetchStatusMiddleware } from 'hooks/useSWRContract'
@@ -13,6 +12,7 @@ import { WagmiProvider } from 'wagmi'
 import { config, metadata, projectId } from 'utils/wagmi'
 import { createWeb3Modal } from '@web3modal/wagmi/react'
 import { polygon } from 'viem/chains'
+import { PropsWithChildren } from 'react'
 
 const ThemeProviderWrapper = (props) => {
   const [isDark] = useThemeManager()
@@ -46,7 +46,9 @@ if (!projectId) throw new Error('Project ID is not defined')
     ]
   })
 
-const Providers: React.FC<{ store: Store }> = ({ children, store }) => {
+type ProvidersProps = PropsWithChildren<{ store: Store }>
+
+const Providers = ({ children, store }: ProvidersProps) => {
   return (
     <WagmiProvider reconnectOnMount config={config}>
       <QueryClientProvider client={queryClient}>
