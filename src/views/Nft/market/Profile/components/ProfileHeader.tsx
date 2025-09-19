@@ -1,16 +1,13 @@
-import { NextLinkFromReactRouter as ReactRouterLink } from 'components/NextLink'
-import { BscScanIcon, Flex, IconButton, Link, Button, useModal } from '@pancakeswap/uikit'
+import { Flex, Link } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { getBscScanLink, getPolygonScanLink } from 'utils'
 import { formatNumber } from 'utils/formatBalance'
 import truncateHash from 'utils/truncateHash'
 import { Achievement, Profile } from 'state/types'
 import useWeb3React from 'hooks/useWeb3React'
-import EditProfileAvatar from './EditProfileAvatar'
 import BannerHeader from '../../components/BannerHeader'
 import StatBox, { StatBoxItem } from '../../components/StatBox'
 import MarketPageTitle from '../../components/MarketPageTitle'
-import EditProfileModal from './EditProfileModal'
 import AvatarImage from '../../components/BannerHeader/AvatarImage'
 import useUserStakedNftFarms from '../hooks/useUserStakedNftFarms'
 import { useClaimInfo } from 'views/Claim/hooks/useClaimInfo'
@@ -23,7 +20,6 @@ interface HeaderProps {
   isAchievementsLoading: boolean
   isNftLoading: boolean
   isProfileLoading: boolean
-  onSuccess?: () => void
 }
 
 // Account and profile passed down as the profile could be used to render _other_ users' profiles.
@@ -35,23 +31,9 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   isAchievementsLoading,
   isNftLoading,
   isProfileLoading,
-  onSuccess,
 }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
-  const [onEditProfileModal] = useModal(
-    <EditProfileModal
-      onSuccess={() => {
-        if (onSuccess) {
-          onSuccess()
-        }
-      }}
-    />,
-    false,
-  )
-  
-  // CAUTION: Profile details disabled here
-  // profile = null
 
   const isConnectedAccount = account?.toLowerCase() === accountPath?.toLowerCase()
   const { stakedFarms, isLoading: isStakedFarmsLoading } = useUserStakedNftFarms(isConnectedAccount)
@@ -76,30 +58,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   const bannerMedia = '/dashboard.webm'
 
   const getAvatar = () => {
-    const getImage = () => {
-      return (
-        <>
-          {profile && accountPath && isConnectedAccount ? (
-            <EditProfileAvatar
-              src={avatarImage}
-              alt={t('User profile picture')}
-              onSuccess={() => {
-                if (onSuccess) {
-                  onSuccess()
-                }
-              }}
-            />
-          ) : (
-            <AvatarImage src={avatarImage} alt={t('User profile picture')} />
-          )}
-        </>
-      )
-    }
-    return (
-      <>
-        {getImage()}
-      </>
-    )
+    return <AvatarImage src={avatarImage} alt={t('User profile picture')} />
   }
 
   const getTitle = () => {
@@ -115,31 +74,15 @@ const ProfileHeader: React.FC<HeaderProps> = ({
   }
 
   const renderDescription = () => {
-    const getActivateButton = () => {
-      // TODO: getActivateButton disabled by return statement below, activate later.
-      return;
-      if (!profile) {
-        return (
-          <ReactRouterLink to="/create-profile">
-            <Button mt="16px">{t('Activate Profile')}</Button>
-          </ReactRouterLink>
-        )
-      }
-      return (
-        <Button width="fit-content" mt="16px" onClick={onEditProfileModal}>
-          {t('Reactivate Profile')}
-        </Button>
-      )
+    if (!accountPath) {
+      return null
     }
 
     return (
       <Flex flexDirection="column" mb={[16, null, 0]} mr={[0, null, 16]}>
-        {accountPath && profile?.username && (
-          <Link href={getBscScanLink(accountPath, 'address')} external bold color="primary">
-            {truncateHash(accountPath)}
-          </Link>
-        )}
-        {accountPath && isConnectedAccount && (!profile || !profile?.nft) && getActivateButton()}
+        <Link href={getBscScanLink(accountPath, 'address')} external bold color="primary">
+          {truncateHash(accountPath)}
+        </Link>
       </Flex>
     )
   }

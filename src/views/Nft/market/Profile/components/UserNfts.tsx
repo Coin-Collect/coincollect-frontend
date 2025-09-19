@@ -19,7 +19,6 @@ import formatRewardAmount from 'utils/formatRewardAmount'
 import FarmCard, { NftFarmWithStakedValue } from 'views/NftFarms/components/FarmCard/FarmCard'
 import { CollectibleActionCard } from '../../components/CollectibleCard'
 import GridPlaceholder from '../../components/GridPlaceholder'
-import ProfileNftModal from '../../components/ProfileNftModal'
 import NoNftsImage from '../../components/Activity/NoNftsImage'
 import SellModal from '../../components/BuySellModals/SellModal'
 import { groupNftsByCollection, INITIAL_COLLECTION_BATCH, CollectionGroup } from '../utils/groupNftsByCollection'
@@ -29,11 +28,6 @@ import ClaimCard from 'views/Claim/components/ClaimCard'
 import OnboardingHero from './OnboardingHero'
 
 const REWARD_TOKEN_DECIMALS = new BigNumber(10).pow(18)
-
-interface ProfileNftProps {
-  nft: NftToken | null
-  location: NftLocation | null
-}
 
 interface SellNftProps {
   nft: NftToken | null
@@ -50,7 +44,6 @@ interface UserNftsProps {
   totalStakedBalance: BigNumber
   onRefreshWallet: () => void
   onSuccessSale: () => void
-  onSuccessEditProfile: () => void
 }
 
 enum NftFilter {
@@ -77,20 +70,14 @@ const UserNfts: React.FC<UserNftsProps> = ({
   totalStakedBalance,
   onRefreshWallet,
   onSuccessSale,
-  onSuccessEditProfile,
 }) => {
-  const [clickedProfileNft, setClickedProfileNft] = useState<ProfileNftProps>({ nft: null, location: null })
   const [clickedSellNft, setClickedSellNft] = useState<SellNftProps>({ nft: null, location: null, variant: null })
   const previousStakeAmount = useRef<string | null>(null)
-  const [onPresentProfileNftModal] = useModal(
-    <ProfileNftModal nft={clickedProfileNft.nft} onSuccess={onSuccessEditProfile} />,
-  )
   const [onPresentSellModal] = useModal(
     <SellModal
       variant={clickedSellNft.variant}
       nftToSell={clickedSellNft.nft}
       onSuccessSale={onSuccessSale}
-      onSuccessEditProfile={onSuccessEditProfile}
     />,
   )
   const { t } = useTranslation()
@@ -199,27 +186,19 @@ const UserNfts: React.FC<UserNftsProps> = ({
 
   const handleCollectibleClick = (nft: NftToken, location: NftLocation) => {
     switch (location) {
-      case NftLocation.PROFILE:
-        setClickedProfileNft({ nft, location })
-        break
       case NftLocation.WALLET:
         setClickedSellNft({ nft, location, variant: 'sell' })
         break
       case NftLocation.FORSALE:
         setClickedSellNft({ nft, location, variant: 'edit' })
         break
+      case NftLocation.PROFILE:
+        setClickedSellNft({ nft, location, variant: 'sell' })
+        break
       default:
         break
     }
   }
-
-  useEffect(() => {
-    if (clickedProfileNft.nft) {
-      onPresentProfileNftModal()
-    }
-    // exhaustive deps disabled as the useModal dep causes re-render loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickedProfileNft])
 
   useEffect(() => {
     if (clickedSellNft.nft) {

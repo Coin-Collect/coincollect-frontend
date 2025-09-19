@@ -27,13 +27,7 @@ const OwnerActivityContainer = styled(Flex)`
 const IndividualNFTPage: React.FC<IndividualNFTPageProps> = ({ collectionAddress, tokenId }) => {
   const collection = useGetCollection(collectionAddress)
   const { data: distributionData, isFetching: isFetchingDistribution } = useGetCollectionDistribution(collectionAddress)
-  const {
-    combinedNft: nft,
-    isOwn: isOwnNft,
-    isProfilePic,
-    isLoading,
-    refetch,
-  } = useCompleteNft(collectionAddress, tokenId)
+  const { combinedNft: nft, isOwn: isOwnNft, isLoading, refetch } = useCompleteNft(collectionAddress, tokenId)
 
   if (!nft || !collection) {
     // Normally we already show a 404 page here if no nft, just put this checking here for safety.
@@ -62,7 +56,7 @@ const IndividualNFTPage: React.FC<IndividualNFTPageProps> = ({ collectionAddress
 
   return (
     <Page>
-      <MainNFTCard nft={nft} isOwnNft={isOwnNft} nftIsProfilePic={isProfilePic} onSuccess={refetch} />
+      <MainNFTCard nft={nft} isOwnNft={isOwnNft} onSuccess={refetch} />
       <TwoColumnsContainer flexDirection={['column', 'column', 'row']}>
         <Flex flexDirection="column" width="100%">
           <ManageNFTsCard nft={nft} isOwnNft={isOwnNft} isLoading={isLoading} onSuccess={refetch} />
@@ -70,7 +64,7 @@ const IndividualNFTPage: React.FC<IndividualNFTPageProps> = ({ collectionAddress
           <DetailsCard contractAddress={collectionAddress} ipfsJson={nft?.marketData?.metadataUrl} />
         </Flex>
         <OwnerActivityContainer flexDirection="column" width="100%">
-          <OwnerCard nft={nft} isOwnNft={isOwnNft} nftIsProfilePic={isProfilePic} onSuccess={refetch} />
+          <OwnerCard nft={nft} isOwnNft={isOwnNft} onSuccess={refetch} />
           <ActivityCard nft={nft} />
         </OwnerActivityContainer>
       </TwoColumnsContainer>

@@ -1,11 +1,10 @@
-import { InjectedModalProps, Modal, Flex, Text, Button, useModal, Link, Grid, LinkExternal } from '@pancakeswap/uikit'
+import { InjectedModalProps, Modal, Flex, Text, Button, Link, Grid, LinkExternal } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
 import styled from 'styled-components'
 import { NftToken } from 'state/nftMarket/types'
 import { useTranslation } from 'contexts/Localization'
 import { getBscScanLinkForNft, getPolygonScanLinkForNft } from 'utils'
 import { HorizontalDivider, RoundedImage } from './BuySellModals/shared/styles'
-import EditProfileModal from '../Profile/components/EditProfileModal'
 import { nftsBaseUrl, pancakeBunniesAddress } from '../constants'
 
 export const StyledModal = styled(Modal)`
@@ -14,17 +13,11 @@ export const StyledModal = styled(Modal)`
   }
 `
 
-const TextWrapper = styled(Flex)`
-  background-color: ${({ theme }) => theme.colors.dropdown};
-`
-
 interface ProfileNftModalProps extends InjectedModalProps {
   nft: NftToken
-  onSuccess?: () => void
 }
 
-const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss, onSuccess }) => {
-  const [onEditProfileModal] = useModal(<EditProfileModal onSuccess={onSuccess} />, false)
+const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
 
@@ -66,22 +59,6 @@ const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss, onSuc
               PolygonScan
             </LinkExternal>
           </Flex>
-        </Flex>
-        <TextWrapper p="24px 16px" flexDirection="column">
-          <Text mb="16px">{t("You're using this NFT as your Pancake Profile picture")}</Text>
-          <Text color="textSubtle" mb="16px" fontSize="14px">
-            {t(
-              'Removing it will suspend your profile, and you won’t be able to earn points, participate in team activities, or be eligible for new NFT drops.',
-            )}
-          </Text>
-          <Text color="textSubtle" fontSize="14px">
-            {t('Go to your profile page to continue.')}
-          </Text>
-        </TextWrapper>
-        <Flex flexDirection="column" py="16px" px="16px">
-          <Button onClick={onEditProfileModal} width="100%" variant="secondary">
-            {t('Remove Profile Pic')}
-          </Button>
         </Flex>
       </Flex>
     </StyledModal>

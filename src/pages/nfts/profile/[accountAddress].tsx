@@ -16,7 +16,6 @@ const NftProfilePage = () => {
   const {
     profile,
     isValidating: isProfileFetching,
-    refresh: refreshProfile,
   } = useProfileForAddress(accountAddress, {
     revalidateIfStale: true,
     revalidateOnFocus: true,
@@ -52,10 +51,6 @@ const NftProfilePage = () => {
           totalStakedBalance={totalStakedBalance}
           onRefreshWallet={handleRefreshUserNfts}
           onSuccessSale={handleRefreshUserNfts}
-          onSuccessEditProfile={async () => {
-            await refreshProfile()
-            handleRefreshUserNfts()
-          }}
         />
       ) : (
         <UnconnectedProfileNfts nfts={nfts} isLoading={isNftLoading} />
