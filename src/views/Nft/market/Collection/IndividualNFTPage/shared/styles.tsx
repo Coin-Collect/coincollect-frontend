@@ -1,38 +1,9 @@
-import { SyntheticEvent, useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { Box, Flex, Grid, Image } from '@pancakeswap/uikit'
-import { getRandomNftFallbackSrc } from 'utils/nftFallback'
+import { useNftFallbackSource } from 'utils/nftFallback'
 
 type ImageComponentProps = React.ComponentProps<typeof Image>
-
-const useNftFallback = (
-  src?: string,
-  onError?: (event: SyntheticEvent<HTMLImageElement, Event>) => void,
-) => {
-  const [currentSrc, setCurrentSrc] = useState<string>(() => (src ? src : getRandomNftFallbackSrc()))
-
-  useEffect(() => {
-    if (src) {
-      setCurrentSrc(src)
-      return
-    }
-
-    setCurrentSrc((previous) => getRandomNftFallbackSrc(previous))
-  }, [src])
-
-  const handleError = useCallback(
-    (event: SyntheticEvent<HTMLImageElement, Event>) => {
-      setCurrentSrc((previous) => getRandomNftFallbackSrc(previous))
-      if (onError) {
-        onError(event)
-      }
-    },
-    [onError],
-  )
-
-  return { currentSrc, handleError }
-}
 
 export const TwoColumnsContainer = styled(Flex)`
   gap: 22px;
@@ -56,7 +27,7 @@ const StyledRoundedImage = styled(Image)`
 `
 
 export const RoundedImage = ({ src, onError, ...props }: ImageComponentProps) => {
-  const { currentSrc, handleError } = useNftFallback(src, onError)
+  const { currentSrc, handleError } = useNftFallbackSource(src, onError)
 
   return <StyledRoundedImage src={currentSrc} onError={handleError} {...props} />
 }
@@ -68,7 +39,7 @@ const StyledSmallRoundedImage = styled(Image)`
 `
 
 export const SmallRoundedImage = ({ src, onError, ...props }: ImageComponentProps) => {
-  const { currentSrc, handleError } = useNftFallback(src, onError)
+  const { currentSrc, handleError } = useNftFallbackSource(src, onError)
 
   return <StyledSmallRoundedImage src={currentSrc} onError={handleError} {...props} />
 }

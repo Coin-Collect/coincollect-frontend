@@ -1,6 +1,6 @@
-import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, memo, useMemo } from 'react'
 import styled from 'styled-components'
-import { getRandomNftFallbackSrc } from 'utils/nftFallback'
+import { useNftFallbackSource } from 'utils/nftFallback'
 
 interface AvatarImageProps {
   src?: string
@@ -35,29 +35,16 @@ const ImageElement = styled.img`
 `
 
 const AvatarImageComponent: FC<AvatarImageProps> = ({ src, borderColor, alt, className }) => {
-  const [mediaSrc, setMediaSrc] = useState<string>(() => (src ? src : getRandomNftFallbackSrc()))
-
-  useEffect(() => {
-    if (src) {
-      setMediaSrc(src)
-      return
-    }
-
-    setMediaSrc((previous) => getRandomNftFallbackSrc(previous))
-  }, [src])
-
-  const handleMediaError = useCallback(() => {
-    setMediaSrc((previous) => getRandomNftFallbackSrc(previous))
-  }, [])
+  const { currentSrc: mediaSrc, handleError } = useNftFallbackSource(src)
 
   const isVideo = useMemo(() => mediaSrc && /\.(webm|mp4)$/i.test(mediaSrc), [mediaSrc])
 
   return (
     <AvatarContainer borderColor={borderColor} className={className}>
       {isVideo ? (
-        <MediaElement src={mediaSrc} aria-label={alt} autoPlay loop muted playsInline onError={handleMediaError} />
+        <MediaElement src={mediaSrc} aria-label={alt} autoPlay loop muted playsInline onError={handleError} />
       ) : (
-        <ImageElement src={mediaSrc} alt={alt} onError={handleMediaError} />
+        <ImageElement src={mediaSrc} alt={alt} onError={handleError} />
       )}
     </AvatarContainer>
   )
