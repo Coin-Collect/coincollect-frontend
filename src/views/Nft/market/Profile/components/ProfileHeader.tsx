@@ -1,6 +1,6 @@
-import { Flex, Link } from '@pancakeswap/uikit'
+import { Flex, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { getBscScanLink, getPolygonScanLink } from 'utils'
+import { getPolygonScanLink } from 'utils'
 import { formatNumber } from 'utils/formatBalance'
 import truncateHash from 'utils/truncateHash'
 import { Achievement, Profile } from 'state/types'
@@ -78,13 +78,7 @@ const ProfileHeader: React.FC<HeaderProps> = ({
       return null
     }
 
-    return (
-      <Flex flexDirection="column" mb={[16, null, 0]} mr={[0, null, 16]}>
-        <Link href={getBscScanLink(accountPath, 'address')} external bold color="primary">
-          {truncateHash(accountPath)}
-        </Link>
-      </Flex>
-    )
+    return null
   }
 
   return (
