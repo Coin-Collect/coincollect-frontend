@@ -79,7 +79,7 @@ const UserMenu = () => {
           disabled={isWrongNetwork}
           onClick={() => router.push(`${nftsBaseUrl}/profile/${account.toLowerCase()}`)}
         >
-          {t('Profile')} {/* TODO: This was Your NFTs */}
+          {t('Dashboard')} {/* TODO: This was Your NFTs */}
         </UserMenuItem>
         {/*TODO: Activate later
         <ProfileUserMenuItem isLoading={isLoading} hasProfile={hasProfile} disabled={isWrongNetwork} />
