@@ -57,6 +57,11 @@ const config: (t: ContextApi['t']) => ConfigMenuItemsType[] = (t) => [
     hideSubNav: true,
     items: [
       {
+        label: t('Buy .COLLECT Domain'),
+        href: 'https://get.unstoppabledomains.com/collect/',
+        type: DropdownMenuItemType.EXTERNAL_LINK,
+      },
+      {
         label: t('CoinMarketCap'),
         href: 'https://coinmarketcap.com/currencies/coincollect/',
         type: DropdownMenuItemType.EXTERNAL_LINK,

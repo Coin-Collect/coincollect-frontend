@@ -54,6 +54,10 @@ const drawerLinks: MenuItemsType[] = [
         initialOpenState: false,
         items: [
             {
+                label: '.COLLECT Domain',
+                href: 'https://get.unstoppabledomains.com/collect/',
+            },
+            {
                 label: 'CoinMarketCap',
                 href: 'https://coinmarketcap.com/currencies/coincollect/',
             },
