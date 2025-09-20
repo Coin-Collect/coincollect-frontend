@@ -95,6 +95,15 @@ export const mainnetTokens = defineTokens({
     'DappRadar Token',
     'https://dappradar.com/',
   ),
+  quick: new Token(
+    POLYGON_MAINNET,
+    '0xB5C064F955D8e7F38fE0460C556a72987494eE17',
+    18,
+    'QUICK',
+    'QuickSwap Token',
+    'https://quickswap.exchange/',
+  ),
+
   dj: new Token(
     POLYGON_MAINNET,
     '0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816',

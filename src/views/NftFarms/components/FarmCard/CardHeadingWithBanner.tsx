@@ -112,7 +112,13 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({ lpLabel, mult
 
   // This expression is used to access the avatar and other information of the main NFT of the pool.
   // Todo: In the future, I plan to add the mainNftPid value to supportedNfts.
-  const firstFarmOfMainNft = nftFarmsConfig.find((nftFarm) => nftFarm.nftAddresses?.[137] === nftFarmData?.nftAddresses?.[137])
+  const firstFarmOfMainNft = (
+    farmAddr137
+      ? nftFarmsConfig.find(
+          (nftFarm) => nftFarm.nftAddresses?.[137]?.toLowerCase() === farmAddr137,
+        )
+      : undefined
+  ) ?? nftFarmData
   const supportedCollectionPids = nftFarmData?.["supportedCollectionPids"] ? [firstFarmOfMainNft?.pid, ...nftFarmData["supportedCollectionPids"]].filter(Boolean) : [firstFarmOfMainNft?.pid].filter(Boolean)
 
   const supportedNftStakeFarms = supportedCollectionPids

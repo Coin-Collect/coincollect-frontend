@@ -1183,15 +1183,47 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/18.webp",
         avatar: "https://coincollect.org/assets/images/partners/taskon/taskon256.png",
         useApi: true
+    },
+
+
+  
+    {
+        pid: 44,
+        lpSymbol: ".COLLECT Domains",
+        isCommunity: true,
+        nftAddresses: {
+            137: "0xa9a6A3626993D487d2Dbda3173cf58cA1a9D9e9f",
+            80001: "0xa9a6A3626993D487d2Dbda3173cf58cA1a9D9e9f"
+        },
+        contractAddresses: {
+            137: "0x3E9d8505aC0A31c7aE6Da181b9baCCCA94511C69",
+            80001: "0x3E9d8505aC0A31c7aE6Da181b9baCCCA94511C69"
+        },
+        tokenPerBlock: "0.0013952308",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "BONK", percentage: 424 },
+            { token: "SHIB", percentage: 383 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://unstoppabledomains.com/",
+            getNftLink: "https://get.unstoppabledomains.com/collect/",
+        },
+        banner: "/images/poolBanners/partners/13.webp",
+        avatar: "https://coincollect.org/assets/images/collections/logos/udomains.jpg",
+        useApi: true
     }
     
     
-
-    
+      
     
 /*
-
-   
 */
 ].filter((f) => !!f.nftAddresses[ChainId.POLYGON])
 
