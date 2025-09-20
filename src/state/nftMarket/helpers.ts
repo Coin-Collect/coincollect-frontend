@@ -42,7 +42,7 @@ import { isAddress } from 'utils'
  * Fetch static data from all collections using the API
  * @returns
  */
-export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
+export const getCollectionsApi = async (): Promise<ApiCollectionsResponse | null> => {
   const res = await fetch(`${API_NFT}/collections`)
   if (res.ok) {
     const json = await res.json()
@@ -63,51 +63,73 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse> => {
   collectionAddresses: string[]
 ): Promise<Array<{
   tokenId: BigNumber;
-  media: string;
+  media?: { original?: string; thumbnail?: string };
   collectionAddress: string;
 }>> => {
-  const mumbaiCollections = ["0xf2149E6B11638BAEf791e3E66ac7E6469328e840", "0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63"];
-  const network = mumbaiCollections.includes(collectionAddresses[0]) ? 'mumbai' : 'mainnet';
-  const baseUrl = `https://polygon-${network}.g.alchemy.com/nft/v2/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4/getNFTs`;
-  const contractAddressesParam = collectionAddresses.map(address => `contractAddresses[]=${address}`).join('&');
-  const queryParams = `?owner=${ownerAddress}&${contractAddressesParam}&pageSize=5`;
-  const fullUrl = `${baseUrl}${queryParams}`;
+  // Normalize addresses for network detection
+  const mumbaiCollections = [
+    "0xf2149E6B11638BAEf791e3E66ac7E6469328e840",
+    "0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63",
+  ].map((a) => a.toLowerCase())
+  const provided = (collectionAddresses || []).map((a) => a?.toLowerCase?.()).filter(Boolean)
+  // If all provided are known mumbai test collections, use mumbai; otherwise default to mainnet
+  const isMumbai = provided.length > 0 && provided.every((addr) => mumbaiCollections.includes(addr))
+  const network = isMumbai ? 'mumbai' : 'mainnet'
 
-  const res = await fetch(fullUrl)
-  if (res.ok) {
-    const json = await res.json()
-    const formattedTokens = json.ownedNfts.reduce<Array<{
-      tokenId: BigNumber
-      media: string
-      collectionAddress: string
-    }>>((acc, item) => {
-      const rawTokenId = item?.id?.tokenId
-      if (!rawTokenId) {
-        return acc
+  // Use Alchemy v3 getNFTsForOwner with pagination and higher page size
+  const baseUrl = `https://polygon-${network}.g.alchemy.com/nft/v3/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4/getNFTsForOwner`
+  const contractAddressesParam = collectionAddresses.map((address) => `contractAddresses[]=${address}`).join('&')
+
+  const results: Array<{ tokenId: BigNumber; media?: { original?: string; thumbnail?: string }; collectionAddress: string }> = []
+  const seen = new Set<string>()
+
+  let pageKey: string | undefined
+  try {
+    do {
+      const queryParams = `?owner=${ownerAddress}&${contractAddressesParam}&withMetadata=true&pageSize=100${pageKey ? `&pageKey=${pageKey}` : ''}`
+      const fullUrl = `${baseUrl}${queryParams}`
+      const res = await fetch(fullUrl)
+      if (!res.ok) {
+        console.error('Failed to fetch NFTs', res.statusText)
+        break
       }
 
-      const isHexToken = rawTokenId.startsWith('0x')
-      const formattedTokenId = isHexToken
-        ? new BigNumber(rawTokenId.slice(2), 16)
-        : new BigNumber(rawTokenId, 10)
+      const json = await res.json()
+      const owned = Array.isArray(json?.ownedNfts) ? json.ownedNfts : Array.isArray(json?.nfts) ? json.nfts : []
 
-      if (!formattedTokenId || !formattedTokenId.isFinite()) {
-        return acc
+      for (const item of owned) {
+        const rawTokenId: string | undefined = item?.id?.tokenId ?? item?.tokenId
+        if (!rawTokenId) continue
+
+        // Parse decimal or hex tokenId
+        let formattedTokenId: BigNumber
+        if (rawTokenId.startsWith('0x')) {
+          formattedTokenId = new BigNumber(rawTokenId.slice(2), 16)
+        } else {
+          formattedTokenId = new BigNumber(rawTokenId, 10)
+        }
+        if (!formattedTokenId || !formattedTokenId.isFinite()) continue
+
+        const collectionAddress: string | undefined = item?.contract?.address ?? item?.contractAddress
+        if (!collectionAddress) continue
+
+        const key = `${collectionAddress.toLowerCase()}-${formattedTokenId.toFixed()}`
+        if (seen.has(key)) continue
+        seen.add(key)
+
+        const imageUrl: string = item?.media?.[0]?.gateway ?? item?.image?.originalUrl ?? ''
+        const media = imageUrl ? { original: imageUrl, thumbnail: imageUrl } : undefined
+
+        results.push({ tokenId: formattedTokenId, media, collectionAddress })
       }
 
-      acc.push({
-        tokenId: formattedTokenId,
-        media: item?.media?.[0],
-        collectionAddress: item?.contract?.address,
-      })
-
-      return acc
-    }, [])
-
-    return formattedTokens
+      pageKey = json?.pageKey
+    } while (pageKey)
+  } catch (error) {
+    console.error('Failed to fetch NFTs via Alchemy v3 API', error)
   }
-  console.error('Failed to fetch NFTs', res.statusText)
-  return null
+
+  return results
 }
 
 export const getLastMintedNft = async (
@@ -137,7 +159,7 @@ export const getLastMintedNft = async (
  */
  export const mintingActivityApi = async (
   collectionAddress: string
-): Promise<any[]> => {
+): Promise<any[] | null> => {
   const mumbaiCollections = ["0xf2149E6B11638BAEf791e3E66ac7E6469328e840", "0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63"];
   const network = mumbaiCollections.includes(collectionAddress) ? 'mumbai' : 'mainnet';
   const baseUrl = `https://polygon-${network}.g.alchemy.com/v2/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4`;
@@ -195,8 +217,8 @@ export const getLastMintedNft = async (
     }
   } catch (error) {
     console.error('Error occurred:', error);
+    return null;
   }
-
 }
 
 const fetchCollectionsTotalSupply = async (collections: ApiCollection[]): Promise<number[]> => {
@@ -236,7 +258,7 @@ export const getCollections = async (): Promise<Record<string, Collection>> => {
     return collectionApiData /*combineCollectionData(collectionApiDataCombinedOnChain, collectionsMarket)*/
   } catch (error) {
     console.error('Unable to fetch data:', error)
-    return null
+    return {}
   }
 }
 
@@ -249,6 +271,10 @@ export const getCollection = async (collectionAddress: string): Promise<Record<s
       getCollectionApi(collectionAddress),
       getCollectionSg(collectionAddress),
     ])
+
+    if (!collection || !collectionMarket) {
+      return null
+    }
 
     const collectionsTotalSupply = await fetchCollectionsTotalSupply([collection])
     const totalSupplyFromApi = Number(collection.totalSupply) || 0
@@ -269,7 +295,7 @@ export const getCollection = async (collectionAddress: string): Promise<Record<s
  * Fetch static data from a collection using the API
  * @returns
  */
-export const getCollectionApi = async (collectionAddress: string): Promise<ApiCollection> => {
+export const getCollectionApi = async (collectionAddress: string): Promise<ApiCollection | null> => {
   const res = await fetch(`${API_NFT}/collections/${collectionAddress}`)
   if (res.ok) {
     const json = await res.json()
@@ -290,7 +316,7 @@ export const getNftsFromCollectionApi = async (
   collectionAddress: string,
   size = 100,
   page = 1,
-): Promise<ApiResponseCollectionTokens> => {
+): Promise<ApiResponseCollectionTokens | null> => {
   const isPBCollection = collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase()
   const requestPath = `${API_NFT}/collections/${collectionAddress}/tokens${
     !isPBCollection ? `?page=${page}&size=${size}` : ``
@@ -314,7 +340,7 @@ export const getNftsFromCollectionApi = async (
 export const getNftApi = async (
   collectionAddress: string,
   tokenId: string,
-): Promise<ApiResponseSpecificToken['data']> => {
+): Promise<ApiResponseSpecificToken['data'] | null> => {
   const res = await fetch(`${API_NFT}/collections/${collectionAddress}/tokens/${tokenId}`)
   if (res.ok) {
     const json = await res.json()
@@ -333,23 +359,34 @@ export const getNftApi = async (
 export const getNftsFromDifferentCollectionsApi = async (
   from: { collectionAddress: string; tokenId: string }[],
 ): Promise<NftToken[]> => {
-  const promises = from.map((nft) => getNftApi(nft.collectionAddress, nft.tokenId))
+  const promises = from.map(async (nft) => {
+    try {
+      return await getNftApi(nft.collectionAddress, nft.tokenId)
+    } catch {
+      return null
+    }
+  })
   const responses = await Promise.all(promises)
   // Sometimes API can't find some tokens (e.g. 404 response)
   // at least return the ones that returned successfully
-  return responses
-    .filter((resp) => resp)
-    .map((res, index) => ({
-      tokenId: res.tokenId,
-      name: res.name,
-      collectionName: res.collection.name,
-      collectionAddress: from[index].collectionAddress,
-      description: res.description,
-      attributes: res.attributes,
-      createdAt: res.createdAt,
-      updatedAt: res.updatedAt,
-      image: res.image,
-    }))
+  const validResponses: Array<{ response: NonNullable<Awaited<ReturnType<typeof getNftApi>>>, originalIndex: number }> = []
+  responses.forEach((resp, index) => {
+    if (resp) {
+      validResponses.push({ response: resp, originalIndex: index })
+    }
+  })
+  
+  return validResponses.map(({ response: res, originalIndex }) => ({
+    tokenId: res.tokenId,
+    name: res.name,
+    collectionName: res.collection.name,
+    collectionAddress: from[originalIndex].collectionAddress,
+    description: res.description,
+    attributes: res.attributes,
+    createdAt: res.createdAt,
+    updatedAt: res.updatedAt,
+    image: res.image,
+  }))
 }
 
 /**
@@ -360,8 +397,11 @@ export const getNftsFromDifferentCollectionsApi = async (
  * Fetch market data from a collection using the Subgraph
  * @returns
  */
-export const getCollectionSg = async (collectionAddress: string): Promise<CollectionMarketDataBaseFields> => {
+export const getCollectionSg = async (collectionAddress: string): Promise<CollectionMarketDataBaseFields | null> => {
   try {
+    if (!collectionAddress) {
+      return null
+    }
     const res = await request(
       GRAPH_API_NFTMARKET,
       gql`
@@ -373,7 +413,7 @@ export const getCollectionSg = async (collectionAddress: string): Promise<Collec
       `,
       { collectionAddress: collectionAddress.toLowerCase() },
     )
-    return res.collection
+    return res.collection || null
   } catch (error) {
     console.error('Failed to fetch collection', error)
     return null
@@ -396,7 +436,7 @@ export const getCollectionsSg = async (): Promise<CollectionMarketDataBaseFields
         }
       `,
     )
-    return res.collections
+    return res.collections || []
   } catch (error) {
     console.error('Failed to fetch NFT collections', error)
     return []
@@ -416,6 +456,9 @@ export const getNftsFromCollectionSg = async (
   skip = 0,
 ): Promise<TokenMarketData[]> => {
   // Squad to be sorted by tokenId as this matches the order of the paginated API return. For PBs - get the most recent,
+  if (!collectionAddress) {
+    return []
+  }
   const isPBCollection = collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase()
 
   try {
@@ -433,7 +476,7 @@ export const getNftsFromCollectionSg = async (
       `,
       { collectionAddress: collectionAddress.toLowerCase(), skip, first },
     )
-    return res.collection.nfts
+    return res.collection?.nfts || []
   } catch (error) {
     console.error('Failed to fetch NFTs from collection', error)
     return []
@@ -452,6 +495,9 @@ export const getNftsByBunnyIdSg = async (
   orderDirection: 'asc' | 'desc',
 ): Promise<TokenMarketData[]> => {
   try {
+    if (!bunnyId) {
+      return []
+    }
     const where =
       existingTokenIds.length > 0
         ? { otherId: bunnyId, isTradable: true, tokenId_not_in: existingTokenIds }
@@ -471,7 +517,7 @@ export const getNftsByBunnyIdSg = async (
         orderDirection,
       },
     )
-    return res.nfts
+    return res.nfts || []
   } catch (error) {
     console.error(`Failed to fetch collection NFTs for bunny id ${bunnyId}`, error)
     return []
@@ -489,7 +535,7 @@ export const getMarketDataForTokenIds = async (
   existingTokenIds: string[],
 ): Promise<TokenMarketData[]> => {
   try {
-    if (existingTokenIds.length === 0) {
+    if (!collectionAddress || existingTokenIds.length === 0) {
       return []
     }
     const res = await request(
@@ -509,7 +555,7 @@ export const getMarketDataForTokenIds = async (
         where: { tokenId_in: existingTokenIds },
       },
     )
-    return res.collection.nfts
+    return res.collection?.nfts || []
   } catch (error) {
     console.error(`Failed to fetch market data for NFTs stored tokens`, error)
     return []
@@ -539,7 +585,7 @@ export const getNftsMarketData = async (
       { where, first, skip, orderBy, orderDirection },
     )
 
-    return res.nfts
+    return res.nfts || []
   } catch (error) {
     console.error('Failed to fetch NFTs market data', error)
     return []
@@ -614,6 +660,9 @@ export const getAllPancakeBunniesRecentUpdatedAt = async (bunnyIds: string[]): P
  */
 export const getLowestPriceInCollection = async (collectionAddress: string) => {
   try {
+    if (!collectionAddress) {
+      return 0
+    }
     const response = await getNftsMarketData(
       { collection: collectionAddress.toLowerCase(), isTradable: true },
       1,
@@ -642,6 +691,13 @@ export const getUserActivity = async (
   address: string,
 ): Promise<{ askOrderHistory: AskOrder[]; buyTradeHistory: Transaction[]; sellTradeHistory: Transaction[] }> => {
   try {
+    if (!address) {
+      return {
+        askOrderHistory: [],
+        buyTradeHistory: [],
+        sellTradeHistory: [],
+      }
+    }
     const res = await request(
       GRAPH_API_NFTMARKET,
       gql`
@@ -675,7 +731,11 @@ export const getUserActivity = async (
       { address },
     )
 
-    return res.user || { askOrderHistory: [], buyTradeHistory: [], sellTradeHistory: [] }
+    return {
+      askOrderHistory: res.user?.askOrderHistory || [],
+      buyTradeHistory: res.user?.buyTradeHistory || [],
+      sellTradeHistory: res.user?.sellTradeHistory || []
+    }
   } catch (error) {
     console.error('Failed to fetch user Activity', error)
     return {
@@ -793,6 +853,9 @@ export const getTokenActivity = async (
   collectionAddress: string,
 ): Promise<{ askOrders: AskOrder[]; transactions: Transaction[] }> => {
   try {
+    if (!tokenId || !collectionAddress) {
+      return { askOrders: [], transactions: [] }
+    }
     const res = await request(
       GRAPH_API_NFTMARKET,
       gql`
@@ -823,8 +886,9 @@ export const getTokenActivity = async (
       { tokenId, address: collectionAddress },
     )
 
-    if (res.nfts.length > 0) {
-      return { askOrders: res.nfts[0].askHistory, transactions: res.nfts[0].transactionHistory }
+    const nfts = res.nfts || []
+    if (nfts.length > 0) {
+      return { askOrders: nfts[0].askHistory || [], transactions: nfts[0].transactionHistory || [] }
     }
     return { askOrders: [], transactions: [] }
   } catch (error) {
@@ -873,7 +937,7 @@ export const getLatestListedNfts = async (first: number): Promise<TokenMarketDat
 export const fetchNftsFiltered = async (
   collectionAddress: string,
   filters: Record<string, string | number>,
-): Promise<ApiTokenFilterResponse> => {
+): Promise<ApiTokenFilterResponse | null> => {
   const res = await fetch(`${API_NFT}/collections/${collectionAddress}/filter?${stringify(filters)}`)
 
   if (res.ok) {
@@ -1051,7 +1115,7 @@ export const attachMarketDataToWalletNfts = (
     const marketData = marketDataForWalletNfts.find(
       (marketNft) =>
         marketNft.tokenId === walletNft.tokenId &&
-        marketNft.collection.id.toLowerCase() === walletNft.collectionAddress.toLowerCase(),
+        marketNft.collection?.id?.toLowerCase() === walletNft.collectionAddress.toLowerCase(),
     )
     return (
       marketData ?? {
@@ -1059,16 +1123,14 @@ export const attachMarketDataToWalletNfts = (
         collection: {
           id: walletNft.collectionAddress.toLowerCase(),
         },
-        nftLocation: walletNft.nftLocation,
-        metadataUrl: null,
-        transactionHistory: null,
-        currentSeller: null,
-        isTradable: null,
-        currentAskPrice: null,
-        latestTradedPriceInBNB: null,
-        tradeVolumeBNB: null,
-        totalTrades: null,
-        otherId: null,
+        metadataUrl: walletNft.collectionAddress,
+        currentSeller: '',
+        isTradable: false,
+        currentAskPrice: '0',
+        latestTradedPriceInBNB: '0',
+        tradeVolumeBNB: '0',
+        totalTrades: '0',
+        otherId: '',
       }
     )
   })
@@ -1178,7 +1240,7 @@ export const getCompleteAccountNftData = async (
   const tokenIdsForSale = marketDataForSaleNfts.map((nft) => nft.tokenId)
 
   const forSaleNftIds = marketDataForSaleNfts.map((nft) => {
-    return { collectionAddress: nft.collection.id, tokenId: nft.tokenId }
+    return { collectionAddress: nft.collection?.id || '', tokenId: nft.tokenId }
   })
 
   const metadataForAllNfts = await getNftsFromDifferentCollectionsApi([
@@ -1202,7 +1264,7 @@ export const getCompleteAccountNftData = async (
  * Fetch distribution information for a collection
  * @returns
  */
-export const getCollectionDistributionApi = async <T>(collectionAddress: string): Promise<T> => {
+export const getCollectionDistributionApi = async <T>(collectionAddress: string): Promise<T | null> => {
   const res = await fetch(`${API_NFT}/collections/${collectionAddress}/distribution`)
   if (res.ok) {
     const data = await res.json()
