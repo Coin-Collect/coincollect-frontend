@@ -64,10 +64,11 @@ export const useStakedNfts = (selectedPid: number) => {
       const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (token, index) => {
         const { tokenId, tokenAddress } = token;
 
-        let meta = null;
+        let meta: any = null;
         try {
           //@ts-ignore
           const tokenURI = rawTokenURIs[index][0];
+          await new Promise(resolve => setTimeout(resolve, index * 300))
           meta = await axios(tokenURI.replace("ipfs://", `${IPFS_GATEWAY}/`));
         } catch (error) {
           console.log('IPFS link is broken!', error);
