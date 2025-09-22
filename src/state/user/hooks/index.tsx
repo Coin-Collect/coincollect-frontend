@@ -71,7 +71,7 @@ export function usePhishingBannerManager(): [boolean, () => void] {
     dispatch(hidePhishingWarningBanner())
   }, [dispatch])
 
-  return [showPhishingWarningBanner, hideBanner]
+  return [false, hideBanner]
 }
 
 // Get user preference for exchange price chart
