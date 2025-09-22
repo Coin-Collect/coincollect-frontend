@@ -1218,8 +1218,44 @@ const nftFarms: SerializedNftFarmConfig[] = [
         banner: "/images/poolBanners/partners/13.webp",
         avatar: "https://coincollect.org/assets/images/collections/logos/udomains.jpg",
         useApi: true
+    },
+
+    
+
+    {
+        pid: 45,
+        lpSymbol: "LootBox Rewards",
+        isCommunity: true,
+        nftAddresses: {
+            137: "0xcE9Ca2edfeC724B17582959cE4B8cf2B9F0d3cF8",
+            80001: "0xcE9Ca2edfeC724B17582959cE4B8cf2B9F0d3cF8"
+        },
+        contractAddresses: {
+            137: "0xE911915E4dF781E9f98e38C501Cdc023D762058C",
+            80001: "0xE911915E4dF781E9f98e38C501Cdc023D762058C"
+        },
+        tokenPerBlock: "0.0015347539",
+        participantThreshold: 1500,
+        isFinished: false,
+        earningToken: serializedTokens.collect,
+        sideRewards: [
+            { token: "AVATAR", percentage: 45455 },
+            { token: "Z", percentage: 136 }
+        ],
+        supportedCollectionPids: [1,2,3,4,15],
+        collectionPowers: [30,3,5,10,15,1],
+        mainCollectionWeight: 30,
+        performanceFee: "0",
+        projectLink: {
+            mainLink: "https://questgalaxy.com/",
+            getNftLink: "https://opensea.io/collection/questgalaxy-lootbox/overview",
+        },
+        banner: "/images/poolBanners/partners/16.webp",
+        avatar: "/images/poolBanners/nfts/lootbox.webp",
+        useApi: true
     }
     
+        
     
       
     

@@ -37,7 +37,7 @@ export const useUnstoppableDomains = (address: string | null | undefined): UseUn
         const testAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
         console.log('🧪 Testing API with known address:', testAddress)
         
-        const testResponse = await fetch(`https://resolve.unstoppabledomains.com/reverse/${testAddress}`)
+        const testResponse = await fetch(`https://api.unstoppabledomains.com/resolve/domains?owners=${testAddress}`)
         console.log('🧪 Test API response status:', testResponse.status)
         
         if (testResponse.ok) {
@@ -46,16 +46,16 @@ export const useUnstoppableDomains = (address: string | null | undefined): UseUn
         }
         
         // Now try with the actual address
-        const response = await fetch(`https://resolve.unstoppabledomains.com/reverse/${address}`)
+        const response = await fetch(`https://api.unstoppabledomains.com/resolve/domains?owners=${address}`)
         console.log('📡 API response status:', response.status)
         
         if (response.ok) {
           const data = await response.json()
           console.log('📡 API response data:', data)
           
-          if (data.meta && data.meta.domain) {
-            console.log('✅ Domain found:', data.meta.domain)
-            setDomainName(data.meta.domain)
+          if (data.data && data.data.length > 0 && data.data[0].meta && data.data[0].meta.domain) {
+            console.log('✅ Domain found:', data.data[0].meta.domain)
+            setDomainName(data.data[0].meta.domain)
           } else {
             console.log('❌ No domain found in response')
             setDomainName(null)
