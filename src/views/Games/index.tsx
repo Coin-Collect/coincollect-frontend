@@ -49,17 +49,17 @@ const GamesView: React.FC = () => {
     {
       name: 'Cyberpunk NFT',
       image: '/images/poolBanners/nfts/cyberpunk.webp',
-      link: 'https://dashboard.coincollect.org/nfts/cyberpunk'
+      link: 'https://opensea.io/collection/cyberpunk-citizenship/overview'
     },
     {
       name: 'Key NFT',
       image: '/images/poolBanners/nfts/key.webp',
-      link: 'https://dashboard.coincollect.org/nfts/key'
+      link: 'https://key2web3.com/'
     },
     {
       name: 'Lootbox NFT',
       image: '/images/poolBanners/nfts/lootbox.webp',
-      link: 'https://dashboard.coincollect.org/nfts/lootbox'
+      link: 'https://opensea.io/collection/questgalaxy-lootbox/overview'
     }
   ]
 
@@ -74,8 +74,8 @@ const GamesView: React.FC = () => {
     projectHref: 'https://questgalaxy.com',
     usableNfts: ['Quest Galaxy Pass'],
     earnableRewards: [
-      { label: 'GHOST', logoSrc: '/images/games/tokens/bonk.png' },
-      { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
+      { label: 'SOL', logoSrc: '/images/games/tokens/sol.webp' },
+      { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
       { label: 'ETH', logoSrc: '/images/games/tokens/eth-min.png' },
       { label: 'LINK', logoSrc: '/images/games/tokens/link-min.png' },
       { label: 'UNI', logoSrc: '/images/games/tokens/uni.png' },
@@ -96,7 +96,7 @@ const GamesView: React.FC = () => {
     projectHref: 'https://coincollect.org',
     usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
     earnableRewards: [
-      { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
+      { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
       { label: 'ETH', logoSrc: '/images/games/tokens/eth-min.png' },
       { label: 'LINK', logoSrc: '/images/games/tokens/link-min.png' },
       { label: 'UNI', logoSrc: '/images/games/tokens/uni.png' },

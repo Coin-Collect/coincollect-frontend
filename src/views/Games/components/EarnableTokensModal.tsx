@@ -50,12 +50,6 @@ const TokenCard = styled(Flex)`
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 16px;
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  box-shadow: 0 6px 16px rgba(15, 21, 43, 0.16);
-  transition: transform 0.2s ease;
   cursor: pointer;
 
   &:hover {
@@ -81,12 +75,6 @@ const NFTCard = styled(Flex)`
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 16px;
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  box-shadow: 0 6px 16px rgba(15, 21, 43, 0.16);
-  transition: transform 0.2s ease;
   cursor: pointer;
 
   &:hover {
@@ -135,7 +123,7 @@ const EarnableTokensModal: React.FC<EarnableTokensModalProps> = ({ tokens, nfts 
             <SectionTitle>Tokens</SectionTitle>
             <TokensGrid>
               {tokens.map((token) => (
-                <TokenCard key={token.label} minWidth="120px">
+                <TokenCard key={token.label}>
                   <TokenImage src={token.logoSrc} alt={token.label} />
                   <Text fontWeight={600}>{token.label}</Text>
                 </TokenCard>
@@ -149,7 +137,7 @@ const EarnableTokensModal: React.FC<EarnableTokensModalProps> = ({ tokens, nfts 
             <SectionTitle>Usable NFTs in-Game</SectionTitle>
             <TokensGrid>
               {nfts.map((nft) => (
-                <NFTCard key={nft.name} minWidth="120px">
+                <NFTCard key={nft.name}>
                   <NFTLink href={nft.link} target="_blank" rel="noopener noreferrer">
                     <NFTImage src={nft.image} alt={nft.name} />
                     <Text fontWeight={600} textAlign="center">{nft.name}</Text>
