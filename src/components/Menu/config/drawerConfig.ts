@@ -22,7 +22,7 @@ const drawerLinks: MenuItemsType[] = [
     {
 
         label: 'Games',
-        icon: 'TicketIcon',
+        icon: 'PlayCircleOutlineIcon',
         href: '/games',
     },
     {
