@@ -21,17 +21,19 @@ import { FetchStatus } from 'config/constants/types'
 import WalletModal, { WalletView, LOW_MATIC_BALANCE } from './WalletModal'
 import ProfileUserMenuItem from './ProfileUserMenutItem'
 import WalletUserMenuItem from './WalletUserMenuItem'
-import useWeb3React from 'hooks/useWeb3React'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { isChainSupported } from 'utils/wagmi'
+import { useUnstoppableDomains } from '../../../hooks/useUnstoppableDomains'
 
 const UserMenu = () => {
   const router = useRouter()
   const { t } = useTranslation()
-  const { account, chainId } = useWeb3React()
+  const { account, chainId } = useActiveWeb3React()
   const { logout } = useAuth()
   const { hasPendingTransactions, pendingNumber } = usePendingTransactions()
   const { balance, fetchStatus } = useGetMaticBalance()
   const { isInitialized, isLoading, profile } = useProfile()
+  const { domainName, loading, error } = useUnstoppableDomains(account)
 
   const [onPresentWalletModal] = useModal(<WalletModal initialView={WalletView.WALLET_INFO} />)
   const [onPresentTransactionModal] = useModal(<WalletModal initialView={WalletView.TRANSACTIONS} />)
@@ -41,17 +43,17 @@ const UserMenu = () => {
   const hasLowMaticBalance = fetchStatus === FetchStatus.Fetched && balance.lte(LOW_MATIC_BALANCE)
   const [userMenuText, setUserMenuText] = useState<string>('')
   const [userMenuVariable, setUserMenuVariable] = useState<UserMenuVariant>('default')
-  const isWrongNetwork = account && !isChainSupported(chainId)
+  const isWrongNetwork = account && (!chainId || !isChainSupported(chainId))
 
   useEffect(() => {
-    if (hasPendingTransactions) {
+    if (pendingNumber && pendingNumber > 0) {
       setUserMenuText(t('%num% Pending', { num: pendingNumber }))
       setUserMenuVariable('pending')
     } else {
       setUserMenuText('')
       setUserMenuVariable('default')
     }
-  }, [hasPendingTransactions, pendingNumber, t])
+  }, [pendingNumber, t])
 
   const onClickWalletMenu = (): void => {
     if (isWrongNetwork) {
@@ -66,20 +68,20 @@ const UserMenu = () => {
       <>
         <WalletUserMenuItem
           hasLowMaticBalance={hasLowMaticBalance}
-          isWrongNetwork={isWrongNetwork}
+          isWrongNetwork={Boolean(isWrongNetwork)}
           onPresentWalletModal={onClickWalletMenu}
         />
-        <UserMenuItem as="button" disabled={isWrongNetwork} onClick={onPresentTransactionModal}>
+        <UserMenuItem as="button" disabled={Boolean(isWrongNetwork)} onClick={onPresentTransactionModal}>
           {t('Recent Transactions')}
           {hasPendingTransactions && <RefreshIcon spin />}
         </UserMenuItem>
         <UserMenuDivider />
         <UserMenuItem
           as="button"
-          disabled={isWrongNetwork}
-          onClick={() => router.push(`${nftsBaseUrl}/profile/${account.toLowerCase()}`)}
+          disabled={Boolean(isWrongNetwork)}
+          onClick={() => account && router.push(`${nftsBaseUrl}/profile/${account.toLowerCase()}`)}
         >
-          {t('Profile')} {/* TODO: This was Your NFTs */}
+          {t('Dashboard')} {/* TODO: This was Your NFTs */}
         </UserMenuItem>
         {/*TODO: Activate later
         <ProfileUserMenuItem isLoading={isLoading} hasProfile={hasProfile} disabled={isWrongNetwork} />
@@ -97,7 +99,7 @@ const UserMenu = () => {
 
   if (account) {
     return (
-      <UIKitUserMenu account={account} avatarSrc={avatarSrc} text={userMenuText} variant={userMenuVariable}>
+      <UIKitUserMenu account={domainName || account} avatarSrc={avatarSrc} text={userMenuText} variant={userMenuVariable}>
         <UserMenuItems />
       </UIKitUserMenu>
     )

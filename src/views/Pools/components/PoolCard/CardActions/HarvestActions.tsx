@@ -2,8 +2,11 @@ import { Flex, Text, Button, Heading, useModal, Skeleton } from '@pancakeswap/ui
 import BigNumber from 'bignumber.js'
 import { Token } from '@coincollect/sdk'
 import { useTranslation } from 'contexts/Localization'
-import { getFullDisplayBalance, getBalanceNumber, formatNumber } from 'utils/formatBalance'
+import { getFullDisplayBalance, getBalanceAmount } from 'utils/formatBalance'
 import Balance from 'components/Balance'
+import AnimatedValue from 'components/AnimatedValue'
+import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
+import formatRewardAmount from 'utils/formatRewardAmount'
 import CollectModal from '../Modals/CollectModal'
 
 interface HarvestActionsProps {
@@ -24,13 +27,14 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation()
-  const earningTokenBalance = getBalanceNumber(earnings, earningToken.decimals)
-  const formattedBalance = formatNumber(earningTokenBalance, 3, 3)
+  const tokenAmount = getBalanceAmount(earnings, earningToken.decimals)
+  const { displayValue, baseValue, isAnimating, collapsedValue } = useAnimatedRewardValue(tokenAmount)
 
-  const earningTokenDollarBalance = getBalanceNumber(earnings.multipliedBy(earningTokenPrice), earningToken.decimals)
+  const earningTokenDollarBalance = baseValue.multipliedBy(earningTokenPrice).toNumber()
 
   const fullBalance = getFullDisplayBalance(earnings, earningToken.decimals)
-  const hasEarnings = earnings.toNumber() > 0
+  const hasEarnings = baseValue.gt(0)
+  const formattedBalance = formatRewardAmount(baseValue)
   const isCompoundPool = sousId === 0
 
   const [onPresentCollect] = useModal(
@@ -54,7 +58,9 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
           <>
             {hasEarnings ? (
               <>
-                <Balance bold fontSize="20px" decimals={5} value={earningTokenBalance} />
+                <Heading as="div" scale="lg" color="text">
+                  <AnimatedValue $animate={isAnimating}>{displayValue}</AnimatedValue>
+                </Heading>
                 {earningTokenPrice > 0 && (
                   <Balance
                     display="inline"
@@ -69,7 +75,9 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
               </>
             ) : (
               <>
-                <Heading color="textDisabled">0</Heading>
+                <Heading color="textDisabled">
+                  <AnimatedValue>{collapsedValue}</AnimatedValue>
+                </Heading>
                 <Text fontSize="12px" color="textDisabled">
                   0 USD
                 </Text>

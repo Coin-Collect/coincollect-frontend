@@ -4,11 +4,14 @@ import { DeserializedPool } from 'state/types'
 import BigNumber from 'bignumber.js'
 import { PoolCategory } from 'config/constants/types'
 import { BIG_ZERO } from 'utils/bigNumber'
-import { formatNumber, getBalanceNumber, getFullDisplayBalance } from 'utils/formatBalance'
-import Balance from 'components/Balance'
+import { getBalanceAmount, getFullDisplayBalance } from 'utils/formatBalance'
 import { useTranslation } from 'contexts/Localization'
 import BaseCell, { CellContent } from './BaseCell'
 import CollectModal from '../../PoolCard/Modals/CollectModal'
+import AnimatedValue from 'components/AnimatedValue'
+import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
+import formatRewardAmount from 'utils/formatRewardAmount'
+import Balance from 'components/Balance'
 
 interface EarningsCellProps {
   pool: DeserializedPool
@@ -30,11 +33,14 @@ const EarningsCell: React.FC<EarningsCellProps> = ({ pool, account, userDataLoad
   const isManualCakePool = sousId === 0
 
   const earnings = userData?.pendingReward ? new BigNumber(userData.pendingReward) : BIG_ZERO
-  const earningTokenBalance = getBalanceNumber(earnings, earningToken.decimals)
-  const earningTokenDollarBalance = getBalanceNumber(earnings.multipliedBy(earningTokenPrice), earningToken.decimals)
-  const hasEarnings = account && earnings.gt(0)
+  const tokenAmount = getBalanceAmount(earnings, earningToken.decimals)
+  const { displayValue, baseValue, isAnimating, collapsedValue } = useAnimatedRewardValue(tokenAmount, {
+    disabled: !account || !userDataLoaded,
+  })
+  const hasEarnings = account && baseValue.gt(0)
+  const earningTokenDollarBalance = baseValue.multipliedBy(earningTokenPrice).toNumber()
   const fullBalance = getFullDisplayBalance(earnings, earningToken.decimals)
-  const formattedBalance = formatNumber(earningTokenBalance, 3, 3)
+  const formattedBalance = formatRewardAmount(baseValue)
   const isBnbPool = poolCategory === PoolCategory.BINANCE
 
   const labelText = t('%asset% Earned', { asset: earningToken.symbol })
@@ -68,28 +74,28 @@ const EarningsCell: React.FC<EarningsCellProps> = ({ pool, account, userDataLoad
           <>
             <Flex>
               <Box mr="8px" height="32px" onClick={hasEarnings ? handleEarningsClick : undefined}>
-                <Balance
+                <Text
                   mt="4px"
-                  bold={!isMobile}
+                  fontWeight={hasEarnings && !isMobile ? 600 : 400}
                   fontSize={isMobile ? '14px' : '16px'}
                   color={hasEarnings ? 'primary' : 'textDisabled'}
-                  decimals={hasEarnings ? 5 : 1}
-                  value={hasEarnings ? earningTokenBalance : 0}
-                />
+                >
+                  <AnimatedValue $animate={hasEarnings && isAnimating}>
+                    {hasEarnings ? displayValue : collapsedValue}
+                  </AnimatedValue>
+                </Text>
                 {hasEarnings ? (
-                  <>
-                    {earningTokenPrice > 0 && (
-                      <Balance
-                        display="inline"
-                        fontSize="12px"
-                        color="textSubtle"
-                        decimals={2}
-                        prefix="~"
-                        value={earningTokenDollarBalance}
-                        unit=" USD"
-                      />
-                    )}
-                  </>
+                  earningTokenPrice > 0 && (
+                    <Balance
+                      display="inline"
+                      fontSize="12px"
+                      color="textSubtle"
+                      decimals={2}
+                      prefix="~"
+                      value={earningTokenDollarBalance}
+                      unit=" USD"
+                    />
+                  )
                 ) : (
                   <Text mt="4px" fontSize="12px" color="textDisabled">
                     0 USD

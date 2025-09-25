@@ -1,116 +1,65 @@
 import { useTranslation } from 'contexts/Localization'
-import { Button, ChevronLeftIcon, ChevronRightIcon, Flex, Text } from '@pancakeswap/uikit'
+import { ChevronLeftIcon, ChevronRightIcon, Flex, Text } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
 import styled from 'styled-components'
-import { useRef, useCallback } from 'react'
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import { useRef, useCallback, useMemo, useEffect, useState } from 'react'
+import useWeb3React from 'hooks/useWeb3React'
+import BigNumber from 'bignumber.js'
+import { useFarms, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
+import FarmCard from 'views/NftFarms/components/FarmCard/FarmCard'
+import { getDisplayApr } from 'views/NftFarms/Farms'
+import { getNftFarmApr } from 'utils/apr'
+import nftFarmsConfig from 'config/constants/nftFarms'
 
-const articlesData = [
-  {
-    link: '/nftpools',
-    imgUrl: '/images/home/collections/unicorns.jpg',
-    from: 'Crypto Unicorns',
-    title: 'Stake your Unicorn NFT and start earning rewards instantly',
-  },
-  {
-    link: '/nftpools',
-    imgUrl: '/images/home/collections/lens.jpg',
-    from: 'Lens Protocol',
-    title: 'Stake your Lens Handle NFT and start earning rewards instantly',
-  },
-  {
-    link: '/nftpools',
-    imgUrl: '/images/home/collections/sandbox.jpg',
-    from: 'Sandbox Land',
-    title: 'Stake your Sandbox Land and start earning rewards instantly',
-  },
-  {
-    link: '/nftpools',
-    imgUrl: '/images/home/collections/udomains.jpg',
-    from: 'Unstoppable Domains',
-    title: 'Stake your Unstoppable Domains and start earning rewards instantly',
-  },
-  {
-    link: '/nftpools',
-    imgUrl: '/images/home/collections/galxe.jpg',
-    from: 'Galxe',
-    title: 'Stake your Galxe OAT NFT and start earning rewards instantly',
-  },
-  {
-    link: '/nftpools',
-    imgUrl: '/images/home/collections/smartcat.jpg',
-    from: 'Smart Cats',
-    title: 'Stake your Smart Cats NFT and start earning rewards instantly',
-  },
-]
-
-const NewsCard = styled.div`
-  vertical-align: top;
-  width: 280px;
-  height: 387px;
-  border-radius: 24px;
-  background: ${({ theme }) => theme.colors.backgroundAlt};
-  box-shadow: 0px 2px 0px 0px ${({ theme }) => theme.colors.cardBorder};
-  display: inline-block;
-  margin-right: 34px;
-  cursor: pointer;
-  scroll-snap-align: start;
-  &:last-child {
-    scroll-snap-align: end;
-  }
-`
-const ImageBox = styled.div`
-  height: 200px;
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  img {
-    flex-shrink: 0;
-    min-width: 100%;
-    min-height: 100%;
-  }
-`
-const ContentBox = styled.div`
-  height: 187px;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
-  overflow: hidden;
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  border-top: none;
-  padding: 20px;
-`
-
-const DescriptionBox = styled.div`
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  white-space: pre-wrap;
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 120%;
-  margin-top: 16px;
-  max-height: 56px;
-`
+const CARD_GAP = 16
 
 const CardWrapper = styled.div`
-  white-space: nowrap;
+  display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   border-radius: 24px;
-  padding-bottom: 5px;
+  padding: 0 8px 12px;
+  gap: ${CARD_GAP}px;
+
   &::-webkit-scrollbar {
     display: none;
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
 `
+
+const CardItem = styled.div`
+  flex: 0 0 85vw;
+  max-width: 320px;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: flex;
+  justify-content: center;
+
+  & > * {
+    width: 100%;
+  }
+
+  ${({ theme }) => theme.mediaQueries.sm} {
+    flex-basis: 300px;
+    max-width: 300px;
+  }
+
+  ${({ theme }) => theme.mediaQueries.lg} {
+    flex-basis: 360px;
+    max-width: 360px;
+  }
+`
+const ArrowWrapper = styled(Flex)`
+  display: none;
+
+  ${({ theme }) => theme.mediaQueries.sm} {
+    display: flex;
+  }
+`
+
 const ArrowButton = styled.div`
   display: flex;
   justify-content: center;
@@ -128,15 +77,84 @@ const ArrowButton = styled.div`
 export const FeaturedSection: React.FC = () => {
   const { theme } = useTheme()
   const { t } = useTranslation()
+  const { account } = useWeb3React()
+  const { data: farmsData } = useFarms()
+  usePollFarmsWithUserData()
+  const cakePrice = usePriceCakeBusd()
   const scrollWrapper = useRef<HTMLDivElement>(null)
+  const [visiblePids, setVisiblePids] = useState<number[]>([])
+
+  useEffect(() => {
+    if (!farmsData || farmsData.length === 0) {
+      return
+    }
+
+    const activeFarms = farmsData.filter((farm) => !farm.isFinished)
+    const poolSource = activeFarms.length > 0 ? activeFarms : farmsData
+    const availablePids = poolSource.map((farm) => farm.pid)
+    const hasValidSelection =
+      visiblePids.length === 6 && visiblePids.every((pid) => availablePids.includes(pid))
+
+    if (hasValidSelection) {
+      return
+    }
+
+    const shuffled = [...poolSource]
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+
+    const selection = shuffled.slice(0, 6).map((farm) => farm.pid)
+    setVisiblePids(selection)
+  }, [farmsData, visiblePids])
+
+  const farmCards = useMemo(() => {
+    if (!farmsData || visiblePids.length === 0) {
+      return []
+    }
+
+    return visiblePids
+      .map((pid) => farmsData.find((farm) => farm.pid === pid))
+      .filter((farm): farm is typeof farmsData[number] => Boolean(farm))
+      .map((farm) => {
+        const configEntry = nftFarmsConfig.find((configFarm) => configFarm.pid === farm.pid)
+        const mainCollectionWeight = configEntry?.mainCollectionWeight ?? 1
+        const isSmartNftStakePool = Boolean(farm.contractAddresses)
+        const totalStaked = farm.totalStaked ?? new BigNumber(0)
+        const totalShares = farm.totalShares ?? new BigNumber(0)
+        const rawLiquidity = Math.max(
+          farm.participantThreshold ?? 0,
+          isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber(),
+        )
+        const totalLiquidityWithThreshold = new BigNumber(rawLiquidity > 0 ? rawLiquidity : 1)
+        const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(
+          new BigNumber(farm.poolWeight),
+          farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
+          totalLiquidityWithThreshold,
+          mainCollectionWeight,
+        )
+
+        return {
+          ...farm,
+          apr: cakeRewardsApr,
+          lpRewardsApr,
+          liquidity: totalStaked,
+        }
+      })
+  }, [farmsData, visiblePids])
+
   const onButtonClick = useCallback((scrollTo: 'next' | 'pre') => {
     const scrollTarget = scrollWrapper.current
     if (!scrollTarget) return
-    if (scrollTo === 'next') {
-      scrollTarget.scrollLeft += 280
-      return
-    }
-    scrollTarget.scrollLeft -= 280
+    const firstCard = scrollTarget.firstElementChild as HTMLElement | null
+    const cardWidth = firstCard ? firstCard.clientWidth : 260
+    const scrollAmount = cardWidth + CARD_GAP
+
+    scrollTarget.scrollBy({
+      left: scrollTo === 'next' ? scrollAmount : -scrollAmount,
+      behavior: 'smooth',
+    })
   }, [])
   return (
     <Flex flexDirection="column" style={{ gap: 36 }}>
@@ -155,45 +173,35 @@ export const FeaturedSection: React.FC = () => {
         </Text>
       </Flex>
       <Flex>
-        <Flex alignItems="center" mr="8px">
+        <ArrowWrapper alignItems="center" mr="8px">
           <ArrowButton>
             <ChevronLeftIcon onClick={() => onButtonClick('pre')} color={theme.colors.textSubtle} />
           </ArrowButton>
-        </Flex>
+        </ArrowWrapper>
         <CardWrapper ref={scrollWrapper}>
-          {
-            articlesData?.map((d, index) => (
-              
-                <NewsCard key={index}>
-                  <NextLinkFromReactRouter to="/nftpools">
-                  <ImageBox>
-                    <img src={d.imgUrl} alt="" />
-                  </ImageBox>
-                  <ContentBox>
-                    <Flex justifyContent="space-between">
-                      <Text bold fontSize={12} color={theme.colors.textSubtle} lineHeight="120%">
-                        {d.from}
-                      </Text>
-                    </Flex>
-                    <Text bold mt="16px" lineHeight="120%" minHeight="66px" style={{ whiteSpace: 'pre-wrap' }}>
-                      {d.title}
-                    </Text>
-                    <Flex justifyContent="center">
-
-                      <Button variant='primary'>{t('Stake Now')}</Button>
-
-                    </Flex>
-                  </ContentBox>
-                  </NextLinkFromReactRouter>
-                </NewsCard>
-              
-            ))}
+          {farmCards.length > 0 ? (
+            farmCards.map((farm) => (
+              <CardItem key={farm.pid}>
+                <FarmCard
+                  farm={farm}
+                  displayApr={getDisplayApr(farm.apr)}
+                  removed={false}
+                  cakePrice={cakePrice}
+                  account={account ?? undefined}
+                />
+              </CardItem>
+            ))
+          ) : (
+            <Flex alignItems="center" justifyContent="center" width="100%">
+              <Text color="textSubtle">{t('NFT pools loading...')}</Text>
+            </Flex>
+          )}
         </CardWrapper>
-        <Flex alignItems="center" ml="8px">
+        <ArrowWrapper alignItems="center" ml="8px">
           <ArrowButton>
             <ChevronRightIcon onClick={() => onButtonClick('next')} color={theme.colors.textSubtle} />
           </ArrowButton>
-        </Flex>
+        </ArrowWrapper>
       </Flex>
     </Flex>
   )

@@ -1,10 +1,8 @@
-import { Flex, Grid, Text, Button, Link, BinanceIcon, LinkExternal, useModal } from '@pancakeswap/uikit'
+import { Flex, Grid, Text, Button, Link, BinanceIcon, LinkExternal } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { nftsBaseUrl, pancakeBunniesAddress } from 'views/Nft/market/constants'
 import { NftToken } from 'state/nftMarket/types'
-import { getBscScanLinkForNft, getPolygonScanLinkForNft } from 'utils'
-import EditProfileModal from 'views/Nft/market/Profile/components/EditProfileModal'
-import { useProfile } from 'state/profile/hooks'
+import { getPolygonScanLinkForNft } from 'utils'
 import { Divider, HorizontalDivider, RoundedImage } from '../shared/styles'
 
 interface SellStageProps {
@@ -12,7 +10,6 @@ interface SellStageProps {
   lowestPrice: number
   continueToNextStage: () => void
   continueToTransferStage: () => void
-  onSuccessEditProfile?: () => void
 }
 
 // Initial stage when user wants to put their NFT for sale or transfer to another wallet
@@ -21,16 +18,12 @@ const SellStage: React.FC<SellStageProps> = ({
   lowestPrice,
   continueToNextStage,
   continueToTransferStage,
-  onSuccessEditProfile,
 }) => {
   const { t } = useTranslation()
-  const { hasProfile } = useProfile()
   const itemPageUrlId =
     nftToSell.collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase()
-      ? nftToSell.attributes[0].value
+      ? nftToSell.attributes?.[0]?.value ?? nftToSell.tokenId
       : nftToSell.tokenId
-
-  const [onEditProfileModal] = useModal(<EditProfileModal onSuccess={onSuccessEditProfile} />, false)
 
   return (
     <>
@@ -97,11 +90,6 @@ const SellStage: React.FC<SellStageProps> = ({
         <Button mb="8px" variant="secondary" onClick={continueToTransferStage}>
           {t('Transfer')}
         </Button>
-        {hasProfile && (
-          <Button variant="secondary" onClick={onEditProfileModal}>
-            {t('Set as Profile Pic')}
-          </Button>
-        )}
       </Flex>
     </>
   )

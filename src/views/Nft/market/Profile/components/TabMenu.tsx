@@ -34,28 +34,7 @@ const TabMenu = () => {
     setIsAchievementsActive(pathname.includes('achievements'))
   }, [pathname])
 
-  return (
-    <Flex>
-      <Tab
-        onClick={() => setIsAchievementsActive(false)}
-        $active={!achievementsActive}
-        as={NextLinkFromReactRouter}
-        to={`${nftsBaseUrl}/profile/${accountAddress}`}
-      >
-        NFTs
-      </Tab>
-      {/* TODO: Activate later
-      <Tab
-        onClick={() => setIsAchievementsActive(true)}
-        $active={achievementsActive}
-        as={NextLinkFromReactRouter}
-        to={`${nftsBaseUrl}/profile/${accountAddress}/achievements`}
-      >
-        {t('Achievements')}
-      </Tab>
-    */}
-    </Flex>
-  )
+  return null
 }
 
 export default TabMenu

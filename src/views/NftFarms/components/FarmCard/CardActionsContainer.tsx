@@ -20,7 +20,7 @@ import CollectionSelectModal from 'components/CollectionSelectModal/CollectionSe
 import DepositModal from '../DepositModal'
 import useStakeFarms from 'views/NftFarms/hooks/useStakeFarms'
 import { getDisplayApr } from 'views/NftFarms/Farms'
-import Balance from 'components/Balance'
+import formatRewardAmount from 'utils/formatRewardAmount'
 
 const Action = styled.div`
   padding-top: 16px;
@@ -148,13 +148,15 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   )
 
   const displayApr = getDisplayApr(farm.apr)
+  const dailyRewardAmount = farm.apr !== undefined && farm.apr !== null ? new BigNumber(farm.apr) : new BigNumber(0)
+  const dailyRewardDisplay = displayApr ?? formatRewardAmount(dailyRewardAmount)
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <>
       <Text bold>Daily Rewards</Text>
       <Text>
         {earnLabel}:
         <Text ml="3px" style={{ display: 'inline-block' }} bold>
-          {displayApr}
+          {dailyRewardDisplay}
         </Text>
       </Text>
 
@@ -162,7 +164,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         <Text key={index}>
           {reward.token}:
           <Text ml="3px" style={{ display: 'inline-block' }} bold>
-            <Balance bold value={Number(displayApr) * (reward.percentage / 100)} />
+            {formatRewardAmount(dailyRewardAmount.multipliedBy(reward.percentage).dividedBy(100))}
           </Text>
         </Text>
       ))}
@@ -236,6 +238,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         addLiquidityUrl={addLiquidityUrl}
         onClickStake={smartNftPoolAddress ? onPresentCollectionModal : null}
         pendingTx={pendingTx}
+        isFinished={farm.isFinished}
       />
     )
   }

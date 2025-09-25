@@ -385,9 +385,9 @@ export function useGasPrice(chainIdOverride?: number): string {
   const userGas = useSelector<AppState, AppState['user']['gasPrice']>((state) => state.user.gasPrice)
   const { data: polygonProviderGasPrice = GAS_PRICE_GWEI.default } = useSWR(
     library &&
-      library.provider &&
+      'provider' in library &&
       chainId === ChainId.POLYGON &&
-      userGas === GAS_PRICE_GWEI.rpcDefault && ['polygonProviderGasPrice', library.provider],
+      userGas === GAS_PRICE_GWEI.rpcDefault && ['polygonProviderGasPrice', library],
     async () => {
       const gasPrice = await library.getGasPrice()
       return gasPrice.toString()
@@ -405,7 +405,7 @@ export function useGasPrice(chainIdOverride?: number): string {
   if (chainId === ChainId.MUMBAI) {
     return GAS_PRICE_GWEI.testnet
   }
-  return undefined
+  return GAS_PRICE_GWEI.default
 }
 
 export function useGasPriceManager(): [string, (userGasPrice: string) => void] {

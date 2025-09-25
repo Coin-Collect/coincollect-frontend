@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { Flex, Box, FlexProps } from '@pancakeswap/uikit'
 import Image from 'next/image'
 import StyledBannerImageWrapper from './BannerImage'
@@ -7,15 +7,54 @@ interface BannerHeaderProps extends FlexProps {
   bannerImage: string
   bannerAlt?: string
   avatar?: ReactNode
+  topLeftOverlay?: ReactNode
+  topRightOverlay?: ReactNode
 }
 
-const BannerHeader: React.FC<BannerHeaderProps> = ({ bannerImage, bannerAlt, avatar, children, ...props }) => {
+const BannerHeader: React.FC<BannerHeaderProps> = ({
+  bannerImage,
+  bannerAlt,
+  avatar,
+  topLeftOverlay,
+  topRightOverlay,
+  children,
+  ...props
+}) => {
+  const isVideo = useMemo(() => {
+    if (!bannerImage) {
+      return false
+    }
+    return /\.(webm|mp4)$/i.test(bannerImage)
+  }, [bannerImage])
+
   return (
     <Flex flexDirection="column" mb="24px" {...props}>
       <Box position="relative" pb="56px">
         <StyledBannerImageWrapper>
-          <Image src={bannerImage} alt={bannerAlt} layout="fill" objectFit="cover" priority />
+          {isVideo ? (
+            <video
+              src={bannerImage}
+              aria-label={bannerAlt}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            <Image src={bannerImage} alt={bannerAlt} layout="fill" objectFit="cover" priority />
+          )}
         </StyledBannerImageWrapper>
+        {topLeftOverlay && (
+          <Box position="absolute" top="16px" left="16px" zIndex={1}>
+            {topLeftOverlay}
+          </Box>
+        )}
+        {topRightOverlay && (
+          <Box position="absolute" top="16px" right="16px" zIndex={1}>
+            {topRightOverlay}
+          </Box>
+        )}
         <Box position="absolute" bottom={0} left={-4}>
           <Flex alignItems="flex-end">
             {avatar}

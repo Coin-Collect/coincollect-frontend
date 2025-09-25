@@ -11,7 +11,7 @@ import useSentryUser from 'hooks/useSentryUser'
 import useUserAgent from 'hooks/useUserAgent'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import { Fragment } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { PersistGate } from 'redux-persist/integration/react'
 import { useStore, persistor } from 'state'
 import { usePollBlockNumber } from 'state/block/hooks'
@@ -23,6 +23,7 @@ import Menu from '../components/Menu'
 import BlockCountry from '../components/BlockCountry'
 import Providers from '../Providers'
 import GlobalStyle from '../style/Global'
+import React from 'react'
 import styled from 'styled-components'
 
 // This config is required for number formatting
@@ -41,7 +42,7 @@ function GlobalHooks() {
   return null
 }
 
-const WizardLink = styled.a`
+const WizardLinkBase = styled.a`
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -73,7 +74,7 @@ const WizardLink = styled.a`
   }
 `
 
-const WizardVideo = styled.video`
+const WizardVideoBase = styled.video`
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -151,6 +152,20 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
   const Layout = Component.Layout || Fragment
   const assistantUrl = process.env.NEXT_PUBLIC_AI_ASSISTANT_URL || 'https://chatgpt.com/g/g-68be838798b88191be7523dce0b90b2c-coincollect-wizard'
   
+  // Detect if device is mobile to conditionally show tooltip
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window)
+    }
+    
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
+    return () => window.removeEventListener('resize', checkIsMobile)
+  }, [])
+  
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <div>
       Meet Wizard, your AI assistant here to help you navigate CoinCollect.
@@ -170,17 +185,26 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       </Menu>
       <EasterEgg iterations={2} />
       <ToastListener />
-      <WizardLink
-        ref={targetRef}
-        href={assistantUrl}
-        target={assistantUrl.startsWith('http') ? '_blank' : undefined}
-        rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
-        aria-label="Open AI Assistant"
-        title={assistantUrl === '#' ? 'AI Assistant coming soon' : 'Chat with our AI Assistant'}
-      >
-        <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
-      </WizardLink>
-      {tooltipVisible && tooltip}
+      {/**
+       * Type-friendly wrappers for styled-components to accept anchor and video attributes.
+       */}
+      {(() => {
+        const WizardLink = WizardLinkBase as unknown as any
+        const WizardVideo = WizardVideoBase as unknown as any
+        return (
+          <WizardLink
+            ref={isMobile ? undefined : targetRef}
+            href={assistantUrl}
+            target={assistantUrl.startsWith('http') ? '_blank' : undefined}
+            rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
+            aria-label="Open AI Assistant"
+            title={assistantUrl === '#' ? 'AI Assistant coming soon' : 'Chat with our AI Assistant'}
+          >
+            <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
+          </WizardLink>
+        )
+      })()}
+      {!isMobile && tooltipVisible && tooltip}
       {/* TODO: Activate later
       <SubgraphHealthIndicator />
       */}

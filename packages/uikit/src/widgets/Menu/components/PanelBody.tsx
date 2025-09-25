@@ -33,6 +33,8 @@ const PanelBody: React.FC<Props> = ({ isPushed, pushNav, isMobile, links }) => {
     <Container>
       {links.map((entry) => {
         const Icon = Icons[entry.icon];
+        const isChildActive = entry.items?.some((item) => item.href === location.pathname);
+        const isEntryActive = isChildActive || entry.href === location.pathname;
         const iconElement = <Icon width="24px" mr="8px" />;
         const calloutClass = entry.calloutClass ? entry.calloutClass : undefined;
 
@@ -49,7 +51,7 @@ const PanelBody: React.FC<Props> = ({ isPushed, pushNav, isMobile, links }) => {
               label={entry.label}
               initialOpenState={initialOpenState}
               className={calloutClass}
-              isActive={entry.items.some((item) => item.href === location.pathname)}
+              isActive={isEntryActive}
             >
               {isPushed &&
                 entry.items.map((item) => (
@@ -61,12 +63,12 @@ const PanelBody: React.FC<Props> = ({ isPushed, pushNav, isMobile, links }) => {
           );
         }
         return (
-          <MenuEntry key={entry.label} isActive={entry.href === location.pathname} className={calloutClass}>
+          <MenuEntry key={entry.label} isActive={isEntryActive} className={calloutClass}>
             <MenuLink href={entry.href} onClick={handleClick}>
-              <a>
               {iconElement}
-              <LinkLabel isPushed={isPushed}>{entry.label}</LinkLabel>
-              </a>
+              <LinkLabel isPushed={isPushed} isActive={isEntryActive}>
+                {entry.label}
+              </LinkLabel>
             </MenuLink>
           </MenuEntry>
         );

@@ -87,6 +87,23 @@ export const mainnetTokens = defineTokens({
     'NITRO Token',
     'https://nitroclash.net/',
   ),
+  radar: new Token(
+    POLYGON_MAINNET,
+    '0xdCb72AE4d5dc6Ae274461d57E65dB8D50d0a33AD',
+    18,
+    'RADAR',
+    'DappRadar Token',
+    'https://dappradar.com/',
+  ),
+  quick: new Token(
+    POLYGON_MAINNET,
+    '0xB5C064F955D8e7F38fE0460C556a72987494eE17',
+    18,
+    'QUICK',
+    'QuickSwap Token',
+    'https://quickswap.exchange/',
+  ),
+
   dj: new Token(
     POLYGON_MAINNET,
     '0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816',
@@ -2305,7 +2322,7 @@ const tokens = () => {
   const chainId = CHAIN_ID
 
   // If testnet - return list comprised of testnetTokens wherever they exist, and mainnetTokens where they don't
-  if (parseInt(chainId, 10) === MUMBAI_TESTNET) {
+  if (chainId && parseInt(chainId, 10) === MUMBAI_TESTNET) {
     return Object.keys(mainnetTokens).reduce((accum, key) => {
       return { ...accum, [key]: testnetTokens[key] || mainnetTokens[key] }
     }, {} as typeof testnetTokens & typeof mainnetTokens)

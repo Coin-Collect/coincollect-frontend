@@ -31,7 +31,68 @@ const config = {
   },
   reactStrictMode: true,
   images: {
-    domains: ['static-nft.pancakeswap.com', 'cdn.pixabay.com', 'coincollect.org', 'vercel.app', 'lh3.googleusercontent.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'static-nft.pancakeswap.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.pixabay.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'coincollect.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'app.coincollect.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vercel.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.seadn.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatarsai.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'beasthunter.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'blitzbrawler.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lotshare.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'nitroclash.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placedj.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sapienx.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'zidanogo.com',
+      },
+    ],
   },
   async rewrites() {
     return [

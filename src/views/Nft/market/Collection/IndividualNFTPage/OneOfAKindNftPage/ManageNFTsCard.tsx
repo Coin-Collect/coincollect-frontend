@@ -17,7 +17,6 @@ import ConnectWalletButton from 'components/ConnectWalletButton'
 import { useTranslation } from 'contexts/Localization'
 import ExpandableCard from '../shared/ExpandableCard'
 import SellModal from '../../../components/BuySellModals/SellModal'
-import ProfileNftModal from '../../../components/ProfileNftModal'
 import { SmallRoundedImage, CollectibleRowContainer } from '../shared/styles'
 
 const LocationColors = {
@@ -39,8 +38,7 @@ interface CollectibleRowProps {
 
 const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, onSuccess }) => {
   const { t } = useTranslation()
-  const modalVariant = nft.location === NftLocation.WALLET ? 'sell' : 'edit'
-  const [onPresentProfileNftModal] = useModal(<ProfileNftModal nft={nft} />)
+  const modalVariant = nft.location === NftLocation.FORSALE ? 'edit' : 'sell'
   const [onPresentModal] = useModal(<SellModal variant={modalVariant} nftToSell={nft} onSuccessSale={onSuccess} />)
   return (
     <CollectibleRowContainer
@@ -48,7 +46,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, onSuccess }) => {
       px="16px"
       pb="8px"
       my="16px"
-      onClick={nft.location === NftLocation.PROFILE ? onPresentProfileNftModal : onPresentModal}
+      onClick={onPresentModal}
     >
       <SmallRoundedImage src={nft.image.thumbnail} width={64} height={64} mx="16px" />
       <Grid gridTemplateColumns="1fr 1fr">

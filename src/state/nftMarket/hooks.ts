@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux'
 import { useAppDispatch } from 'state'
 import { pancakeBunniesAddress } from 'views/Nft/market/constants'
 import { isAddress } from 'utils'
-import { FetchStatus } from 'config/constants/types'
 import erc721Abi from 'config/abi/erc721.json'
 import { useSWRMulticall } from 'hooks/useSWRContract'
 import { EMPTY_ARRAY, EMPTY_OBJECT } from 'utils/constantObjects'
@@ -12,6 +11,7 @@ import useSWR from 'swr'
 import useSWRImmutable from 'swr/immutable'
 import isEmpty from 'lodash/isEmpty'
 import shuffle from 'lodash/shuffle'
+import { FetchStatus } from 'config/constants/types'
 
 import { fetchNewPBAndUpdateExisting } from './reducer'
 import { State } from '../types'
@@ -75,9 +75,14 @@ export const useLoadingState = () => {
 }
 
 export const useGetCollections = (): { data: ApiCollections; status: FetchStatus } => {
-  const { data, status } = useSWR(['nftMarket', 'collections'], async () => getCollections())
+  const { data, error } = useSWR(['nftMarket', 'collections'], async () => getCollections())
   const collections = data ?? ({} as ApiCollections)
-  return { data: collections, status }
+  const status: FetchStatus = error
+    ? FetchStatus.Failed
+    : data === undefined
+    ? FetchStatus.Fetching
+    : FetchStatus.Fetched
+  return { data: collections as unknown as ApiCollections, status }
 }
 
 export const useGetCollection = (collectionAddress: string): Collection | undefined => {
@@ -91,15 +96,25 @@ export const useGetCollection = (collectionAddress: string): Collection | undefi
 }
 
 export const useGetShuffledCollections = (): { data: ApiCollections; status: FetchStatus } => {
-  const { data } = useSWRImmutable(['nftMarket', 'collections'], async () => getCollections())
+  const { data, error } = useSWRImmutable(['nftMarket', 'collections'], async () => getCollections())
   const collections = data ?? ({} as ApiCollections)
-  const { data: shuffledCollections = {}, status } = useSWRImmutable(
-    !isEmpty(collections) ? ['nftMarket', 'shuffledCollections'] : null,
-    () => {
-      return shuffle(collections)
-    },
-  )
-  return { data: shuffledCollections, status }
+
+  // Compute status from the primary fetch
+  const status: FetchStatus = error
+    ? FetchStatus.Failed
+    : data === undefined
+    ? FetchStatus.Fetching
+    : FetchStatus.Fetched
+
+  // Shuffle deterministically when data is available; avoid second SWR indirection
+  const shuffled = useMemo(() => {
+    if (!isEmpty(collections)) {
+      return shuffle(collections as unknown as any[])
+    }
+    return collections
+  }, [collections])
+
+  return { data: shuffled as unknown as ApiCollections, status }
 }
 
 export const useNftsFromCollection = (collectionAddress: string) => {

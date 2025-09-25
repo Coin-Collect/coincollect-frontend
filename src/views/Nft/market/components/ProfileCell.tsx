@@ -1,20 +1,9 @@
 import styled from 'styled-components'
-import { Box, Flex, BunnyPlaceholderIcon, Skeleton, Text } from '@pancakeswap/uikit'
+import { Box, Flex, BunnyPlaceholderIcon, ProfileAvatar, Skeleton, Text } from '@pancakeswap/uikit'
 import truncateHash from 'utils/truncateHash'
 import { useProfileForAddress } from 'state/profile/hooks'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { nftsBaseUrl } from '../constants'
-
-const Avatar = styled.img`
-  margin-right: 4px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-
-  ${({ theme }) => theme.mediaQueries.md} {
-    margin-right: 12px;
-  }
-`
 
 const StyledFlex = styled(Flex)`
   align-items: center;
@@ -32,7 +21,15 @@ const ProfileCell: React.FC<{ accountAddress: string }> = ({ accountAddress }) =
   let sellerProfilePicComponent = <Skeleton width="32px" height="32px" mr={['4px', null, '12px']} />
   if (!isFetching) {
     if (profile?.nft?.image?.thumbnail) {
-      sellerProfilePicComponent = <Avatar src={profile?.nft?.image?.thumbnail} />
+      sellerProfilePicComponent = (
+        <ProfileAvatar
+          src={profile.nft.image.thumbnail}
+          width={32}
+          height={32}
+          mr={['4px', null, '12px']}
+          alt="Profile avatar"
+        />
+      )
     } else {
       sellerProfilePicComponent = <BunnyPlaceholderIcon width="32px" height="32px" mr={['4px', null, '12px']} />
     }

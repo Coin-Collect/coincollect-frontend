@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import Header from "views/Nft/market/Collection/Header";
 import Items from "views/Nft/market/Collection/Items";
 import CollectionNfts from "views/Nft/market/Collection/Items/CollectionNfts";
-import { Box, Button, Card, CardBody, CardRibbon, ChevronLeftIcon, Flex, Grid, LogoIcon, Step } from '@pancakeswap/uikit'
+import { Box, Button, Card, CardBody, CardRibbon, ChevronLeftIcon, Grid, LogoIcon, Step } from '@pancakeswap/uikit'
 import Container from "components/Layout/Container";
 import { useAppDispatch } from "state";
 import { fetchNftsFromCollections } from "state/nftMarket/reducer";
@@ -41,11 +41,13 @@ import { useContext } from 'react'
 import { FarmsPageLayout, FarmsContext } from 'views/NftFarms'
 import FarmCard from 'views/NftFarms/components/FarmCard/FarmCard'
 import { getDisplayApr } from 'views/NftFarms/Farms'
+import BigNumber from 'bignumber.js'
+import { getNftFarmApr } from 'utils/apr'
+import nftFarmsConfig from 'config/constants/nftFarms'
 import { useFarmFromLpSymbol, useFarmFromPid, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
 import useStakeFarms from "views/NftFarms/hooks/useStakeFarms";
 import { StyledCard } from "../../../../../../packages/uikit/src/components/Card/StyledCard";
 import FlexLayout from "components/Layout/Flex";
-import NftStakeCard from "./components/NftStakeCard";
 import PoolCard from "views/Pools/components/PoolCard";
 import NewestForCollection from "../../Home/NewestForCollection";
 import IfoAchievement from "./components/MintingCard/Achievement";
@@ -54,9 +56,38 @@ import ActivityHistoryMinting from "../../ActivityHistory/ActivityHistoryMinting
 
 const BackLink = styled(NextLinkFromReactRouter)`
   align-items: center;
-  color: ${({ theme }) => theme.colors.primary};
+  background: rgba(25, 26, 32, 0.64);
+  border-radius: 999px;
+  color: #ffffff;
   display: inline-flex;
   font-weight: 600;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.25;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  transition: color 200ms ease;
+
+  svg {
+    fill: currentColor;
+    transition: fill 200ms ease;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: ${({ theme }) => theme.colors.primaryBright || theme.colors.primary};
+  }
+`
+
+const SocialOverlay = styled(Box)`
+  align-items: center;
+  background: rgba(25, 26, 32, 0.64);
+  border-radius: 999px;
+  display: inline-flex;
+  padding: 8px 12px;
+  backdrop-filter: blur(6px);
+  color: #ffffff;
 `
 
 
@@ -85,18 +116,47 @@ export default function Minting() {
   usePollFarmsWithUserData()
   const farm = useFarmFromPid(minting.stake_pid)
 
+  // Compute APR to match nftpools FarmCard expectations
+  const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]?.mainCollectionWeight
+  const isSmartNftStakePool = Boolean(farm.contractAddresses)
+  const totalStaked = farm.totalStaked
+  const totalShares = farm.totalShares
+  const totalLiquidityWithThreshold = new BigNumber(
+    Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()),
+  )
+  const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(
+    new BigNumber(farm.poolWeight),
+    farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
+    totalLiquidityWithThreshold,
+    mainCollectionWeight,
+  )
+  const farmWithApr = { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
+
   return (
     <>
       <PageMeta />
       <MarketPageHeader>
-        <Flex alignItems="center" justifyContent="space-between" mb="24px">
-          <BackLink to={`${nftsBaseUrl}/collections`}>
-            <ChevronLeftIcon color="primary" width="24px" />
-            {t('Back')}
-          </BackLink>
-          <IfoAchievement ifo={minting} publicIfoData={publicIfoData} />
-        </Flex>
-        <BannerHeader bannerImage={banner.large} avatar={<AvatarImage src={avatar} />} />
+        <BannerHeader
+          bannerImage={banner.large}
+          avatar={<AvatarImage src={avatar} />}
+          topLeftOverlay={
+            <BackLink to={`${nftsBaseUrl}/collections`}>
+              <ChevronLeftIcon color="currentColor" width="20px" />
+              {t('Back')}
+            </BackLink>
+          }
+          topRightOverlay={
+            <SocialOverlay>
+              <IfoAchievement
+                ifo={minting}
+                publicIfoData={publicIfoData}
+                variant="compact"
+                iconColor="#FFFFFF"
+                hoverColor="primaryBright"
+              />
+            </SocialOverlay>
+          }
+        />
 
         <MarketPageTitle
           title={name}
@@ -124,7 +184,13 @@ export default function Minting() {
 
           <MintingLayoutWrapper>
 
-            <NftStakeCard farm={farm} account={account} />
+            <FarmCard
+              farm={farmWithApr}
+              displayApr={getDisplayApr(farmWithApr.apr)}
+              cakePrice={cakePrice}
+              account={account}
+              removed={false}
+            />
             <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
 
           </MintingLayoutWrapper>

@@ -6,6 +6,10 @@ export const footerLinks: (t: ContextApi['t']) => FooterLinkType[] = (t) => [
     label: t('About'),
     items: [
       {
+        label: t('Buy .COLLECT Domain'),
+        href: 'https://get.unstoppabledomains.com/collect/',
+      },
+      {
         label: t('Contact'),
         href: 'https://docs.coincollect.org/extras/contact-us',
       },

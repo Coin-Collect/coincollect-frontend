@@ -18,11 +18,12 @@ const ifos: Minting[] = [
   //============================Free Mint NFTS====================================
   {
     id: 'coincollectfreenfts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Starter NFT',
     description: 'CoinCollect Starter NFTs are most valuable FREE utility NFTs on the market. Starter NFT is a gift and a lifetime privilege to our community. Starter NFTs earn new tokens from pools and airdrops. it also has a chance on whitelists',
     address: getCoinCollectNftAddress(),
     symbol: 'STARTER',
+    chainId: ChainId.POLYGON,
     totalSupply: 5000,
     isActive: true,
     status: 'finished',
@@ -90,11 +91,12 @@ const ifos: Minting[] = [
   //============================Bronze NFTS====================================
   {
     id: 'coincollectbronzefts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Bronze NFT',
     description: 'CoinCollect Bronze NFTs are the cheapest valuable utility NFTs that has all the features of Starter NFTs also 5x more powerful than Starter NFTs. Bronze NFTs earn more than Starter NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectBronzeNftAddress(),
     symbol: 'BRONZE',
+    chainId: ChainId.POLYGON,
     totalSupply: 3300,
     lastPrice: 80,
     isActive: true,
@@ -163,11 +165,12 @@ const ifos: Minting[] = [
   //============================Silver NFTS====================================
   {
     id: 'coincollectsilverfts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Silver NFT',
     description: 'CoinCollect Silver NFTs are the medium powerful utility NFTs that has all the features of Bronze NFTs also 15x more powerful than Starter NFTs. Silver NFTs earn more than Bronze NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectSilverNftAddress(),
     symbol: 'SILVER',
+    chainId: ChainId.POLYGON,
     totalSupply: 2200,
     lastPrice: 155,
     isActive: true,
@@ -236,11 +239,12 @@ const ifos: Minting[] = [
   //============================Gold NFTS====================================
   {
     id: 'coincollectgoldfts',
-    stake_pid: 29,
+    stake_pid: 37,
     name: 'CoinCollect Gold NFT',
     description: 'CoinCollect Gold NFTs are the most valuable utility NFTs that has all the features of Starter NFTs also 45x more powerful than Starter NFTs. Gold NFTs earn more than Silver NFTs from pools and airdrops. it also has more chance on whitelists',
     address: getCoinCollectGoldNftAddress(),
     symbol: 'GOLD',
+    chainId: ChainId.POLYGON,
     totalSupply: 1100,
     lastPrice: 305,
     isActive: true,
@@ -314,6 +318,7 @@ const ifos: Minting[] = [
     description: 'Embrace the future of land investment with LotShare, where blockchain technology tokenizes land lots for global access and liquidity. Leverage the exclusive LOT token to unlock rich benefits and secure your share in land sale revenues.',
     address: getLotNftAddress(),
     symbol: 'LOT',
+    chainId: ChainId.POLYGON,
     totalSupply: 2556,
     lastPrice: 100,
     isActive: true,
@@ -381,11 +386,12 @@ const ifos: Minting[] = [
   //============================BlitzBrawler NFTS====================================
   {
     id: 'blitzbrawlernfts',
-    stake_pid: 11,
+    stake_pid: 32,
     name: 'BlitzBrawler Player',
     description: 'BlitzBrawler combines football with blockchain, allowing users to collect unique NFT brawlers to build teams and compete in tournaments. Features include staking, renting, trading, or selling NFTs.',
     address: getBlitzBrawlerNftAddress(),
     symbol: 'BRAWLER',
+    chainId: ChainId.POLYGON,
     totalSupply: 4952,
     lastPrice: 30,
     isActive: true,
@@ -453,11 +459,12 @@ const ifos: Minting[] = [
   //============================AvatarsAI NFTS====================================
   {
     id: 'avatarsainfts',
-    stake_pid: 12,
+    stake_pid: 33,
     name: 'AvatarsAI Heroes',
     description: 'AvatarsAI ignites a fierce battle in the digital realm. Heroes and villains, armed with unique powers, strive for control over the AI-driven blockchain universe. The stakes are high, alliances shift, and every decision echoes in a thrilling fight for dominion. Join the adventure at AvatarsAI.',
     address: getAvatarsAiNftAddress(),
     symbol: 'AVATAR',
+    chainId: ChainId.POLYGON,
     totalSupply: 6952,
     lastPrice: 30,
     isActive: true,
@@ -527,11 +534,12 @@ const ifos: Minting[] = [
   //============================BeastHunter NFTS====================================
   {
     id: 'beasthunternfts',
-    stake_pid: 14,
+    stake_pid: 34,
     name: 'Beast Hunter',
     description: 'Unleash the power of your Hunters in BeastHunter! Build an unbeatable team, capture rare beasts, and explore dynamic worlds.',
     address: getBeastHunterNftAddress(),
     symbol: 'HUNTER',
+    chainId: ChainId.POLYGON,
     totalSupply: 2876,
     lastPrice: 25,
     isActive: true,
@@ -597,11 +605,12 @@ const ifos: Minting[] = [
   //============================Nitro NFTS====================================
   {
     id: 'nitronfts',
-    stake_pid: 16,
+    stake_pid: 38,
     name: 'NitroClash',
     description: 'Choose from 5000+ customizable NFT cars, earn $NITRO tokens, and dominate tracks across the universe.',
     address: getNitroNftAddress(),
     symbol: 'CAR',
+    chainId: ChainId.POLYGON,
     totalSupply: 3800,
     lastPrice: 30,
     isActive: true,
@@ -672,11 +681,12 @@ const ifos: Minting[] = [
   //============================PlaceDJ NFTS====================================
   {
     id: 'placedjnfts',
-    stake_pid: 17,
+    stake_pid: 40,
     name: 'PlaceDJ 2.0',
     description: 'PlaceDJ 2.0 offers over 5832 unique NFTs for license-free AI music streams, revolutionizing venue soundscapes with exclusive NFT benefits.',
     address: getPlaceDjNftAddress(),
     symbol: 'PLACEDJ',
+    chainId: ChainId.POLYGON,
     totalSupply: 5832,
     lastPrice: 100,
     isActive: true,
@@ -744,11 +754,12 @@ const ifos: Minting[] = [
   //============================Zidanogo NFTS====================================
   {
     id: 'zidanogonfts',
-    stake_pid: 19,
+    stake_pid: 36,
     name: 'Zidanogo GentleMals',
     description: 'Zidanogo introduces 4181 GentleMals NFTs, showcasing sophisticated animal characters. Each NFT is a unique collectible granting access to exclusive platform airdrops.',
     address: getZidanogoNftAddress(),
     symbol: 'GMAL',
+    chainId: ChainId.POLYGON,
     totalSupply: 4181,
     lastPrice: 50,
     isActive: true,
@@ -817,11 +828,12 @@ const ifos: Minting[] = [
   //============================SapienX NFTS====================================
   {
     id: 'sapienxnfts',
-    stake_pid: 20,
+    stake_pid: 41,
     name: 'SapienX AI',
     description: 'SapienX, developed and operated by AI, is governed by a DAO and has 6854 NFTs and the $X token, creating AI tools that elevate humans to superhuman levels.',
     address: getSapienXNftAddress(),
     symbol: 'AGENT',
+    chainId: ChainId.POLYGON,
     totalSupply: 6854,
     lastPrice: 150,
     isActive: true,

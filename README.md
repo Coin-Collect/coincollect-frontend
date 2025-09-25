@@ -72,7 +72,7 @@
 ## 🛠️ Quick Start
 
 ### Prerequisites
-- Node.js 16.0+ 
+- Node.js 22+
 - npm or yarn
 - MetaMask or compatible wallet
 

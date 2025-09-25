@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useMemo, useRef, createContext } from 'react'
 import BigNumber from 'bignumber.js'
 import useWeb3React from 'hooks/useWeb3React'
-import { Image, Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex, Box } from '@pancakeswap/uikit'
+import { Heading, RowType, Toggle, Text, Button, ArrowForwardIcon, Flex, Box } from '@pancakeswap/uikit'
 import { ChainId } from '@coincollect/sdk'
 import styled from 'styled-components'
 import FlexLayout from 'components/Layout/Flex'
@@ -23,6 +23,7 @@ import SearchInput from 'components/SearchInput'
 import Select, { OptionProps } from 'components/Select/Select'
 import Loading from 'components/Loading'
 import { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
+import formatRewardAmount from 'utils/formatRewardAmount'
 import Table from './components/FarmTable/FarmTable'
 import FarmTabButtons from './components/FarmTabButtons'
 import { RowProps } from './components/FarmTable/Row'
@@ -103,18 +104,21 @@ const ViewControls = styled.div`
   }
 `
 
-const StyledImage = styled(Image)`
+const StyledVideo = styled.video`
   margin-left: auto;
   margin-right: auto;
   margin-top: 58px;
+  border-radius: 16px;
+  display: block;
 `
 const NUMBER_OF_FARMS_VISIBLE = 12
 
 export const getDisplayApr = (cakeRewardsApr?: number) => {
-  if (cakeRewardsApr) {
-    return cakeRewardsApr.toLocaleString('en-US', { maximumFractionDigits: 8 })
+  if (cakeRewardsApr === undefined || cakeRewardsApr === null) {
+    return null
   }
-  return null
+
+  return formatRewardAmount(new BigNumber(cakeRewardsApr))
 }
 
 const Farms: React.FC = ({ children }) => {
@@ -425,7 +429,15 @@ const Farms: React.FC = ({ children }) => {
           </Flex>
         )}
         <div ref={observerRef} />
-        <StyledImage src="/images/decorations/3dpan.png" alt="Pancake illustration" width={120} height={103} />
+        <StyledVideo
+          src="/sheep.webm"
+          width={120}
+          height={103}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
       </Page>
     </FarmsContext.Provider>
   )

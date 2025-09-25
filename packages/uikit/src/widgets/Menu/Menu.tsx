@@ -1,11 +1,10 @@
 import throttle from "lodash/throttle";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import BottomNav from "../../components/BottomNav";
 import { Box } from "../../components/Box";
 import Flex from "../../components/Box/Flex";
 import Footer from "../../components/Footer";
-import MenuItems from "../../components/MenuItems/MenuItems";
 import { SubMenuItems } from "../../components/SubMenuItems";
 import { useMatchBreakpoints } from "../../hooks";
 import CakePrice from "../../components/CakePrice/CakePrice";
@@ -59,15 +58,22 @@ const BodyWrapper = styled(Box)`
   overflow-x: hidden;
 `;
 
-const Inner = styled.div<{ isPushed: boolean; showMenu: boolean }>`
+const Inner = styled.div<{ isPushed: boolean; showMenu: boolean; shouldOffset: boolean }>`
   flex-grow: 1;
   transition: margin-top 0.2s;
   transform: translate3d(0, 0, 0);
   max-width: 100%;
 
+  margin-left: ${({ shouldOffset, isPushed }) =>
+    shouldOffset ? `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px` : "0"};
+  max-width: ${({ shouldOffset, isPushed }) =>
+    shouldOffset ? `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)` : "100%"};
+
   ${({ theme }) => theme.mediaQueries.nav} {
-    margin-left: ${({ isPushed }) => `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px`};
-    max-width: ${({ isPushed }) => `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)`};
+    margin-left: ${({ shouldOffset, isPushed }) =>
+      shouldOffset ? `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px` : "0"};
+    max-width: ${({ shouldOffset, isPushed }) =>
+      shouldOffset ? `calc(100% - ${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px)` : "100%"};
   }
 `;
 
@@ -106,8 +112,27 @@ const Menu: React.FC<NavProps> = ({
 }) => {
   const { isMobile, isDesktop } = useMatchBreakpoints();
   const [showMenu, setShowMenu] = useState(true);
-  const [isPushed, setIsPushed] = useState(isDesktop);
+  const [isPushed, setIsPushed] = useState(false);
   const refPrevOffset = useRef(typeof window === "undefined" ? 0 : window.pageYOffset);
+  const shouldOffsetContent = !isMobile;
+
+  useEffect(() => {
+    if (isDesktop) {
+      setIsPushed(false);
+    }
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsPushed(false);
+    }
+  }, [isMobile]);
+
+  const handleTogglePush = useCallback(() => {
+    if (isMobile) {
+      setIsPushed((prevState: boolean) => !prevState);
+    }
+  }, [isMobile]);
 
   const topBannerHeight = isMobile ? TOP_BANNER_HEIGHT_MOBILE : TOP_BANNER_HEIGHT;
 
@@ -159,9 +184,10 @@ const Menu: React.FC<NavProps> = ({
                 isDark={isDark} 
                 href={homeLink?.href ?? "/"} 
                 isPushed={isPushed}
-                togglePush={() => setIsPushed((prevState: boolean) => !prevState)}
+                isMobile={isMobile}
+                togglePush={handleTogglePush}
+                pushNav={setIsPushed}
               />
-              {!isMobile && <MenuItems items={links} activeItem={activeItem} activeSubItem={activeSubItem} ml="24px" />}
             </Flex>
             <Flex alignItems="center" height="100%">
               
@@ -220,7 +246,7 @@ const Menu: React.FC<NavProps> = ({
             pushNav={setIsPushed}
             links={drawerLinks}
           /> 
-          <Inner isPushed={isPushed} showMenu={showMenu}>
+          <Inner isPushed={isPushed} showMenu={showMenu} shouldOffset={shouldOffsetContent}>
             {children}
             <Footer
               items={footerLinks}

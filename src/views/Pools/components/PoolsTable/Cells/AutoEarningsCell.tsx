@@ -11,6 +11,9 @@ import { getBalanceNumber } from 'utils/formatBalance'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
 import { vaultPoolConfig } from 'config/constants/pools'
 import BaseCell, { CellContent } from './BaseCell'
+import AnimatedValue from 'components/AnimatedValue'
+import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
+import formatRewardAmount from 'utils/formatRewardAmount'
 
 interface AutoEarningsCellProps {
   pool: DeserializedPool
@@ -65,7 +68,7 @@ const AutoEarningsCell: React.FC<AutoEarningsCellProps> = ({ pool, account }) =>
     fees: { performanceFeeAsDecimal },
     pricePerFullShare,
   } = useVaultPoolByKey(pool.vaultKey)
-  const { hasAutoEarnings, autoCakeToDisplay, autoUsdToDisplay } = getCakeVaultEarnings(
+  const { hasAutoEarnings, autoCakeToDisplay } = getCakeVaultEarnings(
     account,
     cakeAtLastUserAction,
     userShares,
@@ -74,14 +77,21 @@ const AutoEarningsCell: React.FC<AutoEarningsCellProps> = ({ pool, account }) =>
   )
 
   const labelText = t('Recent CAKE profit')
-  const earningTokenBalance = autoCakeToDisplay
+  const earningTokenBalance = new BigNumber(autoCakeToDisplay || 0)
   const hasEarnings = hasAutoEarnings
-  const earningTokenDollarBalance = autoUsdToDisplay
+  const { displayValue, baseValue, isAnimating, collapsedValue } = useAnimatedRewardValue(earningTokenBalance, {
+    disabled: !account || !hasEarnings,
+  })
+  const earningTokenDollarBalance = baseValue.multipliedBy(earningTokenPrice).toNumber()
 
   const lastActionInMs = lastUserActionTime ? parseInt(lastUserActionTime) * 1000 : 0
   const hourDiffSinceLastAction = differenceInHours(Date.now(), lastActionInMs)
-  const earnedCakePerHour = hourDiffSinceLastAction ? earningTokenBalance / hourDiffSinceLastAction : 0
-  const earnedUsdPerHour = hourDiffSinceLastAction ? earningTokenDollarBalance / hourDiffSinceLastAction : 0
+  const earnedCakePerHour = hourDiffSinceLastAction
+    ? baseValue.dividedBy(hourDiffSinceLastAction).toNumber()
+    : 0
+  const earnedUsdPerHour = hourDiffSinceLastAction
+    ? earningTokenDollarBalance / hourDiffSinceLastAction
+    : 0
 
   const interestBreakdown = getAutoEarningsInterestBreakdown(
     pool,
@@ -99,10 +109,9 @@ const AutoEarningsCell: React.FC<AutoEarningsCellProps> = ({ pool, account }) =>
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <>
       <Text bold>
-        {autoCakeToDisplay.toFixed(3)}
-        {' CAKE'}
+        {formatRewardAmount(baseValue)} CAKE
       </Text>
-      <Text bold>~${autoUsdToDisplay.toFixed(2)}</Text>
+      <Text bold>~${earningTokenDollarBalance.toFixed(2)}</Text>
       <Text>{t('Earned since your last action')}:</Text>
       <Text>{new Date(lastActionInMs).toLocaleString()}</Text>
       {hourDiffSinceLastAction ? (
@@ -134,28 +143,28 @@ const AutoEarningsCell: React.FC<AutoEarningsCellProps> = ({ pool, account }) =>
             {tooltipVisible && tooltip}
             <Flex>
               <Box mr="8px" height="32px">
-                <Balance
+                <Text
                   mt="4px"
-                  bold={!isMobile}
+                  fontWeight={hasEarnings && !isMobile ? 600 : 400}
                   fontSize={isMobile ? '14px' : '16px'}
                   color={hasEarnings ? 'primary' : 'textDisabled'}
-                  decimals={hasEarnings ? 5 : 1}
-                  value={hasEarnings ? earningTokenBalance : 0}
-                />
+                >
+                  <AnimatedValue $animate={hasEarnings && isAnimating}>
+                    {hasEarnings ? displayValue : collapsedValue}
+                  </AnimatedValue>
+                </Text>
                 {hasEarnings ? (
-                  <>
-                    {earningTokenPrice > 0 && (
-                      <Balance
-                        display="inline"
-                        fontSize="12px"
-                        color="textSubtle"
-                        decimals={2}
-                        prefix="~"
-                        value={earningTokenDollarBalance}
-                        unit=" USD"
-                      />
-                    )}
-                  </>
+                  earningTokenPrice > 0 && (
+                    <Balance
+                      display="inline"
+                      fontSize="12px"
+                      color="textSubtle"
+                      decimals={2}
+                      prefix="~"
+                      value={earningTokenDollarBalance}
+                      unit=" USD"
+                    />
+                  )
                 ) : (
                   <Text mt="4px" fontSize="12px" color="textDisabled">
                     0 USD

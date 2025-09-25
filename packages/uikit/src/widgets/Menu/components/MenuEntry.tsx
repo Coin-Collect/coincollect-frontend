@@ -18,8 +18,13 @@ const rainbowAnimation = keyframes`
   }
 `;
 
-const LinkLabel = styled.div<{ isPushed: boolean }>`
-  color: ${({ isPushed, theme }) => (isPushed ? theme.colors.textSubtle : "transparent")};
+const LinkLabel = styled.div<{ isPushed: boolean; isActive: boolean }>`
+  color: ${({ isPushed, isActive, theme }) => {
+    if (!isPushed) {
+      return "transparent";
+    }
+    return isActive ? theme.colors.primary : theme.colors.textSubtle;
+  }};
   transition: color 0.4s;
   flex-grow: 1;
 `;
@@ -32,8 +37,12 @@ const MenuEntry = styled.div<Props>`
   padding: ${({ secondary }) => (secondary ? "0 32px" : "0 16px")};
   font-size: ${({ secondary }) => (secondary ? "14px" : "16px")};
   background-color: ${({ secondary, theme }) => (secondary ? theme.colors.background : "transparent")};
-  color: ${({ theme }) => theme.colors.textSubtle};
-  box-shadow: ${({ isActive, theme }) => (isActive ? `inset 4px 0px 0px ${theme.colors.primary}` : "none")};
+  color: ${({ secondary, isActive, theme }) => {
+    if (isActive) {
+      return secondary ? theme.colors.primary : theme.colors.primary;
+    }
+    return theme.colors.textSubtle;
+  }};
 
   a {
     display: flex;
@@ -43,11 +52,16 @@ const MenuEntry = styled.div<Props>`
   }
 
   svg {
-    fill: ${({ theme }) => theme.colors.textSubtle};
+    fill: ${({ isActive, theme }) => (isActive ? theme.colors.primary : theme.colors.textSubtle)};
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.tertiary};
+    background-color: ${({ secondary, isActive, theme }) => {
+      if (isActive) {
+        return secondary ? theme.colors.background : "transparent";
+      }
+      return secondary ? theme.colors.background : theme.colors.tertiary;
+    }};
   }
 
   // Safari fix
@@ -66,6 +80,6 @@ MenuEntry.defaultProps = {
   role: "button",
 };
 
-const LinkLabelMemo = React.memo(LinkLabel, (prev, next) => prev.isPushed === next.isPushed);
+const LinkLabelMemo = React.memo(LinkLabel, (prev, next) => prev.isPushed === next.isPushed && prev.isActive === next.isActive);
 
 export { MenuEntry, LinkLabelMemo as LinkLabel };

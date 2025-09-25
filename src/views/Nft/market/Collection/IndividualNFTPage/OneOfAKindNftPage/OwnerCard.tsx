@@ -31,11 +31,10 @@ const OwnerRow = styled(Grid)`
 interface OwnerCardProps {
   nft: NftToken
   isOwnNft: boolean
-  nftIsProfilePic: boolean
   onSuccess: () => void
 }
 
-const OwnerCard: React.FC<OwnerCardProps> = ({ nft, isOwnNft, nftIsProfilePic, onSuccess }) => {
+const OwnerCard: React.FC<OwnerCardProps> = ({ nft, isOwnNft, onSuccess }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
   const bnbBusdPrice = useBNBBusdPrice()
@@ -104,7 +103,6 @@ const OwnerCard: React.FC<OwnerCardProps> = ({ nft, isOwnNft, nftIsProfilePic, o
             <ButtonContainer>
               {isOwnNft ? (
                 <Button
-                  disabled={nftIsProfilePic}
                   scale="sm"
                   variant="secondary"
                   maxWidth="128px"

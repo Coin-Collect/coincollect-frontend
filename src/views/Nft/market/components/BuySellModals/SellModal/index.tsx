@@ -74,7 +74,6 @@ interface SellModalProps extends InjectedModalProps {
   variant: 'sell' | 'edit'
   nftToSell: NftToken
   onSuccessSale: () => void
-  onSuccessEditProfile?: () => void
 }
 
 const SellModal: React.FC<SellModalProps> = ({
@@ -82,7 +81,6 @@ const SellModal: React.FC<SellModalProps> = ({
   nftToSell,
   onDismiss,
   onSuccessSale,
-  onSuccessEditProfile,
 }) => {
   const [stage, setStage] = useState(variant === 'sell' ? SellingStage.SELL : SellingStage.EDIT)
   const [price, setPrice] = useState(variant === 'sell' ? '' : nftToSell.marketData.currentAskPrice)
@@ -222,7 +220,6 @@ const SellModal: React.FC<SellModalProps> = ({
           lowestPrice={lowestPrice}
           continueToNextStage={continueToNextStage}
           continueToTransferStage={continueToTransferStage}
-          onSuccessEditProfile={onSuccessEditProfile}
         />
       )}
       {stage === SellingStage.SET_PRICE && (

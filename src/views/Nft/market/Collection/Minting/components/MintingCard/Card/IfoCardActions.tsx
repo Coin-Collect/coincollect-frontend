@@ -45,7 +45,14 @@ const IfoCardActions: React.FC<Props> = ({
   }
 
 
-  return <ClaimButton poolId={poolId} ifoVersion={ifo.version} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+  return (
+    <ClaimButton
+      poolId={poolId}
+      publicIfoData={publicIfoData}
+      walletIfoData={walletIfoData}
+      requiredChainId={ifo.chainId ?? ifo.currency.chainId}
+    />
+  )
   
 
 }

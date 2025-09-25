@@ -9,7 +9,7 @@ import { FixedNumber } from '@ethersproject/bignumber'
 
 import { useLpTokenPrice, usePriceCakeBusd } from 'state/farms/hooks'
 import { BIG_ZERO } from 'utils/bigNumber'
-import { multicallPolygonv1, multicallv2 } from 'utils/multicall'
+import { multicallPolygonv1, multicallPolygonv2 } from 'utils/multicall'
 import { PublicIfoData } from '../../types'
 import { getStatus } from '../helpers'
 import useWeb3React from 'hooks/useWeb3React'
@@ -78,19 +78,8 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
 
   const fetchIfoData = useCallback(
     async (currentBlock: number, account: string | undefined) => {
-  
-      const [
-        totalSupply,
-        maxSupply,
-        isSaleActive,
-        cost,
-        balance,
-        priceDetails,
-        startBlock,
-        holderDiscountPercentage,
-      ] = await multicallPolygonv1(
-        abi,
-        [
+      try {
+        const calls = [
           {
             address,
             name: 'totalSupply',
@@ -110,7 +99,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
           {
             address,
             name: 'balanceOf',
-            params: [account ? account : '0x514910771af9ca656af840dff83e8264ecf986ca']
+            params: [account ? account : '0x514910771af9ca656af840dff83e8264ecf986ca'],
           },
           version === 3.1 && {
             address,
@@ -124,42 +113,73 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
             address,
             name: 'holderDiscountPercentage',
           },
-        ].filter(Boolean),
-      )
-        
-      
+      ].filter(Boolean)
 
-      const priceDetailsFormatted = formatPriceDetails(priceDetails)
+        let results
 
-      const startBlockNum = startBlock ? startBlock[0].toNumber() : 0
-      const totalSupplyNum =  totalSupply ? totalSupply[0].toNumber() : 0
-      const maxSupplyNum =  maxSupply ? maxSupply[0].toNumber() : 0
-      const formattedCost = cost ? parseFloat(formatEther(cost[0])) : 0
-      const balanceNum = balance ? balance[0].toNumber() : 0
-      const holderDiscountPercentageNum = holderDiscountPercentage ? holderDiscountPercentage[0].toNumber() : 0
-      
-      const status = getStatus(currentBlock, startBlockNum, totalSupplyNum, maxSupplyNum, isSaleActive)
+        try {
+          results = await multicallPolygonv1(abi, calls)
+        } catch (error) {
+          console.warn('Multicall v1 failed for minting data, retrying with v2', error)
+          results = await multicallPolygonv2(abi, calls, { requireSuccess: false })
+        }
 
-      const isDynamicPrice = (priceDetailsFormatted.partialMaxSupply && priceDetailsFormatted.nextPrice);
+        if (!Array.isArray(results)) {
+          throw new Error('Failed to fetch minting contract data')
+        }
 
-      //Calculate Progress Percantage
-      const progress = isDynamicPrice ? (totalSupplyNum * 100) / priceDetailsFormatted.partialMaxSupply
-                                      : (totalSupplyNum * 100) / maxSupplyNum
+        const [
+          totalSupply,
+          maxSupply,
+          isSaleActive,
+          cost,
+          balance,
+          priceDetails,
+          startBlock,
+          holderDiscountPercentage,
+        ] = results
 
+        const priceDetailsFormatted = formatPriceDetails(priceDetails)
 
-      setState((prev) => ({
-        ...prev,
-        isInitialized: true,
-        secondsUntilStart: (startBlockNum - currentBlock) * POLYGON_BLOCK_TIME,
-        totalSupply: totalSupplyNum,
-        isSaleActive,
-        cost: formattedCost,
-        balance: balanceNum,
-        holderDiscountPercentage: holderDiscountPercentageNum,
-        status,
-        progress,
-        ...priceDetailsFormatted,
-      }))
+        const startBlockNum = startBlock ? startBlock[0].toNumber() : 0
+        const totalSupplyNum = totalSupply ? totalSupply[0].toNumber() : 0
+        const maxSupplyNum = maxSupply ? maxSupply[0].toNumber() : 0
+        const formattedCost = cost ? parseFloat(formatEther(cost[0])) : 0
+        const balanceNum = balance ? balance[0].toNumber() : 0
+        const holderDiscountPercentageNum = holderDiscountPercentage ? holderDiscountPercentage[0].toNumber() : 0
+        const isSaleActiveFlag = Boolean(isSaleActive && isSaleActive[0])
+
+        const status = getStatus(currentBlock, startBlockNum, totalSupplyNum, maxSupplyNum, isSaleActiveFlag)
+
+        const isDynamicPrice = Boolean(priceDetailsFormatted.partialMaxSupply && priceDetailsFormatted.nextPrice)
+
+        // Calculate Progress Percentage with guard against division by zero
+        const progressDenominator = isDynamicPrice
+          ? priceDetailsFormatted.partialMaxSupply || maxSupplyNum || 1
+          : maxSupplyNum || 1
+        const progress = (totalSupplyNum * 100) / progressDenominator
+
+        setState((prev) => ({
+          ...prev,
+          isInitialized: true,
+          secondsUntilStart: (startBlockNum - currentBlock) * POLYGON_BLOCK_TIME,
+          totalSupply: totalSupplyNum,
+          isSaleActive: isSaleActiveFlag,
+          cost: formattedCost,
+          balance: balanceNum,
+          holderDiscountPercentage: holderDiscountPercentageNum,
+          status,
+          progress,
+          ...priceDetailsFormatted,
+        }))
+      } catch (error) {
+        console.error('Failed to fetch minting contract data', error)
+        setState((prev) => ({
+          ...prev,
+          isInitialized: true,
+          status: 'idle',
+        }))
+      }
     },
     [releaseBlockNumber, address, version, abi],
   )
