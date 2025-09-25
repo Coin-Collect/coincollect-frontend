@@ -45,6 +45,24 @@ const SectionDescription = styled(Text)`
 `
 
 const GamesView: React.FC = () => {
+  const nftData = [
+    {
+      name: 'Cyberpunk NFT',
+      image: '/images/poolBanners/nfts/cyberpunk.webp',
+      link: 'https://dashboard.coincollect.org/nfts/cyberpunk'
+    },
+    {
+      name: 'Key NFT',
+      image: '/images/poolBanners/nfts/key.webp',
+      link: 'https://dashboard.coincollect.org/nfts/key'
+    },
+    {
+      name: 'Lootbox NFT',
+      image: '/images/poolBanners/nfts/lootbox.webp',
+      link: 'https://dashboard.coincollect.org/nfts/lootbox'
+    }
+  ]
+
   const mainGame = {
     name: 'GhostAlien',
     description:
@@ -59,7 +77,7 @@ const GamesView: React.FC = () => {
       { label: 'GHOST', logoSrc: '/images/games/tokens/bonk.png' },
       { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
     ],
-    earnableNfts: ['GhostAlien Trophy NFTs'],
+    earnableNfts: nftData,
   }
 
   const rogueCircuit = {
@@ -75,7 +93,7 @@ const GamesView: React.FC = () => {
     earnableRewards: [
       { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
     ],
-    earnableNfts: ['Founder Keys', 'Season Zero Trophy NFTs'],
+    earnableNfts: nftData,
   }
 
   const comingSoon = {

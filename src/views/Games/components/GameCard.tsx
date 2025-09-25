@@ -3,6 +3,12 @@ import { Card, CardBody, Flex, Heading, Text, Button, LinkExternal, useModal, us
 import EarnableTokensModal from './EarnableTokensModal'
 import { RewardToken } from '../types'
 
+interface NFTItem {
+  name: string
+  image: string
+  link: string
+}
+
 interface GameCardProps {
   name: string
   description: string
@@ -13,7 +19,7 @@ interface GameCardProps {
   projectHref?: string
   usableNfts: string[]
   earnableRewards: RewardToken[]
-  earnableNfts: string[]
+  earnableNfts: NFTItem[]
   isComingSoon?: boolean
 }
 
@@ -202,7 +208,7 @@ const SectionsGrid = styled.div`
   grid-template-columns: 1fr;
 
   ${({ theme }) => theme.mediaQueries.md} {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 `
 
@@ -245,8 +251,9 @@ const GameCard: React.FC<GameCardProps> = ({
   const hasUsableNfts = usableNfts.length > 0
   const previewTokens = hasRewards ? earnableRewards.slice(0, 3) : []
   const remainingTokens = hasRewards ? earnableRewards.length - previewTokens.length : 0
+
   const [onPresentTokensModal] = useModal(
-    <EarnableTokensModal tokens={earnableRewards} title={`${name} Rewards`} />,
+    <EarnableTokensModal tokens={earnableRewards} nfts={earnableNfts} title={`${name} Rewards`} />,
   )
 
   return (
@@ -266,9 +273,9 @@ const GameCard: React.FC<GameCardProps> = ({
         <SectionsGrid>
           <DetailSection>
             <DetailLabel>Earnable Rewards</DetailLabel>
-            {hasRewards ? (
+            {hasRewards || hasEarnableNfts ? (
               <Flex flexDirection="column" style={{ gap: '8px' }}>
-                <TokenRow onClick={onPresentTokensModal} role="button" aria-label="View earnable tokens">
+                <TokenRow onClick={onPresentTokensModal} role="button" aria-label="View earnable rewards">
                   {earnableRewards.slice(0, 5).map((token) => {
                     const { targetRef, tooltip, tooltipVisible } = useTooltip(token.label, {
                       placement: 'top',
@@ -282,16 +289,11 @@ const GameCard: React.FC<GameCardProps> = ({
                     )
                   })}
                 </TokenRow>
-                <TokensHint>Tap to view the full reward token lineup.</TokensHint>
+                <TokensHint>Tap to view all earnable tokens and NFTs.</TokensHint>
               </Flex>
             ) : (
               <EmptyText>Reward structure will be revealed closer to launch.</EmptyText>
             )}
-          </DetailSection>
-
-          <DetailSection>
-            <DetailLabel>Earnable NFTs</DetailLabel>
-            {hasEarnableNfts ? renderPills(earnableNfts) : <EmptyText>Seasonal NFT drops will be announced soon.</EmptyText>}
           </DetailSection>
 
           <DetailSection>
