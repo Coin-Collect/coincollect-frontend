@@ -1,0 +1,312 @@
+import styled, { css } from 'styled-components'
+import { Card, CardBody, Flex, Heading, Text, Button, LinkExternal, useModal } from '@pancakeswap/uikit'
+import EarnableTokensModal from './EarnableTokensModal'
+import { RewardToken } from '../types'
+
+interface GameCardProps {
+  name: string
+  description: string
+  bannerUrl: string
+  ctaLabel: string
+  ctaHref: string
+  projectLabel?: string
+  projectHref?: string
+  usableNfts: string[]
+  earnableRewards: RewardToken[]
+  earnableNfts: string[]
+  isComingSoon?: boolean
+}
+
+const StyledCard = styled(Card)<{ $comingSoon?: boolean }>`
+  align-self: stretch;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(15, 21, 54, 0.28);
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  ${({ $comingSoon, theme }) =>
+    $comingSoon &&
+    css`
+      border-style: dashed;
+      border-color: ${theme.colors.cardBorder};
+      &:hover {
+        border-color: ${theme.colors.cardBorder};
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(15, 21, 54, 0.18);
+      }
+    `}
+`
+
+const Banner = styled.div<{ $image: string }>`
+  position: relative;
+  height: 200px;
+  background: ${({ $image }) => `url(${$image}) center/cover no-repeat`};
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+  color: ${({ theme }) => theme.colors.invertedContrast};
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(5, 7, 16, 0.2) 25%, rgba(5, 7, 16, 0.73) 100%);
+  }
+`
+
+const BannerContent = styled(Flex)`
+  position: relative;
+  z-index: 1;
+  flex-direction: column;
+  gap: 8px;
+`
+
+const BannerHeading = styled(Heading).attrs({ color: 'white' })`
+  color: ${({ theme }) => theme.colors.white};
+`
+
+const StatusPill = styled.div<{ $soon?: boolean }>`
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: ${({ theme, $soon }) =>
+    $soon ? 'rgba(255, 170, 0, 0.84)' : theme.colors.success};
+  color: #0f152b;
+  backdrop-filter: blur(6px);
+`
+
+const StyledCardBody = styled(CardBody)`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 24px 28px;
+
+  ${({ theme }) => theme.mediaQueries.sm} {
+    padding: 28px 32px 32px;
+  }
+`
+
+const DetailSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+const DetailLabel = styled(Text)`
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textSubtle};
+`
+
+const PillRow = styled(Flex)`
+  gap: 8px;
+  flex-wrap: wrap;
+`
+
+const Pill = styled.div`
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(118, 69, 217, 0.14);
+  border: 1px solid rgba(118, 69, 217, 0.28);
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+
+  ${({ theme }) => theme.isDark && 'color: rgba(255, 255, 255, 0.92);'}
+`
+
+const EmptyText = styled(Text)`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.textDisabled};
+`
+
+const TokenRow = styled(Flex)`
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  cursor: pointer;
+`
+
+const TokenChip = styled(Flex)`
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: rgba(15, 21, 43, 0.08);
+  border: 1px solid rgba(118, 69, 217, 0.2);
+  backdrop-filter: blur(6px);
+
+  ${({ theme }) => theme.isDark &&
+    `background: rgba(255, 255, 255, 0.08); border-color: rgba(118, 69, 217, 0.35);`}
+`
+
+const TokenLogo = styled.img`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(15, 21, 43, 0.25);
+`
+
+const MoreToken = styled(Flex)`
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(118, 69, 217, 0.18);
+  border: 1px solid rgba(118, 69, 217, 0.3);
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+  min-width: 52px;
+
+  ${({ theme }) => theme.isDark && 'color: rgba(255, 255, 255, 0.92);'}
+`
+
+const TokensHint = styled(Text)`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+`
+
+const SectionsGrid = styled.div`
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+`
+
+const ActionsRow = styled(Flex)`
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+`
+
+const LinkLabel = styled(Text)`
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textSubtle};
+`
+
+const renderPills = (items: string[]) => (
+  <PillRow>
+    {items.map((item) => (
+      <Pill key={item}>{item}</Pill>
+    ))}
+  </PillRow>
+)
+
+const GameCard: React.FC<GameCardProps> = ({
+  name,
+  description,
+  bannerUrl,
+  ctaLabel,
+  ctaHref,
+  projectLabel = 'Visit Project',
+  projectHref,
+  usableNfts,
+  earnableRewards,
+  earnableNfts,
+  isComingSoon,
+}) => {
+  const hasRewards = earnableRewards.length > 0
+  const hasEarnableNfts = earnableNfts.length > 0
+  const hasUsableNfts = usableNfts.length > 0
+  const previewTokens = hasRewards ? earnableRewards.slice(0, 3) : []
+  const remainingTokens = hasRewards ? earnableRewards.length - previewTokens.length : 0
+  const [onPresentTokensModal] = useModal(
+    <EarnableTokensModal tokens={earnableRewards} title={`${name} Rewards`} />,
+  )
+
+  return (
+    <StyledCard $comingSoon={isComingSoon}>
+      <Banner $image={bannerUrl}>
+        <BannerContent>
+          <StatusPill $soon={isComingSoon}>{isComingSoon ? 'Coming Soon' : 'Live World'}</StatusPill>
+          <BannerHeading scale="lg">{name}</BannerHeading>
+        </BannerContent>
+      </Banner>
+
+      <StyledCardBody>
+        <Text color="textSubtle" lineHeight="160%">
+          {description}
+        </Text>
+
+        <SectionsGrid>
+          <DetailSection>
+            <DetailLabel>Earnable Rewards</DetailLabel>
+            {hasRewards ? (
+              <Flex flexDirection="column" gap="8px">
+                <TokenRow onClick={onPresentTokensModal} role="button" aria-label="View earnable tokens">
+                  {previewTokens.map((token) => (
+                    <TokenChip key={token.label}>
+                      <TokenLogo src={token.logoSrc} alt={token.label} />
+                      <Text fontSize="14px" fontWeight={600} color="text">
+                        {token.label}
+                      </Text>
+                    </TokenChip>
+                  ))}
+                  {remainingTokens > 0 && <MoreToken>+{remainingTokens}</MoreToken>}
+                </TokenRow>
+                <TokensHint>Tap to view the full reward token lineup.</TokensHint>
+              </Flex>
+            ) : (
+              <EmptyText>Reward structure will be revealed closer to launch.</EmptyText>
+            )}
+          </DetailSection>
+
+          <DetailSection>
+            <DetailLabel>Earnable NFTs</DetailLabel>
+            {hasEarnableNfts ? renderPills(earnableNfts) : <EmptyText>Seasonal NFT drops will be announced soon.</EmptyText>}
+          </DetailSection>
+
+          <DetailSection>
+            <DetailLabel>Usable NFTs In-Game</DetailLabel>
+            {hasUsableNfts ? renderPills(usableNfts) : <EmptyText>Connect your CoinCollect NFTs to unlock gameplay perks.</EmptyText>}
+          </DetailSection>
+        </SectionsGrid>
+
+        <ActionsRow flexDirection={[ 'column', null, 'row' ]} alignItems={[ 'stretch', null, 'center' ]}>
+          <Button
+            as="a"
+            href={ctaHref}
+            target={isComingSoon ? '_self' : '_blank'}
+            rel={isComingSoon ? undefined : 'noreferrer'}
+            variant={isComingSoon ? 'secondary' : 'primary'}
+            width={['100%', null, 'auto']}
+          >
+            {ctaLabel}
+          </Button>
+
+          {projectHref && (
+            <Flex flexDirection="column" gap="4px">
+              <LinkLabel>{projectLabel}</LinkLabel>
+              <LinkExternal href={projectHref} color="primary" fontSize="14px">
+                {projectHref.replace(/^https?:\/\//, '')}
+              </LinkExternal>
+            </Flex>
+          )}
+        </ActionsRow>
+      </StyledCardBody>
+    </StyledCard>
+  )
+}
+
+export default GameCard
