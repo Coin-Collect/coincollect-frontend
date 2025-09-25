@@ -206,10 +206,6 @@ const SectionsGrid = styled.div`
   display: grid;
   gap: 20px;
   grid-template-columns: 1fr;
-
-  ${({ theme }) => theme.mediaQueries.md} {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 `
 
 const ActionsRow = styled(Flex)`
@@ -319,7 +315,7 @@ const GameCard: React.FC<GameCardProps> = ({
             {hasRewards || hasEarnableNfts ? (
               <Flex flexDirection="column" style={{ gap: '8px' }}>
                 <TokenRow onClick={onPresentTokensModal} role="button" aria-label="View earnable rewards">
-                  {earnableRewards.slice(0, 5).map((token) => {
+                  {earnableRewards.slice(0, 4).map((token) => {
                     const { targetRef, tooltip, tooltipVisible } = useTooltip(token.label, {
                       placement: 'top',
                       trigger: 'hover',
@@ -331,6 +327,9 @@ const GameCard: React.FC<GameCardProps> = ({
                       </div>
                     )
                   })}
+                  {earnableRewards.length > 4 && (
+                    <MoreToken>+{earnableRewards.length - 4}</MoreToken>
+                  )}
                 </TokenRow>
               </Flex>
             ) : (

@@ -76,6 +76,11 @@ const GamesView: React.FC = () => {
     earnableRewards: [
       { label: 'GHOST', logoSrc: '/images/games/tokens/bonk.png' },
       { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
+      { label: 'ETH', logoSrc: '/images/games/tokens/eth-min.png' },
+      { label: 'LINK', logoSrc: '/images/games/tokens/link-min.png' },
+      { label: 'UNI', logoSrc: '/images/games/tokens/uni.png' },
+      { label: 'AAVE', logoSrc: '/images/games/tokens/aave-min.png' },
+      { label: 'SAND', logoSrc: '/images/games/tokens/sand.png' },
     ],
     earnableNfts: nftData,
   }
@@ -92,6 +97,11 @@ const GamesView: React.FC = () => {
     usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
     earnableRewards: [
       { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
+      { label: 'ETH', logoSrc: '/images/games/tokens/eth-min.png' },
+      { label: 'LINK', logoSrc: '/images/games/tokens/link-min.png' },
+      { label: 'UNI', logoSrc: '/images/games/tokens/uni.png' },
+      { label: 'SHIB', logoSrc: '/images/games/tokens/shib-min.png' },
+      { label: 'TEL', logoSrc: '/images/games/tokens/tel.png' },
     ],
     earnableNfts: nftData,
   }
