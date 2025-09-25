@@ -182,7 +182,7 @@ const Hero: React.FC = () => {
             <Button as="a" href="https://ghostalien.questgalaxy.com/" target="_blank" rel="noreferrer" scale="md">
               Play Game
             </Button>
-            <Button as="a" href="https://questgalaxy.com/ghostalien.html" target="_blank" rel="noreferrer" variant="secondary" scale="md">
+            <Button as="a" href="https://questgalaxy.com/" target="_blank" rel="noreferrer" variant="secondary" scale="md">
               Learn More
             </Button>
           </ButtonRow>

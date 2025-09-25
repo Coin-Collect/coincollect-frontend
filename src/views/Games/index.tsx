@@ -86,12 +86,12 @@ const GamesView: React.FC = () => {
   }
 
   const rogueCircuit = {
-    name: 'Rogue Circuit',
+    name: 'RainBow Tetris',
     description:
-      'High-speed roguelike racing league where you drift through neon megacities, earn COLLECT boosts, and chase seasonal trophy NFTs.',
-    bannerUrl: '/images/poolBanners/partners/10.webp',
+      'A kaleidoscopic puzzle clash where shifting blocks ignite chain reactions, unlocking COLLECT boosts and seasonal trophy NFTs as you battle for high-score dominance.',
+    bannerUrl: '/images/poolBanners/44.webp',
     ctaLabel: 'Join the Waitlist',
-    ctaHref: 'https://coincollect.org/contact',
+    ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
     projectLabel: 'CoinCollect Studios',
     projectHref: 'https://coincollect.org',
     usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
@@ -112,9 +112,9 @@ const GamesView: React.FC = () => {
       'Have a play-to-earn experience that thrives on powerful NFT utility? Partner with CoinCollect to showcase it to our community and plug into COLLECT rewards.',
     bannerUrl: '/images/poolBanners/partners/9.webp',
     ctaLabel: 'Submit Your Game',
-    ctaHref: 'mailto:hello@coincollect.org?subject=CoinCollect%20Games%20Listing',
-    projectLabel: 'Partner With CoinCollect',
-    projectHref: 'https://coincollect.org/contact',
+    ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
+    projectLabel: 'docs.coincollect.org',
+    projectHref: 'https://docs.coincollect.org',
     usableNfts: [],
     earnableRewards: [],
     earnableNfts: [],

@@ -94,6 +94,57 @@ const StatusPill = styled.div<{ $soon?: boolean }>`
   backdrop-filter: blur(6px);
 `
 
+const OnlineBadge = styled.div`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #00ff88;
+  color: #0f152b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+  animation: glowGreen 2s ease-in-out infinite alternate, pulse 1.5s ease-in-out infinite;
+
+  @keyframes glowGreen {
+    from {
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 30px rgba(0, 255, 136, 0.4);
+    }
+    to {
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.8), 0 0 40px rgba(0, 255, 136, 0.6);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+`
+
+const OfflineBadge = styled.div`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ff4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+`
+
 const StyledCardBody = styled(CardBody)`
   display: flex;
   flex-direction: column;
@@ -298,8 +349,15 @@ const GameCard: React.FC<GameCardProps> = ({
   return (
     <StyledCard $comingSoon={isComingSoon}>
       <Banner $image={bannerUrl}>
+        {name === 'GhostAlien' ? (
+          <OnlineBadge>Online</OnlineBadge>
+        ) : (
+          <OfflineBadge>Offline</OfflineBadge>
+        )}
         <BannerContent>
-          <StatusPill $soon={isComingSoon}>{isComingSoon ? 'Coming Soon' : 'Live World'}</StatusPill>
+          <StatusPill $soon={isComingSoon}>
+             {isComingSoon ? (name === 'RainBow Tetris' ? 'Puzzle P2E' : 'Coming Soon') : name === 'GhostAlien' ? 'Space Shooter' : 'Live World'}
+           </StatusPill>
           <BannerHeading scale="lg">{name}</BannerHeading>
         </BannerContent>
       </Banner>
