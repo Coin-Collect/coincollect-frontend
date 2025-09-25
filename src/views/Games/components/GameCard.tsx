@@ -233,6 +233,49 @@ const renderPills = (items: string[]) => (
   </PillRow>
 )
 
+const NFTImageRow = styled(Flex)`
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+`
+
+const NFTImageLink = styled.a`
+  display: inline-block;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+`
+
+const NFTImage = styled.img`
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(15, 21, 43, 0.25);
+`
+
+const renderNFTImages = (nfts: NFTItem[]) => (
+  <NFTImageRow>
+    {nfts.map((nft) => {
+      const { targetRef, tooltip, tooltipVisible } = useTooltip(nft.name, {
+        placement: 'top',
+        trigger: 'hover',
+      })
+      return (
+        <div key={nft.name} ref={targetRef}>
+          <NFTImageLink href={nft.link} target="_blank" rel="noopener noreferrer">
+            <NFTImage src={nft.image} alt={nft.name} />
+          </NFTImageLink>
+          {tooltipVisible && tooltip}
+        </div>
+      )
+    })}
+  </NFTImageRow>
+)
+
 const GameCard: React.FC<GameCardProps> = ({
   name,
   description,
@@ -289,7 +332,6 @@ const GameCard: React.FC<GameCardProps> = ({
                     )
                   })}
                 </TokenRow>
-                <TokensHint>Tap to view all earnable tokens and NFTs.</TokensHint>
               </Flex>
             ) : (
               <EmptyText>Reward structure will be revealed closer to launch.</EmptyText>
@@ -298,7 +340,7 @@ const GameCard: React.FC<GameCardProps> = ({
 
           <DetailSection>
             <DetailLabel>Usable NFTs In-Game</DetailLabel>
-            {hasUsableNfts ? renderPills(usableNfts) : <EmptyText>Connect your CoinCollect NFTs to unlock gameplay perks.</EmptyText>}
+            {hasEarnableNfts ? renderNFTImages(earnableNfts) : hasUsableNfts ? renderPills(usableNfts) : <EmptyText>Connect your CoinCollect NFTs to unlock gameplay perks.</EmptyText>}
           </DetailSection>
         </SectionsGrid>
 
