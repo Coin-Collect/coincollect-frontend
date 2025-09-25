@@ -90,15 +90,15 @@ const HeroContent = styled(Flex)`
   z-index: 1;
   flex-direction: column;
   gap: 24px;
-  color: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.contrast};
 
   ${({ theme }) => theme.mediaQueries.md} {
     max-width: 520px;
   }
 `
 
-const HeroTitle = styled(Heading).attrs({ color: 'white' })`
-  color: ${({ theme }) => theme.colors.white};
+const HeroTitle = styled(Heading).attrs({ color: 'contrast' })`
+  color: ${({ theme }) => theme.colors.contrast};
 `
 
 const HeroDescription = styled(Text)`
@@ -174,9 +174,9 @@ const Hero: React.FC = () => {
       <GlowOrb />
       <HeroLayout>
         <HeroContent>
-          <HeroTitle scale="xl">Discover Play-to-Earn Worlds</HeroTitle>
+          <HeroTitle scale="xl">Unlock the Future of Play-to-Earn</HeroTitle>
           <HeroDescription fontSize="18px" lineHeight="150%">
-            Step into curated metaverse experiences where your CoinCollect NFTs unlock exclusive abilities and the COLLECT economy fuels every quest.
+            Enter the QuestGalaxy × CoinCollect universe where NFTs aren't just collectibles — they're keys to new worlds. Power up your adventures, claim rewards, and thrive in the COLLECT economy as every quest fuels your journey through the metaverse.
           </HeroDescription>
           <ButtonRow>
             <Button as="a" href="https://game.coincollect.org" target="_blank" rel="noreferrer" scale="md">

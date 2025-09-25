@@ -62,6 +62,22 @@ const GamesView: React.FC = () => {
     earnableNfts: ['GhostAlien Trophy NFTs'],
   }
 
+  const rogueCircuit = {
+    name: 'Rogue Circuit',
+    description:
+      'High-speed roguelike racing league where you drift through neon megacities, earn COLLECT boosts, and chase seasonal trophy NFTs.',
+    bannerUrl: '/images/poolBanners/partners/10.webp',
+    ctaLabel: 'Join the Waitlist',
+    ctaHref: 'https://coincollect.org/contact',
+    projectLabel: 'CoinCollect Studios',
+    projectHref: 'https://coincollect.org',
+    usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
+    earnableRewards: [
+      { label: 'COLLECT', logoSrc: '/images/games/tokens/0xdbc80878e4Ffe6A4f87fb94DB2Ee58a642986816.png' },
+    ],
+    earnableNfts: ['Founder Keys', 'Season Zero Trophy NFTs'],
+  }
+
   const comingSoon = {
     name: 'Your Game Here',
     description:
@@ -88,6 +104,7 @@ const GamesView: React.FC = () => {
         </SectionHeader>
         <CardsGrid>
           <GameCard {...mainGame} />
+          <GameCard {...rogueCircuit} isComingSoon />
           <GameCard {...comingSoon} isComingSoon />
         </CardsGrid>
       </CardsSection>
