@@ -179,11 +179,11 @@ const Hero: React.FC = () => {
             Enter the QuestGalaxy × CoinCollect universe where NFTs aren't just collectibles — they're keys to new worlds. Power up your adventures, claim rewards, and thrive in the COLLECT economy as every quest fuels your journey through the metaverse.
           </HeroDescription>
           <ButtonRow>
-            <Button as="a" href="https://game.coincollect.org" target="_blank" rel="noreferrer" scale="md">
-              Launch Featured Game
+            <Button as="a" href="https://ghostalien.questgalaxy.com/" target="_blank" rel="noreferrer" scale="md">
+              Play Game
             </Button>
-            <Button as="a" href="#games-grid" variant="secondary" scale="md">
-              Browse Games
+            <Button as="a" href="https://questgalaxy.com/ghostalien.html" target="_blank" rel="noreferrer" variant="secondary" scale="md">
+              Learn More
             </Button>
           </ButtonRow>
         </HeroContent>

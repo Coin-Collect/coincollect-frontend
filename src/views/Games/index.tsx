@@ -37,7 +37,7 @@ const SectionHeader = styled(Flex)`
 `
 
 const SectionTitle = styled(Heading)`
-  color: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.contrast};
 `
 
 const SectionDescription = styled(Text)`

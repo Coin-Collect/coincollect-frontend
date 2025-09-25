@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { Card, CardBody, Flex, Heading, Text, Button, LinkExternal, useModal } from '@pancakeswap/uikit'
+import { Card, CardBody, Flex, Heading, Text, Button, LinkExternal, useModal, useTooltip } from '@pancakeswap/uikit'
 import EarnableTokensModal from './EarnableTokensModal'
 import { RewardToken } from '../types'
 
@@ -70,8 +70,8 @@ const BannerContent = styled(Flex)`
   gap: 8px;
 `
 
-const BannerHeading = styled(Heading).attrs({ color: 'white' })`
-  color: ${({ theme }) => theme.colors.white};
+const BannerHeading = styled(Heading).attrs({ color: 'contrast' })`
+  color: ${({ theme }) => theme.colors.contrast};
 `
 
 const StatusPill = styled.div<{ $soon?: boolean }>`
@@ -136,10 +136,24 @@ const EmptyText = styled(Text)`
 `
 
 const TokenRow = styled(Flex)`
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
   cursor: pointer;
+  justify-content: flex-start;
+`
+
+const TokenIcon = styled.img`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(15, 21, 43, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(15, 21, 43, 0.35);
+  }
 `
 
 const TokenChip = styled(Flex)`
@@ -253,17 +267,20 @@ const GameCard: React.FC<GameCardProps> = ({
           <DetailSection>
             <DetailLabel>Earnable Rewards</DetailLabel>
             {hasRewards ? (
-              <Flex flexDirection="column" gap="8px">
+              <Flex flexDirection="column" style={{ gap: '8px' }}>
                 <TokenRow onClick={onPresentTokensModal} role="button" aria-label="View earnable tokens">
-                  {previewTokens.map((token) => (
-                    <TokenChip key={token.label}>
-                      <TokenLogo src={token.logoSrc} alt={token.label} />
-                      <Text fontSize="14px" fontWeight={600} color="text">
-                        {token.label}
-                      </Text>
-                    </TokenChip>
-                  ))}
-                  {remainingTokens > 0 && <MoreToken>+{remainingTokens}</MoreToken>}
+                  {earnableRewards.slice(0, 5).map((token) => {
+                    const { targetRef, tooltip, tooltipVisible } = useTooltip(token.label, {
+                      placement: 'top',
+                      trigger: 'hover',
+                    })
+                    return (
+                      <div key={token.label} ref={targetRef}>
+                        <TokenIcon src={token.logoSrc} alt={token.label} />
+                        {tooltipVisible && tooltip}
+                      </div>
+                    )
+                  })}
                 </TokenRow>
                 <TokensHint>Tap to view the full reward token lineup.</TokensHint>
               </Flex>
@@ -296,7 +313,7 @@ const GameCard: React.FC<GameCardProps> = ({
           </Button>
 
           {projectHref && (
-            <Flex flexDirection="column" gap="4px">
+            <Flex flexDirection="column" style={{ gap: '4px' }}>
               <LinkLabel>{projectLabel}</LinkLabel>
               <LinkExternal href={projectHref} color="primary" fontSize="14px">
                 {projectHref.replace(/^https?:\/\//, '')}
