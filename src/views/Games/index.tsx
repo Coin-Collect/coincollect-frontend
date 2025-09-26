@@ -10,6 +10,8 @@ const CardsSection = styled(Container)`
   display: flex;
   flex-direction: column;
   gap: 32px;
+  padding-left: 0px;
+  padding-right: 0px;
 
   ${({ theme }) => theme.mediaQueries.md} {
     gap: 40px;
@@ -19,6 +21,7 @@ const CardsSection = styled(Container)`
 const CardsGrid = styled(FlexLayout)`
   margin-left: -8px;
   margin-right: -8px;
+ 
 
   & > * {
     margin: 0 8px 32px;
