@@ -77,7 +77,7 @@ const BannerContent = styled(Flex)`
 `
 
 const BannerHeading = styled(Heading).attrs({ color: 'contrast' })`
-  color: ${({ theme }) => theme.colors.contrast};
+  color: #ffffff !important;
 `
 
 const StatusPill = styled.div<{ $soon?: boolean }>`

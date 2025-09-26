@@ -110,7 +110,7 @@ const GamesView: React.FC = () => {
     name: 'Your Game Here',
     description:
       'Partner with CoinCollect to showcase your P2E game and integrate COLLECT rewards.',
-    bannerUrl: '/images/poolBanners/partners/9.webp',
+    bannerUrl: '/images/poolBanners/28.webp',
     ctaLabel: 'Submit Your Game',
     ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
     projectLabel: 'docs.coincollect.org',

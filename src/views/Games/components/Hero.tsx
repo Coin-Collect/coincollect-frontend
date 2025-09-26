@@ -98,7 +98,7 @@ const HeroContent = styled(Flex)`
 `
 
 const HeroTitle = styled(Heading).attrs({ color: 'contrast' })`
-  color: ${({ theme }) => theme.colors.contrast};
+  color: #ffffff !important;
 `
 
 const HeroDescription = styled(Text)`
