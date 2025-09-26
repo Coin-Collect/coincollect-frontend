@@ -42,11 +42,6 @@ const drawerLinks: MenuItemsType[] = [
         href: '/pools',
     },
     {
-        label: 'Quest (Soon)',
-        icon: 'LightningIcon',
-        href: '/?q=soon',
-    },
-    {
         label: 'Swap',
         icon: 'SwapIcon',
         href: '/swap',
