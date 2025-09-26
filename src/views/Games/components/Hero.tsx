@@ -22,37 +22,20 @@ const HeroWrapper = styled(Box)`
   border-radius: 32px;
   padding: 56px 32px;
   margin-bottom: 48px;
-  background: radial-gradient(circle at 20% 20%, rgba(118, 69, 217, 0.35) 0%, rgba(22, 12, 52, 0.7) 45%, rgba(11, 16, 26, 0.95) 100%),
-    linear-gradient(135deg, rgba(118, 69, 217, 0.75) 0%, rgba(31, 197, 255, 0.65) 80%);
+  min-height: 400px;
 
   ${({ theme }) => theme.mediaQueries.md} {
     padding: 72px 64px;
-  }
-
-  &:before,
-  &:after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(0px);
+    min-height: 500px;
   }
 
   &:before {
-    top: -120px;
-    right: -80px;
-    width: 260px;
-    height: 260px;
-    background: rgba(31, 197, 255, 0.6);
-    opacity: 0.6;
-  }
-
-  &:after {
-    bottom: -140px;
-    left: -100px;
-    width: 320px;
-    height: 320px;
-    background: rgba(118, 69, 217, 0.55);
-    opacity: 0.7;
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(118, 69, 217, 0.75) 0%, rgba(31, 197, 255, 0.45) 50%, rgba(11, 16, 26, 0.85) 100%);
+    z-index: 2;
+    pointer-events: none;
   }
 `
 
@@ -64,8 +47,9 @@ const GlowOrb = styled.div`
   height: 320px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 70%);
-  opacity: 0.5;
+  opacity: 0.3;
   animation: ${waveAnimation} 7s ease-in-out infinite;
+  z-index: 2;
 
   ${({ theme }) => theme.mediaQueries.md} {
     left: 58%;
@@ -74,103 +58,77 @@ const GlowOrb = styled.div`
 `
 
 const HeroLayout = styled(Flex)`
+  position: relative;
+  z-index: 3;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
+  justify-content: center;
+  align-items: center;
   gap: 32px;
+  height: 100%;
+  text-align: center;
 
   ${({ theme }) => theme.mediaQueries.md} {
-    flex-direction: row;
-    gap: 48px;
+    text-align: left;
+    align-items: flex-start;
+    justify-content: center;
   }
 `
 
 const HeroContent = styled(Flex)`
   position: relative;
-  z-index: 1;
+  z-index: 4;
   flex-direction: column;
   gap: 24px;
   color: ${({ theme }) => theme.colors.contrast};
+  width: 100%;
+  max-width: 600px;
 
   ${({ theme }) => theme.mediaQueries.md} {
-    max-width: 520px;
+    max-width: 700px;
   }
 `
 
 const HeroTitle = styled(Heading).attrs({ color: 'contrast' })`
   color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
 `
 
 const HeroDescription = styled(Text)`
   color: rgba(255, 255, 255, 0.92);
-`
-
-const HeroVisual = styled(Box)`
-  position: relative;
-  z-index: 1;
-  margin-top: 32px;
-  width: 100%;
-  max-width: 420px;
-  align-self: center;
-
-  ${({ theme }) => theme.mediaQueries.md} {
-    margin-top: 0;
-    align-self: flex-end;
-  }
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
 `
 
 const ButtonRow = styled(Flex)`
   flex-wrap: wrap;
   gap: 16px;
-`
+  justify-content: center;
 
-const VisualPanel = styled.div`
-  width: 100%;
-  padding-top: 70%;
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 18px 42px rgba(15, 20, 36, 0.55);
-  position: relative;
-  overflow: hidden;
-
-  &:before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(118, 69, 217, 0.28) 0%, rgba(10, 14, 26, 0.7) 100%);
-    opacity: 0.65;
-    z-index: 1;
-    pointer-events: none;
+  ${({ theme }) => theme.mediaQueries.md} {
+    justify-content: flex-start;
   }
 
-  &:after {
-    content: '';
-    position: absolute;
-    inset: 12px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(31, 197, 255, 0.35) 0%, rgba(118, 69, 217, 0.28) 45%, rgba(66, 32, 115, 0.35) 100%);
-    opacity: 0.5;
-    z-index: 1;
-    pointer-events: none;
+  button {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 `
 
-const VideoBackground = styled.video`
+const HeroVideoBackground = styled.video`
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 24px;
-  filter: saturate(110%);
-  z-index: 0;
+  border-radius: 32px;
+  filter: saturate(110%) brightness(0.8);
+  z-index: 1;
 `
 
 const Hero: React.FC = () => {
   return (
     <HeroWrapper>
+      <HeroVideoBackground autoPlay loop muted playsInline preload="auto" aria-hidden="true">
+        <source src="/questGalaxy.mp4" type="video/mp4" />
+      </HeroVideoBackground>
       <GlowOrb />
       <HeroLayout>
         <HeroContent>
@@ -187,13 +145,6 @@ const Hero: React.FC = () => {
             </Button>
           </ButtonRow>
         </HeroContent>
-        <HeroVisual>
-          <VisualPanel>
-            <VideoBackground autoPlay loop muted playsInline preload="auto" aria-hidden="true">
-              <source src="/questGalaxy.mp4" type="video/mp4" />
-            </VideoBackground>
-          </VisualPanel>
-        </HeroVisual>
       </HeroLayout>
     </HeroWrapper>
   )

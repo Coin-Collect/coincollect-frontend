@@ -65,7 +65,7 @@ const Banner = styled.div<{ $image: string }>`
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(5, 7, 16, 0.2) 25%, rgba(5, 7, 16, 0.73) 100%);
+    background: linear-gradient(180deg, rgba(5, 7, 16, 0.1) 25%, rgba(5, 7, 16, 0.4) 100%);
   }
 `
 
