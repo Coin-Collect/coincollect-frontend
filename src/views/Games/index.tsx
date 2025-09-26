@@ -120,6 +120,63 @@ const GamesView: React.FC = () => {
     earnableNfts: [],
   }
 
+  const sonicDash = {
+    name: 'Sonic Dash',
+    description:
+      'High-speed endless runner with COLLECT rewards and NFT power-ups.',
+    bannerUrl: '/images/poolBanners/42.webp',
+    ctaLabel: 'Join the Waitlist',
+    ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
+    projectLabel: 'CoinCollect Studios',
+    projectHref: 'https://coincollect.org',
+    usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
+    earnableRewards: [
+      { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
+      { label: 'AAVE', logoSrc: '/images/games/tokens/aave-min.png' },
+      { label: 'ELON', logoSrc: '/images/games/tokens/elon-min.png' },
+      { label: 'VOXEL', logoSrc: '/images/games/tokens/voxel-min.png' },
+    ],
+    earnableNfts: nftData,
+  }
+
+  const pacmanAdventures = {
+    name: 'PacMan Adventures',
+    description:
+      'Classic arcade action reimagined with blockchain rewards and NFT collectibles.',
+    bannerUrl: '/images/poolBanners/43.webp',
+    ctaLabel: 'Join the Waitlist',
+    ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
+    projectLabel: 'CoinCollect Studios',
+    projectHref: 'https://coincollect.org',
+    usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
+    earnableRewards: [
+      { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
+      { label: 'SAND', logoSrc: '/images/games/tokens/sand.png' },
+      { label: 'AAVE', logoSrc: '/images/games/tokens/aave-min.png' },
+      { label: 'ELON', logoSrc: '/images/games/tokens/elon-min.png' },
+    ],
+    earnableNfts: nftData,
+  }
+
+  const metroidDread = {
+    name: 'Metroid Dread',
+    description:
+      'Sci-fi exploration adventure with NFT upgrades and COLLECT token rewards.',
+    bannerUrl: '/images/poolBanners/56.webp',
+    ctaLabel: 'Join the Waitlist',
+    ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
+    projectLabel: 'CoinCollect Studios',
+    projectHref: 'https://coincollect.org',
+    usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
+    earnableRewards: [
+      { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
+      { label: 'VOXEL', logoSrc: '/images/games/tokens/voxel-min.png' },
+      { label: 'SAND', logoSrc: '/images/games/tokens/sand.png' },
+      { label: 'ELON', logoSrc: '/images/games/tokens/elon-min.png' },
+    ],
+    earnableNfts: nftData,
+  }
+
   return (
     <Page>
       <Hero />
@@ -134,6 +191,9 @@ const GamesView: React.FC = () => {
           <GameCard {...mainGame} />
           <GameCard {...rogueCircuit} isComingSoon />
           <GameCard {...comingSoon} isComingSoon />
+          <GameCard {...sonicDash} isComingSoon />
+          <GameCard {...pacmanAdventures} isComingSoon />
+          <GameCard {...metroidDread} isComingSoon />
         </CardsGrid>
       </CardsSection>
     </Page>
