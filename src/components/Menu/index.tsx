@@ -52,9 +52,9 @@ const Menu = (props) => {
       }}
       userMenu={<UserMenu />}
       globalMenu={<GlobalSettings />}
-      banner={showPhishingWarningBanner && typeof window !== 'undefined' && <PhishingWarningBanner />}
+      banner={false}
       isDark={isDark}
-      showPhishingWarningBanner={showPhishingWarningBanner}
+      showPhishingWarningBanner={false}
       toggleTheme={toggleTheme}
       currentLang={currentLanguage.code}
       langs={languageList}

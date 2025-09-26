@@ -1,4 +1,6 @@
+
 import { MenuItemsType } from "@pancakeswap/uikit";
+
 
 
 const drawerLinks: MenuItemsType[] = [
@@ -18,6 +20,13 @@ const drawerLinks: MenuItemsType[] = [
         href: '/claim',
     },
     {
+
+        label: 'Games',
+        icon: 'PlayCircleOutlineIcon',
+        href: '/games',
+    },
+    {
+
         label: 'Marketplace',
         icon: 'OpenNewIcon',
         href: 'https://market.coincollect.org/',
@@ -31,11 +40,6 @@ const drawerLinks: MenuItemsType[] = [
         label: 'Stake',
         icon: 'EarnIcon',
         href: '/pools',
-    },
-    {
-        label: 'Quest (Soon)',
-        icon: 'LightningIcon',
-        href: '/?q=soon',
     },
     {
         label: 'Swap',
@@ -82,5 +86,6 @@ const drawerLinks: MenuItemsType[] = [
     },
 
 ];
+
 
 export default drawerLinks

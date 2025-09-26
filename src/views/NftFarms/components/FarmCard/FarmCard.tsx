@@ -201,7 +201,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         {showExpandableSection && (
           <DetailsSection
             removed={removed}
-            bscScanAddress={getPolygonScanLink(nftAddress, 'address')}
+            bscScanAddress={getPolygonScanLink(farm.contractAddresses ? getAddress(farm.contractAddresses) : nftAddress, 'address')}
             earningToken={farm.earningToken}
             totalStaked={farm.liquidity}
             startTimestamp={farm.startTimestamp}
