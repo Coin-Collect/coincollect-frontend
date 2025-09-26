@@ -146,8 +146,8 @@ const GamesView: React.FC = () => {
     bannerUrl: '/images/poolBanners/43.webp',
     ctaLabel: 'Join the Waitlist',
     ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
-    projectLabel: 'CoinCollect Studios',
-    projectHref: 'https://coincollect.org',
+    projectLabel: 'QuestGalaxy Hub',
+    projectHref: 'https://questgalaxy.com',
     usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
     earnableRewards: [
       { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
@@ -165,8 +165,8 @@ const GamesView: React.FC = () => {
     bannerUrl: '/images/poolBanners/56.webp',
     ctaLabel: 'Join the Waitlist',
     ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
-    projectLabel: 'CoinCollect Studios',
-    projectHref: 'https://coincollect.org',
+    projectLabel: 'QuestGalaxy Hub',
+    projectHref: 'https://questgalaxy.com',
     usableNfts: ['Quest Galaxy Pass', 'COLLECT Season Badges'],
     earnableRewards: [
       { label: 'COLLECT', logoSrc: '/images/games/tokens/0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148.png' },
