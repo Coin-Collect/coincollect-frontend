@@ -66,7 +66,7 @@ const GamesView: React.FC = () => {
   const mainGame = {
     name: 'GhostAlien',
     description:
-      'Retro cyberpunk space shooter where you blast ghost-shaped invaders to stack arcade thrills and on-chain rewards.',
+      'Retro space shooter with ghost invaders and on-chain rewards.',
     bannerUrl: '/images/games/bannerGhost.webp',
     ctaLabel: 'Play GhostAlien',
     ctaHref: 'https://questgalaxy.com/ghostalien.html',
@@ -88,7 +88,7 @@ const GamesView: React.FC = () => {
   const rogueCircuit = {
     name: 'RainBow Tetris',
     description:
-      'A kaleidoscopic puzzle clash where shifting blocks ignite chain reactions, unlocking COLLECT boosts and seasonal trophy NFTs as you battle for high-score dominance.',
+      'Puzzle game with chain reactions, COLLECT boosts and trophy NFTs.',
     bannerUrl: '/images/poolBanners/44.webp',
     ctaLabel: 'Join the Waitlist',
     ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
@@ -109,7 +109,7 @@ const GamesView: React.FC = () => {
   const comingSoon = {
     name: 'Your Game Here',
     description:
-      'Have a play-to-earn experience that thrives on powerful NFT utility? Partner with CoinCollect to showcase it to our community and plug into COLLECT rewards.',
+      'Partner with CoinCollect to showcase your P2E game and integrate COLLECT rewards.',
     bannerUrl: '/images/poolBanners/partners/9.webp',
     ctaLabel: 'Submit Your Game',
     ctaHref: 'https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities',
