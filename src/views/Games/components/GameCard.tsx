@@ -272,13 +272,30 @@ const LinkLabel = styled(Text)`
   color: ${({ theme }) => theme.colors.textSubtle};
 `
 
-const renderPills = (items: string[]) => (
-  <PillRow>
-    {items.map((item) => (
-      <Pill key={item}>{item}</Pill>
-    ))}
-  </PillRow>
-)
+const renderPills = (items: string[]) => {
+  const { targetRef: addNFTRef, tooltip: addNFTTooltip, tooltipVisible: addNFTTooltipVisible } = useTooltip('Add your NFT', {
+    placement: 'top',
+    trigger: 'hover',
+  })
+  
+  return (
+    <PillRow>
+      {items.map((item) => (
+        <Pill key={item}>{item}</Pill>
+      ))}
+      <div ref={addNFTRef}>
+        <AddNFTBox 
+          href="https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          +
+        </AddNFTBox>
+        {addNFTTooltipVisible && addNFTTooltip}
+      </div>
+    </PillRow>
+  )
+}
 
 const NFTImageRow = styled(Flex)`
   gap: 12px;
@@ -304,24 +321,67 @@ const NFTImage = styled.img`
   box-shadow: 0 4px 12px rgba(15, 21, 43, 0.25);
 `
 
-const renderNFTImages = (nfts: NFTItem[]) => (
-  <NFTImageRow>
-    {nfts.map((nft) => {
-      const { targetRef, tooltip, tooltipVisible } = useTooltip(nft.name, {
-        placement: 'top',
-        trigger: 'hover',
-      })
-      return (
-        <div key={nft.name} ref={targetRef}>
-          <NFTImageLink href={nft.link} target="_blank" rel="noopener noreferrer">
-            <NFTImage src={nft.image} alt={nft.name} />
-          </NFTImageLink>
-          {tooltipVisible && tooltip}
-        </div>
-      )
-    })}
-  </NFTImageRow>
-)
+const AddNFTBox = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: 2px dashed ${({ theme }) => theme.colors.primary};
+  background: rgba(118, 69, 217, 0.08);
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  
+  &:hover {
+    transform: scale(1.1);
+    background: rgba(118, 69, 217, 0.15);
+    border-color: ${({ theme }) => theme.colors.primaryBright};
+  }
+  
+  ${({ theme }) => theme.isDark &&
+    `background: rgba(118, 69, 217, 0.12); border-color: rgba(118, 69, 217, 0.6);`}
+`
+
+const renderNFTImages = (nfts: NFTItem[]) => {
+  const { targetRef: addNFTRef, tooltip: addNFTTooltip, tooltipVisible: addNFTTooltipVisible } = useTooltip('Add your NFT', {
+    placement: 'top',
+    trigger: 'hover',
+  })
+  
+  return (
+    <NFTImageRow>
+      {nfts.map((nft) => {
+        const { targetRef, tooltip, tooltipVisible } = useTooltip(nft.name, {
+          placement: 'top',
+          trigger: 'hover',
+        })
+        return (
+          <div key={nft.name} ref={targetRef}>
+            <NFTImageLink href={nft.link} target="_blank" rel="noopener noreferrer">
+              <NFTImage src={nft.image} alt={nft.name} />
+            </NFTImageLink>
+            {tooltipVisible && tooltip}
+          </div>
+        )
+      })}
+      <div ref={addNFTRef}>
+        <AddNFTBox 
+          href="https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          +
+        </AddNFTBox>
+        {addNFTTooltipVisible && addNFTTooltip}
+      </div>
+    </NFTImageRow>
+  )
+}
 
 const GameCard: React.FC<GameCardProps> = ({
   name,
@@ -397,7 +457,36 @@ const GameCard: React.FC<GameCardProps> = ({
 
           <DetailSection>
             <DetailLabel>Usable NFTs In-Game</DetailLabel>
-            {hasEarnableNfts ? renderNFTImages(earnableNfts) : hasUsableNfts ? renderPills(usableNfts) : <EmptyText>Connect your CoinCollect NFTs to unlock gameplay perks.</EmptyText>}
+            {hasEarnableNfts ? (
+              renderNFTImages(earnableNfts)
+            ) : hasUsableNfts ? (
+              renderPills(usableNfts)
+            ) : (
+              (() => {
+                const { targetRef: addNFTRef, tooltip: addNFTTooltip, tooltipVisible: addNFTTooltipVisible } = useTooltip('Add your NFT', {
+                  placement: 'top',
+                  trigger: 'hover',
+                })
+                
+                return (
+                  <Flex flexDirection="column" style={{ gap: '12px' }}>
+                    <EmptyText>Connect your CoinCollect NFTs to unlock gameplay perks.</EmptyText>
+                    <NFTImageRow>
+                      <div ref={addNFTRef}>
+                        <AddNFTBox 
+                          href="https://docs.coincollect.org/collaboration-pools-unlocking-rewards-and-opportunities" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          +
+                        </AddNFTBox>
+                        {addNFTTooltipVisible && addNFTTooltip}
+                      </div>
+                    </NFTImageRow>
+                  </Flex>
+                )
+              })()
+            )}
           </DetailSection>
         </SectionsGrid>
 
