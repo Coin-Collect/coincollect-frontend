@@ -20,13 +20,13 @@ const HeroWrapper = styled(Box)`
   position: relative;
   overflow: hidden;
   border-radius: 32px;
-  padding: 56px 32px;
+  padding: 40px 32px;
   margin-bottom: 48px;
-  min-height: 400px;
+  min-height: 320px;
 
   ${({ theme }) => theme.mediaQueries.md} {
-    padding: 72px 64px;
-    min-height: 500px;
+    padding: 56px 64px;
+    min-height: 380px;
   }
 
   &:before {
