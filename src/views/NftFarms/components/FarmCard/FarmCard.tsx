@@ -48,9 +48,10 @@ const StyledCard = styled(Card)<{ $variant: 'default' | 'expanded' }>`
           }
         `
       : css`
-          width: 100%;
+          max-width: 350px;
+          margin: 0 auto 32px;
           ${theme.mediaQueries.sm} {
-            margin: 0 0 32px;
+            margin: 0 auto 32px;
           }
         `}
 `
