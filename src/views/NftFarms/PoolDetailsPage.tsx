@@ -121,17 +121,33 @@ const PowerBadge = styled.span`
 const HeroTopBar = styled(Flex)`
   flex-direction: column;
   gap: 16px;
+  color: white;
 
   ${({ theme }) => theme.mediaQueries.sm} {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
   }
+
+  ${Heading} {
+    color: white;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  ${Button} {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  }
 `
 
 const HeroTags = styled(Flex)`
   flex-wrap: wrap;
   gap: 8px;
+  color: white;
+
+  ${Tag} {
+    color: white;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
 `
 
 const HeroStats = styled(Flex)`
@@ -165,6 +181,7 @@ const StatTile = styled.div<{ $withOverlay: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: center;
+  color: white;
 
   ${({ theme }) => theme.mediaQueries.md} {
     min-width: 140px;
@@ -177,6 +194,16 @@ const StatTile = styled.div<{ $withOverlay: boolean }>`
         backdrop-filter: blur(6px);
       }
     `}
+
+  ${Text} {
+    color: white;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  ${Heading} {
+    color: white;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
 `
 
 const Section = styled.section`
