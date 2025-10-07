@@ -199,6 +199,142 @@ const AllowedCollectionLabel = styled(Text)`
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 `
 
+const AnimatedFrame = styled.div`
+  position: relative;
+  margin-bottom: 32px;
+  border-radius: 28px;
+  isolation: isolate;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 42px;
+    background: conic-gradient(
+      from 0deg,
+      rgba(57, 255, 242, 0.75),
+      rgba(199, 65, 255, 0.75),
+      rgba(255, 99, 211, 0.75),
+      rgba(57, 255, 242, 0.75)
+    );
+    filter: blur(10px);
+    opacity: 0.8;
+    animation: frameGlow 6s linear infinite;
+    z-index: 0;
+  }
+
+  .frame-content {
+    position: relative;
+    z-index: 2;
+    border-radius: inherit;
+  }
+
+  .frame-content > * {
+    display: block;
+    border-radius: inherit;
+  }
+
+  .frame-strip {
+    position: absolute;
+    z-index: 3;
+    font-size: 11px;
+    letter-spacing: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(57, 255, 242, 0.85);
+    text-shadow: 0 0 12px rgba(57, 255, 242, 0.8);
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .frame-strip span {
+    display: inline-block;
+    white-space: nowrap;
+    padding-right: 96px;
+  }
+
+  .frame-strip--top,
+  .frame-strip--bottom {
+    left: -8px;
+    right: -8px;
+    height: 16px;
+  }
+
+  .frame-strip--top {
+    top: -20px;
+  }
+
+  .frame-strip--bottom {
+    bottom: -20px;
+  }
+
+  .frame-strip--left,
+  .frame-strip--right {
+    top: -8px;
+    bottom: -8px;
+    width: 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .frame-strip--left {
+    left: -20px;
+  }
+
+  .frame-strip--right {
+    right: -20px;
+  }
+
+  .frame-strip--top span,
+  .frame-strip--bottom span {
+    animation: scroll-horizontal 12s linear infinite;
+  }
+
+  .frame-strip--bottom span {
+    animation-direction: reverse;
+  }
+
+  .frame-strip--left span,
+  .frame-strip--right span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    animation: scroll-vertical 12s linear infinite;
+    padding-right: 0;
+    padding-bottom: 96px;
+  }
+
+  .frame-strip--right span {
+    animation-direction: reverse;
+  }
+
+  @keyframes scroll-horizontal {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes scroll-vertical {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+
+  @keyframes frameGlow {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`
+
 const HeroTopBar = styled(Flex)`
   flex-direction: column;
   gap: 16px;
@@ -486,6 +622,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
+  const frameText = `${t('Stake')} · ${t('Earn')} · ${t('Collect')} · `
+  const frameStripContent = `${frameText}${frameText}${frameText}${frameText}`
 
   return (
     <Page>
@@ -589,14 +727,34 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
           )}
         </SectionHeader>
         {selectedFarm ? (
-          <FarmCard
-            farm={selectedFarm}
-            displayApr={aprDisplay}
-            cakePrice={cakePrice}
-            account={account}
-            removed={Boolean(selectedFarm.isFinished)}
-            variant="expanded"
-          />
+          <AnimatedFrame>
+            <div className="frame-strip frame-strip--top">
+              <span>{frameStripContent}</span>
+              <span>{frameStripContent}</span>
+            </div>
+            <div className="frame-strip frame-strip--bottom">
+              <span>{frameStripContent}</span>
+              <span>{frameStripContent}</span>
+            </div>
+            <div className="frame-strip frame-strip--left">
+              <span>{frameStripContent}</span>
+              <span>{frameStripContent}</span>
+            </div>
+            <div className="frame-strip frame-strip--right">
+              <span>{frameStripContent}</span>
+              <span>{frameStripContent}</span>
+            </div>
+            <div className="frame-content">
+              <FarmCard
+                farm={selectedFarm}
+                displayApr={aprDisplay}
+                cakePrice={cakePrice}
+                account={account}
+                removed={Boolean(selectedFarm.isFinished)}
+                variant="expanded"
+              />
+            </div>
+          </AnimatedFrame>
         ) : (
           <Skeleton width="100%" height="320px" />
         )}
