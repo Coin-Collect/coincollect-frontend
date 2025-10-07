@@ -460,13 +460,6 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
   return (
     <Page>
-      <Breadcrumbs mb="24px">
-        <NextLinkFromReactRouter to="/nftpools">
-          <Text color="primary">{t('NFT Pools')}</Text>
-        </NextLinkFromReactRouter>
-        {selectedFarm ? <Text>{selectedFarm.lpSymbol}</Text> : <Skeleton width="120px" height="18px" />}
-      </Breadcrumbs>
-
       <Hero $banner={bannerImage}>
         <HeroTopBar>
           <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
