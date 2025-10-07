@@ -20,8 +20,8 @@ import { DeserializedNftFarm } from 'state/types'
 import { getDisplayApr } from './Farms'
 import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
 import nftFarmsConfig from 'config/constants/nftFarms'
+import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
-import formatRewardAmount from 'utils/formatRewardAmount'
 
 const Hero = styled.div<{ $banner?: string }>`
   position: relative;
@@ -62,6 +62,62 @@ const Hero = styled.div<{ $banner?: string }>`
   }
 `
 
+const AllowedCollectionsRow = styled(Flex)`
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    max-width: 360px;
+    justify-content: flex-end;
+    overflow-x: visible;
+  }
+`
+
+const AllowedCollectionLink = styled.a`
+  position: relative;
+  display: inline-flex;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+  }
+`
+
+const AllowedCollectionImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`
+
+const PowerBadge = styled.span`
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(13, 179, 119, 0.92);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+`
+
 const HeroTopBar = styled(Flex)`
   flex-direction: column;
   gap: 16px;
@@ -81,19 +137,38 @@ const HeroTags = styled(Flex)`
 const HeroStats = styled(Flex)`
   flex-direction: column;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 16px;
 
   ${({ theme }) => theme.mediaQueries.md} {
     flex-direction: row;
-    gap: 32px;
+    justify-content: space-between;
+    align-items: stretch;
+  }
+`
+
+const StatTilesWrapper = styled(Flex)`
+  flex-wrap: wrap;
+  gap: 12px;
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    flex-wrap: nowrap;
+    gap: 16px;
   }
 `
 
 const StatTile = styled.div<{ $withOverlay: boolean }>`
-  background: ${({ $withOverlay, theme }) => ($withOverlay ? 'rgba(0, 0, 0, 0.35)' : theme.colors.backgroundAlt)};
-  border-radius: 16px;
-  padding: 16px 20px;
-  min-width: 160px;
+  background: ${({ $withOverlay, theme }) => ($withOverlay ? 'rgba(0, 0, 0, 0.32)' : theme.colors.backgroundAlt)};
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-width: calc(50% - 8px);
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    min-width: 140px;
+  }
 
   ${({ theme, $withOverlay }) =>
     $withOverlay &&
@@ -124,6 +199,23 @@ const EmptyState = styled.div`
   text-align: center;
   width: 100%;
 `
+
+const AllowedCollectionDisplay: React.FC<{
+  avatar?: string
+  title: string
+  power?: number
+  link: string
+}> = ({ avatar, title, power, link }) => {
+  const isExternal = link?.startsWith('http')
+  const href = link || '#'
+
+  return (
+    <AllowedCollectionLink href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noopener noreferrer' : undefined}>
+      <AllowedCollectionImage src={avatar || '/logo.png'} alt={title} />
+      <PowerBadge>{power ? `x${power}` : 'x1'}</PowerBadge>
+    </AllowedCollectionLink>
+  )
+}
 
 interface PoolDetailsPageProps {
   pid: number
@@ -186,6 +278,73 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
   const selectedConfig = nftFarmsConfig.find((farm) => farm.pid === pid)
   const bannerImage = selectedConfig?.banner
 
+  const allowedCollections = useMemo(() => {
+    if (!selectedConfig) {
+      return [] as Array<{ title: string; power?: number; avatar?: string; link: string }>
+    }
+
+    const farmAddr137 = selectedConfig.nftAddresses?.[137]?.toLowerCase()
+    const firstFarmOfMainNft = (
+      farmAddr137
+        ? nftFarmsConfig.find((nftFarm) => nftFarm.nftAddresses?.[137]?.toLowerCase() === farmAddr137)
+        : undefined
+    ) ?? selectedConfig
+
+    const supportedCollectionPids = selectedConfig.supportedCollectionPids
+      ? [firstFarmOfMainNft?.pid, ...selectedConfig.supportedCollectionPids].filter(Boolean)
+      : [firstFarmOfMainNft?.pid].filter(Boolean)
+
+    const supportedNftStakeFarms = supportedCollectionPids
+      .map((collectionPid) => nftFarmsConfig.find((farm) => farm.pid === collectionPid))
+      .filter((farm): farm is typeof nftFarmsConfig[number] => Boolean(farm))
+
+    const collectionPowers =
+      selectedConfig.collectionPowers ??
+      supportedNftStakeFarms.map((collection) => {
+        switch (collection.pid) {
+          case 1:
+            return 1
+          case 2:
+            return 3
+          case 3:
+            return 6
+          case 4:
+            return 12
+          default:
+            return 15
+        }
+      })
+
+    let collectBadgeAdded = false
+
+    return supportedNftStakeFarms.map((farm, index) => {
+      const dataFromMintingByPid = mintingConfig.find((collection) => collection.stake_pid === farm.pid)
+      const farmAddr = farm.nftAddresses?.[137]?.toLowerCase()
+      const dataFromMintingByAddress = farmAddr
+        ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr)
+        : undefined
+
+      let displayAvatar: string | undefined
+      if (farm.pid <= 4) {
+        if (!collectBadgeAdded) {
+          displayAvatar = '/logo.png'
+          collectBadgeAdded = true
+        }
+      } else {
+        displayAvatar = farm.avatar ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar
+      }
+
+      return {
+        title: farm.lpSymbol.replace('CoinCollect', ''),
+        power: collectionPowers?.[index],
+        avatar: displayAvatar ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar,
+        link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? '/nfts/collections',
+      }
+    })
+  }, [selectedConfig])
+
+  const limitedAllowedCollections = useMemo(() => allowedCollections.slice(0, 5), [allowedCollections])
+
   const aprDisplay = getDisplayApr(selectedFarm?.apr)
   const totalStakedDisplay = selectedFarm?.liquidity ? selectedFarm.liquidity.toFormat(0) : undefined
   const yourStake = selectedFarm?.userData?.stakedBalance
@@ -222,40 +381,59 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
           )}
         </HeroTags>
         <HeroStats>
-          <StatTile $withOverlay={Boolean(bannerImage)}>
-            <Text fontSize="12px" textTransform="uppercase" color="textSubtle">
-              {t('APR')}
-            </Text>
-            {aprDisplay ? (
-              <Heading scale="lg">{aprDisplay}</Heading>
-            ) : (
-              <Skeleton width="80px" height="24px" />
-            )}
-          </StatTile>
-          <StatTile $withOverlay={Boolean(bannerImage)}>
-            <Text fontSize="12px" textTransform="uppercase" color="textSubtle">
-              {t('Total Staked')}
-            </Text>
-            {totalStakedDisplay ? (
-              <Heading scale="lg">{totalStakedDisplay}</Heading>
-            ) : (
-              <Skeleton width="120px" height="24px" />
-            )}
-          </StatTile>
-          <StatTile $withOverlay={Boolean(bannerImage)}>
-            <Text fontSize="12px" textTransform="uppercase" color="textSubtle">
-              {t('Your Stake')}
-            </Text>
-            {account ? (
-              userDataLoaded ? (
-                <Heading scale="lg">{yourStakeDisplay ?? '0'}</Heading>
+          <StatTilesWrapper>
+            <StatTile $withOverlay={Boolean(bannerImage)}>
+              <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                {t('APR')}
+              </Text>
+              {aprDisplay ? (
+                <Heading scale="md">{aprDisplay}</Heading>
               ) : (
                 <Skeleton width="80px" height="24px" />
-              )
-            ) : (
-              <Heading scale="lg">—</Heading>
-            )}
-          </StatTile>
+              )}
+            </StatTile>
+            <StatTile $withOverlay={Boolean(bannerImage)}>
+              <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                {t('Total Staked')}
+              </Text>
+              {totalStakedDisplay ? (
+                <Heading scale="md">{totalStakedDisplay}</Heading>
+              ) : (
+                <Skeleton width="120px" height="24px" />
+              )}
+            </StatTile>
+            <StatTile $withOverlay={Boolean(bannerImage)}>
+              <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                {t('Your Stake')}
+              </Text>
+              {account ? (
+                userDataLoaded ? (
+                  <Heading scale="md">{yourStakeDisplay ?? '0'}</Heading>
+                ) : (
+                  <Skeleton width="80px" height="24px" />
+                )
+              ) : (
+                <Heading scale="md">—</Heading>
+              )}
+            </StatTile>
+          </StatTilesWrapper>
+          {limitedAllowedCollections.length > 0 && (
+            <AllowedCollectionsRow>
+              {limitedAllowedCollections.map((collection, index) => (
+                <Flex key={`${collection.title}-${index}`} flexDirection="column" alignItems="center" width="72px">
+                  <AllowedCollectionDisplay
+                    avatar={collection.avatar}
+                    title={collection.title}
+                    power={collection.power}
+                    link={collection.link}
+                  />
+                  <Text fontSize="10px" color="textSubtle" mt="4px" textAlign="center" lineHeight="1.2">
+                    {collection.title}
+                  </Text>
+                </Flex>
+              ))}
+            </AllowedCollectionsRow>
+          )}
         </HeroStats>
       </Hero>
 
