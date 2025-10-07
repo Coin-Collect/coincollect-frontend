@@ -9,6 +9,7 @@ import {
   Skeleton,
   Tag,
   Text,
+  ChevronRightIcon,
 } from '@pancakeswap/uikit'
 import Page from 'components/Layout/Page'
 import FlexLayout from 'components/Layout/Flex'
@@ -62,6 +63,18 @@ const Hero = styled.div<{ $banner?: string }>`
   }
 `
 
+const AllowedCollectionsWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  margin-top: 8px;
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    width: auto;
+    max-width: 420px;
+    margin-left: auto;
+  }
+`
+
 const AllowedCollectionsRow = styled(Flex)`
   flex-direction: row;
   flex-wrap: nowrap;
@@ -69,16 +82,52 @@ const AllowedCollectionsRow = styled(Flex)`
   align-items: center;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+  padding-right: 48px;
+  scroll-snap-type: x proximity;
 
   &::-webkit-scrollbar {
     display: none;
   }
 
   ${({ theme }) => theme.mediaQueries.md} {
-    max-width: 360px;
     justify-content: flex-end;
-    overflow-x: visible;
+    overflow-x: auto;
+  }
+`
+
+const ScrollHint = styled(Flex)`
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  color: white;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(270deg, rgba(9, 11, 16, 0.9) 0%, rgba(9, 11, 16, 0) 100%);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+
+  .scroll-chevron {
+    animation: nudge 1.2s ease-in-out infinite;
+  }
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    background: linear-gradient(270deg, rgba(9, 11, 16, 0.7) 0%, rgba(9, 11, 16, 0) 100%);
+  }
+
+  @keyframes nudge {
+    0%, 100% {
+      transform: translateX(0);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translateX(6px);
+      opacity: 1;
+    }
   }
 `
 
@@ -92,6 +141,7 @@ const AllowedCollectionLink = styled.a`
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(0, 0, 0, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  scroll-snap-align: start;
 
   &:hover {
     transform: translateY(-2px);
@@ -116,6 +166,14 @@ const PowerBadge = styled.span`
   padding: 3px 8px;
   border-radius: 999px;
   letter-spacing: 0.3px;
+`
+
+const AllowedCollectionLabel = styled(Text)`
+  font-size: 10px;
+  line-height: 1.2;
+  color: white;
+  text-align: center;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 `
 
 const HeroTopBar = styled(Flex)`
@@ -370,7 +428,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     })
   }, [selectedConfig])
 
-  const limitedAllowedCollections = useMemo(() => allowedCollections, [allowedCollections])
+  const displayAllowedCollections = useMemo(() => allowedCollections, [allowedCollections])
 
   const aprDisplay = getDisplayApr(selectedFarm?.apr)
   const totalStakedDisplay = selectedFarm?.liquidity ? selectedFarm.liquidity.toFormat(0) : undefined
@@ -444,22 +502,29 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
               )}
             </StatTile>
           </StatTilesWrapper>
-          {limitedAllowedCollections.length > 0 && (
-            <AllowedCollectionsRow>
-              {limitedAllowedCollections.map((collection, index) => (
-                <Flex key={`${collection.title}-${index}`} flexDirection="column" alignItems="center" width="72px">
-                  <AllowedCollectionDisplay
-                    avatar={collection.avatar}
-                    title={collection.title}
-                    power={collection.power}
-                    link={collection.link}
-                  />
-                  <Text fontSize="10px" color="white" mt="4px" textAlign="center" lineHeight="1.2" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.45)' }}>
-                    {collection.title}
-                  </Text>
-                </Flex>
-              ))}
-            </AllowedCollectionsRow>
+          {displayAllowedCollections.length > 0 && (
+            <AllowedCollectionsWrapper>
+              <AllowedCollectionsRow>
+                {displayAllowedCollections.map((collection, index) => (
+                  <Flex key={`${collection.title}-${index}`} flexDirection="column" alignItems="center" width="72px">
+                    <AllowedCollectionDisplay
+                      avatar={collection.avatar}
+                      title={collection.title}
+                      power={collection.power}
+                      link={collection.link}
+                    />
+                    <AllowedCollectionLabel mt="4px">
+                      {collection.title}
+                    </AllowedCollectionLabel>
+                  </Flex>
+                ))}
+              </AllowedCollectionsRow>
+              {displayAllowedCollections.length > 4 && (
+                <ScrollHint>
+                  <ChevronRightIcon className="scroll-chevron" color="white" width="18px" />
+                </ScrollHint>
+              )}
+            </AllowedCollectionsWrapper>
           )}
         </HeroStats>
       </Hero>
