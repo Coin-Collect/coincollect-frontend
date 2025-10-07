@@ -179,8 +179,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
   const otherFarms = useMemo(() => {
     return decoratedFarms
-      .filter((farm) => farm.pid !== pid)
-      .sort((a, b) => Number(a.isFinished) - Number(b.isFinished))
+      .filter((farm) => farm.pid !== pid && !farm.isFinished)
+      .sort((a, b) => Number(a.pid) - Number(b.pid))
   }, [decoratedFarms, pid])
 
   const selectedConfig = nftFarmsConfig.find((farm) => farm.pid === pid)
@@ -189,7 +189,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
   const aprDisplay = getDisplayApr(selectedFarm?.apr)
   const totalStakedDisplay = selectedFarm?.liquidity ? selectedFarm.liquidity.toFormat(0) : undefined
   const yourStake = selectedFarm?.userData?.stakedBalance
-  const yourStakeDisplay = yourStake ? formatRewardAmount(yourStake) : undefined
+  const yourStakeDisplay = yourStake ? yourStake.toFormat(0) : undefined
 
   return (
     <Page>
