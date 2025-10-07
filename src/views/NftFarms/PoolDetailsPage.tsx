@@ -370,7 +370,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     })
   }, [selectedConfig])
 
-  const limitedAllowedCollections = useMemo(() => allowedCollections.slice(0, 5), [allowedCollections])
+  const limitedAllowedCollections = useMemo(() => allowedCollections, [allowedCollections])
 
   const aprDisplay = getDisplayApr(selectedFarm?.apr)
   const totalStakedDisplay = selectedFarm?.liquidity ? selectedFarm.liquidity.toFormat(0) : undefined
