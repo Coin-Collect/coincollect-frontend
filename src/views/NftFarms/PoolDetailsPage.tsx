@@ -205,18 +205,34 @@ const AnimatedFrame = styled.div`
   border-radius: 28px;
   isolation: isolate;
 
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -38px;
+    border-radius: 64px;
+    background-image:
+      radial-gradient(rgba(255, 255, 255, 0.14) 0%, transparent 60%),
+      radial-gradient(rgba(57, 255, 242, 0.18) 0%, transparent 55%),
+      radial-gradient(rgba(199, 65, 255, 0.16) 0%, transparent 62%);
+    background-size: 140px 140px, 180px 180px, 220px 220px;
+    background-position: 0 0, 80px 40px, 140px 120px;
+    opacity: 0.55;
+    animation: particleDrift 12s linear infinite;
+    z-index: 0;
+  }
+
   &::after {
     content: '';
     position: absolute;
-    inset: -18px;
-    border-radius: 46px;
+    inset: -14px;
+    border-radius: 42px;
     background:
-      radial-gradient(120% 130% at 50% 0%, rgba(199, 65, 255, 0.55), transparent 70%),
-      radial-gradient(120% 130% at 50% 100%, rgba(57, 255, 242, 0.55), transparent 70%),
-      radial-gradient(180% 180% at 50% 50%, rgba(255, 99, 211, 0.5), transparent 75%);
-    filter: blur(30px);
-    opacity: 0.8;
-    animation: frameGlow 5.5s ease-in-out infinite;
+      radial-gradient(120% 130% at 50% 0%, rgba(199, 65, 255, 0.45), transparent 70%),
+      radial-gradient(120% 130% at 50% 100%, rgba(57, 255, 242, 0.45), transparent 70%),
+      radial-gradient(170% 170% at 50% 50%, rgba(255, 99, 211, 0.35), transparent 72%);
+    filter: blur(26px);
+    opacity: 0.75;
+    animation: frameGlow 6s ease-in-out infinite;
     z-index: 0;
   }
 
@@ -224,153 +240,130 @@ const AnimatedFrame = styled.div`
     position: relative;
     z-index: 2;
     border-radius: inherit;
+    box-shadow:
+      0 0 36px rgba(57, 255, 242, 0.25),
+      0 0 48px rgba(199, 65, 255, 0.18);
   }
 
-  .frame-content > * {
-    display: block;
-    border-radius: inherit;
-  }
-
-  .frame-strip {
+  .corner {
     position: absolute;
-    z-index: 3;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
+    width: 54px;
+    height: 54px;
     pointer-events: none;
-    overflow: hidden;
+    z-index: 3;
+    opacity: 0.8;
   }
 
-  .frame-sequence {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    padding-right: 64px;
-    letter-spacing: 8px;
+  .corner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 0 12px rgba(57, 255, 242, 0.55);
+    animation: cornerPulse 2.4s ease-in-out infinite;
   }
 
-  .frame-word {
-    margin-right: 24px;
-    text-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
+  .corner--tl {
+    top: -8px;
+    left: -8px;
   }
 
-  .frame-word:last-child {
-    margin-right: 0;
+  .corner--tl::after {
+    border-top-color: #39fff2;
+    border-left-color: #39fff2;
+    border-bottom: none;
+    border-right: none;
+    animation-delay: 0s;
   }
 
-  .frame-word--stake {
-    color: #39fff2;
+  .corner--tr {
+    top: -8px;
+    right: -8px;
   }
 
-  .frame-word--earn {
-    color: #c741ff;
+  .corner--tr::after {
+    border-top-color: #c741ff;
+    border-right-color: #c741ff;
+    border-bottom: none;
+    border-left: none;
+    animation-delay: 0.4s;
   }
 
-  .frame-word--collect {
-    color: #ff9b3d;
+  .corner--bl {
+    bottom: -8px;
+    left: -8px;
   }
 
-  .frame-strip--top,
-  .frame-strip--bottom {
-    left: -10px;
-    right: -10px;
-    height: 18px;
+  .corner--bl::after {
+    border-bottom-color: #ff9b3d;
+    border-left-color: #ff9b3d;
+    border-top: none;
+    border-right: none;
+    animation-delay: 0.8s;
   }
 
-  .frame-strip--top {
-    top: -14px;
+  .corner--br {
+    bottom: -8px;
+    right: -8px;
   }
 
-  .frame-strip--bottom {
-    bottom: -14px;
+  .corner--br::after {
+    border-bottom-color: #39fff2;
+    border-right-color: #39fff2;
+    border-top: none;
+    border-left: none;
+    animation-delay: 1.2s;
   }
 
-  .frame-strip--left,
-  .frame-strip--right {
-    top: -10px;
-    bottom: -10px;
-    width: 18px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .frame-strip--left {
-    left: -16px;
-  }
-
-  .frame-strip--right {
-    right: -16px;
-  }
-
-  .frame-strip--top .frame-sequence,
-  .frame-strip--bottom .frame-sequence {
-    animation: scroll-horizontal 12s linear infinite;
-  }
-
-  .frame-strip--bottom .frame-sequence {
-    animation-direction: reverse;
-  }
-
-  .frame-strip--left .frame-sequence,
-  .frame-strip--right .frame-sequence {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    row-gap: 18px;
-    animation: scroll-vertical 13s linear infinite;
-    padding-right: 0;
-    padding-bottom: 56px;
-  }
-
-  .frame-strip--left .frame-word,
-  .frame-strip--right .frame-word {
-    margin: 0;
-  }
-
-  .frame-strip--left .frame-word {
-    transform: rotate(-90deg);
-  }
-
-  .frame-strip--right .frame-word {
-    transform: rotate(90deg);
-  }
-
-  .frame-strip--right .frame-sequence {
-    animation-direction: reverse;
-  }
-
-  @keyframes scroll-horizontal {
+  @keyframes frameGlow {
     0% {
-      transform: translateX(0);
+      opacity: 0.65;
+      transform: scale(0.96);
+    }
+    50% {
+      opacity: 0.92;
+      transform: scale(1.04);
     }
     100% {
-      transform: translateX(-50%);
+      opacity: 0.65;
+      transform: scale(0.96);
     }
   }
 
-  @keyframes scroll-vertical {
+  @keyframes particleDrift {
     0% {
-      transform: translateY(0);
+      background-position: 0 0, 80px 40px, 140px 120px;
+      opacity: 0.45;
+    }
+    40% {
+      background-position: -60px 30px, 40px 120px, 200px 60px;
+      opacity: 0.6;
+    }
+    70% {
+      background-position: -120px 80px, 20px 190px, 260px 140px;
+      opacity: 0.35;
     }
     100% {
-      transform: translateY(-50%);
+      background-position: 0 0, 80px 40px, 140px 120px;
+      opacity: 0.45;
     }
   }
 
-@keyframes frameGlow {
-  0% {
-    opacity: 0.65;
-    transform: scale(0.96);
+  @keyframes cornerPulse {
+    0% {
+      opacity: 0.1;
+      transform: scale(0.9);
+    }
+    40% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 0.1;
+      transform: scale(0.9);
+    }
   }
-  50% {
-    opacity: 0.92;
-    transform: scale(1.04);
-  }
-  100% {
-    opacity: 0.65;
-    transform: scale(0.96);
-  }
-}
 `
 
 const HeroTopBar = styled(Flex)`
@@ -660,14 +653,6 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
-  const frameWords = useMemo(
-    () => [
-      { key: 'stake', label: t('Stake') },
-      { key: 'earn', label: t('Earn') },
-      { key: 'collect', label: t('Collect') },
-    ],
-    [t],
-  )
 
   return (
     <Page>
@@ -772,50 +757,10 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         </SectionHeader>
         {selectedFarm ? (
           <AnimatedFrame>
-            <div className="frame-strip frame-strip--top">
-              {[0, 1].map((cycle) => (
-                <span className="frame-sequence" key={`top-${cycle}`}>
-                  {frameWords.map(({ key, label }) => (
-                    <span className={`frame-word frame-word--${key}`} key={`top-${cycle}-${key}`}>
-                      {label}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </div>
-            <div className="frame-strip frame-strip--bottom">
-              {[0, 1].map((cycle) => (
-                <span className="frame-sequence" key={`bottom-${cycle}`}>
-                  {frameWords.map(({ key, label }) => (
-                    <span className={`frame-word frame-word--${key}`} key={`bottom-${cycle}-${key}`}>
-                      {label}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </div>
-            <div className="frame-strip frame-strip--left">
-              {[0, 1].map((cycle) => (
-                <span className="frame-sequence" key={`left-${cycle}`}>
-                  {frameWords.map(({ key, label }) => (
-                    <span className={`frame-word frame-word--${key}`} key={`left-${cycle}-${key}`}>
-                      {label}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </div>
-            <div className="frame-strip frame-strip--right">
-              {[0, 1].map((cycle) => (
-                <span className="frame-sequence" key={`right-${cycle}`}>
-                  {frameWords.map(({ key, label }) => (
-                    <span className={`frame-word frame-word--${key}`} key={`right-${cycle}-${key}`}>
-                      {label}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </div>
+            <span className="corner corner--tl" />
+            <span className="corner corner--tr" />
+            <span className="corner corner--bl" />
+            <span className="corner corner--br" />
             <div className="frame-content">
               <FarmCard
                 farm={selectedFarm}
