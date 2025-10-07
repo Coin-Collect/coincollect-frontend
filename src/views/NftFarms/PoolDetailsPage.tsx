@@ -72,6 +72,7 @@ const AllowedCollectionsWrapper = styled.div`
     width: auto;
     max-width: 420px;
     margin-left: auto;
+    padding-bottom: 4px;
   }
 `
 
@@ -84,6 +85,7 @@ const AllowedCollectionsRow = styled(Flex)`
   overflow-x: auto;
   padding-bottom: 6px;
   padding-right: 48px;
+  padding-left: 4px;
   scroll-snap-type: x proximity;
 
   &::-webkit-scrollbar {
@@ -91,8 +93,29 @@ const AllowedCollectionsRow = styled(Flex)`
   }
 
   ${({ theme }) => theme.mediaQueries.md} {
-    justify-content: flex-end;
+    justify-content: flex-start;
     overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    &::-webkit-scrollbar {
+      display: block;
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
   }
 `
 
