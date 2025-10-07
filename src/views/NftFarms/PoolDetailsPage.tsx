@@ -208,18 +208,15 @@ const AnimatedFrame = styled.div`
   &::after {
     content: '';
     position: absolute;
-    inset: -14px;
-    border-radius: 42px;
-    background: conic-gradient(
-      from 0deg,
-      rgba(57, 255, 242, 0.75),
-      rgba(199, 65, 255, 0.75),
-      rgba(255, 99, 211, 0.75),
-      rgba(57, 255, 242, 0.75)
-    );
-    filter: blur(10px);
+    inset: -18px;
+    border-radius: 46px;
+    background:
+      radial-gradient(120% 130% at 50% 0%, rgba(199, 65, 255, 0.55), transparent 70%),
+      radial-gradient(120% 130% at 50% 100%, rgba(57, 255, 242, 0.55), transparent 70%),
+      radial-gradient(180% 180% at 50% 50%, rgba(255, 99, 211, 0.5), transparent 75%);
+    filter: blur(30px);
     opacity: 0.8;
-    animation: frameGlow 6s linear infinite;
+    animation: frameGlow 5.5s ease-in-out infinite;
     z-index: 0;
   }
 
@@ -238,72 +235,107 @@ const AnimatedFrame = styled.div`
     position: absolute;
     z-index: 3;
     font-size: 11px;
-    letter-spacing: 10px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    color: rgba(57, 255, 242, 0.85);
-    text-shadow: 0 0 12px rgba(57, 255, 242, 0.8);
     pointer-events: none;
     overflow: hidden;
   }
 
-  .frame-strip span {
-    display: inline-block;
+  .frame-sequence {
+    display: inline-flex;
+    align-items: center;
     white-space: nowrap;
-    padding-right: 96px;
+    padding-right: 64px;
+    letter-spacing: 8px;
+  }
+
+  .frame-word {
+    margin-right: 24px;
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
+  }
+
+  .frame-word:last-child {
+    margin-right: 0;
+  }
+
+  .frame-word--stake {
+    color: #39fff2;
+  }
+
+  .frame-word--earn {
+    color: #c741ff;
+  }
+
+  .frame-word--collect {
+    color: #ff9b3d;
   }
 
   .frame-strip--top,
   .frame-strip--bottom {
-    left: -8px;
-    right: -8px;
-    height: 16px;
+    left: -10px;
+    right: -10px;
+    height: 18px;
   }
 
   .frame-strip--top {
-    top: -20px;
+    top: -14px;
   }
 
   .frame-strip--bottom {
-    bottom: -20px;
+    bottom: -14px;
   }
 
   .frame-strip--left,
   .frame-strip--right {
-    top: -8px;
-    bottom: -8px;
-    width: 16px;
+    top: -10px;
+    bottom: -10px;
+    width: 18px;
     display: flex;
     justify-content: center;
   }
 
   .frame-strip--left {
-    left: -20px;
+    left: -16px;
   }
 
   .frame-strip--right {
-    right: -20px;
+    right: -16px;
   }
 
-  .frame-strip--top span,
-  .frame-strip--bottom span {
+  .frame-strip--top .frame-sequence,
+  .frame-strip--bottom .frame-sequence {
     animation: scroll-horizontal 12s linear infinite;
   }
 
-  .frame-strip--bottom span {
+  .frame-strip--bottom .frame-sequence {
     animation-direction: reverse;
   }
 
-  .frame-strip--left span,
-  .frame-strip--right span {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    animation: scroll-vertical 12s linear infinite;
+  .frame-strip--left .frame-sequence,
+  .frame-strip--right .frame-sequence {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 18px;
+    animation: scroll-vertical 13s linear infinite;
     padding-right: 0;
-    padding-bottom: 96px;
+    padding-bottom: 56px;
   }
 
-  .frame-strip--right span {
+  .frame-strip--left .frame-word,
+  .frame-strip--right .frame-word {
+    margin: 0;
+  }
+
+  .frame-strip--left .frame-word {
+    transform: rotate(-90deg);
+  }
+
+  .frame-strip--right .frame-word {
+    transform: rotate(90deg);
+  }
+
+  .frame-strip--right .frame-sequence {
     animation-direction: reverse;
   }
 
@@ -325,14 +357,20 @@ const AnimatedFrame = styled.div`
     }
   }
 
-  @keyframes frameGlow {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+@keyframes frameGlow {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.96);
   }
+  50% {
+    opacity: 0.92;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+}
 `
 
 const HeroTopBar = styled(Flex)`
@@ -622,8 +660,14 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
-  const frameText = `${t('Stake')} · ${t('Earn')} · ${t('Collect')} · `
-  const frameStripContent = `${frameText}${frameText}${frameText}${frameText}`
+  const frameWords = useMemo(
+    () => [
+      { key: 'stake', label: t('Stake') },
+      { key: 'earn', label: t('Earn') },
+      { key: 'collect', label: t('Collect') },
+    ],
+    [t],
+  )
 
   return (
     <Page>
@@ -729,20 +773,48 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         {selectedFarm ? (
           <AnimatedFrame>
             <div className="frame-strip frame-strip--top">
-              <span>{frameStripContent}</span>
-              <span>{frameStripContent}</span>
+              {[0, 1].map((cycle) => (
+                <span className="frame-sequence" key={`top-${cycle}`}>
+                  {frameWords.map(({ key, label }) => (
+                    <span className={`frame-word frame-word--${key}`} key={`top-${cycle}-${key}`}>
+                      {label}
+                    </span>
+                  ))}
+                </span>
+              ))}
             </div>
             <div className="frame-strip frame-strip--bottom">
-              <span>{frameStripContent}</span>
-              <span>{frameStripContent}</span>
+              {[0, 1].map((cycle) => (
+                <span className="frame-sequence" key={`bottom-${cycle}`}>
+                  {frameWords.map(({ key, label }) => (
+                    <span className={`frame-word frame-word--${key}`} key={`bottom-${cycle}-${key}`}>
+                      {label}
+                    </span>
+                  ))}
+                </span>
+              ))}
             </div>
             <div className="frame-strip frame-strip--left">
-              <span>{frameStripContent}</span>
-              <span>{frameStripContent}</span>
+              {[0, 1].map((cycle) => (
+                <span className="frame-sequence" key={`left-${cycle}`}>
+                  {frameWords.map(({ key, label }) => (
+                    <span className={`frame-word frame-word--${key}`} key={`left-${cycle}-${key}`}>
+                      {label}
+                    </span>
+                  ))}
+                </span>
+              ))}
             </div>
             <div className="frame-strip frame-strip--right">
-              <span>{frameStripContent}</span>
-              <span>{frameStripContent}</span>
+              {[0, 1].map((cycle) => (
+                <span className="frame-sequence" key={`right-${cycle}`}>
+                  {frameWords.map(({ key, label }) => (
+                    <span className={`frame-word frame-word--${key}`} key={`right-${cycle}-${key}`}>
+                      {label}
+                    </span>
+                  ))}
+                </span>
+              ))}
             </div>
             <div className="frame-content">
               <FarmCard
