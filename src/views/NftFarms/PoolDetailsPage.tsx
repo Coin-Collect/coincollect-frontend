@@ -454,7 +454,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
                     power={collection.power}
                     link={collection.link}
                   />
-                  <Text fontSize="10px" color="textSubtle" mt="4px" textAlign="center" lineHeight="1.2">
+                  <Text fontSize="10px" color="white" mt="4px" textAlign="center" lineHeight="1.2" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.45)' }}>
                     {collection.title}
                   </Text>
                 </Flex>
