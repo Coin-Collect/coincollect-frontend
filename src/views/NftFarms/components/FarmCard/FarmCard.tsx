@@ -1,18 +1,8 @@
 import { useState } from 'react'
 import type { ComponentType } from 'react'
 import BigNumber from 'bignumber.js'
-import styled from 'styled-components'
-import {
-  Card,
-  Flex,
-  Text,
-  Skeleton,
-  CardRibbon,
-  HomeIcon,
-  NftIcon,
-  SmartContractIcon,
-  useTooltip,
-} from '@pancakeswap/uikit'
+import styled, { css } from 'styled-components'
+import { Card, Flex, Text, Skeleton, CardRibbon, HomeIcon, NftIcon, SmartContractIcon, useTooltip } from '@pancakeswap/uikit'
 import type { SvgProps } from '@pancakeswap/uikit'
 import { DeserializedNftFarm } from 'state/types'
 import { getPolygonScanLink } from 'utils'
@@ -32,10 +22,10 @@ export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   liquidity?: BigNumber
 }
 
-const StyledCard = styled(Card)`
+const StyledCard = styled(Card)<{ $variant: 'default' | 'expanded' }>`
   align-self: baseline;
   max-width: 100%;
-  margin: 0 0 24px 0;
+  margin: ${({ $variant }) => ($variant === 'expanded' ? '0 0 32px' : '0 0 24px 0')};
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -49,10 +39,20 @@ const StyledCard = styled(Card)`
     border-color: ${({ theme }) => theme.colors.primary};
   }
   
-  ${({ theme }) => theme.mediaQueries.sm} {
-    max-width: 350px;
-    margin: 0 12px 46px;
-  }
+  ${({ theme, $variant }) =>
+    $variant === 'default'
+      ? css`
+          ${theme.mediaQueries.sm} {
+            max-width: 350px;
+            margin: 0 12px 46px;
+          }
+        `
+      : css`
+          width: 100%;
+          ${theme.mediaQueries.sm} {
+            margin: 0 0 32px;
+          }
+        `}
 `
 
 const FarmCardInnerContainer = styled(Flex)`
@@ -169,9 +169,10 @@ interface FarmCardProps {
   removed: boolean
   cakePrice?: BigNumber
   account?: string
+  variant?: 'default' | 'expanded'
 }
 
-const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePrice, account }) => {
+const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePrice, account, variant = 'default' }) => {
   const { t } = useTranslation()
 
   const [showExpandableSection, setShowExpandableSection] = useState(false)
@@ -204,7 +205,11 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   const mintLink = farmConfig?.projectLink?.getNftLink ?? apyModalLink
 
   return (
-    <StyledCard ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />} isActive={isPromotedFarm}>
+    <StyledCard
+      $variant={variant}
+      ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />}
+      isActive={isPromotedFarm}
+    >
       <FarmCardInnerContainer>
         <CardHeadingWithBanner
           lpLabel={lpLabel}
