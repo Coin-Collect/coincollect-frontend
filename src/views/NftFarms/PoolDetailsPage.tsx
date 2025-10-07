@@ -231,6 +231,13 @@ const HeroTags = styled(Flex)`
   }
 `
 
+const HeroDescription = styled(Text)`
+  max-width: 520px;
+  color: white;
+  text-shadow: 0 5px 14px rgba(0, 0, 0, 0.45);
+  line-height: 1.4;
+`
+
 const HeroStats = styled(Flex)`
   flex-direction: column;
   gap: 16px;
@@ -458,6 +465,28 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
   const yourStake = selectedFarm?.userData?.stakedBalance
   const yourStakeDisplay = yourStake ? yourStake.toFormat(0) : undefined
 
+  const heroDescription = useMemo(() => {
+    if (!selectedFarm) {
+      return ''
+    }
+    const poolName = selectedFarm.lpSymbol?.replace('CoinCollect', '').trim() || t('this collection')
+    const rewardToken = selectedFarm.earningToken?.symbol ?? 'COLLECT'
+    const intro = t('Stake %poolName% NFTs to earn %rewardToken%.', { poolName, rewardToken })
+
+    let callout: string
+    if (selectedFarm.isFinished) {
+      callout = t('Pool has wrapped up—review performance and claim any remaining rewards.')
+    } else if (selectedFarm.isCommunity) {
+      callout = t('Back community builders and unlock special perks reserved for early supporters.')
+    } else if (selectedConfig?.projectLink?.mainLink) {
+      callout = t('Secure your spot to unlock partner extras and snapshot-based surprises.')
+    } else {
+      callout = t('Stake early to maximise your weight and stay eligible for seasonal drops.')
+    }
+
+    return `${intro} ${callout}`
+  }, [selectedFarm, selectedConfig, t])
+
   return (
     <Page>
       <Hero $banner={bannerImage}>
@@ -481,6 +510,11 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
             </Tag>
           )}
         </HeroTags>
+        {heroDescription && (
+          <HeroDescription mt="12px">
+            {heroDescription}
+          </HeroDescription>
+        )}
         <HeroStats>
           <StatTilesWrapper>
             <StatTile $withOverlay={Boolean(bannerImage)}>
