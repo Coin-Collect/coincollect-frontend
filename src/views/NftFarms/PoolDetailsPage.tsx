@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import BigNumber from 'bignumber.js'
 import styled, { css } from 'styled-components'
 import {
-  Breadcrumbs,
   Button,
   Flex,
   Heading,
@@ -23,6 +22,9 @@ import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
+import { CommunityTag, PartnerTag } from 'components/Tags'
+
+type NftFarmConfigEntry = typeof nftFarmsConfig[number]
 
 const Hero = styled.div<{ $banner?: string }>`
   position: relative;
@@ -382,19 +384,19 @@ const HeroTopBar = styled(Flex)`
     text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   }
 
-  ${Button} {
+  button,
+  a {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
   }
 `
 
-const HeroTags = styled(Flex)`
+const HeroBadges = styled(Flex)`
   flex-wrap: wrap;
   gap: 8px;
-  color: white;
+  align-items: center;
 
-  ${Tag} {
-    color: white;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  > * {
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
   }
 `
 
@@ -508,7 +510,7 @@ const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithS
     return undefined
   }
 
-  const config = nftFarmsConfig.find((pool) => pool.pid === farm.pid)
+  const config = nftFarmsConfig.find((pool) => pool.pid === farm.pid) as NftFarmConfigEntry | undefined
   const totalStaked = farm.totalStaked ?? new BigNumber(0)
   const totalShares = farm.totalShares ?? new BigNumber(0)
   const mainCollectionWeight = config?.mainCollectionWeight ? Number(config.mainCollectionWeight) : 1
@@ -557,7 +559,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
       .sort((a, b) => Number(a.pid) - Number(b.pid))
   }, [decoratedFarms, pid])
 
-  const selectedConfig = nftFarmsConfig.find((farm) => farm.pid === pid)
+  const selectedConfig = nftFarmsConfig.find((farm) => farm.pid === pid) as NftFarmConfigEntry | undefined
   const bannerImage = selectedConfig?.banner
 
   const allowedCollections = useMemo(() => {
@@ -665,18 +667,24 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
             </Button>
           </NextLinkFromReactRouter>
         </HeroTopBar>
-        <HeroTags mt="12px">
-          {selectedFarm?.isCommunity && <Tag outline variant="secondary">{t('Community')}</Tag>}
+        <HeroBadges mt="12px">
+          {selectedFarm && (
+            selectedFarm.isCommunity ? (
+              <CommunityTag scale="sm" mr="4px" />
+            ) : (
+              <PartnerTag scale="sm" mr="4px" />
+            )
+          )}
           {selectedFarm?.isFinished ? (
-            <Tag outline variant="text">
+            <Tag outline variant="textSubtle" scale="sm">
               {t('Finished')}
             </Tag>
           ) : (
-            <Tag outline variant="success">
+            <Tag outline variant="success" scale="sm">
               {t('Live')}
             </Tag>
           )}
-        </HeroTags>
+        </HeroBadges>
         {heroDescription && (
           <HeroDescription mt="12px">
             {heroDescription}
@@ -764,9 +772,9 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
             <div className="frame-content">
               <FarmCard
                 farm={selectedFarm}
-                displayApr={aprDisplay}
+                displayApr={aprDisplay ?? ''}
                 cakePrice={cakePrice}
-                account={account}
+                account={account ?? undefined}
                 removed={Boolean(selectedFarm.isFinished)}
                 variant="expanded"
               />
@@ -787,9 +795,9 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
               <FarmCard
                 key={farm.pid}
                 farm={farm}
-                displayApr={getDisplayApr(farm.apr)}
+                displayApr={getDisplayApr(farm.apr) ?? ''}
                 cakePrice={cakePrice}
-                account={account}
+                account={account ?? undefined}
                 removed={Boolean(farm.isFinished)}
               />
             ))}
