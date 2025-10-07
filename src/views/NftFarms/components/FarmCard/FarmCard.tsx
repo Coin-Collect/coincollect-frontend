@@ -1,7 +1,19 @@
 import { useState } from 'react'
+import type { ComponentType } from 'react'
 import BigNumber from 'bignumber.js'
 import styled from 'styled-components'
-import { Card, Flex, Text, Skeleton, CardRibbon } from '@pancakeswap/uikit'
+import {
+  Card,
+  Flex,
+  Text,
+  Skeleton,
+  CardRibbon,
+  HomeIcon,
+  NftIcon,
+  SmartContractIcon,
+  useTooltip,
+} from '@pancakeswap/uikit'
+import type { SvgProps } from '@pancakeswap/uikit'
 import { DeserializedNftFarm } from 'state/types'
 import { getPolygonScanLink } from 'utils'
 import { useTranslation } from 'contexts/Localization'
@@ -54,6 +66,66 @@ const ExpandingWrapper = styled.div`
   border-top: 2px solid ${({ theme }) => theme.colors.cardBorder};
   overflow: hidden;
 `
+
+const FooterTopRow = styled(Flex)`
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+`
+
+const FooterLinks = styled(Flex)`
+  gap: 12px;
+`
+
+const FooterIconWrapper = styled.span`
+  display: inline-flex;
+`
+
+const FooterIconLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.background};
+  transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.secondary};
+    border-color: ${({ theme }) => theme.colors.secondary};
+    transform: translateY(-2px);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`
+
+interface FooterIconWithTooltipProps {
+  href: string
+  label: string
+  IconComponent: ComponentType<SvgProps>
+}
+
+const FooterIconWithTooltip: React.FC<FooterIconWithTooltipProps> = ({ href, label, IconComponent }) => {
+  const { targetRef, tooltip, tooltipVisible } = useTooltip(label, { placement: 'top' })
+
+  return (
+    <>
+      {tooltipVisible && tooltip}
+      <FooterIconWrapper ref={targetRef}>
+        <FooterIconLink href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
+          <IconComponent color="currentColor" />
+        </FooterIconLink>
+      </FooterIconWrapper>
+    </>
+  )
+}
 
 const MetricText = styled(Text)<{ metricType?: 'high' | 'medium' | 'low' | 'reward' }>`
   color: ${({ theme, metricType }) => {
@@ -127,6 +199,10 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
     return undefined
   }
 
+  const contractLink = getPolygonScanLink(farm.contractAddresses ? getAddress(farm.contractAddresses) : nftAddress, 'address')
+  const mainLink = farmConfig?.projectLink?.mainLink
+  const mintLink = farmConfig?.projectLink?.getNftLink ?? apyModalLink
+
   return (
     <StyledCard ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />} isActive={isPromotedFarm}>
       <FarmCardInnerContainer>
@@ -194,14 +270,27 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
       </FarmCardInnerContainer>
 
       <ExpandingWrapper>
-        <ExpandableSectionButton
-          onClick={() => setShowExpandableSection(!showExpandableSection)}
-          expanded={showExpandableSection}
-        />
+        <FooterTopRow>
+          <FooterLinks>
+            {mainLink && (
+              <FooterIconWithTooltip href={mainLink} label={t('Visit project website')} IconComponent={HomeIcon} />
+            )}
+            {mintLink && (
+              <FooterIconWithTooltip href={mintLink} label={t('Open mint page')} IconComponent={NftIcon} />
+            )}
+            {contractLink && (
+              <FooterIconWithTooltip href={contractLink} label={t('View contract on explorer')} IconComponent={SmartContractIcon} />
+            )}
+          </FooterLinks>
+          <ExpandableSectionButton
+            onClick={() => setShowExpandableSection(!showExpandableSection)}
+            expanded={showExpandableSection}
+          />
+        </FooterTopRow>
         {showExpandableSection && (
           <DetailsSection
             removed={removed}
-            bscScanAddress={getPolygonScanLink(farm.contractAddresses ? getAddress(farm.contractAddresses) : nftAddress, 'address')}
+            bscScanAddress={contractLink}
             earningToken={farm.earningToken}
             totalStaked={farm.liquidity}
             startTimestamp={farm.startTimestamp}
