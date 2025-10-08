@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import Head from 'next/head'
 import BigNumber from 'bignumber.js'
 import styled, { css, keyframes } from 'styled-components'
 import {
@@ -754,10 +755,41 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
 
+  const shareTitle = selectedFarm?.lpSymbol ? `${selectedFarm.lpSymbol} | CoinCollect` : 'CoinCollect NFT Pool'
+  const shareDescription = heroDescription || 'Stake NFTs on CoinCollect and earn rewards.'
+  const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
+  const resolveImageUrl = (image?: string) => {
+    if (!image) {
+      return 'https://coincollect.org/assets/images/clone/ogbanner.png'
+    }
+    if (image.startsWith('http')) {
+      return image
+    }
+    const normalisedBase = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
+    const normalisedPath = image.startsWith('/') ? image : `/${image}`
+    return `${normalisedBase}${normalisedPath}`
+  }
+  const shareImage = resolveImageUrl(bannerImage)
+  const shareUrl = `${appBaseUrl}/nftpools/${pid}`
+
   return (
-    <Page>
-      <Hero $banner={bannerImage}>
-        <HeroTopBar>
+    <>
+      <Head>
+        <title>{shareTitle}</title>
+        <meta name="description" content={shareDescription} key="description" />
+        <meta property="og:title" content={shareTitle} key="og:title" />
+        <meta property="og:description" content={shareDescription} key="og:description" />
+        <meta property="og:image" content={shareImage} key="og:image" />
+        <meta property="og:url" content={shareUrl} key="og:url" />
+        <meta property="og:type" content="website" key="og:type" />
+        <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
+        <meta name="twitter:title" content={shareTitle} key="twitter:title" />
+        <meta name="twitter:description" content={shareDescription} key="twitter:description" />
+        <meta name="twitter:image" content={shareImage} key="twitter:image" />
+      </Head>
+      <Page>
+        <Hero $banner={bannerImage}>
+          <HeroTopBar>
           <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
           <NextLinkFromReactRouter to="/nftpools">
             <Button variant="secondary" scale="sm">
@@ -920,7 +952,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
           </EmptyState>
         )}
       </Section>
-    </Page>
+      </Page>
+    </>
   )
 }
 
