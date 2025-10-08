@@ -33,7 +33,7 @@ const NftPoolSoloPage: NextPage<PoolPageProps> = ({ pid, initialMeta }) => {
         <meta key="pool:twitter:image" name="twitter:image" content={image} />
         <link key="pool:canonical" rel="canonical" href={url} />
       </Head>
-      <PoolDetailsPage pid={pid} initialMeta={initialMeta} />
+      <PoolDetailsPage pid={pid} />
     </>
   )
 }

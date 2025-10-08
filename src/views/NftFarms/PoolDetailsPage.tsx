@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import Head from 'next/head'
 import BigNumber from 'bignumber.js'
 import styled, { css, keyframes } from 'styled-components'
 import {
@@ -602,12 +601,6 @@ const AllowedCollectionDisplay: React.FC<{
 
 interface PoolDetailsPageProps {
   pid: number
-  initialMeta: {
-    title: string
-    description: string
-    image: string
-    url: string
-  }
 }
 
 const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithStakedValue | undefined => {
@@ -640,7 +633,7 @@ const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithS
   }
 }
 
-const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) => {
+const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
   const { data: farms, userDataLoaded } = useFarms()
@@ -761,42 +754,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) =
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
 
-  const shareTitle = selectedFarm?.lpSymbol ? `${selectedFarm.lpSymbol} | CoinCollect` : initialMeta.title
-  const shareDescription = heroDescription || initialMeta.description
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
-  const resolveImageUrl = (image?: string) => {
-    if (!image) {
-      return 'https://coincollect.org/assets/images/clone/ogbanner.png'
-    }
-    if (image.startsWith('http')) {
-      return image
-    }
-    const normalisedBase = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
-    const normalisedPath = image.startsWith('/') ? image : `/${image}`
-    return `${normalisedBase}${normalisedPath}`
-  }
-  const shareImage = resolveImageUrl(bannerImage)
-  const normalisedBaseUrl = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
-  const shareUrl = `${normalisedBaseUrl}/nftpools/${pid}`
-
   return (
-    <>
-      <Head>
-        <title key="pool:title">{shareTitle}</title>
-        <meta name="description" content={shareDescription} key="pool:description" />
-        <meta property="og:title" content={shareTitle} key="pool:og:title" />
-        <meta property="og:description" content={shareDescription} key="pool:og:description" />
-        <meta property="og:image" content={shareImage} key="pool:og:image" />
-        <meta property="og:image:secure_url" content={shareImage} key="pool:og:image:secure_url" />
-        <meta property="og:url" content={shareUrl} key="pool:og:url" />
-        <meta property="og:type" content="website" key="pool:og:type" />
-        <meta name="twitter:card" content="summary_large_image" key="pool:twitter:card" />
-        <meta name="twitter:title" content={shareTitle} key="pool:twitter:title" />
-        <meta name="twitter:description" content={shareDescription} key="pool:twitter:description" />
-        <meta name="twitter:image" content={shareImage} key="pool:twitter:image" />
-        <link rel="canonical" href={shareUrl} key="pool:canonical" />
-      </Head>
-      <Page withMeta={false}>
+    <Page withMeta={false}>
         <Hero $banner={bannerImage}>
           <HeroTopBar>
             <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
@@ -962,7 +921,6 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) =
         )}
       </Section>
       </Page>
-    </>
   )
 }
 
