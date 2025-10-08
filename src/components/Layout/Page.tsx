@@ -22,12 +22,23 @@ const StyledPage = styled(Container)`
   }
 `
 
-export const PageMeta: React.FC<{ symbol?: string }> = ({ symbol }) => {
+interface MetaOverrides {
+  title?: string
+  description?: string
+  image?: string
+}
+
+interface PageMetaProps {
+  symbol?: string
+  customMeta?: MetaOverrides
+}
+
+export const PageMeta: React.FC<PageMetaProps> = ({ symbol, customMeta }) => {
   const { t } = useTranslation()
   const { pathname } = useRouter()
   
   const pageMeta = getCustomMeta(pathname, t) || {}
-  const { title, description, image } = { ...DEFAULT_META, ...pageMeta }
+  const { title, description, image } = { ...DEFAULT_META, ...pageMeta, ...customMeta }
   
   return (
     <Head>
@@ -41,12 +52,13 @@ export const PageMeta: React.FC<{ symbol?: string }> = ({ symbol }) => {
 
 interface PageProps extends React.HTMLAttributes<HTMLDivElement> {
   symbol?: string
+  meta?: MetaOverrides
 }
 
-const Page: React.FC<PageProps> = ({ children, symbol, ...props }) => {
+const Page: React.FC<PageProps> = ({ children, symbol, meta, ...props }) => {
   return (
     <>
-      <PageMeta symbol={symbol} />
+      <PageMeta symbol={symbol} customMeta={meta} />
       <StyledPage {...props}>{children}</StyledPage>
     </>
   )
