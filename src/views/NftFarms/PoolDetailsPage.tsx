@@ -602,6 +602,12 @@ const AllowedCollectionDisplay: React.FC<{
 
 interface PoolDetailsPageProps {
   pid: number
+  initialMeta: {
+    title: string
+    description: string
+    image: string
+    url: string
+  }
 }
 
 const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithStakedValue | undefined => {
@@ -634,7 +640,7 @@ const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithS
   }
 }
 
-const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
+const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
   const { data: farms, userDataLoaded } = useFarms()
@@ -755,8 +761,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
 
-  const shareTitle = selectedFarm?.lpSymbol ? `${selectedFarm.lpSymbol} | CoinCollect` : 'CoinCollect NFT Pool'
-  const shareDescription = heroDescription || 'Stake NFTs on CoinCollect and earn rewards.'
+  const shareTitle = selectedFarm?.lpSymbol ? `${selectedFarm.lpSymbol} | CoinCollect` : initialMeta.title
+  const shareDescription = heroDescription || initialMeta.description
   const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
   const resolveImageUrl = (image?: string) => {
     if (!image) {
@@ -770,7 +776,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     return `${normalisedBase}${normalisedPath}`
   }
   const shareImage = resolveImageUrl(bannerImage)
-  const shareUrl = `${appBaseUrl}/nftpools/${pid}`
+  const normalisedBaseUrl = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
+  const shareUrl = `${normalisedBaseUrl}/nftpools/${pid}`
 
   return (
     <>
@@ -790,13 +797,13 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
       <Page meta={{ title: shareTitle, description: shareDescription, image: shareImage }}>
         <Hero $banner={bannerImage}>
           <HeroTopBar>
-          <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
-          <NextLinkFromReactRouter to="/nftpools">
-            <Button variant="secondary" scale="sm">
-              {t('Back to Pools')}
-            </Button>
-          </NextLinkFromReactRouter>
-        </HeroTopBar>
+            <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
+            <NextLinkFromReactRouter to="/nftpools">
+              <Button variant="secondary" scale="sm">
+                {t('Back to Pools')}
+              </Button>
+            </NextLinkFromReactRouter>
+          </HeroTopBar>
         <HeroBadges mt="12px">
           {selectedFarm && (
             <HeroBadge variant={selectedFarm.isCommunity ? 'community' : 'partner'}>
