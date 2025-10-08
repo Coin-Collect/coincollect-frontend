@@ -148,6 +148,11 @@ interface NftFarmConfigBaseProps {
   performanceFee?: string
   supportedCollectionPids?:number[]
   collectionPowers?:number[]
+  mainCollectionWeight?: number
+  banner?: string
+  avatar?: string
+  staticNftImage?: string
+  useApi?: boolean
   dual?: {
     rewardPerBlock: number
     earnLabel: string
