@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import BigNumber from 'bignumber.js'
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import {
   Button,
   Flex,
@@ -8,6 +8,11 @@ import {
   Skeleton,
   Text,
   ChevronRightIcon,
+  ChartIcon,
+  CurrencyIcon,
+  WalletIcon,
+  CommunityIcon,
+  VerifiedIcon,
 } from '@pancakeswap/uikit'
 import Page from 'components/Layout/Page'
 import FlexLayout from 'components/Layout/Flex'
@@ -396,32 +401,6 @@ const HeroBadges = styled(Flex)`
 
 type BadgeVariant = 'community' | 'partner' | 'live' | 'finished'
 
-const getBadgeStyles = (variant: BadgeVariant) => {
-  switch (variant) {
-    case 'community':
-      return css`
-        background: rgba(199, 65, 255, 0.85);
-        box-shadow: 0 0 14px rgba(199, 65, 255, 0.45);
-      `
-    case 'partner':
-      return css`
-        background: rgba(57, 255, 242, 0.85);
-        box-shadow: 0 0 14px rgba(57, 255, 242, 0.35);
-      `
-    case 'finished':
-      return css`
-        background: rgba(120, 130, 150, 0.75);
-        box-shadow: 0 0 14px rgba(120, 130, 150, 0.35);
-      `
-    case 'live':
-    default:
-      return css`
-        background: rgba(76, 195, 125, 0.85);
-        box-shadow: 0 0 14px rgba(76, 195, 125, 0.35);
-      `
-  }
-}
-
 const HeroBadge = styled.span<{ variant: BadgeVariant }>`
   display: inline-flex;
   align-items: center;
@@ -433,7 +412,74 @@ const HeroBadge = styled.span<{ variant: BadgeVariant }>`
   text-transform: uppercase;
   color: #ffffff;
   text-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
-  ${({ variant }) => getBadgeStyles(variant)}
+  gap: 6px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  ${({ variant, theme }) => {
+    switch (variant) {
+      case 'community':
+        return css`
+          background: rgba(76, 195, 125, 0.95);
+          box-shadow: 0 0 14px rgba(76, 195, 125, 0.45);
+        `
+      case 'partner':
+        return css`
+          background: rgba(64, 153, 255, 0.92);
+          box-shadow: 0 0 14px rgba(64, 153, 255, 0.4);
+        `
+      case 'finished':
+        return css`
+          background: rgba(120, 130, 150, 0.78);
+          box-shadow: 0 0 14px rgba(120, 130, 150, 0.35);
+        `
+      case 'live':
+      default:
+        return css`
+          background: ${theme.colors.primary};
+          box-shadow: 0 0 14px ${theme.colors.primary}55;
+        `
+    }
+  }}
+
+  ${({ variant, theme }) =>
+    variant === 'live' &&
+    css`
+      padding-left: 18px;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+        transform: translateY(-50%);
+        animation: ${liveDot} 1.0s ease-in-out infinite;
+      }
+    `}
+`
+
+const liveDot = keyframes`
+  0% {
+    transform: translateY(-50%) scale(0.7);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50%) scale(0.7);
+    opacity: 0.3;
+  }
 `
 
 const HeroDescription = styled(Text)`
@@ -466,11 +512,12 @@ const StatTilesWrapper = styled(Flex)`
 `
 
 const StatTile = styled.div<{ $withOverlay: boolean }>`
-  background: ${({ $withOverlay, theme }) => ($withOverlay ? 'rgba(0, 0, 0, 0.32)' : theme.colors.backgroundAlt)};
-  border-radius: 14px;
-  padding: 12px 14px;
-  min-width: calc(50% - 8px);
-  flex: 1 1 120px;
+  background: ${({ $withOverlay, theme }) =>
+    $withOverlay ? 'rgba(15, 20, 30, 0.55)' : `${theme.colors.backgroundAlt}E6`};
+  border-radius: 12px;
+  padding: 8px 12px;
+  min-width: calc(50% - 10px);
+  flex: 1 1 110px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -498,6 +545,21 @@ const StatTile = styled.div<{ $withOverlay: boolean }>`
     text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   }
 `
+
+const StatTileHeader = styled(Flex)`
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+`
+
+const StatIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+`
+
 
 const Section = styled.section`
   width: 100%;
@@ -706,6 +768,11 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         <HeroBadges mt="12px">
           {selectedFarm && (
             <HeroBadge variant={selectedFarm.isCommunity ? 'community' : 'partner'}>
+              {selectedFarm.isCommunity ? (
+                <CommunityIcon width="16px" color="white" />
+              ) : (
+                <VerifiedIcon width="16px" color="white" />
+              )}
               {selectedFarm.isCommunity ? t('Community') : t('Partner')}
             </HeroBadge>
           )}
@@ -723,9 +790,14 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         <HeroStats>
           <StatTilesWrapper>
             <StatTile $withOverlay={Boolean(bannerImage)}>
-              <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
-                {t('APR')}
-              </Text>
+              <StatTileHeader>
+                <StatIcon>
+                  <ChartIcon width="16px" color="white" />
+                </StatIcon>
+                <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                  {t('APR')}
+                </Text>
+              </StatTileHeader>
               {aprDisplay ? (
                 <Heading scale="md">{aprDisplay}</Heading>
               ) : (
@@ -733,9 +805,14 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
               )}
             </StatTile>
             <StatTile $withOverlay={Boolean(bannerImage)}>
-              <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
-                {t('Total Staked')}
-              </Text>
+              <StatTileHeader>
+                <StatIcon>
+                  <CurrencyIcon width="16px" color="white" />
+                </StatIcon>
+                <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                  {t('Total Staked')}
+                </Text>
+              </StatTileHeader>
               {totalStakedDisplay ? (
                 <Heading scale="md">{totalStakedDisplay}</Heading>
               ) : (
@@ -743,9 +820,14 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
               )}
             </StatTile>
             <StatTile $withOverlay={Boolean(bannerImage)}>
-              <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
-                {t('Your Stake')}
-              </Text>
+              <StatTileHeader>
+                <StatIcon>
+                  <WalletIcon width="16px" color="white" />
+                </StatIcon>
+                <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                  {t('Your Stake')}
+                </Text>
+              </StatTileHeader>
               {account ? (
                 userDataLoaded ? (
                   <Heading scale="md">{yourStakeDisplay ?? '0'}</Heading>
