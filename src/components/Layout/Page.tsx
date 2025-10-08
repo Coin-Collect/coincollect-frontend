@@ -53,12 +53,13 @@ export const PageMeta: React.FC<PageMetaProps> = ({ symbol, customMeta }) => {
 interface PageProps extends React.HTMLAttributes<HTMLDivElement> {
   symbol?: string
   meta?: MetaOverrides
+  withMeta?: boolean
 }
 
-const Page: React.FC<PageProps> = ({ children, symbol, meta, ...props }) => {
+const Page: React.FC<PageProps> = ({ children, symbol, meta, withMeta = true, ...props }) => {
   return (
     <>
-      <PageMeta symbol={symbol} customMeta={meta} />
+      {withMeta && <PageMeta symbol={symbol} customMeta={meta} />}
       <StyledPage {...props}>{children}</StyledPage>
     </>
   )
