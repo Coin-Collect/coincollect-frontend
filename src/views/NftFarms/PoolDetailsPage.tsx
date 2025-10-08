@@ -787,7 +787,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         <meta name="twitter:description" content={shareDescription} key="twitter:description" />
         <meta name="twitter:image" content={shareImage} key="twitter:image" />
       </Head>
-      <Page>
+      <Page meta={{ title: shareTitle, description: shareDescription, image: shareImage }}>
         <Hero $banner={bannerImage}>
           <HeroTopBar>
           <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
