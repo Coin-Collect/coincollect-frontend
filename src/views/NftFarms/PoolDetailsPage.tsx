@@ -6,7 +6,6 @@ import {
   Flex,
   Heading,
   Skeleton,
-  Tag,
   Text,
   ChevronRightIcon,
 } from '@pancakeswap/uikit'
@@ -22,7 +21,6 @@ import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
-import { CommunityTag, PartnerTag } from 'components/Tags'
 
 type NftFarmConfigEntry = typeof nftFarmsConfig[number]
 
@@ -394,10 +392,48 @@ const HeroBadges = styled(Flex)`
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+`
 
-  > * {
-    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+type BadgeVariant = 'community' | 'partner' | 'live' | 'finished'
+
+const getBadgeStyles = (variant: BadgeVariant) => {
+  switch (variant) {
+    case 'community':
+      return css`
+        background: rgba(199, 65, 255, 0.85);
+        box-shadow: 0 0 14px rgba(199, 65, 255, 0.45);
+      `
+    case 'partner':
+      return css`
+        background: rgba(57, 255, 242, 0.85);
+        box-shadow: 0 0 14px rgba(57, 255, 242, 0.35);
+      `
+    case 'finished':
+      return css`
+        background: rgba(120, 130, 150, 0.75);
+        box-shadow: 0 0 14px rgba(120, 130, 150, 0.35);
+      `
+    case 'live':
+    default:
+      return css`
+        background: rgba(76, 195, 125, 0.85);
+        box-shadow: 0 0 14px rgba(76, 195, 125, 0.35);
+      `
   }
+}
+
+const HeroBadge = styled.span<{ variant: BadgeVariant }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.65px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  ${({ variant }) => getBadgeStyles(variant)}
 `
 
 const HeroDescription = styled(Text)`
@@ -669,20 +705,14 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         </HeroTopBar>
         <HeroBadges mt="12px">
           {selectedFarm && (
-            selectedFarm.isCommunity ? (
-              <CommunityTag scale="sm" mr="4px" />
-            ) : (
-              <PartnerTag scale="sm" mr="4px" />
-            )
+            <HeroBadge variant={selectedFarm.isCommunity ? 'community' : 'partner'}>
+              {selectedFarm.isCommunity ? t('Community') : t('Partner')}
+            </HeroBadge>
           )}
           {selectedFarm?.isFinished ? (
-            <Tag outline variant="textSubtle" scale="sm">
-              {t('Finished')}
-            </Tag>
+            <HeroBadge variant="finished">{t('Finished')}</HeroBadge>
           ) : (
-            <Tag outline variant="success" scale="sm">
-              {t('Live')}
-            </Tag>
+            <HeroBadge variant="live">{t('Live')}</HeroBadge>
           )}
         </HeroBadges>
         {heroDescription && (
