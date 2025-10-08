@@ -782,17 +782,19 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) =
   return (
     <>
       <Head>
-        <title>{shareTitle}</title>
-        <meta name="description" content={shareDescription} key="description" />
-        <meta property="og:title" content={shareTitle} key="og:title" />
-        <meta property="og:description" content={shareDescription} key="og:description" />
-        <meta property="og:image" content={shareImage} key="og:image" />
-        <meta property="og:url" content={shareUrl} key="og:url" />
-        <meta property="og:type" content="website" key="og:type" />
-        <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
-        <meta name="twitter:title" content={shareTitle} key="twitter:title" />
-        <meta name="twitter:description" content={shareDescription} key="twitter:description" />
-        <meta name="twitter:image" content={shareImage} key="twitter:image" />
+        <title key="pool:title">{shareTitle}</title>
+        <meta name="description" content={shareDescription} key="pool:description" />
+        <meta property="og:title" content={shareTitle} key="pool:og:title" />
+        <meta property="og:description" content={shareDescription} key="pool:og:description" />
+        <meta property="og:image" content={shareImage} key="pool:og:image" />
+        <meta property="og:image:secure_url" content={shareImage} key="pool:og:image:secure_url" />
+        <meta property="og:url" content={shareUrl} key="pool:og:url" />
+        <meta property="og:type" content="website" key="pool:og:type" />
+        <meta name="twitter:card" content="summary_large_image" key="pool:twitter:card" />
+        <meta name="twitter:title" content={shareTitle} key="pool:twitter:title" />
+        <meta name="twitter:description" content={shareDescription} key="pool:twitter:description" />
+        <meta name="twitter:image" content={shareImage} key="pool:twitter:image" />
+        <link rel="canonical" href={shareUrl} key="pool:canonical" />
       </Head>
       <Page meta={{ title: shareTitle, description: shareDescription, image: shareImage }}>
         <Hero $banner={bannerImage}>

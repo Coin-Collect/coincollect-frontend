@@ -42,10 +42,10 @@ export const PageMeta: React.FC<PageMetaProps> = ({ symbol, customMeta }) => {
   
   return (
     <Head>
-      <title>{title}</title>
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
+      <title key="page:title">{title}</title>
+      <meta key="page:og:title" property="og:title" content={title} />
+      <meta key="page:og:description" property="og:description" content={description} />
+      <meta key="page:og:image" property="og:image" content={image} />
     </Head>
   )
 }
