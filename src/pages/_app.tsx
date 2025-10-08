@@ -94,20 +94,7 @@ function MyApp(props: AppProps) {
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=5, minimum-scale=1, viewport-fit=cover"
         />
-        <meta
-          key="app:description"
-          name="description"
-          content="CoinCollect is the MultiChain NFT DeFi Protocol. Earn tokens through NTF staking, yield farming or special pools, CoinCollect NFTs are lifetime privilege."
-        />
         <meta key="app:theme-color" name="theme-color" content="#E91E63" />
-        <meta key="app:twitter:image" name="twitter:image" content="https://coincollect.org/assets/images/clone/ogbanner.png" />
-        <meta
-          key="app:twitter:description"
-          name="twitter:description"
-          content="CoinCollect is the MultiChain NFT DeFi Protocol. Earn tokens through NTF staking, yield farming or special pools, CoinCollect NFTs are lifetime privilege."
-        />
-        <meta key="app:twitter:card" name="twitter:card" content="summary_large_image" />
-        <meta key="app:twitter:title" name="twitter:title" content="CoinCollect is the MultiChain NFT DeFi Protocol." />
         <title key="app:title">CoinCollect</title>
       </Head>
       <Providers store={store}>
