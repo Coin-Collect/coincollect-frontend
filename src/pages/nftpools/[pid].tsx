@@ -1,3 +1,4 @@
+import Head from 'next/head'
 import { GetStaticPaths, GetStaticProps, NextPage } from 'next'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import PoolDetailsPage from 'views/NftFarms/PoolDetailsPage'
@@ -13,7 +14,28 @@ interface PoolPageProps {
 }
 
 const NftPoolSoloPage: NextPage<PoolPageProps> = ({ pid, initialMeta }) => {
-  return <PoolDetailsPage pid={pid} initialMeta={initialMeta} />
+  const { title, description, image, url } = initialMeta
+
+  return (
+    <>
+      <Head>
+        <title key="pool:title">{title}</title>
+        <meta key="pool:description" name="description" content={description} />
+        <meta key="pool:og:title" property="og:title" content={title} />
+        <meta key="pool:og:description" property="og:description" content={description} />
+        <meta key="pool:og:image" property="og:image" content={image} />
+        <meta key="pool:og:image:secure_url" property="og:image:secure_url" content={image} />
+        <meta key="pool:og:url" property="og:url" content={url} />
+        <meta key="pool:og:type" property="og:type" content="website" />
+        <meta key="pool:twitter:card" name="twitter:card" content="summary_large_image" />
+        <meta key="pool:twitter:title" name="twitter:title" content={title} />
+        <meta key="pool:twitter:description" name="twitter:description" content={description} />
+        <meta key="pool:twitter:image" name="twitter:image" content={image} />
+        <link key="pool:canonical" rel="canonical" href={url} />
+      </Head>
+      <PoolDetailsPage pid={pid} initialMeta={initialMeta} />
+    </>
+  )
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
