@@ -2,9 +2,9 @@ import { ContextApi } from 'contexts/Localization/types'
 import { PageMeta } from './types'
 
 export const DEFAULT_META: PageMeta = {
-  title: 'CoinCollect',
+  title: 'CoinCollect - Mint, Stake, Play and Earn Crypto',
   description:
-    'CoinCollect is the MultiChain NFT DeFi Protocol, that helps NFT traders, high yield farmers, liquidity providers, developers and web 3.0 startups to participate in an open financial market with no barriers to entry',
+    'Your NFTs now earn while you play. CoinCollect turns gaming and DeFi into one ecosystem — stake, play, and earn crypto effortlessly.',
   image: 'https://coincollect.org/assets/images/clone/ogbanner.webp',
 }
 
@@ -33,7 +33,7 @@ export const getCustomMeta = (path: string, t: ContextApi['t']): PageMeta | null
   switch (basePath) {
     case '/':
       return {
-        title: `${t('Home')} | ${t('CoinCollect')}`,
+        title: `${t('CoinCollect')} | ${t('Mint, Stake, Play and Earn Crypto')}`,
       }
     case '/swap':
       return {
