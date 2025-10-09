@@ -25,6 +25,8 @@ import Providers from '../Providers'
 import GlobalStyle from '../style/Global'
 import React from 'react'
 import styled from 'styled-components'
+import { useRouter } from 'next/router'
+import { DEFAULT_META } from 'config/constants/meta'
 
 // This config is required for number formatting
 BigNumber.config({
@@ -85,10 +87,49 @@ function MyApp(props: AppProps) {
   const { pageProps } = props
   // @ts-ignore
   const store = useStore(pageProps.initialReduxState)
+  const router = useRouter()
+
+  const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
+  const normalizedBaseUrl = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
+
+  const pageLevelMeta = ((pageProps as unknown as { meta?: Record<string, string>; initialMeta?: Record<string, string> })
+    ?.meta ??
+    (pageProps as unknown as { meta?: Record<string, string>; initialMeta?: Record<string, string> })?.initialMeta) ?? {}
+
+  const title = pageLevelMeta.title ?? DEFAULT_META.title
+  const description = pageLevelMeta.description ?? DEFAULT_META.description
+
+  const toAbsoluteUrl = (value?: string) => {
+    if (!value) {
+      return undefined
+    }
+    if (value.startsWith('http')) {
+      return value
+    }
+    const path = value.startsWith('/') ? value : `/${value}`
+    return `${normalizedBaseUrl}${path}`
+  }
+
+  const image = toAbsoluteUrl(pageLevelMeta.image) ?? DEFAULT_META.image
+  const canonical =
+    pageLevelMeta.url ??
+    `${normalizedBaseUrl}${router?.asPath ? router.asPath.split('#')[0].split('?')[0] : ''}`
 
   return (
     <>
       <Head>
+        <title key="app:title">{title}</title>
+        <meta key="app:description" name="description" content={description} />
+        <meta key="app:og:title" property="og:title" content={title} />
+        <meta key="app:og:description" property="og:description" content={description} />
+        <meta key="app:og:image" property="og:image" content={image} />
+        <meta key="app:og:url" property="og:url" content={canonical} />
+        <meta key="app:og:type" property="og:type" content="website" />
+        <meta key="app:twitter:card" name="twitter:card" content="summary_large_image" />
+        <meta key="app:twitter:title" name="twitter:title" content={title} />
+        <meta key="app:twitter:description" name="twitter:description" content={description} />
+        <meta key="app:twitter:image" name="twitter:image" content={image} />
+        <link key="app:canonical" rel="canonical" href={canonical} />
         <meta
           key="app:viewport"
           name="viewport"
