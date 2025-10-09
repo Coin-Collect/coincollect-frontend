@@ -24,6 +24,7 @@ import { DeserializedNftFarm } from 'state/types'
 import { getDisplayApr } from './Farms'
 import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
 import nftFarmsConfig from 'config/constants/nftFarms'
+import { DEFAULT_META } from 'config/constants/meta'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
 
@@ -754,8 +755,40 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
 
+  const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
+  const normalisedAppBaseUrl = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
+
+  const pageMeta = useMemo(() => {
+    const overrides: { title?: string; description?: string; image?: string } = {}
+
+    if (selectedConfig?.lpSymbol) {
+      overrides.title = `${selectedConfig.lpSymbol} | CoinCollect`
+    }
+
+    const trimmedDescription = heroDescription ? heroDescription.trim() : ''
+    if (trimmedDescription) {
+      overrides.description = trimmedDescription
+    } else {
+      overrides.description = DEFAULT_META.description
+    }
+
+    const rawImage = bannerImage ?? selectedConfig?.banner
+    if (rawImage) {
+      if (rawImage.startsWith('http')) {
+        overrides.image = rawImage
+      } else {
+        const path = rawImage.startsWith('/') ? rawImage : `/${rawImage}`
+        overrides.image = `${normalisedAppBaseUrl}${path}`
+      }
+    } else {
+      overrides.image = DEFAULT_META.image
+    }
+
+    return overrides
+  }, [bannerImage, heroDescription, normalisedAppBaseUrl, selectedConfig])
+
   return (
-    <Page withMeta={false}>
+    <Page meta={pageMeta} symbol={selectedConfig?.lpSymbol}>
         <Hero $banner={bannerImage}>
           <HeroTopBar>
             <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
