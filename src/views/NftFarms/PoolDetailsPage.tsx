@@ -24,7 +24,6 @@ import { DeserializedNftFarm } from 'state/types'
 import { getDisplayApr } from './Farms'
 import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
 import nftFarmsConfig from 'config/constants/nftFarms'
-import { DEFAULT_META } from 'config/constants/meta'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
 
@@ -602,11 +601,6 @@ const AllowedCollectionDisplay: React.FC<{
 
 interface PoolDetailsPageProps {
   pid: number
-  initialMeta?: {
-    title: string
-    description: string
-    image: string
-  }
 }
 
 const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithStakedValue | undefined => {
@@ -639,7 +633,7 @@ const enhanceFarmWithApr = (farm: DeserializedNftFarm | undefined): NftFarmWithS
   }
 }
 
-const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) => {
+const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
   const { data: farms, userDataLoaded } = useFarms()
@@ -760,40 +754,8 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid, initialMeta }) =
     return `${intro} ${callout}`
   }, [selectedFarm, selectedConfig, t])
 
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
-  const normalisedAppBaseUrl = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
-
-  const pageMeta = useMemo(() => {
-    const toAbsolute = (image?: string) => {
-      if (!image) {
-        return undefined
-      }
-      if (image.startsWith('http')) {
-        return image
-      }
-      const path = image.startsWith('/') ? image : `/${image}`
-      return `${normalisedAppBaseUrl}${path}`
-    }
-
-    const title = selectedConfig?.lpSymbol
-      ? `${selectedConfig.lpSymbol} | CoinCollect`
-      : initialMeta?.title ?? DEFAULT_META.title
-
-    const trimmedDescription = heroDescription ? heroDescription.trim() : ''
-    const description = trimmedDescription || initialMeta?.description || DEFAULT_META.description
-
-    const rawImage = bannerImage ?? selectedConfig?.banner ?? initialMeta?.image
-    const image = toAbsolute(rawImage) ?? DEFAULT_META.image
-
-    return {
-      title,
-      description,
-      image,
-    }
-  }, [bannerImage, heroDescription, initialMeta, normalisedAppBaseUrl, selectedConfig])
-
   return (
-    <Page meta={pageMeta} symbol={selectedConfig?.lpSymbol}>
+    <Page withMeta={false}>
         <Hero $banner={bannerImage}>
           <HeroTopBar>
             <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
