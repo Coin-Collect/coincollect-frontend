@@ -25,6 +25,7 @@ import Providers from '../Providers'
 import GlobalStyle from '../style/Global'
 import React from 'react'
 import styled from 'styled-components'
+import { DEFAULT_META } from 'config/constants/meta'
 
 // This config is required for number formatting
 BigNumber.config({
@@ -89,13 +90,22 @@ function MyApp(props: AppProps) {
   return (
     <>
       <Head>
+        <title key="page:title">{DEFAULT_META.title}</title>
+        <meta key="page:description" name="description" content={DEFAULT_META.description} />
+        <meta key="page:og:title" property="og:title" content={DEFAULT_META.title} />
+        <meta key="page:og:description" property="og:description" content={DEFAULT_META.description} />
+        <meta key="page:og:image" property="og:image" content={DEFAULT_META.image} />
+        <meta key="page:og:type" property="og:type" content="website" />
+        <meta key="page:twitter:card" name="twitter:card" content="summary_large_image" />
+        <meta key="page:twitter:title" name="twitter:title" content={DEFAULT_META.title} />
+        <meta key="page:twitter:description" name="twitter:description" content={DEFAULT_META.description} />
+        <meta key="page:twitter:image" name="twitter:image" content={DEFAULT_META.image} />
         <meta
           key="app:viewport"
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=5, minimum-scale=1, viewport-fit=cover"
         />
         <meta key="app:theme-color" name="theme-color" content="#E91E63" />
-        <title key="app:title">CoinCollect</title>
       </Head>
       <Providers store={store}>
         <Blocklist>
