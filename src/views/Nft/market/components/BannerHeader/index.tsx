@@ -44,7 +44,7 @@ const BannerHeader: React.FC<BannerHeaderProps> = ({
               playsInline
             />
           ) : (
-            <Image src={bannerImage} alt={bannerAlt} layout="fill" objectFit="cover" priority />
+            <Image src={bannerImage} alt={bannerAlt || ''} layout="fill" objectFit="cover" priority />
           )}
         </StyledBannerImageWrapper>
         {topLeftOverlay && (
