@@ -109,7 +109,7 @@ const DiscountBadge = styled(Box)`
   align-items: flex-end;
   padding: 14px 20px;
   border-radius: 28px;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
   box-shadow: none;
   text-align: center;
