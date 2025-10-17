@@ -109,6 +109,33 @@ const MediaGradient = styled(Box)`
   pointer-events: none;
 `
 
+const SlideshowContainer = styled(Box)`
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    display: block;
+    padding-bottom: 100%;
+  }
+`
+
+const SlideFrame = styled(Box)<{ $active: boolean }>`
+  position: absolute;
+  inset: 0;
+  opacity: ${({ $active }) => ($active ? 1 : 0)};
+  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(1.05)')};
+  transition: opacity 600ms ease, transform 600ms ease;
+  will-change: opacity, transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
+
 const SpeedFigure = styled(Text)`
   font-size: 34px;
   font-weight: 800;
@@ -229,8 +256,78 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({ poolId, ifo, publicIfoDat
   const { version } = ifo
 
   let { showCase, sampleNftImage, address, name } = ifo
-  const nfts = showCase ? showCase.map((item) => ({ 'tokenId': item.tokenId, 'collectionAddress': address, 'name': `#${item.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': item.image } })) : []
-  const nft = sampleNftImage ? { 'tokenId': sampleNftImage.tokenId, 'collectionAddress': address, 'name': `#${sampleNftImage.tokenId}`, 'collectionName': name, 'image': { 'thumbnail': sampleNftImage.image } } : nfts[0]
+  const baseShowcaseItems = useMemo(() => {
+    const items: any[] = []
+
+    if (sampleNftImage) {
+      items.push({
+        tokenId: sampleNftImage.tokenId,
+        collectionAddress: address,
+        name: `#${sampleNftImage.tokenId}`,
+        collectionName: name,
+        image: { thumbnail: sampleNftImage.image },
+      })
+    }
+
+    if (showCase?.length) {
+      showCase.forEach((item) => {
+        items.push({
+          tokenId: item.tokenId,
+          collectionAddress: address,
+          name: `#${item.tokenId}`,
+          collectionName: name,
+          image: { thumbnail: item.image },
+        })
+      })
+    }
+
+    if (!items.length) {
+      return items
+    }
+
+    const deduped: typeof items = []
+    const seen = new Set<string>()
+    items.forEach((item) => {
+      const key = `${item.collectionAddress}-${item.tokenId}-${item.image?.thumbnail}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        deduped.push(item)
+      }
+    })
+    return deduped
+  }, [sampleNftImage, showCase, address, name])
+
+  const slideshowItems = baseShowcaseItems.length
+    ? baseShowcaseItems
+    : [
+        {
+          tokenId: 0,
+          collectionAddress: address,
+          name,
+          collectionName: name,
+          image: { thumbnail: showCase?.[0]?.image ?? sampleNftImage?.image },
+        },
+      ].filter((item) => item.image?.thumbnail)
+
+  const [slideIndex, setSlideIndex] = useState(0)
+
+  useEffect(() => {
+    setSlideIndex(0)
+  }, [slideshowItems])
+
+  useEffect(() => {
+    if (slideshowItems.length <= 1) {
+      return undefined
+    }
+    const timer = window.setInterval(() => {
+      setSlideIndex((prev) => {
+        const next = prev + 1
+        return next >= slideshowItems.length ? 0 : next
+      })
+    }, 4500)
+    return () => window.clearInterval(timer)
+  }, [slideshowItems])
+
   const mintedCount = typeof totalSupply === 'number' ? totalSupply : 0
   const discountCap = typeof partialMaxSupply === 'number' ? partialMaxSupply : 0
   const discountLeft = Math.max(discountCap - mintedCount, 0)
@@ -257,21 +354,29 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({ poolId, ifo, publicIfoDat
     return (
       <>
         <MediaWrapper mb="18px">
-          <NFTMedia
-            style={{ backgroundPosition: 'center' }}
-            as={PreviewImage}
-            nft={nft}
-            height={360}
-            width={360}
-            maxWidth="100%"
-            borderRadius="24px"
-          />
+          {slideshowItems.length > 0 && (
+            <SlideshowContainer>
+              {slideshowItems.map((item, index) => (
+                <SlideFrame key={`${item.collectionAddress}-${item.tokenId}-${index}`} $active={index === slideIndex}>
+                  <NFTMedia
+                    style={{ backgroundPosition: 'center', width: '100%', height: '100%' }}
+                    as={PreviewImage}
+                    nft={item}
+                    height={360}
+                    width={360}
+                    maxWidth="100%"
+                    borderRadius="24px"
+                  />
+                </SlideFrame>
+              ))}
+            </SlideshowContainer>
+          )}
           <MediaGradient />
 
           <SpeedCounter $isAnimating={isPrimaryAnimating}>
             <SpeedHeader>
-              <SpeedFigure>{primaryValue}</SpeedFigure>
-              <SpeedLabel>{primaryLabel}</SpeedLabel>
+            <SpeedFigure>{primaryValue}</SpeedFigure>
+            <SpeedLabel>{primaryLabel}</SpeedLabel>
             </SpeedHeader>
             {secondaryLabel && <SpeedSecondary>{secondaryLabel}</SpeedSecondary>}
           </SpeedCounter>
