@@ -102,39 +102,52 @@ export default function Minting() {
   const collectionAddress = router.query.collectionAddress as string
   const collection = useGetCollection(collectionAddress)
   const { totalSupply, maxSupply, cost, status, numberTokensListed, banner, avatar, name, description } = collection
-  const minting = mintingConfig.find((ifo) => ifo.name === name)
+  // Prefer matching minting config by address; fallback to name
+  const minting = useMemo(() => {
+    const byAddress = mintingConfig.find((ifo) => ifo.address?.toLowerCase() === collectionAddress?.toLowerCase())
+    return byAddress ?? mintingConfig.find((ifo) => ifo.name === name)
+  }, [collectionAddress, name])
   const { t } = useTranslation()
   const { account, library } = useWeb3React()
   const { toastError } = useToast()
-  const publicIfoData = useGetPublicIfoV2Data(minting)
-  const walletIfoData = useGetWalletIfoV3Data(minting)
+  const publicIfoData = useGetPublicIfoV2Data(minting!)
+  const walletIfoData = useGetWalletIfoV3Data(minting!)
   const { chosenFarmsMemoized } = useContext(FarmsContext)
   const cakePrice = usePriceCakeBusd()
 
   const { isLastPrice, nextPrice } = publicIfoData
 
   usePollFarmsWithUserData()
-  const farm = useFarmFromPid(minting.stake_pid)
+  const farm = useFarmFromPid(minting?.stake_pid ?? 0)
 
   // Compute APR to match nftpools FarmCard expectations
-  const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]?.mainCollectionWeight
-  const isSmartNftStakePool = Boolean(farm.contractAddresses)
-  const totalStaked = farm.totalStaked
-  const totalShares = farm.totalShares
+  const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == (farm?.pid ?? 0))[0]?.mainCollectionWeight
+  const isSmartNftStakePool = Boolean(farm?.contractAddresses)
+  const totalStakedNum = (farm?.totalStaked ?? new BigNumber(0)).toNumber()
+  const totalSharesNum = (farm?.totalShares ?? new BigNumber(0)).toNumber()
   const totalLiquidityWithThreshold = new BigNumber(
-    Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()),
+    Math.max(farm?.participantThreshold ?? 0, isSmartNftStakePool ? totalSharesNum : totalStakedNum),
   )
   const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(
-    new BigNumber(farm.poolWeight),
-    farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
+    new BigNumber(farm?.poolWeight ?? 0),
+    farm?.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
     totalLiquidityWithThreshold,
     mainCollectionWeight,
   )
-  const farmWithApr = { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
+  const farmWithApr = farm ? { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: (farm?.totalStaked ?? new BigNumber(0)) } : null
+
+  // Build social meta from collection data
+  const pageMeta = useMemo(() => {
+    const meta: { title?: string; description?: string; image?: string } = {}
+    if (name) meta.title = `Mint ${name} | CoinCollect`
+    if (description) meta.description = description
+    if (banner?.large) meta.image = banner.large
+    return meta
+  }, [name, description, banner])
 
   return (
     <>
-      <PageMeta />
+      <PageMeta customMeta={pageMeta} />
       <MarketPageHeader>
         <BannerHeader
           bannerImage={banner.large}
@@ -147,13 +160,15 @@ export default function Minting() {
           }
           topRightOverlay={
             <SocialOverlay>
-              <IfoAchievement
-                ifo={minting}
-                publicIfoData={publicIfoData}
-                variant="compact"
-                iconColor="#FFFFFF"
-                hoverColor="primaryBright"
-              />
+              {minting && (
+                <IfoAchievement
+                  ifo={minting}
+                  publicIfoData={publicIfoData}
+                  variant="compact"
+                  iconColor="#FFFFFF"
+                  hoverColor="primaryBright"
+                />
+              )}
             </SocialOverlay>
           }
         />
@@ -177,21 +192,24 @@ export default function Minting() {
 
 
 
-
       <MintingLayout id="current-minting" py={['24px', '24px', '40px']}>
 
         <Container>
 
           <MintingLayoutWrapper>
 
-            <FarmCard
-              farm={farmWithApr}
-              displayApr={getDisplayApr(farmWithApr.apr)}
-              cakePrice={cakePrice}
-              account={account}
-              removed={false}
-            />
-            <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+            {farmWithApr && (
+              <FarmCard
+                farm={farmWithApr}
+                displayApr={getDisplayApr(farmWithApr.apr) ?? ''}
+                cakePrice={cakePrice}
+                account={account ?? undefined}
+                removed={false}
+              />
+            )}
+            {minting && (
+              <MintingCurrentCard ifo={minting} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+            )}
 
           </MintingLayoutWrapper>
 
@@ -204,21 +222,22 @@ export default function Minting() {
         </Container>
 
         <Container>
-          <NewestForCollection mintingData={minting} />
+          {minting && <NewestForCollection mintingData={minting} />}
         </Container>
 
         <IfoStepBackground>
           <Container>
-            <MintingSteps isLive={minting.status === 'live'} ifo={minting} walletIfoData={walletIfoData} />
+            {minting && (
+              <MintingSteps isLive={minting.status === 'live'} ifo={minting} walletIfoData={walletIfoData} />
+            )}
           </Container>
         </IfoStepBackground>
 
         <Container>
-          <MintingQuestions mintingData={minting} />
+          {minting && <MintingQuestions mintingData={minting} />}
         </Container>
 
       </MintingLayout>
-
 
 
 
