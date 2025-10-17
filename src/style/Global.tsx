@@ -18,6 +18,9 @@ const GlobalStyle = createGlobalStyle`
       max-width: 100%;
     }
   }
+  h3 {
+    margin: 10px;
+  }
 `
 
 export default GlobalStyle
