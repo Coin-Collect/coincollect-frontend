@@ -19,7 +19,7 @@ import useTranslation from "contexts/Localization/useTranslation";
 import AvatarImage from "views/Nft/market/components/BannerHeader/AvatarImage";
 import { Text } from '@pancakeswap/uikit'
 import { nftsBaseUrl } from "views/Nft/market/constants";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { NextLinkFromReactRouter } from "components/NextLink";
 import Row from "components/Layout/Row";
 import { multicallv2 } from "utils/multicall";
@@ -90,6 +90,71 @@ const SocialOverlay = styled(Box)`
   color: #ffffff;
 `
 
+const badgeFloat = keyframes`
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 22px 46px rgba(32, 10, 78, 0.38);
+  }
+
+  50% {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 58px rgba(32, 10, 78, 0.52);
+  }
+`
+
+const DiscountBadge = styled(Box)`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 14px 20px;
+  border-radius: 28px;
+  background: transparent;
+  color: #ffffff;
+  box-shadow: none;
+  text-align: center;
+  text-align: right;
+  overflow: hidden;
+  isolation: isolate;
+  animation: ${badgeFloat} 6.5s ease-in-out infinite;
+  min-width: 0;
+  max-width: 320px;
+  width: max-content;
+  pointer-events: none;
+`
+
+const DiscountValue = styled(Text)`
+  margin-top: 4px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-shadow:
+    0 26px 52px rgba(2, 2, 8, 0.65),
+    0 0 24px rgba(0, 0, 0, 0.45),
+    0 0 2px rgba(0, 0, 0, 0.8);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.65);
+  paint-order: stroke fill;
+
+  ${({ theme }) => theme.mediaQueries.md} {
+    font-size: 48px;
+  }
+`
+
+const DiscountLeftText = styled(Text)`
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow:
+    0 14px 32px rgba(2, 2, 8, 0.55),
+    0 0 16px rgba(0, 0, 0, 0.35),
+    0 0 1px rgba(0, 0, 0, 0.8);
+  -webkit-text-stroke: 0.75px rgba(0, 0, 0, 0.6);
+  paint-order: stroke fill;
+`
+
 
 const IfoStepBackground = styled(Box)`
   background: ${({ theme }) => theme.colors.gradients.bubblegum};
@@ -115,8 +180,6 @@ export default function Minting() {
   const { chosenFarmsMemoized } = useContext(FarmsContext)
   const cakePrice = usePriceCakeBusd()
 
-  const { isLastPrice, nextPrice } = publicIfoData
-
   usePollFarmsWithUserData()
   const farm = useFarmFromPid(minting?.stake_pid ?? 0)
 
@@ -135,6 +198,38 @@ export default function Minting() {
     mainCollectionWeight,
   )
   const farmWithApr = farm ? { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: (farm?.totalStaked ?? new BigNumber(0)) } : null
+
+  const discountHighlight = useMemo(() => {
+    if (!minting || !publicIfoData) {
+      return null
+    }
+
+    const { isLastPrice, cost, nextPrice, lastPrice, partialMaxSupply, totalSupply } = publicIfoData
+
+    const baselinePrice = isLastPrice ? 0 : (lastPrice ?? nextPrice ?? 0)
+    if (!baselinePrice || baselinePrice <= 0) {
+      return null
+    }
+
+    const discountAmount = Math.max((baselinePrice ?? 0) - (cost ?? 0), 0)
+    if (discountAmount <= 0) {
+      return null
+    }
+
+    const discountPercent = Math.max(Math.round((discountAmount / baselinePrice) * 100), 0)
+    if (discountPercent <= 0) {
+      return null
+    }
+
+    const unitsLeft = Math.max((partialMaxSupply ?? 0) - (totalSupply ?? 0), 0)
+
+    const leftDisplay = new Intl.NumberFormat().format(Math.max(unitsLeft, 0))
+
+    return {
+      percent: discountPercent,
+      leftDisplay,
+    }
+  }, [minting, publicIfoData])
 
   // Build social meta from collection data
   const pageMeta = useMemo(() => {
@@ -170,6 +265,20 @@ export default function Minting() {
                 />
               )}
             </SocialOverlay>
+          }
+          bottomRightOverlay={
+            discountHighlight ? (
+              <DiscountBadge>
+                <DiscountValue>
+                  {t('%percent%% OFF', { percent: discountHighlight.percent })}
+                </DiscountValue>
+                {discountHighlight.leftDisplay && (
+                  <DiscountLeftText>
+                    {t('%count% left at this price', { count: discountHighlight.leftDisplay })}
+                  </DiscountLeftText>
+                )}
+              </DiscountBadge>
+            ) : null
           }
         />
 
