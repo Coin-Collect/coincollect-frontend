@@ -69,7 +69,7 @@ const BannerHeader: React.FC<BannerHeaderProps> = ({
             <Flex justifyContent="flex-end">{bottomRightOverlay}</Flex>
           </Box>
         )}
-        <Box position="absolute" bottom={0} left={-4}>
+        <Box position="absolute" bottom={18} left="14px">
           <Flex alignItems="flex-end">
             {avatar}
             {children}

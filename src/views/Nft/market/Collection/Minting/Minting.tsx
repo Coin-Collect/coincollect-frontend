@@ -23,7 +23,8 @@ import styled, { keyframes } from "styled-components";
 import { NextLinkFromReactRouter } from "components/NextLink";
 import Row from "components/Layout/Row";
 import { multicallv2 } from "utils/multicall";
-import  useWeb3React  from 'hooks/useWeb3React'
+import useWeb3React from 'hooks/useWeb3React'
+import useTheme from 'hooks/useTheme'
 import { isAddress } from 'utils'
 import useSWR from "swr";
 import { getCollectionApi } from "pages/nfts/collections/mint/[collectionAddress]";
@@ -162,7 +163,7 @@ const IfoStepBackground = styled(Box)`
 
 
 export default function Minting() {
-
+  const { theme } = useTheme()
   const router = useRouter()
   const collectionAddress = router.query.collectionAddress as string
   const collection = useGetCollection(collectionAddress)
@@ -243,7 +244,14 @@ export default function Minting() {
   return (
     <>
       <PageMeta customMeta={pageMeta} />
-      <MarketPageHeader>
+      <Box
+        style={{
+          background:
+            theme.isDark
+              ? 'linear-gradient(166.77deg, #3B4155 0%, #3A3045 100%)'
+              : 'linear-gradient(111.68deg, #f2ecf2 0%, #e8f2f6 100%)',
+        }}
+      >
         <BannerHeader
           bannerImage={banner.large}
           avatar={<AvatarImage src={avatar} />}
@@ -281,27 +289,24 @@ export default function Minting() {
             ) : null
           }
         />
-
-        <MarketPageTitle
-          title={name}
-          description={description ? <Text color="textSubtle">{t(description)}</Text> : null}
-        >
-
-
-          <StatBox>
-            <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
-            <StatBoxItem title={t('Price')} stat={(cost) + ' POL'} />
-            <StatBoxItem title={t('Status')} stat={status} />
-          </StatBox>
-
-
-        </MarketPageTitle>
-      </MarketPageHeader>
+        <Container>
+          <MarketPageTitle
+            title={name}
+            description={description ? <Text color="textSubtle">{t(description)}</Text> : null}
+          >
+            <StatBox>
+              <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
+              <StatBoxItem title={t('Price')} stat={(cost) + ' POL'} />
+              <StatBoxItem title={t('Status')} stat={status} />
+            </StatBox>
+          </MarketPageTitle>
+        </Container>
+      </Box>
 
 
 
 
-      <MintingLayout id="current-minting" py={['24px', '24px', '40px']}>
+      <MintingLayout id="current-minting">
 
         <Container>
 
