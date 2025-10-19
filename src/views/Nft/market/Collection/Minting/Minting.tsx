@@ -53,6 +53,7 @@ import PoolCard from "views/Pools/components/PoolCard";
 import NewestForCollection from "../../Home/NewestForCollection";
 import IfoAchievement from "./components/MintingCard/Achievement";
 import ActivityHistoryMinting from "../../ActivityHistory/ActivityHistoryMinting";
+import AnimatedPricingBadge from "views/Nft/market/components/AnimatedPricingBadge";
 
 
 const BackLink = styled(NextLinkFromReactRouter)`
@@ -229,6 +230,8 @@ export default function Minting() {
     return {
       percent: discountPercent,
       leftDisplay,
+      originalPrice: baselinePrice,
+      discountedPrice: cost ?? 0,
     }
   }, [minting, publicIfoData])
 
@@ -278,16 +281,13 @@ export default function Minting() {
           }
           bottomRightOverlay={
             discountHighlight ? (
-              <DiscountBadge>
-                <DiscountValue>
-                  {t('%percent%% OFF', { percent: discountHighlight.percent })}
-                </DiscountValue>
-                {discountHighlight.leftDisplay && (
-                  <DiscountLeftText>
-                    {t('%count% left at this price', { count: discountHighlight.leftDisplay })}
-                  </DiscountLeftText>
-                )}
-              </DiscountBadge>
+              <AnimatedPricingBadge
+                originalPrice={discountHighlight.originalPrice}
+                discountedPrice={discountHighlight.discountedPrice}
+                discountPercent={discountHighlight.percent}
+                leftDisplay={discountHighlight.leftDisplay}
+                countdownDuration={5}
+              />
             ) : null
           }
         />
