@@ -9,6 +9,7 @@ import { getCollection } from 'state/nftMarket/helpers'
 import { mintingConfig } from 'config/constants'
 import { API_NFT } from 'config/constants/endpoints'
 import Minting from 'views/Nft/market/Collection/Minting/Minting'
+import { DEFAULT_META } from 'config/constants/meta'
 
 const CollectionPage = ({ fallback = {} }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const router = useRouter()
@@ -33,6 +34,38 @@ export const getStaticPaths: GetStaticPaths = async () => {
   return {
     fallback: true,
     paths: [],
+  }
+}
+
+type MintCollectionMetaSource = {
+  name?: string
+  description?: string
+  banner?: { large?: string; small?: string }
+  avatar?: string
+  sampleNftImage?: { image?: string }
+}
+
+const buildMintPageMeta = (collection: MintCollectionMetaSource | null, address: string) => {
+  const name = collection?.name?.trim()
+  const description = collection?.description?.trim()
+  const bannerLarge = collection?.banner?.large?.trim()
+  const bannerSmall = collection?.banner?.small?.trim()
+  const avatar = collection?.avatar?.trim()
+  const sampleImage = collection?.sampleNftImage?.image?.trim()
+
+  const image = [bannerLarge, bannerSmall, avatar, sampleImage, DEFAULT_META.image].find(Boolean)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+  const path = `/nfts/collections/mint/${address.toLowerCase()}`
+
+  return {
+    title: name ? `${name} NFT Mint | CoinCollect` : `NFT Mint | CoinCollect`,
+    description:
+      description && description.length > 160
+        ? `${description.slice(0, 157)}...`
+        : description || DEFAULT_META.description,
+    image,
+    url: `${normalizedBaseUrl}${path}`,
   }
 }
 
@@ -62,17 +95,20 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           status: minting.status ?? 'live',
           avatar: minting.avatar,
           banner: { large: minting.banner?.large ?? '', small: minting.banner?.small ?? '' },
+          sampleNftImage: minting.sampleNftImage ?? null,
           attributes: [],
         }
       : null
 
     const resolved = collectionData || minimal || {}
+    const meta = buildMintPageMeta(resolved, collectionAddress)
 
     return {
       props: {
         fallback: {
           [unstable_serialize(['minting', 'collections', collectionAddress.toLowerCase()])]: resolved,
         },
+        meta,
       },
       revalidate: 60,
     }
@@ -91,14 +127,17 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           status: minting.status ?? 'live',
           avatar: minting.avatar,
           banner: { large: minting.banner?.large ?? '', small: minting.banner?.small ?? '' },
+          sampleNftImage: minting?.sampleNftImage ?? null,
           attributes: [],
         }
       : {}
+    const meta = buildMintPageMeta(minimal, String(collectionAddress))
     return {
       props: {
         fallback: {
           [unstable_serialize(['minting', 'collections', String(collectionAddress).toLowerCase()])]: minimal,
         },
+        meta,
       },
       revalidate: 60,
     }
@@ -116,4 +155,3 @@ export const getCollectionApi = async (collectionAddress: string): Promise<any> 
   console.error(`API: Failed to fetch NFT collection ${collectionAddress}`, res.statusText)
   return null
 }
-
