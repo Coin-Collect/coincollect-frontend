@@ -1,8 +1,9 @@
 import { ReactNode } from 'react'
-import { Box, Grid, GridProps, Heading, Flex, Link } from '@pancakeswap/uikit'
+import { Box, Grid, GridProps, Heading, Flex, Link, Text } from '@pancakeswap/uikit'
 import { BscScanIcon } from '@pancakeswap/uikit'
 import { getPolygonScanLink } from 'utils'
 import useWeb3React from 'hooks/useWeb3React'
+import ExpandableDescription from './ExpandableDescription'
 
 interface MarketPageTitleProps extends GridProps {
   title: string
@@ -13,6 +14,9 @@ interface MarketPageTitleProps extends GridProps {
 const MarketPageTitle: React.FC<MarketPageTitleProps> = ({ title, description, children, accountPath, ...props }) => {
   const scanLink = accountPath ? getPolygonScanLink(accountPath, 'address') : undefined
 
+  // Check if description is a string to use ExpandableDescription
+  const isStringDescription = typeof description === 'string'
+  
   return (
     <Grid gridGap="16px" alignItems="center" gridTemplateColumns={['1fr', null, null, null, 'repeat(2, 1fr)']} {...props}>
       <Box>
@@ -30,7 +34,11 @@ const MarketPageTitle: React.FC<MarketPageTitleProps> = ({ title, description, c
             {title}
           </Heading>
         )}
-        {description}
+        {isStringDescription ? (
+          <ExpandableDescription text={description} color="textSubtle" />
+        ) : (
+          description
+        )}
       </Box>
       <Box>{children}</Box>
     </Grid>
