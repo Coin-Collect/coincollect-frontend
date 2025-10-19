@@ -1,4 +1,4 @@
-import { Box, CardBody, Flex, Text } from '@pancakeswap/uikit'
+import { Box, CardBody, Flex, Text, Button } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { useBNBBusdPrice } from 'hooks/useBUSDPrice'
 import PreviewImage from './PreviewImage'
@@ -9,7 +9,7 @@ import { useGetLowestPriceFromNft } from '../../hooks/useGetLowestPrice'
 import { pancakeBunniesAddress } from '../../constants'
 import NFTMedia from '../NFTMedia'
 
-const CollectibleCardBody: React.FC<CollectibleCardProps> = ({ nft, nftLocation, currentAskPrice, isUserNft }) => {
+const CollectibleCardBody: React.FC<CollectibleCardProps> = ({ nft, nftLocation, currentAskPrice, isUserNft, showBuyButton, directLink }) => {
   const { t } = useTranslation()
   const { name } = nft
   const bnbBusdPrice = useBNBBusdPrice()
@@ -19,26 +19,42 @@ const CollectibleCardBody: React.FC<CollectibleCardProps> = ({ nft, nftLocation,
   //TODO: added style={{backgroundPosition:"center"}} to NFTMedia temporarily
   return (
     <CardBody p="8px">
-      <NFTMedia style={{backgroundPosition:"center"}} as={PreviewImage} nft={nft} height={320} width={320} mb="8px" borderRadius="8px" />
-      <Flex alignItems="center" justifyContent="space-between">
-        {nft.collectionName && (
-          <Text fontSize="12px" color="textSubtle" mb="8px">
-            {nft.collectionName}
+      <Box position="relative" mb="8px" pb="8px">
+        <NFTMedia style={{backgroundPosition:"center"}} as={PreviewImage} nft={nft} height={320} width={320} borderRadius="12px" />
+        {/* NFT Title Overlay */}
+        <Box
+          position="absolute"
+          top="12px"
+          left="12px"
+          background="rgba(0, 0, 0, 0.7)"
+          borderRadius="8px"
+          px="8px"
+          py="4px"
+        >
+          <Text color="white" fontSize="14px" fontWeight="600">
+            {name}
           </Text>
-        )}
-        {nftLocation && <LocationTag nftLocation={nftLocation} />}
-      </Flex>
-      <Text as="h4" fontWeight="600" mb="8px">
-        {name}
-      </Text>
-      <Box borderTop="1px solid" borderTopColor="cardBorder" pt="8px">
-        {isPancakeBunny && (
-          <LowestPriceMetaRow lowestPrice={lowestPrice} isFetching={isFetching} bnbBusdPrice={bnbBusdPrice} />
-        )}
-        {currentAskPrice && (
-          <MetaRow title={isUserNft ? t('Your price') : t('Asking price')}>
-            <CostLabel cost={currentAskPrice} bnbBusdPrice={bnbBusdPrice} />
-          </MetaRow>
+        </Box>
+        {showBuyButton && directLink && (
+          <Flex
+            position="absolute"
+            left="12px"
+            right="12px"
+            bottom="12px"
+            justifyContent="center"
+          >
+            <Button
+              as="a"
+              href={directLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="secondary"
+              scale="sm"
+              style={{ pointerEvents: 'auto' }}
+            >
+              {t('Buy')}
+            </Button>
+          </Flex>
         )}
       </Box>
     </CardBody>
