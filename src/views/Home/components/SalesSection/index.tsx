@@ -75,7 +75,7 @@ const SalesSection: React.FC<SalesSectionProps> = (props) => {
           height={['320px', '400px', null, '100%']}
           width={['100%', '100%', null, '100%']}
           flex={[null, null, null, '1']}
-          mb={['24px', null, null, '0']}
+          mb={['0px', '0px', null, '0']}
         >
           {video ? (
             <VideoComponent src={video.src} maxHeight={video.maxHeight || '512px'} />

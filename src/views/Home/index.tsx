@@ -98,7 +98,13 @@ const Home: React.FC = () => {
         <MetricsSection />
       </PageSection>
       <PageSection
-        innerProps={{ style: HomeSectionContainerStyles }}
+        innerProps={{ 
+          style: {
+            ...HomeSectionContainerStyles,
+            paddingTop: '0px',
+            paddingBottom: '0px',
+          }
+        }}
         background={theme.colors.background}
         index={2}
         hasCurvedDivider={false}
