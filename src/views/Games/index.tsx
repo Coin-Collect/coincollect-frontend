@@ -6,12 +6,12 @@ import FlexLayout from 'components/Layout/Flex'
 import Hero from './components/Hero'
 import GameCard from './components/GameCard'
 
-const CardsSection = styled(Container)`
+const CardsSection = styled(Container).attrs({
+  px: ['0px', '24px'],
+})`
   display: flex;
   flex-direction: column;
   gap: 32px;
-  padding-left: 0px;
-  padding-right: 0px;
 
   ${({ theme }) => theme.mediaQueries.md} {
     gap: 40px;
@@ -25,12 +25,7 @@ const CardsGrid = styled(FlexLayout)`
 
   & > * {
     margin: 0 8px 32px;
-  }
-
-  ${({ theme }) => theme.mediaQueries.lg} {
-    & > * {
-      min-width: 300px;
-    }
+    min-width: 350px;
   }
 `
 

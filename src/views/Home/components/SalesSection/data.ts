@@ -15,13 +15,9 @@ export const swapSectionData = (t: TranslateFunction): SalesSectionProps => ({
     text: t('Learn'),
     external: true,
   },
-  images: {
-    path: '/images/home/trade/',
-    attributes: [
-      { src: 'BNB', alt: t('BNB token') },
-      { src: 'BTC', alt: t('BTC token') },
-      { src: 'CAKE', alt: t('CAKE token') },
-    ],
+  video: {
+    src: '/sheepCollect.webm',
+    maxHeight: '400px',
   },
 })
 

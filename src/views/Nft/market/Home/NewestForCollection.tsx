@@ -39,6 +39,7 @@ const NewestForCollection = ({mintingData}) => {
                 key={nft.tokenId}
                 nft={nft}
                 directLink={openSeaUrl}
+                showBuyButton
               />
             )
           })}

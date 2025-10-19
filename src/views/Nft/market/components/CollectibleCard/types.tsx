@@ -7,4 +7,5 @@ export interface CollectibleCardProps extends CardProps {
   currentAskPrice?: number
   isUserNft?: boolean
   directLink?: string
+  showBuyButton?: boolean
 }

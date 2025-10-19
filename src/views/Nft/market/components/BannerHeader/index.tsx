@@ -9,6 +9,7 @@ interface BannerHeaderProps extends FlexProps {
   avatar?: ReactNode
   topLeftOverlay?: ReactNode
   topRightOverlay?: ReactNode
+  bottomRightOverlay?: ReactNode
 }
 
 const BannerHeader: React.FC<BannerHeaderProps> = ({
@@ -17,6 +18,7 @@ const BannerHeader: React.FC<BannerHeaderProps> = ({
   avatar,
   topLeftOverlay,
   topRightOverlay,
+  bottomRightOverlay,
   children,
   ...props
 }) => {
@@ -42,7 +44,7 @@ const BannerHeader: React.FC<BannerHeaderProps> = ({
               playsInline
             />
           ) : (
-            <Image src={bannerImage} alt={bannerAlt} layout="fill" objectFit="cover" priority />
+            <Image src={bannerImage} alt={bannerAlt || ''} layout="fill" objectFit="cover" priority />
           )}
         </StyledBannerImageWrapper>
         {topLeftOverlay && (
@@ -53,6 +55,18 @@ const BannerHeader: React.FC<BannerHeaderProps> = ({
         {topRightOverlay && (
           <Box position="absolute" top="16px" right="16px" zIndex={1}>
             {topRightOverlay}
+          </Box>
+        )}
+        {bottomRightOverlay && (
+          <Box
+            position="absolute"
+            right={['12px', '16px', '24px']}
+            bottom={['12px', '16px', '20px']}
+            style={{ pointerEvents: 'none' }}
+            zIndex={1}
+            maxWidth={['calc(100% - 24px)', 'calc(100% - 32px)', '360px']}
+          >
+            <Flex justifyContent="flex-end">{bottomRightOverlay}</Flex>
           </Box>
         )}
         <Box position="absolute" bottom={0} left={-4}>
