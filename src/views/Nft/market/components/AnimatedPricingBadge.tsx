@@ -83,15 +83,15 @@ const AnimatedBadge = styled(Box)<AnimatedBadgeProps>`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding: ${({ size }) => size === 'large' ? '20px 28px' : '14px 20px'};
-  border-radius: 28px;
+  padding: ${({ size }) => size === 'large' ? '16px 22px' : '11px 16px'};
+  border-radius: 22px;
   background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
   text-align: right;
   overflow: hidden;
   isolation: isolate;
   min-width: 0;
-  max-width: 320px;
+  max-width: 256px;
   width: max-content;
   pointer-events: none;
   transform-origin: center;
@@ -116,14 +116,14 @@ const AnimatedBadge = styled(Box)<AnimatedBadgeProps>`
 `
 
 const PriceValue = styled(Text)<{ isAnimating: boolean; size: 'normal' | 'large' }>`
-  margin-top: 4px;
-  font-size: ${({ size }) => size === 'large' ? '52px' : '36px'};
+  margin-top: 3px;
+  font-size: ${({ size }) => size === 'large' ? '42px' : '29px'};
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.1;
   text-shadow:
-    0 26px 52px rgba(2, 2, 8, 0.65),
-    0 0 24px rgba(0, 0, 0, 0.45),
+    0 21px 42px rgba(2, 2, 8, 0.65),
+    0 0 19px rgba(0, 0, 0, 0.45),
     0 0 2px rgba(0, 0, 0, 0.8);
   -webkit-text-stroke: 1px rgba(0, 0, 0, 0.65);
   paint-order: stroke fill;
@@ -134,19 +134,19 @@ const PriceValue = styled(Text)<{ isAnimating: boolean; size: 'normal' | 'large'
   `}
 
   ${({ theme }) => theme.mediaQueries.md} {
-    font-size: ${({ size }) => size === 'large' ? '64px' : '48px'};
+    font-size: ${({ size }) => size === 'large' ? '51px' : '38px'};
   }
 `
 
 const SubText = styled(Text)<{ size: 'normal' | 'large' }>`
-  margin-top: 6px;
-  font-size: ${({ size }) => size === 'large' ? '17px' : '15px'};
+  margin-top: 5px;
+  font-size: ${({ size }) => size === 'large' ? '14px' : '12px'};
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-shadow:
-    0 14px 32px rgba(2, 2, 8, 0.55),
-    0 0 16px rgba(0, 0, 0, 0.35),
+    0 11px 26px rgba(2, 2, 8, 0.55),
+    0 0 13px rgba(0, 0, 0, 0.35),
     0 0 1px rgba(0, 0, 0, 0.8);
   -webkit-text-stroke: 0.75px rgba(0, 0, 0, 0.6);
   paint-order: stroke fill;
@@ -154,7 +154,7 @@ const SubText = styled(Text)<{ size: 'normal' | 'large' }>`
 `
 
 const CountdownText = styled(Text)`
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -218,7 +218,7 @@ const AnimatedPricingBadge: React.FC<AnimatedPricingBadgeProps> = ({
 
   // Format price for display
   const formatPrice = (price: number) => {
-    return price.toFixed(2)
+    return `${price.toFixed(0)} POL`
   }
 
   return (
@@ -239,7 +239,7 @@ const AnimatedPricingBadge: React.FC<AnimatedPricingBadgeProps> = ({
       >
         {isDiscountRevealed 
           ? t('%percent%% OFF', { percent: discountPercent })
-          : `$${formatPrice(currentPrice)}`
+          : formatPrice(currentPrice)
         }
       </PriceValue>
       
