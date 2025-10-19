@@ -250,6 +250,7 @@ export default function Minting() {
             theme.isDark
               ? 'linear-gradient(166.77deg, #3B4155 0%, #3A3045 100%)'
               : 'linear-gradient(111.68deg, #f2ecf2 0%, #e8f2f6 100%)',
+          marginBottom: '30px',
         }}
       >
         <BannerHeader
@@ -292,7 +293,7 @@ export default function Minting() {
         <Container>
           <MarketPageTitle
             title={name}
-            description={description ? <Text color="textSubtle">{t(description)}</Text> : null}
+            description={description || null}
           >
             <StatBox>
               <StatBoxItem title={t('Minted')} stat={`${totalSupply}/${maxSupply}`} />
