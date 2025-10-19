@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Text, Button, Box } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 
@@ -40,12 +40,28 @@ const ExpandableDescription: React.FC<ExpandableDescriptionProps> = ({
   maxLines = 2 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  
-  // Check if text needs truncation by counting approximate lines
-  const wordsPerLine = 12 // Approximate words per line
-  const words = text.split(' ')
-  const estimatedLines = Math.ceil(words.length / wordsPerLine)
-  const needsTruncation = estimatedLines > maxLines
+  const [needsTruncation, setNeedsTruncation] = useState(false)
+  const textRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const checkTruncation = () => {
+      if (textRef.current) {
+        // Check if the text is actually being truncated
+        const element = textRef.current
+        const lineHeight = parseFloat(getComputedStyle(element).lineHeight)
+        const maxHeight = lineHeight * maxLines
+        const actualHeight = element.scrollHeight
+        
+        setNeedsTruncation(actualHeight > maxHeight + 1) // +1 for rounding tolerance
+      }
+    }
+
+    // Check truncation after component mounts and on resize
+    checkTruncation()
+    window.addEventListener('resize', checkTruncation)
+    
+    return () => window.removeEventListener('resize', checkTruncation)
+  }, [text, maxLines])
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded)
@@ -56,6 +72,7 @@ const ExpandableDescription: React.FC<ExpandableDescriptionProps> = ({
   return (
     <Box>
       <TruncatedText 
+        ref={textRef}
         color={color} 
         isExpanded={isExpanded} 
         maxLines={maxLines}

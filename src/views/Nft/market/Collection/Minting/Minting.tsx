@@ -251,6 +251,7 @@ export default function Minting() {
               ? 'linear-gradient(166.77deg, #3B4155 0%, #3A3045 100%)'
               : 'linear-gradient(111.68deg, #f2ecf2 0%, #e8f2f6 100%)',
           marginBottom: '30px',
+          paddingBottom: '20px',
         }}
       >
         <BannerHeader
