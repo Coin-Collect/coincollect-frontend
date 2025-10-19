@@ -1,6 +1,7 @@
 import { Flex, Text, Button, Link } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter as RouterLink } from 'components/NextLink'
 import CompositeImage, { CompositeImageProps } from '../CompositeImage'
+import VideoComponent from '../VideoComponent'
 import ColoredWordHeading from '../ColoredWordHeading'
 
 interface SalesSectionButton {
@@ -9,17 +10,23 @@ interface SalesSectionButton {
   external: boolean
 }
 
+interface VideoProps {
+  src: string
+  maxHeight?: string
+}
+
 export interface SalesSectionProps {
   headingText: string
   bodyText: string
   reverse: boolean
   primaryButton: SalesSectionButton
   secondaryButton: SalesSectionButton
-  images: CompositeImageProps
+  images?: CompositeImageProps
+  video?: VideoProps
 }
 
 const SalesSection: React.FC<SalesSectionProps> = (props) => {
-  const { headingText, bodyText, reverse, primaryButton, secondaryButton, images } = props
+  const { headingText, bodyText, reverse, primaryButton, secondaryButton, images, video } = props
 
   return (
     <Flex flexDirection="column">
@@ -31,8 +38,8 @@ const SalesSection: React.FC<SalesSectionProps> = (props) => {
         <Flex
           flexDirection="column"
           flex="1"
-          ml={[null, null, null, reverse && '64px']}
-          mr={[null, null, null, !reverse && '64px']}
+          ml={[null, null, null, reverse ? '64px' : null]}
+          mr={[null, null, null, !reverse ? '64px' : null]}
           alignSelf={['flex-start', null, null, 'center']}
         >
           <ColoredWordHeading text={headingText} />
@@ -65,12 +72,16 @@ const SalesSection: React.FC<SalesSectionProps> = (props) => {
           </Flex>
         </Flex>
         <Flex
-          height={['192px', null, null, '100%']}
-          width={['192px', null, null, '100%']}
+          height={['320px', '400px', null, '100%']}
+          width={['100%', '100%', null, '100%']}
           flex={[null, null, null, '1']}
           mb={['24px', null, null, '0']}
         >
-          <CompositeImage {...images} />
+          {video ? (
+            <VideoComponent src={video.src} maxHeight={video.maxHeight || '512px'} />
+          ) : images ? (
+            <CompositeImage {...images} />
+          ) : null}
         </Flex>
       </Flex>
     </Flex>
