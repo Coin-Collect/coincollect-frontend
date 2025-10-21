@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { Text, Box, Message, MessageText, Link } from '@pancakeswap/uikit'
+import { Text, Box, Link } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import useWeb3React from 'hooks/useWeb3React'
 import { Minting, PoolIds } from 'config/constants/types'
@@ -242,12 +242,30 @@ const ButtonOverlay = styled(Box)`
   }
 `
 
-const MessageTextLink = styled(Link)`
+const InfoBanner = styled(Box)<{ $variant: 'warning' | 'success' }>`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid ${({ $variant }) => ($variant === 'warning' ? 'rgba(214, 126, 10, 0.45)' : 'rgba(18, 158, 125, 0.45)')};
+  background: ${({ $variant }) => ($variant === 'warning' ? 'rgba(214, 126, 10, 0.12)' : 'rgba(18, 158, 125, 0.12)')};
+  color: ${({ $variant }) => ($variant === 'warning' ? '#D67E0A' : '#129E7D')};
+`
+
+const InfoText = styled(Text)`
+  font-size: 14px;
+  line-height: 1.5;
+  color: inherit;
+`
+
+const InfoLink = styled(Link)`
   display: inline;
   text-decoration: underline;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
+  color: inherit;
 `
 
 const IfoCardTokens: React.FC<IfoCardTokensProps> = ({ poolId, ifo, publicIfoData, walletIfoData, isLoading, actionsSlot }) => {
@@ -390,32 +408,24 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({ poolId, ifo, publicIfoDat
         </MediaWrapper>
 
         {(account && !isHolder && version === 3.1) && (
-          <Message my="20px" p="10px" variant="warning">
-            <Box>
-              <MessageText display="inline" fontSize="14px">
-                {t(
-                  `You don't have any CoinCollect NFT, NFT holders get %${holderDiscountPercentage} discount and doesn't have to wait for the countdown.`,
-                )}
-              </MessageText>{' '}
-              <MessageTextLink
-                display="inline"
-                fontWeight={700}
-                href="https://market.coincollect.org/"
-                target="_blank"
-                color="failure"
-              >
-                {t('Not too late')} »
-              </MessageTextLink>
-            </Box>
-          </Message>
+          <InfoBanner $variant="warning" my="20px">
+            <InfoText>
+              {t(
+                `You don't have any CoinCollect NFT, NFT holders get %${holderDiscountPercentage} discount and doesn't have to wait for the countdown.`,
+              )}
+            </InfoText>
+            <InfoLink href="https://market.coincollect.org/" target="_blank">
+              {t('Not too late')} »
+            </InfoLink>
+          </InfoBanner>
         )}
 
         {(account && isHolder && version === 3.1) && (
-          <Message mt="20px" p="10px" variant="success">
-            <MessageText small display="inline">
+          <InfoBanner $variant="success" mt="20px">
+            <InfoText>
               {t(`Wow! You are holder. You save ${discountAmount} POL and no need to wait for the countdown.`)}
-            </MessageText>
-          </Message>
+            </InfoText>
+          </InfoBanner>
         )}
       </>
     )
