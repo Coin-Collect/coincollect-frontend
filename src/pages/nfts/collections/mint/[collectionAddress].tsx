@@ -42,7 +42,7 @@ type MintCollectionMetaSource = {
   description?: string
   banner?: { large?: string; small?: string }
   avatar?: string
-  sampleNftImage?: { image?: string }
+  sampleNftImage?: { image?: string } | null
 }
 
 const buildMintPageMeta = (collection: MintCollectionMetaSource | null, address: string) => {
@@ -70,7 +70,7 @@ const buildMintPageMeta = (collection: MintCollectionMetaSource | null, address:
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { collectionAddress } = params
+  const collectionAddress = params?.collectionAddress
   if (typeof collectionAddress !== 'string') {
     return {
       notFound: true,
