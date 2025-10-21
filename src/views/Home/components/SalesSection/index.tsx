@@ -1,6 +1,7 @@
 import { Flex, Text, Button, Link } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter as RouterLink } from 'components/NextLink'
 import CompositeImage, { CompositeImageProps } from '../CompositeImage'
+import CompositeVideo from '../CompositeVideo'
 import VideoComponent from '../VideoComponent'
 import ColoredWordHeading from '../ColoredWordHeading'
 
@@ -15,6 +16,16 @@ interface VideoProps {
   maxHeight?: string
 }
 
+interface VideoAttributes {
+  src: string
+  alt: string
+}
+
+export interface CompositeVideoProps {
+  path: string
+  attributes: VideoAttributes[]
+}
+
 export interface SalesSectionProps {
   headingText: string
   bodyText: string
@@ -23,10 +34,11 @@ export interface SalesSectionProps {
   secondaryButton: SalesSectionButton
   images?: CompositeImageProps
   video?: VideoProps
+  videos?: CompositeVideoProps
 }
 
 const SalesSection: React.FC<SalesSectionProps> = (props) => {
-  const { headingText, bodyText, reverse, primaryButton, secondaryButton, images, video } = props
+  const { headingText, bodyText, reverse, primaryButton, secondaryButton, images, video, videos } = props
 
   return (
     <Flex flexDirection="column">
@@ -79,6 +91,8 @@ const SalesSection: React.FC<SalesSectionProps> = (props) => {
         >
           {video ? (
             <VideoComponent src={video.src} maxHeight={video.maxHeight || '512px'} />
+          ) : videos ? (
+            <CompositeVideo {...videos} />
           ) : images ? (
             <CompositeImage {...images} />
           ) : null}
