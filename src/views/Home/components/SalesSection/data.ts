@@ -1,5 +1,6 @@
 import { TranslateFunction } from 'contexts/Localization/types'
 import { SalesSectionProps } from '.'
+import { getRandomSuperheroVideos } from 'utils/getRandomSuperheroVideo'
 
 export const swapSectionData = (t: TranslateFunction): SalesSectionProps => ({
   headingText: t('Trade anything. No registration, no hassle.'),
@@ -21,29 +22,32 @@ export const swapSectionData = (t: TranslateFunction): SalesSectionProps => ({
   },
 })
 
-export const earnSectionData = (t: TranslateFunction): SalesSectionProps => ({
-  headingText: t('Earn passive income with crypto.'),
-  bodyText: t('PancakeSwap makes it easy to make your crypto work for you.'),
-  reverse: true,
-  primaryButton: {
-    to: '/pools',
-    text: t('Stake'),
-    external: false,
-  },
-  secondaryButton: {
-    to: 'https://docs.coincollect.org/',
-    text: t('Learn'),
-    external: true,
-  },
-  images: {
-    path: '/images/home/earn/',
-    attributes: [
-      { src: 'pie', alt: t('Pie chart') },
-      { src: 'stonks', alt: t('Stocks chart') },
-      { src: 'folder', alt: t('Folder with cake token') },
-    ],
-  },
-})
+export const earnSectionData = (t: TranslateFunction): SalesSectionProps => {
+  const randomVideos = getRandomSuperheroVideos(3)
+  
+  return {
+    headingText: t('Earn passive income with crypto.'),
+    bodyText: t('PancakeSwap makes it easy to make your crypto work for you.'),
+    reverse: true,
+    primaryButton: {
+      to: '/pools',
+      text: t('Stake'),
+      external: false,
+    },
+    secondaryButton: {
+      to: 'https://docs.coincollect.org/',
+      text: t('Learn'),
+      external: true,
+    },
+    videos: {
+      path: '/images/superheroes/',
+      attributes: randomVideos.map((videoPath, index) => ({
+        src: videoPath.replace('/images/superheroes/', '').replace('.webm', ''),
+        alt: t(`Superhero video ${index + 1}`),
+      })),
+    },
+  }
+}
 
 export const cakeSectionData = (t: TranslateFunction): SalesSectionProps => ({
   headingText: t('CAKE makes our world go round.'),
