@@ -2,7 +2,18 @@ import { useState } from 'react'
 import type { ComponentType } from 'react'
 import BigNumber from 'bignumber.js'
 import styled, { css } from 'styled-components'
-import { Card, Flex, Text, Skeleton, CardRibbon, HomeIcon, NftIcon, SmartContractIcon, useTooltip } from '@pancakeswap/uikit'
+import {
+  Card,
+  Flex,
+  Text,
+  Skeleton,
+  CardRibbon,
+  HomeIcon,
+  NftIcon,
+  SmartContractIcon,
+  useTooltip,
+  useMatchBreakpoints,
+} from '@pancakeswap/uikit'
 import type { SvgProps } from '@pancakeswap/uikit'
 import { DeserializedNftFarm } from 'state/types'
 import { getPolygonScanLink } from 'utils'
@@ -115,11 +126,19 @@ interface FooterIconWithTooltipProps {
 
 const FooterIconWithTooltip: React.FC<FooterIconWithTooltipProps> = ({ href, label, IconComponent }) => {
   const { targetRef, tooltip, tooltipVisible } = useTooltip(label, { placement: 'top' })
+  const { isXs, isSm, isMd } = useMatchBreakpoints()
+  const isTouch =
+    typeof window !== 'undefined' &&
+    ('ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      // @ts-ignore
+      navigator.msMaxTouchPoints > 0)
+  const disableTooltip = isXs || isSm || isMd || isTouch
 
   return (
     <>
-      {tooltipVisible && tooltip}
-      <FooterIconWrapper ref={targetRef}>
+      {!disableTooltip && tooltipVisible && tooltip}
+      <FooterIconWrapper ref={!disableTooltip ? targetRef : undefined}>
         <FooterIconLink href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
           <IconComponent color="currentColor" />
         </FooterIconLink>
