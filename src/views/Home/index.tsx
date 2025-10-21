@@ -1,6 +1,5 @@
 import styled from 'styled-components'
 import PageSection from 'components/PageSection'
-import useWeb3React from 'hooks/useWeb3React'
 import useTheme from 'hooks/useTheme'
 import Container from 'components/Layout/Container'
 import { PageMeta } from 'components/Layout/Page'
@@ -20,6 +19,16 @@ import { FeaturedSection } from './components/FeaturedSection'
 
 const StyledHeroSection = styled(PageSection)`
   padding-top: 16px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
 
   ${({ theme }) => theme.mediaQueries.md} {
     padding-top: 48px;
@@ -44,7 +53,6 @@ const UserBannerWrapper = styled(Container)`
 
 const Home: React.FC = () => {
   const { theme } = useTheme()
-  const { account } = useWeb3React()
 
   const HomeSectionContainerStyles = { margin: '0', width: '100%', maxWidth: '968px', padding: '0px 16px' }
 
@@ -57,18 +65,18 @@ const Home: React.FC = () => {
         innerProps={{ style: { margin: '0', width: '100%' } }}
         background={
           theme.isDark
-            ? 'radial-gradient(103.12% 50% at 50% 50%, #21193A 0%, #191326 100%)'
-            : 'linear-gradient(139.73deg, #E6FDFF 0%, #F3EFFF 100%)'
+            ? 'linear-gradient(180deg, rgba(33, 25, 58, 0.9) 0%, rgba(25, 19, 38, 0.85) 100%)'
+            : 'linear-gradient(180deg, rgba(230, 253, 255, 0.85) 0%, rgba(243, 239, 255, 0.85) 100%)'
         }
         index={2}
         hasCurvedDivider={false}
       >
-        {/*account && (
+        {/*
           <UserBannerWrapper>
             <UserBanner />
           </UserBannerWrapper>
           <HomeBanner />
-        )*/}
+        */}
 
         <Hero />
       </StyledHeroSection>
