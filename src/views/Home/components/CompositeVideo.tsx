@@ -23,17 +23,17 @@ const Wrapper = styled(Box)<{ maxHeight: string }>`
   }
 
   & :nth-child(3) {
-    animation: ${floatingAnim('5px', '50px')} 3s ease-in-out infinite;
+    animation: ${floatingAnim('10px', '50px')} 3s ease-in-out infinite;
     animation-delay: 0.66s;
   }
 
   & :nth-child(4) {
-    animation: ${floatingAnim('6px', '50px')} 3s ease-in-out infinite;
+    animation: ${floatingAnim('16px', '50px')} 3s ease-in-out infinite;
     animation-delay: 0.33s;
   }
 
   & :nth-child(5) {
-    animation: ${floatingAnim('4px', '92px')} 3s ease-in-out infinite;
+    animation: ${floatingAnim('14px', '92px')} 3s ease-in-out infinite;
     animation-delay: 0s;
   }
 `
@@ -53,24 +53,24 @@ const VideoWrapper = styled(Box)<{ index: number }>`
     switch (index) {
       case 0:
         return `
-          top: 10%;
-          left: 10%;
+          top: 0%;
+          left: 0%;
         `
       case 1:
         return `
-          top: 10%;
-          right: 10%;
+          top: 0%;
+          right: 0%;
         `
       case 2:
         return `
-          bottom: 10%;
-          left: 50%;
+          bottom: 0%;
+          left: 0%;
           transform: translateX(-50%);
         `
       default:
         return `
-          top: 50%;
-          left: 50%;
+          top: 30%;
+          left: 35%;
           transform: translate(-50%, -50%);
         `
     }
