@@ -113,6 +113,7 @@ const StyledCardFooter = styled(CardFooter)`
   text-align: center;
 `
 
+
 const StyledNoHatBunny = styled.div<{ $isLive: boolean; $isCurrent?: boolean }>`
   position: absolute;
   left: -24px;

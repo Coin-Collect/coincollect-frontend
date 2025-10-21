@@ -160,8 +160,13 @@ const SpeedCounter = styled(Box)<{ $isAnimating: boolean }>`
   flex-direction: column;
   align-items: flex-start;
   color: #ffffff;
-  text-shadow: 0 10px 22px rgba(10, 11, 14, 0.8);
+  text-shadow: 0 10px 22px rgba(10, 11, 14, 0.9);
   animation: pulse-glow 2.4s ease-in-out infinite;
+  padding: 4px 6px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 20px rgba(3, 4, 6, 0.45);
+  backdrop-filter: blur(2px);
 
   @keyframes pulse-glow {
     0%,
@@ -177,7 +182,7 @@ const SpeedCounter = styled(Box)<{ $isAnimating: boolean }>`
 
   ${({ theme }) => theme.mediaQueries.sm} {
     top: 20px;
-   left: 20px;
+    left: 20px;
   }
 
   ${SpeedFigure} {

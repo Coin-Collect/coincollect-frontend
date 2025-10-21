@@ -11,6 +11,7 @@ import { EnableStatus } from '../types'
 import IfoCardTokens from './IfoCardTokens'
 import IfoCardActions from './IfoCardActions'
 import IfoCardDetails from './IfoCardDetails'
+import IfoAchievement from '../Achievement'
 
 
 const StyledCard = styled(Card)`
@@ -19,6 +20,22 @@ const StyledCard = styled(Card)`
   width: 100%;
   margin: 0 auto;
   height: fit-content;
+`
+
+const SocialLinksContainer = styled(Box)`
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+`
+
+const SocialLinksOverlay = styled(Box)`
+  align-items: center;
+  background: rgba(25, 26, 32, 0.64);
+  border-radius: 999px;
+  display: inline-flex;
+  padding: 8px 12px;
+  backdrop-filter: blur(6px);
+  color: #ffffff;
 `
 
 interface IfoCardProps {
@@ -169,6 +186,19 @@ const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletI
             publicIfoData={publicIfoData}
             walletIfoData={walletIfoData}
           />
+          {poolId === PoolIds.poolUnlimited && (
+            <SocialLinksContainer>
+              <SocialLinksOverlay>
+                <IfoAchievement
+                  ifo={ifo}
+                  publicIfoData={publicIfoData}
+                  variant="compact"
+                  iconColor="#FFFFFF"
+                  hoverColor="primaryBright"
+                />
+              </SocialLinksOverlay>
+            </SocialLinksContainer>
+          )}
         </CardBody>
       </StyledCard>
     </>

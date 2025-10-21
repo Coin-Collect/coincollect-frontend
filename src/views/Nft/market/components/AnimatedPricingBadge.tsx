@@ -121,6 +121,7 @@ const PriceValue = styled(Text)<{ isAnimating: boolean; size: 'normal' | 'large'
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.1;
+  color: #ffffff;
   text-shadow:
     0 21px 42px rgba(2, 2, 8, 0.65),
     0 0 19px rgba(0, 0, 0, 0.45),
@@ -143,6 +144,7 @@ const SubText = styled(Text)<{ size: 'normal' | 'large' }>`
   font-size: ${({ size }) => size === 'large' ? '14px' : '12px'};
   font-weight: 600;
   letter-spacing: 0.06em;
+  color: #ffffff;
   text-transform: uppercase;
   text-shadow:
     0 11px 26px rgba(2, 2, 8, 0.55),
@@ -158,6 +160,7 @@ const CountdownText = styled(Text)`
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #ffffff;
   opacity: 0.9;
   margin-bottom: 2px;
 `
