@@ -60,12 +60,17 @@ const BackgroundVideo = styled.video`
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh + 56px);
   min-width: 100vw;
-  min-height: 100vh;
+  min-height: calc(100vh + 56px);
   object-fit: cover;
   filter: saturate(1.1) brightness(0.85);
   opacity: 0.88;
+  
+  ${({ theme }) => theme.mediaQueries.nav} {
+    height: calc(100vh + 44px);
+    min-height: calc(100vh + 44px);
+  }
 `
 
 const VideoGradientOverlay = styled.div`
@@ -73,10 +78,14 @@ const VideoGradientOverlay = styled.div`
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh + 56px);
   background:
     linear-gradient(180deg, rgba(10, 8, 20, 0.82) 0%, rgba(10, 8, 20, 0.68) 45%, rgba(9, 7, 15, 0.85) 100%),
     linear-gradient(120deg, rgba(30, 22, 60, 0.35), rgba(15, 10, 25, 0.55));
+    
+  ${({ theme }) => theme.mediaQueries.nav} {
+    height: calc(100vh + 44px);
+  }
 `
 
 const BunnyWrapper = styled.div`
