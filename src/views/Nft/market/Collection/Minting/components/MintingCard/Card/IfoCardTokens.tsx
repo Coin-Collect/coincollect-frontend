@@ -411,7 +411,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({ poolId, ifo, publicIfoDat
           <InfoBanner $variant="warning" my="20px">
             <InfoText>
               {t(
-                `You don't have any CoinCollect NFT, NFT holders get %${holderDiscountPercentage} discount and doesn't have to wait for the countdown.`,
+                `You don't own a CoinCollect NFT. Holders get ${holderDiscountPercentage}% off and skip the countdown`,
               )}
             </InfoText>
             <InfoLink href="https://market.coincollect.org/" target="_blank">

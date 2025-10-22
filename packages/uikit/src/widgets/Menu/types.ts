@@ -1,4 +1,4 @@
-import { ElementType, ReactElement } from "react";
+import { ElementType, ReactElement, ReactNode } from "react";
 import { FooterLinkType } from "../../components/Footer/types";
 import { MenuItemsType } from "../../components/MenuItems/types";
 import { SubMenuItemsType } from "../../components/SubMenuItems/types";
@@ -34,6 +34,7 @@ export interface NavProps {
   buyCakeLabel: string;
   langs: Language[];
   setLang: (lang: Language) => void;
+  children?: ReactNode;
 }
 
 //*
