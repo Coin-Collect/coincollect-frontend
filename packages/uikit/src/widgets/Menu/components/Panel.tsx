@@ -31,14 +31,17 @@ const StyledPanel = styled.div<{ isPushed: boolean; isMobile: boolean; showMenu:
   }};
   height: 100vh;
   transition: padding-top 0.2s, width 0.2s;
-  border-right: ${({ isPushed, isMobile }) =>
-    !isMobile && !isPushed ? "2px solid rgba(133, 133, 133, 0.1)" : isPushed ? "2px solid rgba(133, 133, 133, 0.1)" : 0};
+  border-right: ${({ isPushed, isMobile, theme }) =>
+    !isMobile && !isPushed ? `2px solid ${theme.nav.background}` : isPushed ? `2px solid ${theme.nav.background}` : 0};
+  box-shadow: ${({ isPushed, isMobile }) => 
+    isPushed || !isMobile ? '2px 0 8px rgba(0, 0, 0, 0.1)' : 'none'};
   z-index: 11;
   overflow: ${({ isPushed }) => (isPushed ? "initial" : "hidden")};
   transform: translate3d(0, 0, 0);
 
   ${({ theme }) => theme.mediaQueries.nav} {
-    border-right: 2px solid rgba(133, 133, 133, 0.1);
+    border-right: 2px solid ${({ theme }) => theme.nav.background};
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     width: ${({ isPushed }) => `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px`};
   }
 `;
