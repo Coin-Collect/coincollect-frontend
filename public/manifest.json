@@ -1,12 +1,12 @@
 {
   "short_name": "CoinCollect",
   "name": "CoinCollect - Web3 Hub for NFT Collectors",
-  "description": "Earn with NFTs, Effortlessly",
+  "description": "Collect, Stake, Play and Earn with NFTs",
   "homepage_url": "https://app.coincollect.org",
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#e91e62",
-  "background_color": "#e91e62",
+  "theme_color": "#dc4c70",
+  "background_color": "#dc4c70",
   "orientation": "portrait",
   "icons": [
     {
@@ -15,7 +15,7 @@
       "sizes": "16x16"
     },
     {
-      "src": "logo.png",
+      "src": "logo2.png",
       "type": "image/png",
       "sizes": "512x512"
     }
