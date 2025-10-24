@@ -12,6 +12,7 @@ import useWeb3React from 'hooks/useWeb3React'
 import config from './config/config'
 import UserMenu from './UserMenu'
 import GlobalSettings from './GlobalSettings'
+import FooterControls from './FooterControls'
 import { getActiveMenuItem, getActiveSubMenuItem } from './utils'
 import { footerLinks } from './config/footerConfig'
 import drawerLinks from "./config/drawerConfig"
@@ -67,6 +68,7 @@ const Menu = (props) => {
       activeItem={activeMenuItem?.href}
       activeSubItem={activeSubMenuItem?.href}
       buyCakeLabel={t('Buy COLLECT')}
+      panelFooterActions={<FooterControls />}
       {...props}
     />
   )

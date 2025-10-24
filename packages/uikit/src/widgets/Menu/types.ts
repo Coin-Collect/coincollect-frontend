@@ -35,6 +35,7 @@ export interface NavProps {
   langs: Language[];
   setLang: (lang: Language) => void;
   children?: ReactNode;
+  panelFooterActions?: ReactNode;
 }
 
 //*
@@ -52,10 +53,10 @@ export interface PanelProps {
   langs: Language[];
   setLang: (lang: Language) => void;
   links: Array<MenuItemsType>;
+  panelFooterActions?: ReactNode;
 }
 //*
 export interface PushedProps {
   isPushed: boolean;
   pushNav: (isPushed: boolean) => void;
 }
-

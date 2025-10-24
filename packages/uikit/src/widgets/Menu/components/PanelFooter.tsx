@@ -24,6 +24,7 @@ const SettingsEntry = styled.div`
   justify-content: center;
   height: ${MENU_ENTRY_HEIGHT}px;
   padding: 0 8px;
+  gap: 8px;
 `;
 
 const SocialEntry = styled.div`
@@ -43,6 +44,7 @@ const PanelFooter: React.FC<Props> = ({
   currentLang,
   langs,
   setLang,
+  panelFooterActions,
 }) => {
   if (!isPushed) {
     return (
@@ -61,6 +63,7 @@ const PanelFooter: React.FC<Props> = ({
         <SocialLinks />
       </SocialEntry>
       <SettingsEntry>
+        {panelFooterActions}
         <ThemeSwitcher isDark={isDark} toggleTheme={toggleTheme} />
         {/*<LangSelector currentLang={currentLang} langs={langs} setLang={setLang} />*/}
       </SettingsEntry>

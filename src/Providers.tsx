@@ -13,6 +13,7 @@ import { config, metadata, projectId } from 'utils/wagmi'
 import { createWeb3Modal } from '@web3modal/wagmi/react'
 import { polygon } from 'viem/chains'
 import { PropsWithChildren } from 'react'
+import { MusicProvider } from 'contexts/MusicContext'
 
 const ThemeProviderWrapper = (props) => {
   const [isDark] = useThemeManager()
@@ -61,7 +62,9 @@ const Providers = ({ children, store }: ProvidersProps) => {
                     use: [fetchStatusMiddleware],
                   }}
                 >
-                  <ModalProvider>{children}</ModalProvider>
+                  <MusicProvider>
+                    <ModalProvider>{children}</ModalProvider>
+                  </MusicProvider>
                 </SWRConfig>
               </LanguageProvider>
             </ThemeProviderWrapper>
