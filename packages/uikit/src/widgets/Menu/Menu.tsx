@@ -110,6 +110,7 @@ const Menu: React.FC<NavProps> = ({
   langs,
   buyCakeLabel,
   children,
+  panelFooterActions,
 }) => {
   const { isMobile, isDesktop } = useMatchBreakpoints();
   const [showMenu, setShowMenu] = useState(true);
@@ -246,6 +247,7 @@ const Menu: React.FC<NavProps> = ({
             cakePriceUsd={cakePriceUsd}
             pushNav={setIsPushed}
             links={drawerLinks}
+            panelFooterActions={panelFooterActions}
           /> 
           <Inner isPushed={isPushed} showMenu={showMenu} shouldOffset={shouldOffsetContent}>
             {children}
