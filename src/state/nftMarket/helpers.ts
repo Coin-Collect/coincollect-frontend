@@ -157,11 +157,12 @@ export const getLastMintedNft = async (
  * @param {string} collectionAddress - The collection's Ethereum address.
  * @returns {Promise<BigNumber[]>} - The response from the API or null if an error occurs.
  */
- export const mintingActivityApi = async (
+export const mintingActivityApi = async (
   collectionAddress: string
 ): Promise<any[] | null> => {
   const mumbaiCollections = ["0xf2149E6B11638BAEf791e3E66ac7E6469328e840", "0x28BC2B247aeE27d7d592FA51D5BfEFFf479C4A63"];
-  const network = mumbaiCollections.includes(collectionAddress) ? 'mumbai' : 'mainnet';
+  const normalizedAddress = collectionAddress?.toLowerCase?.();
+  const network = normalizedAddress && mumbaiCollections.some((addr) => addr.toLowerCase() === normalizedAddress) ? 'mumbai' : 'mainnet';
   const baseUrl = `https://polygon-${network}.g.alchemy.com/v2/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4`;
   
   const payload = {
@@ -210,6 +211,71 @@ export const getLastMintedNft = async (
 
     if (response.ok) {
       const responseData = await response.json();
+      const transfers = Array.isArray(responseData?.result?.transfers) ? responseData.result.transfers : [];
+
+      if (transfers.length > 0) {
+        const transfersWithNames = await Promise.all(
+          transfers.map(async (transfer) => {
+            if (transfer?.asset) {
+              return transfer;
+            }
+
+            const contractAddress = transfer?.rawContract?.address;
+            const rawTokenId = transfer?.tokenId ?? transfer?.erc721TokenId;
+            if (!contractAddress || rawTokenId === undefined || rawTokenId === null) {
+              return transfer;
+            }
+
+            let tokenIdParam: string | null = null;
+            try {
+              const tokenIdString =
+                typeof rawTokenId === 'string' ? rawTokenId : rawTokenId?.toString?.();
+              if (!tokenIdString) {
+                return transfer;
+              }
+              tokenIdParam = new BigNumber(tokenIdString).toString(10);
+            } catch (tokenIdError) {
+              console.error('Failed to parse tokenId for metadata lookup', tokenIdError);
+              return transfer;
+            }
+
+            if (!tokenIdParam) {
+              return transfer;
+            }
+
+            const metadataUrl = `https://polygon-${network}.g.alchemy.com/nft/v3/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4/getNFTMetadata?contractAddress=${contractAddress}&tokenId=${tokenIdParam}`;
+
+            try {
+              const metadataResponse = await fetch(metadataUrl);
+              if (metadataResponse.ok) {
+                const metadataJson = await metadataResponse.json();
+                const assetName =
+                  metadataJson?.name ??
+                  metadataJson?.title ??
+                  metadataJson?.raw?.metadata?.name ??
+                  metadataJson?.contract?.name ??
+                  null;
+
+                if (assetName) {
+                  return {
+                    ...transfer,
+                    asset: assetName,
+                  };
+                }
+              } else {
+                console.error('Failed to fetch NFT metadata:', metadataResponse.statusText);
+              }
+            } catch (metadataError) {
+              console.error('Error fetching NFT metadata:', metadataError);
+            }
+
+            return transfer;
+          }),
+        );
+
+        responseData.result.transfers = transfersWithNames;
+      }
+
       return responseData;
     } else {
       console.error('Failed to fetch activities:', response.status);

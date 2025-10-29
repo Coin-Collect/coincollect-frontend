@@ -54,8 +54,8 @@ const Logo: React.FC<Props> = ({ isPushed, togglePush, isMobile, pushNav, href, 
     if (isMobile) {
       return;
     }
-    const nextElement = event.relatedTarget as HTMLElement | null;
-    if (nextElement && nextElement.closest('[data-menu-panel="true"]')) {
+    const nextElement = event.relatedTarget;
+    if (nextElement instanceof Element && nextElement.closest('[data-menu-panel="true"]')) {
       return;
     }
     pushNav(false);
