@@ -1,25 +1,98 @@
-import { ConfigMenuItemsType } from './config/config'
+import { NavItem } from './config/navConfig'
 
-export const getActiveMenuItem = ({ pathname, menuConfig }: { pathname: string; menuConfig: ConfigMenuItemsType[] }) =>
-  menuConfig.find((menuItem) => pathname.startsWith(menuItem.href) || getActiveSubMenuItem({ menuItem, pathname }))
+const normalizePath = (path: string) => {
+  const stripped = path.split('#')[0].split('?')[0]
+  const trimmed = stripped.replace(/\/+$/, '')
+  return trimmed === '' ? '/' : trimmed
+}
 
-export const getActiveSubMenuItem = ({ pathname, menuItem }: { pathname: string; menuItem?: ConfigMenuItemsType }) => {
-  const activeSubMenuItems = menuItem?.items?.filter((subMenuItem) => pathname.startsWith(subMenuItem.href)) ?? []
+const isHttpLink = (href?: string) => Boolean(href && href.startsWith('http'))
 
-  // Pathname doesn't include any submenu item href - return undefined
-  if (!activeSubMenuItems || activeSubMenuItems.length === 0) {
+const getMatchLength = (currentPath: string, matchPath: string, matchType: 'exact' | 'prefix') => {
+  const current = normalizePath(currentPath)
+  const target = normalizePath(matchPath)
+
+  if (matchType === 'exact') {
+    return current === target ? target.length : -1
+  }
+
+  if (target === '/') {
+    return current === '/' ? 1 : -1
+  }
+
+  if (current === target || current.startsWith(`${target}/`)) {
+    return target.length
+  }
+
+  return -1
+}
+
+const getItemMatchLength = (currentPath: string, item: NavItem) => {
+  if (item.external || isHttpLink(item.href)) {
+    return -1
+  }
+
+  const matchType = item.activeMatch ?? 'prefix'
+  const matchPaths = [item.href, ...(item.matchPaths ?? [])]
+
+  return matchPaths.reduce((best, matchPath) => Math.max(best, getMatchLength(currentPath, matchPath, matchType)), -1)
+}
+
+const getBestMatch = (currentPath: string, items?: NavItem[]) => {
+  if (!items || items.length === 0) {
     return undefined
   }
 
-  // Pathname includes one sub menu item href - return it
-  if (activeSubMenuItems.length === 1) {
-    return activeSubMenuItems[0]
+  let bestItem: NavItem | undefined
+  let bestScore = -1
+
+  items.forEach((item) => {
+    const score = getItemMatchLength(currentPath, item)
+    if (score > bestScore) {
+      bestScore = score
+      bestItem = item
+    }
+  })
+
+  return bestScore >= 0 ? bestItem : undefined
+}
+
+const getBestMatchScore = (currentPath: string, items?: NavItem[]) => {
+  if (!items || items.length === 0) {
+    return -1
   }
 
-  // Pathname includes multiple sub menu item hrefs - find the most specific match
-  const mostSpecificMatch = activeSubMenuItems.sort(
-    (subMenuItem1, subMenuItem2) => subMenuItem2.href.length - subMenuItem1.href.length,
-  )[0]
-
-  return mostSpecificMatch
+  return items.reduce((best, item) => Math.max(best, getItemMatchLength(currentPath, item)), -1)
 }
+
+export const getActiveMenuItem = ({
+  currentPath,
+  menuConfig,
+}: {
+  currentPath: string
+  menuConfig: NavItem[]
+}) => {
+  let bestItem: NavItem | undefined
+  let bestScore = -1
+
+  menuConfig.forEach((menuItem) => {
+    const selfScore = getItemMatchLength(currentPath, menuItem)
+    const childScore = getBestMatchScore(currentPath, menuItem.children)
+    const score = Math.max(selfScore, childScore)
+
+    if (score > bestScore) {
+      bestScore = score
+      bestItem = menuItem
+    }
+  })
+
+  return bestScore >= 0 ? bestItem : undefined
+}
+
+export const getActiveSubMenuItem = ({
+  currentPath,
+  menuItem,
+}: {
+  currentPath: string
+  menuItem?: NavItem
+}) => getBestMatch(currentPath, menuItem?.children)

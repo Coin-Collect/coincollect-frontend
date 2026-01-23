@@ -1,4 +1,4 @@
-import menuConfig from 'components/Menu/config/config'
+import { getNavConfig, NavItem } from 'components/Menu/config/navConfig'
 import { getActiveMenuItem, getActiveSubMenuItem } from 'components/Menu/utils'
 
 const mockT = (key) => key
@@ -6,43 +6,59 @@ const mockT = (key) => key
 describe('getActiveMenuItem', () => {
   it('should return an active item', () => {
     // Given
-    const pathname = '/swap'
+    const currentPath = '/swap'
+    const menuConfig = getNavConfig(mockT)
 
     // When
-    const result = getActiveMenuItem({ pathname, menuConfig: menuConfig(mockT) })
+    const result = getActiveMenuItem({ currentPath, menuConfig })
 
     // Then
-    expect(result).toEqual(menuConfig(mockT)[0])
+    expect(result).toEqual(menuConfig.find((item) => item.href === '/swap'))
   })
 
-  it('should return an active item if pathname found in subitems', () => {
+  it('should return an active item for nested routes', () => {
     // Given
-    const pathname = '/pools'
+    const currentPath = '/nfts/collections/0xDf7952B35f24aCF7fC0487D01c8d5690a60DBa07'
+    const menuConfig = getNavConfig(mockT)
 
     // When
-    const result = getActiveMenuItem({ pathname, menuConfig: menuConfig(mockT) })
+    const result = getActiveMenuItem({ currentPath, menuConfig })
 
     // Then
-    expect(result).toEqual(menuConfig(mockT)[1])
+    expect(result?.href).toEqual('/nfts/collections')
   })
 
-  it('should not return an item that only includes pathname but not starts with', () => {
+  it('should handle query and hash fragments', () => {
     // Given
-    const pathname = '/info/pools'
+    const currentPath = '/swap?ref=1#top'
+    const menuConfig = getNavConfig(mockT)
 
     // When
-    const result = getActiveMenuItem({ pathname, menuConfig: menuConfig(mockT) })
+    const result = getActiveMenuItem({ currentPath, menuConfig })
 
     // Then
-    expect(result).toEqual(menuConfig(mockT)[4])
+    expect(result?.href).toEqual('/swap')
+  })
+
+  it('should not return an item for partial prefix matches', () => {
+    // Given
+    const currentPath = '/swapper'
+    const menuConfig = getNavConfig(mockT)
+
+    // When
+    const result = getActiveMenuItem({ currentPath, menuConfig })
+
+    // Then
+    expect(result).toEqual(undefined)
   })
 
   it('should return undefined if item is not found', () => {
     // Given
-    const pathname = '/corgi'
+    const currentPath = '/corgi'
+    const menuConfig = getNavConfig(mockT)
 
     // When
-    const result = getActiveMenuItem({ pathname, menuConfig: menuConfig(mockT) })
+    const result = getActiveMenuItem({ currentPath, menuConfig })
 
     // Then
     expect(result).toEqual(undefined)
@@ -50,58 +66,36 @@ describe('getActiveMenuItem', () => {
 })
 
 describe('getActiveSubMenuItem', () => {
+  const menuItem: NavItem = {
+    id: 'parent',
+    label: 'Parent',
+    href: '/parent',
+    icon: 'Info',
+    children: [
+      { id: 'child', label: 'Child', href: '/parent/child' },
+      { id: 'child-details', label: 'Child Details', href: '/parent/child/details' },
+    ],
+  }
+
   it('should return undefined', () => {
     // Given
-    const pathname = '/'
+    const currentPath = '/'
 
     // When
-    const result = getActiveSubMenuItem({ pathname, menuItem: menuConfig(mockT)[1] })
+    const result = getActiveSubMenuItem({ currentPath, menuItem })
 
     // Then
     expect(result).toEqual(undefined)
   })
 
-  it('should return an active sub item', () => {
+  it('should return the most specific sub item', () => {
     // Given
-    const pathname = '/pools'
+    const currentPath = '/parent/child/details/extra'
 
     // When
-    const result = getActiveSubMenuItem({ pathname, menuItem: menuConfig(mockT)[1] })
+    const result = getActiveSubMenuItem({ currentPath, menuItem })
 
     // Then
-    expect(result).toEqual(menuConfig(mockT)[1].items[1])
-  })
-
-  it('should return the item with the longest href when multiple items are found', () => {
-    // Given
-    const pathname = '/nfts/collections/0xDf7952B35f24aCF7fC0487D01c8d5690a60DBa07'
-
-    // When
-    const result = getActiveSubMenuItem({ pathname, menuItem: menuConfig(mockT)[3] })
-
-    // Then
-    expect(result).toEqual(menuConfig(mockT)[3].items[1])
-  })
-
-  it('should return undefined if item is not found', () => {
-    // Given
-    const pathname = '/corgi'
-
-    // When
-    const result = getActiveSubMenuItem({ pathname, menuItem: menuConfig(mockT)[1] })
-
-    // Then
-    expect(result).toEqual(undefined)
-  })
-
-  it('should return the item with the longest href when multiple items are found', () => {
-    // Given
-    const pathname = '/nfts/collections/0xDf7952B35f24aCF7fC0487D01c8d5690a60DBa07'
-
-    // When
-    const result = getActiveSubMenuItem({ pathname, menuItem: menuConfig(mockT)[3] })
-
-    // Then
-    expect(result).toEqual(menuConfig(mockT)[3].items[1])
+    expect(result?.href).toEqual('/parent/child/details')
   })
 })

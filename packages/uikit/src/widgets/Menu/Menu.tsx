@@ -101,7 +101,7 @@ const Menu: React.FC<NavProps> = ({
   currentLang,
   setLang,
   cakePriceUsd,
-  links,
+  homeHref,
   drawerLinks,
   subLinks,
   footerLinks,
@@ -169,8 +169,7 @@ const Menu: React.FC<NavProps> = ({
     };
   }, [totalTopMenuHeight]);
 
-  // Find the home link if provided
-  const homeLink = links.find((link) => link.label === "Home");
+  const resolvedHomeHref = homeHref ?? "/";
 
   const subLinksWithoutMobile = subLinks?.filter((subLink) => !subLink.isMobileOnly);
   const subLinksMobileOnly = subLinks?.filter((subLink) => subLink.isMobileOnly);
@@ -184,7 +183,7 @@ const Menu: React.FC<NavProps> = ({
             <Flex>
             <Logo 
                 isDark={isDark} 
-                href={homeLink?.href ?? "/"} 
+                href={resolvedHomeHref} 
                 isPushed={isPushed}
                 isMobile={isMobile}
                 togglePush={handleTogglePush}
@@ -247,6 +246,8 @@ const Menu: React.FC<NavProps> = ({
             cakePriceUsd={cakePriceUsd}
             pushNav={setIsPushed}
             links={drawerLinks}
+            activeItem={activeItem}
+            activeSubItem={activeSubItem}
             panelFooterActions={panelFooterActions}
           /> 
           <Inner isPushed={isPushed} showMenu={showMenu} shouldOffset={shouldOffsetContent}>

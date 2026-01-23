@@ -20,17 +20,18 @@ export interface NavProps {
   userMenu?: ReactElement;
   banner?: ReactElement;
   globalMenu?: ReactElement;
-  links: Array<MenuItemsType>;
+  links?: Array<MenuItemsType>;
   drawerLinks: Array<MenuItemsType>; //*
-  subLinks: Array<SubMenuItemsType>;
+  subLinks?: Array<SubMenuItemsType>;
   footerLinks: Array<FooterLinkType>;
-  activeItem: string;
-  activeSubItem: string;
+  activeItem?: string;
+  activeSubItem?: string;
   isDark: boolean;
   showPhishingWarningBanner: boolean; //*
   toggleTheme: (isDark: boolean) => void;
   cakePriceUsd?: number;
   currentLang: string;
+  homeHref?: string;
   buyCakeLabel: string;
   langs: Language[];
   setLang: (lang: Language) => void;
@@ -53,6 +54,8 @@ export interface PanelProps {
   langs: Language[];
   setLang: (lang: Language) => void;
   links: Array<MenuItemsType>;
+  activeItem?: string;
+  activeSubItem?: string;
   panelFooterActions?: ReactNode;
 }
 //*
