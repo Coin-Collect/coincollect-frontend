@@ -238,6 +238,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://blitzbrawler.com/',
     },
+    avatar: "/images/collections/blitz/blitzLogo.png",
   },
   {
     pid: 12,
@@ -263,6 +264,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://avatarsai.net/',
     },
+    avatar: "/images/collections/avatar/avlogo.png",
   },
   {
     pid: 13,
@@ -320,6 +322,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://beasthunter.app/',
     },
+    avatar: "/images/collections/beasthunter/bhlogo.webp",
   },
   {
     pid: 15,
@@ -350,8 +353,8 @@ const nftFarms: SerializedNftFarmConfig[] = [
       
     },
     banner: "https://coincollect.org/assets/images/partners/key/keyBanner.gif",
-    avatar: "https://coincollect.org/assets/images/partners/key/key128.jpg",
-    staticNftImage: "https://coincollect.org/assets/images/partners/key/key128.jpg",
+    avatar: "/images/poolBanners/nfts/key.webp",
+    staticNftImage: "/images/poolBanners/nfts/key.webp",
     useApi: true,
   },
   {
@@ -378,6 +381,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://nitroclash.net/',
     },
+    avatar: "/images/collections/nitro/nilogo.jpeg",
   },
   {
     pid: 17,
@@ -403,6 +407,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://placedj.com/',
     },
+    avatar: "/images/collections/placedj/pllogo.png",
   },
   {
     pid: 18,
@@ -460,6 +465,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://zidanogo.com/',
     },
+    avatar: "/images/collections/zidanogo/zilogo.png",
   },
   {
     pid: 20,
@@ -486,6 +492,7 @@ const nftFarms: SerializedNftFarmConfig[] = [
     projectLink: {
       mainLink: 'https://sapienx.app/',
     },
+    avatar: "/images/collections/sapienx/sxlogo.gif",
   },
 
   {

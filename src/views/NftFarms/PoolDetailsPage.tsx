@@ -706,6 +706,9 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr)
         : undefined
 
+      const resolvedAvatar =
+        dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar ?? farm.avatar ?? farm.staticNftImage
+
       let displayAvatar: string | undefined
       if (farm.pid <= 4) {
         if (!collectBadgeAdded) {
@@ -713,13 +716,13 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
           collectBadgeAdded = true
         }
       } else {
-        displayAvatar = farm.avatar ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar
+        displayAvatar = resolvedAvatar
       }
 
       return {
         title: farm.lpSymbol.replace('CoinCollect', ''),
         power: collectionPowers?.[index],
-        avatar: displayAvatar ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar,
+        avatar: displayAvatar ?? resolvedAvatar,
         link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? '/nfts/collections',
       }
     })

@@ -174,6 +174,9 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
       ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr)
       : undefined
 
+    const resolvedAvatar =
+      dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar ?? farm.avatar ?? farm.staticNftImage
+
     let avatar: { avatar: string } | null = null
     if (farm.pid <= 4) {
       if (!collectBadgeAdded) {
@@ -182,14 +185,14 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
       }
     } else {
       avatar = {
-        avatar: farm.avatar ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar,
+        avatar: resolvedAvatar,
       }
     }
 
     largeAvatars.push({
       title: farm.lpSymbol.replace('CoinCollect', ''),
       power: collectionPowers?.[index],
-      avatar: farm.avatar ?? dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar,
+      avatar: resolvedAvatar,
       link: farm?.projectLink?.getNftLink ?? farm?.projectLink?.mainLink ?? '/nfts/collections',
     })
 

@@ -1,12 +1,11 @@
-import { CSSProperties, MutableRefObject, useCallback } from 'react'
-import { LightningIcon, ProfileAvatar, Text } from '@pancakeswap/uikit'
+import { CSSProperties, MutableRefObject, useCallback, useMemo, useState } from 'react'
+import { LightningIcon, Text } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { FixedSizeList } from 'react-window'
 import { useTranslation } from 'contexts/Localization'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import Column from '../Layout/Column'
 import { RowFixed, RowBetween } from '../Layout/Row'
-import { ListLogo } from '../Logo'
 import CircleLoader from '../Loader/CircleLoader'
 import { DeserializedNftFarm } from 'state/types'
 import { mintingConfig } from 'config/constants'
@@ -24,11 +23,12 @@ const StyledBalanceText = styled(Text)`
   text-overflow: ellipsis;
 `
 
-export const CollectionAvatar = styled(ProfileAvatar)`
-  left: 0;
-  position: absolute;
-  top: -32px;
-  border: 4px white solid;
+const CollectionAvatar = styled.img`
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 `
 
 function Balance({ balance }: { balance: number }) {
@@ -74,8 +74,19 @@ function CollectionRow({
     ? mintingConfig.find((mintCollection) => mintCollection.address?.toLowerCase() === farmAddr137)
     : undefined
   const defaultAvatar = collection.pid <= 4 ? '/logo.png' : '/images/nfts/no-profile-md.png'
-  const avatar = nftFarmData?.["avatar"] ?? collectionDataByPid?.avatar ?? collectionDataByAddress?.avatar ?? defaultAvatar
-  
+  const avatarCandidates = useMemo(
+    () =>
+      [
+        collectionDataByPid?.avatar,
+        collectionDataByAddress?.avatar,
+        nftFarmData?.avatar,
+        nftFarmData?.staticNftImage,
+        defaultAvatar,
+      ].filter((value): value is string => Boolean(value)),
+    [collectionDataByAddress?.avatar, collectionDataByPid?.avatar, defaultAvatar, nftFarmData?.avatar, nftFarmData?.staticNftImage],
+  )
+  const [avatarIndex, setAvatarIndex] = useState(0)
+  const avatar = avatarCandidates[avatarIndex] ?? defaultAvatar
 
   // only show add or remove buttons if not on selected list
   return (
@@ -86,7 +97,16 @@ function CollectionRow({
       disabled={balance == 0} // Disable the item if balance is zero
       selected={isSelected}
     >
-      <ListLogo logoURI={avatar} size={"34px"} />
+      <CollectionAvatar
+        src={avatar}
+        alt={`${collection.lpSymbol} logo`}
+        loading="lazy"
+        onError={() => {
+          if (avatarIndex < avatarCandidates.length - 1) {
+            setAvatarIndex((prev) => prev + 1)
+          }
+        }}
+      />
       <Column>
         <Text bold>{collection.lpSymbol.replace("CoinCollect","")} <LightningIcon/>{collectionPower}</Text>
         <Text color="textSubtle" small ellipsis maxWidth="200px">
