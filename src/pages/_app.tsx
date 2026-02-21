@@ -3,6 +3,7 @@ import Script from 'next/script'
 import BigNumber from 'bignumber.js'
 import EasterEgg from 'components/EasterEgg'
 import GlobalCheckClaimStatus from 'components/GlobalCheckClaimStatus'
+import GlobalButtonSoundEffects from 'components/GlobalButtonSoundEffects'
 import SubgraphHealthIndicator from 'components/SubgraphHealthIndicator'
 import { ToastListener } from 'contexts/ToastsContext'
 import useEagerConnect from 'hooks/useEagerConnect'
@@ -140,6 +141,7 @@ function MyApp(props: AppProps) {
       <Providers store={store}>
         <Blocklist>
           <GlobalHooks />
+          <GlobalButtonSoundEffects />
           <Updaters />
           <ResetCSS />
           <GlobalStyle />
