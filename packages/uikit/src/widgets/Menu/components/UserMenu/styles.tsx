@@ -24,7 +24,9 @@ export const UserMenuItem = styled.button<UserMenuItemProps>`
   width: 100%;
 
   &:hover:not(:disabled) {
-    background-color: ${({ theme }) => theme.colors.tertiary};
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+    color: ${({ theme }) => theme.colors.text};
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
 
   &:active:not(:disabled) {
