@@ -1,5 +1,5 @@
+import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import every from 'lodash/every'
 import {
   Stepper,
   Step,
@@ -65,6 +65,13 @@ const SmallStakePoolCard = styled(Box)`
   margin-top: 16px;
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
   background-color: ${({ theme }) => theme.colors.background};
+`
+
+const AnimatedStepCard = styled(Card)<{ $isActive: boolean }>`
+  opacity: ${({ $isActive }) => ($isActive ? 1 : 0.72)};
+  transform: ${({ $isActive }) => ($isActive ? 'scale(1.015)' : 'scale(0.985)')};
+  transition: opacity 280ms ease, transform 280ms ease, box-shadow 280ms ease;
+  box-shadow: ${({ $isActive, theme }) => ($isActive ? theme.shadows.level2 : 'none')};
 `
 
 const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
@@ -195,13 +202,39 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
     isCommitted,
     poolBasic.hasClaimed || poolUnlimited.hasClaimed,
   ]
+  const [activeAnimatedStep, setActiveAnimatedStep] = useState(0)
+  const totalSteps = stepsValidationStatus.length
+
+  useEffect(() => {
+    if (totalSteps === 0) {
+      return undefined
+    }
+    const intervalId = window.setInterval(() => {
+      setActiveAnimatedStep((prevStep) => (prevStep + 1) % totalSteps)
+    }, 2200)
+
+    return () => window.clearInterval(intervalId)
+  }, [totalSteps])
 
   const getStatusProp = (index: number): StepStatus => {
-    const arePreviousValid = index === 0 ? true : every(stepsValidationStatus.slice(0, index), Boolean)
-    if (stepsValidationStatus[index]) {
-      return arePreviousValid ? 'past' : 'future'
+    if (index < 0 || index >= totalSteps) {
+      return 'future'
     }
-    return arePreviousValid ? 'current' : 'future'
+    if (index < activeAnimatedStep) {
+      return 'past'
+    }
+    if (index === activeAnimatedStep) {
+      return 'current'
+    }
+
+    return 'future'
+  }
+
+  const getConnectorStatus = (index: number): StepStatus => {
+    if (index < activeAnimatedStep) {
+      return 'past'
+    }
+    return 'future'
   }
 
   const renderCardBody = (step: number) => {
@@ -255,7 +288,7 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
             </Heading>
             <Text color="textSubtle" small>
               {t(
-                'After the IFO sales finish, you can claim any IFO tokens that you bought, and any unspent CAKE tokens will be returned to your wallet.',
+                'After the IFO ends, claim your purchased tokens and get any unspent CAKE back.',
               )}
             </Text>
             <Button external={true} as="a" href="/nftpools" mt="16px">
@@ -280,9 +313,9 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
             key={index}
             index={index}
             statusFirstPart={getStatusProp(index)}
-            statusSecondPart={getStatusProp(index + 1)}
+            statusSecondPart={getConnectorStatus(index)}
           >
-            <Card>{renderCardBody(index)}</Card>
+            <AnimatedStepCard $isActive={index === activeAnimatedStep}>{renderCardBody(index)}</AnimatedStepCard>
           </Step>
         ))}
       </Stepper>
