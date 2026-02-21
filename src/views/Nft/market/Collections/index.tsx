@@ -270,8 +270,8 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
 
         <CollectionCard
           key="dummy"
-          bgSrc="https://coincollect.org/assets/images/partners/questgalaxy/questgalaxySM.jpg"
-          avatarSrc="https://coincollect.org/assets/images/partners/questgalaxy/qlogo.jpg"
+          bgSrc="/images/coincollect-assets/partners/questgalaxy/questgalaxySM.jpg"
+          avatarSrc="/images/coincollect-assets/partners/questgalaxy/qlogo.jpg"
           collectionName="QuestGalaxy"
           url="https://questgalaxy.com/"
           openInNewTab
@@ -287,8 +287,8 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
 
         <CollectionCard
           key="dummy"
-          bgSrc="https://coincollect.org/assets/images/partners/cyberpunk/bannersm-min.png"
-          avatarSrc="https://coincollect.org/assets/images/partners/cyberpunk/logo300-min.png"
+          bgSrc="/images/coincollect-assets/partners/cyberpunk/bannersm-min.png"
+          avatarSrc="/images/coincollect-assets/partners/cyberpunk/logo300-min.png"
           collectionName="CyberPunk Space"
           url="https://cyberpunk3.com/"
           openInNewTab
@@ -303,8 +303,8 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
 
         <CollectionCard
           key="dummy"
-          bgSrc="https://coincollect.org/assets/images/clone/web3sports.png"
-          avatarSrc="https://coincollect.org/assets/images/clone/web3slogo128.png"
+          bgSrc="/images/coincollect-assets/clone/web3sports.png"
+          avatarSrc="/images/coincollect-assets/clone/web3slogo128.png"
           collectionName="Web3Sports"
           url="https://web3sports.app"
         >

@@ -27,10 +27,10 @@ const ifos: Minting[] = [
     totalSupply: 5000,
     isActive: true,
     status: 'finished',
-    avatar: "https://coincollect.org/assets/images/clone/nft350.png",
+    avatar: "/images/coincollect-assets/clone/nft350.png",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/banner-lg.png",
-      small: "https://coincollect.org/assets/images/clone/banner-lg.png",
+      large: "/images/coincollect-assets/clone/banner-lg.png",
+      small: "/images/coincollect-assets/clone/banner-lg.png",
     },
     sampleNftImage: { 'tokenId': 5, 'image': 'https://i.seadn.io/gae/ZoAedbU7HPpWA2PZVoDXDP9jnD7f89tQi_qswW9_4vdOh9boeHpawxDARmvSVWeZtVc9uMy1Y9vNkYO57MmWTp9PsLHzLr98Znm-3Q?auto=format&dpr=1&w=1000', 'link': collectionLinks['starter'] },
     showCase: [
@@ -101,10 +101,10 @@ const ifos: Minting[] = [
     lastPrice: 80,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/clone/banners/profileBronze.png",
+    avatar: "/images/coincollect-assets/clone/banners/profileBronze.png",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/banners/bannerBronzeLg.png",
-      small: "https://coincollect.org/assets/images/clone/banners/bannerBronzeSm.png",
+      large: "/images/coincollect-assets/clone/banners/bannerBronzeLg.png",
+      small: "/images/coincollect-assets/clone/banners/bannerBronzeSm.png",
     },
     sampleNftImage: { 'tokenId': 25, 'image': 'https://i.seadn.io/gae/68uO7RwfcZupc_CfKlH9hsK3tfZWBDetY_bqcnrHNN5LsxH7dsQLEkWyMWDmdp7lQI2oBR7e9IVPzhzXCyWfDQ3wwCIGSq-juA3L?auto=format&dpr=1&w=1000', 'link': collectionLinks['bronze'] },
     showCase: [
@@ -175,10 +175,10 @@ const ifos: Minting[] = [
     lastPrice: 155,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/clone/banners/profileSilver.png",
+    avatar: "/images/coincollect-assets/clone/banners/profileSilver.png",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/banners/bannerSilverLg.png",
-      small: "https://coincollect.org/assets/images/clone/banners/bannerSilverSm.png",
+      large: "/images/coincollect-assets/clone/banners/bannerSilverLg.png",
+      small: "/images/coincollect-assets/clone/banners/bannerSilverSm.png",
     },
     sampleNftImage: { 'tokenId': 54, 'image': 'https://i.seadn.io/gae/SE_Wv4fq1J1gUPr8VKFSAjYAB38VOD1ickB9-M-AkycRfQ5PHEe8NvgxLdQBA0dYVrOR5oO6sag-aZrziSad8fDkA0p8jRfy-MPmTIs?auto=format&dpr=1&w=1000', 'link': collectionLinks['silver'] },
     showCase: [
@@ -249,10 +249,10 @@ const ifos: Minting[] = [
     lastPrice: 305,
     isActive: true,
     status: 'livepublic', /// Options: livepublic, liveprivate
-    avatar: "https://coincollect.org/assets/images/clone/banners/profileGold.png",
+    avatar: "/images/coincollect-assets/clone/banners/profileGold.png",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/banners/bannerGoldLg.png",
-      small: "https://coincollect.org/assets/images/clone/banners/bannerGoldSm.png",
+      large: "/images/coincollect-assets/clone/banners/bannerGoldLg.png",
+      small: "/images/coincollect-assets/clone/banners/bannerGoldSm.png",
     },
     sampleNftImage: { 'tokenId': 67, 'image': 'https://i.seadn.io/gae/bHePLGqsdW8CP4PmRf0Q-Eoc03sT9ebaqgNLcjtW4lkufeowLQ1Z7-dqnBG-Nhzwefr-xY2We-ZIszraPcGJt0jZqoZnqex_lXj6hg?auto=format&dpr=1&w=1000', 'link': collectionLinks['gold'] },
     showCase: [
@@ -325,8 +325,8 @@ const ifos: Minting[] = [
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "/images/collections/lotshare/lslogo.webp",
     banner: {
-      large: "https://coincollect.org/assets/images/clone/banners/bannerLotLg.png",
-      small: "https://coincollect.org/assets/images/clone/banners/bannerLotSm.png",
+      large: "/images/coincollect-assets/clone/banners/bannerLotLg.png",
+      small: "/images/coincollect-assets/clone/banners/bannerLotSm.png",
     },
     showCase: [
       { 'tokenId': 57, 'image': '/images/collections/lotshare/ls0.webp', 'link': 'https://opensea.io/collection/lotshare' },
@@ -398,8 +398,8 @@ const ifos: Minting[] = [
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "/images/collections/blitz/blitzLogo.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/blitz/blitzBannerLg.png",
-      small: "https://coincollect.org/assets/images/partners/blitz/blitzBannerSm.png",
+      large: "/images/coincollect-assets/partners/blitz/blitzBannerLg.png",
+      small: "/images/coincollect-assets/partners/blitz/blitzBannerSm.png",
     },
     showCase: [
       { 'tokenId': 8, 'image': '/images/collections/blitz/bl0.webp', 'link': 'https://opensea.io/collection/blitzbrawler' },
@@ -471,8 +471,8 @@ const ifos: Minting[] = [
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "/images/collections/avatar/avlogo.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/avatar/avatarBannerLg.png",
-      small: "https://coincollect.org/assets/images/partners/avatar/avatarBannerSg.png",
+      large: "/images/coincollect-assets/partners/avatar/avatarBannerLg.png",
+      small: "/images/coincollect-assets/partners/avatar/avatarBannerSg.png",
     },
     sampleNftImage: { 'tokenId': 124, 'image': '/images/collections/avatar/av0.webp', 'link': 'https://opensea.io/collection/avatarsai-heroes' },
     showCase: [
@@ -546,8 +546,8 @@ const ifos: Minting[] = [
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "/images/collections/beasthunter/bhlogo.webp",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerLg.png",
-      small: "https://coincollect.org/assets/images/partners/BeastHunter/hunterBannerSm.png",
+      large: "/images/coincollect-assets/partners/BeastHunter/hunterBannerLg.png",
+      small: "/images/coincollect-assets/partners/BeastHunter/hunterBannerSm.png",
     },
     sampleNftImage: { 'tokenId': 11, 'image': '/images/collections/beasthunter/bh0.webp', 'link': 'https://opensea.io/collection/beasthunterapp' },
     showCase: [
@@ -617,8 +617,8 @@ const ifos: Minting[] = [
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "/images/collections/nitro/nilogo.jpeg",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerLg.jpg",
-      small: "https://coincollect.org/assets/images/partners/NitroClash/nitroBannerSm.jpg",
+      large: "/images/coincollect-assets/partners/NitroClash/nitroBannerLg.jpg",
+      small: "/images/coincollect-assets/partners/NitroClash/nitroBannerSm.jpg",
     },
     sampleNftImage: { 'tokenId': 43, 'image': '/images/collections/nitro/ni0.webp', 'link': 'https://opensea.io/collection/nitroclash' },
     showCase: [
@@ -693,8 +693,8 @@ const ifos: Minting[] = [
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "/images/collections/placedj/pllogo.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/placedj/placedjBannerMin.png",
-      small: "https://coincollect.org/assets/images/partners/placedj/banner2.gif",
+      large: "/images/coincollect-assets/partners/placedj/placedjBannerMin.png",
+      small: "/images/coincollect-assets/partners/placedj/banner2.gif",
     },
     sampleNftImage: { 'tokenId': 43, 'image': '/images/collections/placedj/pl0.webp', 'link': 'https://opensea.io/collection/placedj' },
     showCase: [
@@ -766,8 +766,8 @@ const ifos: Minting[] = [
     status: 'livepublic', /// Options: livepublic, liveprivate
     avatar: "/images/collections/zidanogo/zilogo.png",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerLg-min.png",
-      small: "https://coincollect.org/assets/images/partners/zidanogo/zidanogoBannerSm-min.png",
+      large: "/images/coincollect-assets/partners/zidanogo/zidanogoBannerLg-min.png",
+      small: "/images/coincollect-assets/partners/zidanogo/zidanogoBannerSm-min.png",
     },
     sampleNftImage: { 'tokenId': 143, 'image': '/images/collections/zidanogo/zi0.webp', 'link': 'https://opensea.io/collection/zidanogo' },
     showCase: [
@@ -840,8 +840,8 @@ const ifos: Minting[] = [
     status: 'liveprivate', /// Options: livepublic, liveprivate
     avatar: "/images/collections/sapienx/sxlogo.gif",
     banner: {
-      large: "https://coincollect.org/assets/images/partners/cyberpunk/bannerLg-min.png",
-      small: "https://coincollect.org/assets/images/partners/sapienx/sapienBannerSm-min.png",
+      large: "/images/coincollect-assets/partners/cyberpunk/bannerLg-min.png",
+      small: "/images/coincollect-assets/partners/sapienx/sapienBannerSm-min.png",
     },
     sampleNftImage: { 'tokenId': 143, 'image': '/images/collections/sapienx/1.webp', 'link': 'https://opensea.io/collection/sapienxapp' },
     showCase: [

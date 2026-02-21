@@ -5,7 +5,7 @@ export const DEFAULT_META: PageMeta = {
   title: 'CoinCollect - Mint, Stake, Play and Earn Crypto',
   description:
     'Your NFTs now earn while you play. CoinCollect turns gaming and DeFi into one ecosystem — stake, play, and earn crypto effortlessly.',
-  image: 'https://coincollect.org/assets/images/clone/ogbanner.webp',
+  image: '/images/coincollect-assets/clone/ogbanner.webp',
 }
 
 export const getCustomMeta = (path: string, t: ContextApi['t']): PageMeta | null => {
