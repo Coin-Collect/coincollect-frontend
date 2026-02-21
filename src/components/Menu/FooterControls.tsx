@@ -18,7 +18,7 @@ const FooterControls = () => {
         onClick={toggleMusic}
         id="toggle-background-music-button"
       >
-        <MusicIcon width={24} height={24} color="textSubtle" />
+        <MusicIcon width={24} height={24} color="#F4EEFF" />
       </IconButton>
       <IconButton
         aria-label="Open settings"
@@ -28,11 +28,10 @@ const FooterControls = () => {
         onClick={onPresentSettingsModal}
         id="open-settings-dialog-button-sidebar"
       >
-        <CogIcon width={24} height={24} color="textSubtle" />
+        <CogIcon width={24} height={24} color="#F4EEFF" />
       </IconButton>
     </Flex>
   )
 }
 
 export default FooterControls
-

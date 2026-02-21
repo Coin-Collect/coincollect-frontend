@@ -27,9 +27,11 @@ const StyledNav = styled.nav`
   align-items: center;
   width: 100%;
   height: ${MENU_HEIGHT}px;
-  background-color: ${({ theme }) => theme.nav.background};
-  border-bottom: 1px solid ${({ theme }) => theme.nav.background};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.78);
+  border-bottom: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
   transform: translate3d(0, 0, 0);
 
   padding-left: 16px;
@@ -194,7 +196,7 @@ const Menu: React.FC<NavProps> = ({
               
               {!isMobile && (
                 <Box mr="12px">
-                  <CakePrice cakePriceUsd={cakePriceUsd} />
+                  <CakePrice cakePriceUsd={cakePriceUsd} color="#F4EEFF" />
                 </Box>
               )}
               {/*
@@ -215,19 +217,19 @@ const Menu: React.FC<NavProps> = ({
         </FixedContainer>
         {subLinks && (
           <Flex justifyContent="space-around">
-            <SubMenuItems items={subLinksWithoutMobile} mt={`${totalTopMenuHeight + 1}px`} activeItem={activeSubItem} />
+            <SubMenuItems items={subLinksWithoutMobile} mt={`${totalTopMenuHeight}px`} activeItem={activeSubItem} />
 
             {subLinksMobileOnly?.length > 0 && (
               <SubMenuItems
                 items={subLinksMobileOnly}
-                mt={`${totalTopMenuHeight + 1}px`}
+                mt={`${totalTopMenuHeight}px`}
                 activeItem={activeSubItem}
                 isMobileOnly
               />
             )}
           </Flex>
         )}
-        <BodyWrapper mt={!subLinks ? `${totalTopMenuHeight + 1}px` : "0"}>
+        <BodyWrapper mt={!subLinks ? `${totalTopMenuHeight}px` : "0"}>
           <Overlay 
             isPushed={isPushed} 
             isMobile={isMobile} 

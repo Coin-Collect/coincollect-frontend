@@ -22,7 +22,7 @@ const StyledPanel = styled.div<{ isPushed: boolean; isMobile: boolean; showMenu:
   flex-direction: column;
   justify-content: space-between;
   flex-shrink: 0;
-  background-color: ${({ theme }) => theme.nav.background};
+  background-color: rgba(0, 0, 0, 0.78);
   width: ${({ isPushed, isMobile }) => {
     if (isMobile) {
       return isPushed ? `${SIDEBAR_WIDTH_FULL}px` : 0;
@@ -31,17 +31,18 @@ const StyledPanel = styled.div<{ isPushed: boolean; isMobile: boolean; showMenu:
   }};
   height: 100vh;
   transition: padding-top 0.2s, width 0.2s;
-  border-right: ${({ isPushed, isMobile, theme }) =>
-    !isMobile && !isPushed ? `2px solid ${theme.nav.background}` : isPushed ? `2px solid ${theme.nav.background}` : 0};
+  border-right: none;
   box-shadow: ${({ isPushed, isMobile }) => 
-    isPushed || !isMobile ? '2px 0 8px rgba(0, 0, 0, 0.1)' : 'none'};
+    isPushed || !isMobile ? '12px 0 32px rgba(0, 0, 0, 0.28)' : 'none'};
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
   z-index: 11;
   overflow: ${({ isPushed }) => (isPushed ? "initial" : "hidden")};
   transform: translate3d(0, 0, 0);
 
   ${({ theme }) => theme.mediaQueries.nav} {
-    border-right: 2px solid ${({ theme }) => theme.nav.background};
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    border-right: none;
+    box-shadow: 12px 0 32px rgba(0, 0, 0, 0.28);
     width: ${({ isPushed }) => `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px`};
   }
 `;
