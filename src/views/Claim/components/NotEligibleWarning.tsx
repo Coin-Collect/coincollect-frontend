@@ -1,32 +1,47 @@
 import { Box, Message, MessageText } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { useTranslation } from 'contexts/Localization'
+import styled, { keyframes } from 'styled-components'
+
+const pulse = keyframes`
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+`
+
+const BuyNowLink = styled(NextLinkFromReactRouter)`
+  color: ${({ theme }) => theme.colors.failure};
+  text-decoration: underline;
+  display: inline-block;
+  animation: ${pulse} 1.2s ease-in-out infinite;
+  font-weight: 700;
+`
 
 export function NotEligibleWarning({
   requiredToken,
-  nftCount,
-  remainingClaims
 }) {
   const { t } = useTranslation()
 
   return (
-    <Message variant={nftCount > 0 ? "success" : "warning"} mb="15px">
+    <Message variant="warning" mb="0">
       <Box>
         <MessageText>
-          {nftCount === 0
-            ? t(`Only owners of ${ requiredToken }s can claim these rewards.You can immediately purchase an NFT to become eligible for claiming.`)
-        : remainingClaims > 0
-          ? t(`You have already claimed all your NFTs, but you still have ${remainingClaims} more claim(s) left. You can use your remaining claim(s) by purchasing new NFTs.`)
-          : t(`You have reached the claim limit.`)
-        }
+          {t(`Only ${requiredToken} owners can claim rewards.`)}
         </MessageText>
-        {remainingClaims > 0 && (
-          <MessageText bold>
-            <NextLinkFromReactRouter style={{ textDecoration: 'underline' }} to="/nfts/collections">
-              {t('Buy Now')} »
-            </NextLinkFromReactRouter>
-          </MessageText>
-        )}
+        <MessageText bold>
+          <BuyNowLink to="/nfts/collections">
+            {t('Buy Now')} »
+          </BuyNowLink>
+        </MessageText>
       </Box>
     </Message>
   )

@@ -53,13 +53,47 @@ const Pools: React.FC = () => {
   const { observerRef, isIntersecting } = useIntersectionObserver()
 
 
-  const claimData  = useClaimInfo()
+  const claimData = useClaimInfo()
+
+  const sortedClaims = useMemo(() => {
+    const claimsWithIndex = claimConfig.map((claim, index) => ({ claim, index })).reverse()
+
+    if (!account || !claimData.data) {
+      return claimsWithIndex
+    }
+
+    const isClaimable = (claim, claimIndex) => {
+      const claimInfo = claimData.data[claimIndex]
+
+      if (!claimInfo || claim.isFinished) {
+        return false
+      }
+
+      if ((claimInfo.remainingClaims ?? 0) <= 0) {
+        return false
+      }
+
+      const userWeight = claimInfo.userWeight ?? 0
+      if (userWeight <= 0) {
+        return false
+      }
+
+      const requiredReward = new BigNumber(claim.baseAmount).times(userWeight).times(10 ** 18)
+      return new BigNumber(claimInfo.rewardBalance ?? 0).gte(requiredReward)
+    }
+
+    const [claimableClaims, nonClaimableClaims] = partition(claimsWithIndex, ({ claim, index }) =>
+      isClaimable(claim, index),
+    )
+
+    return [...claimableClaims, ...nonClaimableClaims]
+  }, [account, claimData.data])
 
   const cardLayout = (
     <CardLayout>
-      {claimConfig.map((claim, index) =>
+      {sortedClaims.map(({ claim, index }) =>
         <ClaimCard key={index} claimId={index} claim={claim} claimData={claimData} account={account} />
-      ).reverse()}
+      )}
     </CardLayout>
   )
 

@@ -1,4 +1,4 @@
-import { CardBody, Flex, Text, CardRibbon, Image, Button, Skeleton } from '@pancakeswap/uikit'
+import { CardBody, Flex, CardRibbon, Image, Button, Skeleton } from '@pancakeswap/uikit'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { useTranslation } from 'contexts/Localization'
 import { StyledCard } from './StyledCard'
@@ -26,8 +26,6 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
       </ClaimCardHeader>
 
       <CardBody p={15} mt="-24px">
-      {claimData.data !== undefined && (claimData.data[claimId].userWeight || 0) === 0 && 
-                                      (<NotEligibleWarning requiredToken={claim.requiredToken} nftCount={claimData.data[claimId].nftsToClaim[1].length || 0} remainingClaims={claimData.data[claimId].remainingClaims || 0}  />)}
       <ClaimCardHeaderTitle
           title={claim.name}
           subTitle={claim.description}
@@ -43,7 +41,10 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
               ) : claimData.data[claimId].remainingClaims <= 0 ? (
                 <Button disabled>{t('Claim Limit Reached')}</Button>
               ) : (claimData.data[claimId].userWeight || 0) === 0 ? (
-                <Button disabled>{t(`${claim.requiredToken} required!`)}</Button>
+                <>
+                  <NotEligibleWarning requiredToken={claim.requiredToken} />
+                  <Button disabled mt="8px">{t(`${claim.requiredToken} required!`)}</Button>
+                </>
               ) : (claimData.data[claimId].rewardBalance ?? 0) < (claim.baseAmount * (claimData.data[claimId].userWeight || 1)) * (10**18) ? (
                 <Button disabled>{t('No Rewards Available')}</Button>
               ) : (
