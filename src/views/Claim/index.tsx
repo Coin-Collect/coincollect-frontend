@@ -33,6 +33,16 @@ import { ClaimPageBanner } from 'views/Home/components/Banners/ClaimPageBanner'
 
 const CardLayout = styled(FlexLayout)`
   justify-content: center;
+
+  ${({ theme }) => theme.mediaQueries.lg} {
+    & > * {
+      width: calc(25% - 12px);
+      min-width: 0;
+      max-width: calc(25% - 12px);
+      margin-left: 6px;
+      margin-right: 6px;
+    }
+  }
 `
 
 const NUMBER_OF_POOLS_VISIBLE = 12
