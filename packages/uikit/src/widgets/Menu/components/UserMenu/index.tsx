@@ -115,6 +115,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [targetRef, setTargetRef] = useState<HTMLDivElement | null>(null);
   const [tooltipRef, setTooltipRef] = useState<HTMLDivElement | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const accountEllipsis = account ? `${account.substring(0, 2)}...${account.substring(account.length - 4)}` : null;
   const { styles, attributes } = usePopper(targetRef, tooltipRef, {
     strategy: "fixed",
@@ -123,6 +124,19 @@ const UserMenu: React.FC<UserMenuProps> = ({
   });
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const touch = "ontouchstart" in window || window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    setIsTouchDevice(touch);
+  }, []);
+
+  useEffect(() => {
+    if (isTouchDevice) {
+      return undefined;
+    }
+
     const showDropdownMenu = () => {
       setIsOpen(true);
     };
@@ -131,7 +145,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
       const target = evt.target as Node;
       if (target && !tooltipRef?.contains(target)) {
         setIsOpen(false);
-        evt.stopPropagation();
       }
     };
 
@@ -142,12 +155,35 @@ const UserMenu: React.FC<UserMenuProps> = ({
       targetRef?.removeEventListener("mouseenter", showDropdownMenu);
       targetRef?.removeEventListener("mouseleave", hideDropdownMenu);
     };
-  }, [targetRef, tooltipRef, setIsOpen]);
+  }, [isTouchDevice, targetRef, tooltipRef]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const onDocumentPress = (evt: MouseEvent | TouchEvent) => {
+      const target = evt.target as Node;
+      if (targetRef?.contains(target) || tooltipRef?.contains(target)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocumentPress);
+    document.addEventListener("touchstart", onDocumentPress);
+
+    return () => {
+      document.removeEventListener("mousedown", onDocumentPress);
+      document.removeEventListener("touchstart", onDocumentPress);
+    };
+  }, [isOpen, targetRef, tooltipRef]);
 
   return (
     <Flex alignItems="center" height="100%" ref={setTargetRef} {...props}>
       <StyledUserMenu
-        onTouchStart={() => {
+        onClick={(evt) => {
+          evt.stopPropagation();
           setIsOpen((s) => !s);
         }}
       >

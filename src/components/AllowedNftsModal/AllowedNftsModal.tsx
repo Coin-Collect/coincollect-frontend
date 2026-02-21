@@ -22,8 +22,12 @@ import useTheme from 'hooks/useTheme';
 
 const StyledModalContainer = styled(ModalContainer)`
   max-width: 420px;
-  width: 100%;
+  width: calc(100vw - 24px);
+  margin: 0 12px;
+  box-sizing: border-box;
   ${({ theme }) => theme.mediaQueries.md} {
+    width: 100%;
+    margin: 0;
     min-width: 500px;
   }
 `;
@@ -115,7 +119,7 @@ export default function AllowedNftsModal({
   const { theme } = useTheme()
 
   return (
-    <StyledModalContainer minWidth="320px">
+    <StyledModalContainer>
       <ModalHeader background={theme.colors.gradients.bubblegum}>
         <ModalTitle>
           <Heading>{t('Allowed NFTs')}</Heading>
