@@ -3,7 +3,7 @@ import { ReactNode, useState } from 'react'
 import styled from 'styled-components'
 
 const Description = styled(Text)<{ $expanded?: boolean }>`
-  font-size: 15px;
+  font-size: 12px;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: ${({ $expanded }) => ($expanded ? 'unset' : 2)};
@@ -22,6 +22,7 @@ const Description = styled(Text)<{ $expanded?: boolean }>`
 `
 
 const Title = styled(Heading)`
+  font-size: 20px;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -34,7 +35,7 @@ const ClaimCardHeader: React.FC<{
   isStaking?: boolean
 }> = ({ isFinished: _isFinished = false, isStaking: _isStaking = false, children }) => {
   return (
-      <Flex alignItems="center" justifyContent="space-center" p={20}>
+      <Flex alignItems="center" justifyContent="space-center" p={15}>
         {children}
       </Flex>
   )
@@ -49,7 +50,7 @@ export const ClaimCardHeaderTitle: React.FC<{ isFinished?: boolean; title: React
 
   return (
     <Flex flexDirection="column">
-      <Title color={isFinished ? 'textDisabled' : 'body'} scale="lg">
+      <Title color={isFinished ? 'textDisabled' : 'body'}>
         {title}
       </Title>
       <Description

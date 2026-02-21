@@ -25,7 +25,7 @@ const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account
       <RoundedImage width={400} height={400} src={claim.imageLink} />
       </ClaimCardHeader>
 
-      <CardBody p={24} pt={4} mt="-24px">
+      <CardBody p={15} mt="-24px">
       {claimData.data !== undefined && (claimData.data[claimId].userWeight || 0) === 0 && 
                                       (<NotEligibleWarning requiredToken={claim.requiredToken} nftCount={claimData.data[claimId].nftsToClaim[1].length || 0} remainingClaims={claimData.data[claimId].remainingClaims || 0}  />)}
       <ClaimCardHeaderTitle

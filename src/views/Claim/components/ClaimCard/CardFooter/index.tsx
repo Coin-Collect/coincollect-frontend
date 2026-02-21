@@ -36,7 +36,7 @@ const Footer: React.FC<FooterProps> = ({ claim, account, defaultExpanded }) => {
   })
 
   return (
-    <CardFooter>
+    <CardFooter p={15}>
       <ExpandableButtonWrapper>
         <Flex alignItems="center">
           {true ? <CompoundingPoolTag2 /> : <ManualPoolTag2 />}

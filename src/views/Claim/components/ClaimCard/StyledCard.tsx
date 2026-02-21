@@ -15,6 +15,19 @@ export const StyledCard = styled(Card)<{ isFinished?: boolean }>`
   ${({ theme }) => theme.mediaQueries.sm} {
     margin: 0 12px 46px;
   }
+
+  img {
+    transition: transform 0.3s ease, filter 0.3s ease;
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover img {
+      transform: scale(1.03);
+      filter: saturate(1.03);
+    }
+  }
 `
 
 export default StyledCard
