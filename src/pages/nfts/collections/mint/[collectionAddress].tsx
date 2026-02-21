@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from 'next'
+import { useLayoutEffect } from 'react'
 // eslint-disable-next-line camelcase
 import { SWRConfig, unstable_serialize } from 'swr'
 import CollectionPageRouter from 'views/Nft/market/Collection/CollectionPageRouter'
@@ -13,11 +14,14 @@ import { DEFAULT_META } from 'config/constants/meta'
 
 const CollectionPage = ({ fallback = {} }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const router = useRouter()
-  
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
+
   if (router.isFallback) {
     return <PageLoader />
   }
-  
 
   return (
     <SWRConfig

@@ -45,20 +45,32 @@ const Collectible = () => {
   const { t } = useTranslation()
   const { data: collections, status } = useGetShuffledCollections()
   const { isMobile } = useMatchBreakpoints()
+  const [isNavigating, setIsNavigating] = useState(false)
   const [sortField, setSortField] = useState(null)
   const [page, setPage] = useState(1)
   const [maxPage, setMaxPage] = useState(1)
 
+  const handleCollectionClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    setIsNavigating(true)
+  }
+
   useEffect(() => {
     if (isMobile) {
-      setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         window.scroll({
           top: 50,
           left: 0,
           behavior: 'smooth',
         })
       }, 50)
+
+      return () => {
+        window.clearTimeout(timeoutId)
+      }
     }
+
+    return undefined
   }, [isMobile, page])
 
   useEffect(() => {
@@ -125,7 +137,7 @@ const Collectible = () => {
 
       </PageHeader>
       <Page>
-        {status !== FetchStatus.Fetched ? (
+        {status !== FetchStatus.Fetched || isNavigating ? (
           <PageLoader />
         ) : (
           <>
@@ -171,6 +183,7 @@ const Collectible = () => {
               title={t('🔥New & Hot')}
               testId="active-private-mintings"
               collections={activePrivateMintings}
+              onCollectionClick={handleCollectionClick}
             />}
 
             {activePublicMintings.length > 0 && <Collections
@@ -178,6 +191,7 @@ const Collectible = () => {
               title={t('Live Public Mintings')}
               testId="active-public-mintings"
               collections={activePublicMintings}
+              onCollectionClick={handleCollectionClick}
             />}
 
 
@@ -193,6 +207,7 @@ const Collectible = () => {
               title={t('Finished Mintings')}
               testId="finished-mintings"
               collections={finishedMintings}
+              onCollectionClick={handleCollectionClick}
             />}
 
 
@@ -226,10 +241,11 @@ export default Collectible
 
 // This function cloned from Market/Home/Collections.tsx
 //TODO: Using temporarily
-const Collections: React.FC<{ title: string; testId: string; collections: Collection[] }> = ({
+const Collections: React.FC<{ title: string; testId: string; collections: Collection[]; onCollectionClick?: () => void }> = ({
   title,
   testId,
   collections,
+  onCollectionClick,
 }) => {
   const { t } = useTranslation()
 
@@ -249,6 +265,7 @@ const Collections: React.FC<{ title: string; testId: string; collections: Collec
               avatarSrc={collection.avatar}
               collectionName={collection.name}
               url={`${nftsBaseUrl}/collections/mint/${collection.address}`}
+              onClick={onCollectionClick}
             >
               <Flex alignItems="center">
                 <Text fontSize="12px" color="textSubtle">

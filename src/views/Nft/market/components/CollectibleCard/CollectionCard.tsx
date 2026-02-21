@@ -11,6 +11,7 @@ interface HotCollectionCardProps {
   url?: string
   disabled?: boolean
   openInNewTab?: boolean
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>
 }
 
 export const CollectionAvatar = styled(ProfileAvatar)`
@@ -54,6 +55,7 @@ const CollectionCard: React.FC<HotCollectionCardProps> = ({
   url,
   disabled,
   openInNewTab,
+  onClick,
   children,
 }) => {
   const renderBody = () => (
@@ -83,6 +85,7 @@ const CollectionCard: React.FC<HotCollectionCardProps> = ({
           to={url}
           target={openInNewTab ? '_blank' : undefined}
           rel={openInNewTab ? 'noopener noreferrer' : undefined}
+          onClick={onClick}
         >
           {renderBody()}
         </NextLinkFromReactRouter>
