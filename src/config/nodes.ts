@@ -1,10 +1,11 @@
 import { ChainId } from "@coincollect/sdk";
-import { polygon } from "wagmi/chains";
 
 export const PUBLIC_NODES = {
   [ChainId.POLYGON]: [
-    ...polygon.rpcUrls.default.http,
-    'https://polygon-bor-rpc.publicnode.com',
-    'https://polygon.llamarpc.com',
+    "https://polygon.drpc.org",
+    "https://polygon-bor.publicnode.com",
+    "https://1rpc.io/matic",
+    "https://pol.leorpc.com/?api_key=FREE",
+    "https://polygon.llamarpc.com",
   ],
-}
+};
