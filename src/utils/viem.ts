@@ -60,7 +60,7 @@ export function createViemPublicClientGetter({
   }
 }
 
-const PUBLIC_MAINNET = 'https://polygon-rpc.com'
+const PUBLIC_MAINNET = 'https://polygon.drpc.org'
 
 export const CLIENT_CONFIG = {
   batch: {
