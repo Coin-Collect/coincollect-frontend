@@ -7,7 +7,6 @@ import {
   InjectedModalProps,
   Heading,
   Text,
-  ProfileAvatar,
   Flex,
   Message,
   MessageText,
@@ -17,6 +16,7 @@ import {
 import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 import useTheme from 'hooks/useTheme';
+import { useMemo } from 'react'
 
 
 
@@ -41,17 +41,16 @@ const StyledModalBody = styled(ModalBody)`
     display: none;
   }
 `
-export const CollectionAvatar = styled(ProfileAvatar)`
-  border: 1px white solid;
-  width: 120px;
-  height: 120px;
+export const CollectionAvatar = styled.img`
+  display: block;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.8);
 `
-
-const CollectionWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
 
 export const Title = styled.div`
   font-size: 16px;
@@ -61,19 +60,68 @@ export const Title = styled.div`
   color: ${({ theme }) => theme.colors.textSubtle};
 `
 
-const Wrapper = styled(Flex)`
-  margin-top: 24px;
-  margin-bottom: 24px;
-  justify-content: center;
+const SummaryBar = styled(Flex)`
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => `${theme.colors.cardBorder}`};
+`
+
+const CollectionGrid = styled.div`
+  display: flex;
   flex-wrap: wrap;
-  row-gap: 26px;
-  column-gap: 20px;
-  background: ${props => props.theme.colors.background};
-  padding: 30px 5px 15px 5px;
-  border-radius: 16px;
-  max-height: 500px;
-  overflow-y: auto;
-`;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+  max-height: none;
+  overflow: visible;
+  padding: 12px 10px 6px 10px;
+`
+
+const CollectionCardLink = styled(Link)`
+  display: block;
+  flex: 0 0 calc(50% - 4px);
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+`
+
+const CollectionCard = styled(Flex)`
+  position: relative;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 64px;
+  border-radius: 10px;
+  padding: 6px 8px;
+  background: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => `${theme.colors.cardBorder}`};
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  }
+`
+
+const CollectionTitle = styled(Text)`
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+`
 
 const MessageTextLink = styled(Link)`
   display: inline;
@@ -83,23 +131,22 @@ const MessageTextLink = styled(Link)`
   white-space: nowrap;
 `
 
-const CoinContainer = styled.div`
-  position: relative;
-`;
-
-
-const CoinPower = styled.p`
+const CoinPower = styled.span`
   position: absolute;
-  min-width: 45px;
-  bottom: 56px;
-  right: 12px;
+  top: -8px;
+  right: -8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 34px;
+  justify-content: center;
   color: #333;
   background: linear-gradient(145deg, #fadf76, #f9e8b4, #fadf76);
-  padding: 5px 10px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 10px;
   font-weight: bold;
-  text-transform: uppercase;
+  z-index: 2;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.4);
 `;
 
@@ -117,6 +164,11 @@ export default function AllowedNftsModal({
 
   const { t } = useTranslation()
   const { theme } = useTheme()
+  const sortedNfts = useMemo(
+    () => [...nfts].sort((a, b) => (Number(b?.power ?? 0) - Number(a?.power ?? 0))),
+    [nfts],
+  )
+  const highestPower = sortedNfts.length > 0 ? Number(sortedNfts[0]?.power ?? 1) : 1
 
   return (
     <StyledModalContainer>
@@ -129,38 +181,41 @@ export default function AllowedNftsModal({
       <StyledModalBody>
 
         <Title style={{ marginBottom: '2px' }}>
-          {t('Stake eligible NFTs in this pool to earn rewards based on their ')}
+          {t('Stake NFTs here to earn by ')}
           <LightningIcon width={15} />
-          {t('earning power. ')}
+          {t('power. ')}
           <MessageTextLink display="inline" fontWeight={700} href="https://docs.coincollect.org/coincollect-nft/nft-powers" target="_blank" color="failure">
-            {t('Discover NFT Power')} »
+            {t('Learn Power')} »
           </MessageTextLink>
         </Title>
 
 
-        <Wrapper>
+        <SummaryBar>
+          <Text bold fontSize="13px">
+            {t('%count% Collections', { count: sortedNfts.length })}
+          </Text>
+          <Text fontSize="12px" color="textSubtle">
+            {t('Highest power applies:')} <b><LightningIcon width={12} /> {highestPower}</b>
+          </Text>
+        </SummaryBar>
 
-          {nfts.map((avatar, index) => (
-            <Link href={avatar["link"]} target="_blank">
-              <CollectionWrapper>
-                <CoinContainer>
-                  <CollectionAvatar
-                    key={index}
-                    src={avatar["avatar"]}
-                    width={70}
-                    height={70}
-                  />
-                  <CoinPower><LightningIcon width={12} />{nfts.length > 1 ? avatar["power"] : 1}</CoinPower >
-                </CoinContainer>
-
-                <Text>{avatar["title"]}</Text>
-              </CollectionWrapper>
-            </Link>
+        <CollectionGrid>
+          {sortedNfts.map((avatar, index) => (
+            <CollectionCardLink key={`${avatar?.title}-${index}`} href={avatar["link"]} target="_blank">
+              <CollectionCard>
+                <CollectionAvatar
+                  src={avatar["avatar"]}
+                  width={44}
+                  height={44}
+                />
+                <CollectionTitle title={avatar["title"]}>{avatar["title"]}</CollectionTitle>
+                <CoinPower><LightningIcon width={11} />{sortedNfts.length > 1 ? avatar["power"] : 1}</CoinPower >
+              </CollectionCard>
+            </CollectionCardLink>
           ))}
-
-        </Wrapper>
+        </CollectionGrid>
         <Message variant="warning">
-          <MessageText>{t('Daily earnings are calculated based on the NFT with the highest earning power in the pool.')}</MessageText>
+          <MessageText>{t('Daily rewards use the highest-power NFT in this pool.')}</MessageText>
         </Message>
       </StyledModalBody>
     </StyledModalContainer>

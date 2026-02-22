@@ -1,5 +1,5 @@
 import { CSSProperties, MutableRefObject, useCallback, useMemo, useState } from 'react'
-import { LightningIcon, Text } from '@pancakeswap/uikit'
+import { LightningIcon, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { FixedSizeList } from 'react-window'
 import { useTranslation } from 'contexts/Localization'
@@ -16,11 +16,18 @@ function collectionKey(collection: DeserializedNftFarm): number {
   return collection.pid
 }
 
+const COLLECTION_AVATAR_FALLBACK_BY_PID: Record<number, string> = {
+  26: '/images/coincollect-assets/partners/cyberpunk/logo300-min.png',
+}
+
 const StyledBalanceText = styled(Text)`
   white-space: nowrap;
   overflow: hidden;
   max-width: 5rem;
   text-overflow: ellipsis;
+  ${({ theme }) => theme.mediaQueries.sm} {
+    max-width: 4.5rem;
+  }
 `
 
 const CollectionAvatar = styled.img`
@@ -31,16 +38,42 @@ const CollectionAvatar = styled.img`
   flex-shrink: 0;
 `
 
+const ContentColumn = styled(Column)`
+  min-width: 0;
+`
+
+const CollectionTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+`
+
+const CollectionTitleText = styled(Text)`
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
+
+const PowerText = styled(Text)`
+  flex-shrink: 0;
+  white-space: nowrap;
+`
+
 function Balance({ balance }: { balance: number }) {
   return <StyledBalanceText title={"balance"}>{balance}</StyledBalanceText>
 }
 
 const MenuItem = styled(RowBetween)<{ disabled: boolean; selected: boolean }>`
-  padding: 4px 20px;
+  padding: 4px 12px;
   height: 56px;
   display: grid;
   grid-template-columns: auto minmax(auto, 1fr) minmax(0, 72px);
   grid-gap: 8px;
+  ${({ theme }) => theme.mediaQueries.sm} {
+    padding: 4px 20px;
+  }
   cursor: ${({ disabled }) => !disabled && 'pointer'};
   pointer-events: ${({ disabled }) => disabled && 'none'};
   :hover {
@@ -64,6 +97,8 @@ function CollectionRow({
   allowance: boolean
   collectionPower: number
 }) {
+  const { isXs, isSm } = useMatchBreakpoints()
+  const isMobile = isXs || isSm
   const { account } = useActiveWeb3React()
   const key = collectionKey(collection)
   const balance = collection.userData.tokenBalance.toNumber()
@@ -74,19 +109,39 @@ function CollectionRow({
     ? mintingConfig.find((mintCollection) => mintCollection.address?.toLowerCase() === farmAddr137)
     : undefined
   const defaultAvatar = collection.pid <= 4 ? '/logo.png' : '/images/nfts/no-profile-md.png'
+  const localAvatarFallback = COLLECTION_AVATAR_FALLBACK_BY_PID[collection.pid]
   const avatarCandidates = useMemo(
     () =>
       [
+        localAvatarFallback,
         collectionDataByPid?.avatar,
         collectionDataByAddress?.avatar,
         nftFarmData?.avatar,
         nftFarmData?.staticNftImage,
         defaultAvatar,
       ].filter((value): value is string => Boolean(value)),
-    [collectionDataByAddress?.avatar, collectionDataByPid?.avatar, defaultAvatar, nftFarmData?.avatar, nftFarmData?.staticNftImage],
+    [
+      collectionDataByAddress?.avatar,
+      collectionDataByPid?.avatar,
+      defaultAvatar,
+      localAvatarFallback,
+      nftFarmData?.avatar,
+      nftFarmData?.staticNftImage,
+    ],
   )
   const [avatarIndex, setAvatarIndex] = useState(0)
   const avatar = avatarCandidates[avatarIndex] ?? defaultAvatar
+
+  const actionText =
+    balance === 0
+      ? 'Insufficient'
+      : allowance
+        ? isMobile
+          ? 'Tap to Stake'
+          : 'Click to Start Staking'
+        : isMobile
+          ? 'Tap to Enable'
+          : 'Click to Enable'
 
   // only show add or remove buttons if not on selected list
   return (
@@ -107,15 +162,20 @@ function CollectionRow({
           }
         }}
       />
-      <Column>
-        <Text bold>{collection.lpSymbol.replace("CoinCollect","")} <LightningIcon/>{collectionPower}</Text>
-        <Text color="textSubtle" small ellipsis maxWidth="200px">
-          {
-            balance === 0 ? "Insufficient balance" :
-            allowance ? "Click to Start Staking" : "Click to Enable"
-          }
+      <ContentColumn>
+        <CollectionTitleRow>
+          <CollectionTitleText bold fontSize={isMobile ? '13px' : '14px'} title={collection.lpSymbol.replace('CoinCollect', '')}>
+            {collection.lpSymbol.replace('CoinCollect', '')}
+          </CollectionTitleText>
+          <PowerText bold fontSize={isMobile ? '12px' : '14px'}>
+            <LightningIcon />
+            {collectionPower}
+          </PowerText>
+        </CollectionTitleRow>
+        <Text color="textSubtle" small ellipsis maxWidth="100%" fontSize={isMobile ? '10px' : '11px'}>
+          {actionText}
         </Text>
-      </Column>
+      </ContentColumn>
       <RowFixed style={{ justifySelf: 'flex-end' }}>
         {balance != null && balance != undefined ? <Balance balance={balance} /> : account ? <CircleLoader /> : null}
       </RowFixed>

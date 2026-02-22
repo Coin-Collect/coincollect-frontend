@@ -18,6 +18,10 @@ export interface ExpandableSectionProps {
   disabled?: boolean
 }
 
+const COLLECTION_AVATAR_FALLBACK_BY_PID: Record<number, string> = {
+  26: '/images/coincollect-assets/partners/cyberpunk/logo300-min.png',
+}
+
 const Wrapper = styled(Flex)`
   svg {
     margin-right: 4px;
@@ -187,8 +191,14 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
       ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr)
       : undefined
 
+    const defaultAvatar = farm.pid <= 4 ? '/logo.png' : '/images/nfts/no-profile-md.png'
     const resolvedAvatar =
-      dataFromMintingByPid?.avatar ?? dataFromMintingByAddress?.avatar ?? farm.avatar ?? farm.staticNftImage
+      COLLECTION_AVATAR_FALLBACK_BY_PID[farm.pid] ??
+      dataFromMintingByPid?.avatar ??
+      dataFromMintingByAddress?.avatar ??
+      farm.avatar ??
+      farm.staticNftImage ??
+      defaultAvatar
 
     let avatar: { avatar: string } | null = null
     if (farm.pid <= 4) {

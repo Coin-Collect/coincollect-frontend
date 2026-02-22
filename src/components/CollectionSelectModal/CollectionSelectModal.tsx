@@ -156,11 +156,11 @@ export default function CollectionSelectModal({
       </ModalHeader>
       <StyledModalBody>
         <Title style={{ marginBottom: '2px' }}>
-          {t('Stake eligible NFTs in this pool to earn rewards based on their ')}
+          {t('Stake NFTs here to earn by ')}
           <LightningIcon width={15} />
-          {t('earning power. ')}
+          {t('power. ')}
           <MessageTextLink display="inline" fontWeight={700} href="https://docs.coincollect.org/coincollect-nft/nft-powers" target="_blank" color="failure">
-            {t('Discover NFT Power')} »
+            {t('Learn Power')} »
           </MessageTextLink>
         </Title>
         <Wrapper>
@@ -174,7 +174,7 @@ export default function CollectionSelectModal({
           />
         </Wrapper>
         <Message variant="warning">
-          <MessageText>{t('Daily earnings are calculated based on the NFT with the highest earning power in the pool.')}</MessageText>
+          <MessageText>{t('Daily rewards use the highest-power NFT in this pool.')}</MessageText>
         </Message>
       </StyledModalBody>
     </StyledModalContainer>
