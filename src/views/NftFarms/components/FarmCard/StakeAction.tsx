@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import useWeb3React from 'hooks/useWeb3React'
 import styled from 'styled-components'
 import BigNumber from 'bignumber.js'
-import { Button, Flex, Heading, IconButton, AddIcon, MinusIcon, useModal, AutoRenewIcon } from '@pancakeswap/uikit'
+import { Button, Flex, Heading, useModal, AutoRenewIcon, AddIcon, MinusIcon } from '@pancakeswap/uikit'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import Balance from 'components/Balance'
@@ -38,9 +38,21 @@ interface FarmCardActionsProps {
 
 const IconButtonWrapper = styled.div`
   display: flex;
-  svg {
-    width: 20px;
-  }
+  gap: 6px;
+`
+
+const ActionChipButton = styled(Button)<{ $stake?: boolean }>`
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid
+    ${({ theme, $stake }) => ($stake ? `${theme.colors.primary}55` : `${theme.colors.textSubtle}55`)};
+  background: ${({ theme, $stake }) =>
+    $stake ? `${theme.colors.primary}22` : `${theme.colors.textSubtle}15`};
+  color: ${({ theme, $stake }) => ($stake ? theme.colors.primary : theme.colors.text)};
 `
 
 const StakeAction: React.FC<FarmCardActionsProps> = ({
@@ -141,16 +153,19 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
       </Button>
     ) : (
       <IconButtonWrapper>
-        <IconButton variant="tertiary" onClick={onPresentWithdraw} mr="6px">
-          <MinusIcon color="primary" width="14px" />
-        </IconButton>
-        <IconButton
+        <ActionChipButton variant="tertiary" onClick={onPresentWithdraw}>
+          <MinusIcon width="13px" mr="4px" color="currentColor" />
+          {t('Unstake')}
+        </ActionChipButton>
+        <ActionChipButton
+          $stake
           variant="tertiary"
           onClick={onClickStake ?? onPresentDeposit}
           disabled={stakingDisabled}
         >
-          <AddIcon color="primary" width="14px" />
-        </IconButton>
+          <AddIcon width="13px" mr="4px" color="currentColor" />
+          {t('Stake More')}
+        </ActionChipButton>
       </IconButtonWrapper>
     )
   }

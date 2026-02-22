@@ -117,6 +117,16 @@ const CollectionAvatar = styled(ProfileAvatar)`
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 `
 
+const BannerFooter = styled(Flex)`
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+`
+
 const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   lpLabel,
   multiplier,
@@ -242,18 +252,12 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
             />
           ))}
 
-          <Flex
-            position="absolute"
-            bottom="8px"
-            left="8px"
-            right="8px"
-            flexDirection="column"
-            alignItems="flex-start"
-          >
+          <BannerFooter>
             <Heading
               color="white"
               as="h3"
-              mb="4px"
+              scale="lg"
+              mb="0"
               style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}
             >
               {lpLabel}
@@ -263,7 +267,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
             ) : (
               <PartnerTag variant="textSubtle" scale="sm" />
             )}
-          </Flex>
+          </BannerFooter>
         </BannerContainer>
       </Flex>
     </CardBody>

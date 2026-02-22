@@ -6,7 +6,7 @@ import { useTranslation } from 'contexts/Localization'
 import { useErc721CollectionContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
 import { DeserializedNftFarm } from 'state/types'
@@ -21,9 +21,52 @@ import DepositModal from '../DepositModal'
 import useStakeFarms from 'views/NftFarms/hooks/useStakeFarms'
 import { getDisplayApr } from 'views/NftFarms/Farms'
 import formatRewardAmount from 'utils/formatRewardAmount'
+import tokens from 'config/constants/tokens'
+import { Token } from '@coincollect/sdk'
 
 const Action = styled.div`
   padding-top: 16px;
+`
+
+const EarnedHelpWrap = styled.span`
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+`
+
+const TooltipTokenRow = styled(Flex)`
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`
+
+const TooltipTokenLabel = styled(Flex)`
+  align-items: center;
+  gap: 6px;
+`
+
+const TooltipTokenImage = styled.img`
+  width: 13px;
+  height: 13px;
+  min-width: 13px;
+  min-height: 13px;
+  border-radius: 50%;
+  object-fit: cover;
+`
+
+const TooltipTokenFallback = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
 `
 
 const StyledActionButton = styled(Button)`
@@ -58,6 +101,31 @@ const StyledActionButton = styled(Button)`
 `
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
+}
+
+const REWARD_SYMBOL_ICON_MAP: Record<string, string> = {
+  SHIB: '/images/games/tokens/shib-min.png',
+  ELON: '/images/games/tokens/elon-min.png',
+  BONK: '/images/games/tokens/bonk.png',
+  RADAR: '/images/tokens/0xdCb72AE4d5dc6Ae274461d57E65dB8D50d0a33AD.png',
+}
+
+const RewardTooltipTokenIcon: React.FC<{ token: string; tokenMeta?: Token }> = ({ token, tokenMeta }) => {
+  const tokenSymbol = String(token).toUpperCase()
+  const tokenAddress = tokenMeta?.address
+  const iconCandidates = [
+    REWARD_SYMBOL_ICON_MAP[tokenSymbol],
+    tokenAddress ? `/images/tokens/${tokenAddress}.svg` : '',
+    tokenAddress ? `/images/tokens/${tokenAddress}.png` : '',
+  ].filter(Boolean)
+  const [iconIndex, setIconIndex] = useState(0)
+  const iconSrc = iconCandidates[iconIndex]
+
+  if (iconSrc) {
+    return <TooltipTokenImage src={iconSrc} alt={`${token} icon`} onError={() => setIconIndex((prev) => prev + 1)} />
+  }
+
+  return <TooltipTokenFallback>{String(token).slice(0, 1)}</TooltipTokenFallback>
 }
 
 interface FarmCardActionsProps {
@@ -150,25 +218,49 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const displayApr = getDisplayApr(farm.apr)
   const dailyRewardAmount = farm.apr !== undefined && farm.apr !== null ? new BigNumber(farm.apr) : new BigNumber(0)
   const dailyRewardDisplay = displayApr ?? formatRewardAmount(dailyRewardAmount)
+  const tokenBySymbol = useMemo(
+    () =>
+      Object.values(tokens).reduce<Record<string, Token>>((acc, token) => {
+        if (token?.symbol) {
+          acc[String(token.symbol).toUpperCase()] = token as Token
+        }
+        return acc
+      }, {}),
+    [],
+  )
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <>
-      <Text bold>Daily Rewards</Text>
-      <Text>
-        {earnLabel}:
-        <Text ml="3px" style={{ display: 'inline-block' }} bold>
+      <Text bold fontSize="13px" mb="2px">
+        Daily Rewards
+      </Text>
+      <TooltipTokenRow>
+        <TooltipTokenLabel>
+          <RewardTooltipTokenIcon token={earnLabel} tokenMeta={farm.earningToken as Token} />
+          <Text fontSize="12px" lineHeight="1.2">
+            {earnLabel}
+          </Text>
+        </TooltipTokenLabel>
+        <Text bold fontSize="12px" lineHeight="1.2">
           {dailyRewardDisplay}
         </Text>
-      </Text>
+      </TooltipTokenRow>
 
       {sideRewards.map((reward, index) => (
-        <Text key={index}>
-          {reward.token}:
-          <Text ml="3px" style={{ display: 'inline-block' }} bold>
+        <TooltipTokenRow key={index}>
+          <TooltipTokenLabel>
+            <RewardTooltipTokenIcon token={reward.token} tokenMeta={tokenBySymbol[String(reward.token).toUpperCase()]} />
+            <Text fontSize="12px" lineHeight="1.2">
+              {reward.token}
+            </Text>
+          </TooltipTokenLabel>
+          <Text bold fontSize="12px" lineHeight="1.2">
             {formatRewardAmount(dailyRewardAmount.multipliedBy(reward.percentage).dividedBy(100))}
           </Text>
-        </Text>
+        </TooltipTokenRow>
       ))}
-      <Text mt={1} small color='primary'>*Calculated based on the NFT with the highest <LightningIcon />earning power</Text>
+      <Text mt="4px" fontSize="10px" color="textSubtle" lineHeight="1.25">
+        *Based on the NFT with highest <LightningIcon width="11px" height="11px" /> earning power.
+      </Text>
     </>,
     {
       placement: 'top',
@@ -248,23 +340,31 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
     <Action>
       {stakedBalance?.gt(0) && (
         <>
-          <Flex>
-            <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-              {sideRewards.length == 0 ? "COLLECT" : "REWARDS"}
-            </Text>
-            <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-              {t('Earned')}
-            </Text>
-            {displayApr && (
-              <Flex>
-                <span ref={targetRef}>
-                  <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />
-                </span>
-              </Flex>
-            )}
-            {tooltipVisible && tooltip}
-          </Flex>
-          <HarvestAction earnings={earnings} pid={pid} earnLabel={earnLabel} sideRewards={sideRewards} earningToken={farm.earningToken} />
+          <HarvestAction
+            earnings={earnings}
+            pid={pid}
+            earnLabel={earnLabel}
+            sideRewards={sideRewards}
+            earningToken={farm.earningToken}
+            header={
+              <>
+                <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
+                  {sideRewards.length == 0 ? "COLLECT" : "REWARDS"}
+                </Text>
+                <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
+                  {t('Earned')}
+                </Text>
+                {displayApr && (
+                  <Flex>
+                    <EarnedHelpWrap ref={targetRef}>
+                      <HelpIcon ml="2px" width="18px" height="18px" color="textSubtle" />
+                    </EarnedHelpWrap>
+                  </Flex>
+                )}
+                {tooltipVisible && tooltip}
+              </>
+            }
+          />
           <Flex>
             {smartNftPoolAddress ? (
               <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
