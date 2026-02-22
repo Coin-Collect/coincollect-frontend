@@ -12,6 +12,7 @@ import erc721ABI from 'config/abi/erc721.json'
 import { walletOfOwnerApi } from 'state/nftMarket/helpers'
 
 const FALLBACK_IMAGE = '/images/nfts/no-profile-md.png'
+const FALLBACK_COLLECTION_NAME = 'Unknown Collection'
 
 const normalizeIpfsUri = (uri?: string | null) => {
   if (!uri) {
@@ -40,10 +41,19 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
     const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
     const collectionAddress = getAddress(nftPool.nftAddresses)
     const collectionContract = useCoinCollectNFTContract(collectionAddress)
+    const resolveCollectionName = async () => {
+      try {
+        const name = await collectionContract.name()
+        return name || nftPool?.lpSymbol || FALLBACK_COLLECTION_NAME
+      } catch (error) {
+        return nftPool?.lpSymbol || FALLBACK_COLLECTION_NAME
+      }
+    }
 
 
     const getNfts = async () => {
       try {
+        const collectionName = await resolveCollectionName()
         const nftData = nftPool["useApi"] ? await walletOfOwnerApi(account, [collectionAddress]) : await collectionContract.walletOfOwner(account);
         const tokenIds = nftPool["useApi"] ? nftData.map(nft => nft.tokenId) : nftData;
     
@@ -55,14 +65,16 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             return {
               tokenId: id.toString(),
               collectionAddress,
-              image: normalizeIpfsUri(nftPool["staticNftImage"]) ?? FALLBACK_IMAGE
+              image: normalizeIpfsUri(nftPool["staticNftImage"]) ?? FALLBACK_IMAGE,
+              collectionName,
             };
           });
         } else if (nftPool["useApi"]) {
           tokenIdsNumber = nftData.map(nft => ({
             tokenId: nft.tokenId.toString(),
             collectionAddress,
-            image: normalizeIpfsUri(nft.media?.["thumbnail"]) ?? FALLBACK_IMAGE
+            image: normalizeIpfsUri(nft.media?.["thumbnail"]) ?? FALLBACK_IMAGE,
+            collectionName,
           }));
         } else {
           // If staticNftImage doesn't exist, get image from blockchain
@@ -87,6 +99,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
                 tokenId: id.toNumber(),
                 collectionAddress,
                 image,
+                collectionName,
               };
             } catch (error) {
               console.log('IPFS link is broken!', error);
@@ -94,6 +107,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
                 tokenId: id.toNumber(),
                 collectionAddress,
                 image: FALLBACK_IMAGE,
+                collectionName,
               };
             }
           }));

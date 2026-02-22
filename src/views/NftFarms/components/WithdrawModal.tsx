@@ -42,6 +42,14 @@ const SelectedNftBox = styled(RoundedImage)`
     }
 `;
 
+const NftOption = styled(Flex)`
+  width: 96px;
+  flex-direction: column;
+  align-items: center;
+  margin: 4px;
+  cursor: pointer;
+`;
+
 const Wrapper = styled(Flex)`
   background: ${props => props.theme.colors.background};
   border-radius: 16px;
@@ -81,24 +89,36 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
         selectedNft.tokenId === nft.tokenId
     );
 
-    return isSelected ? (
-      <SelectedNftBox
-        key={nft.tokenId}
-        onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
-        src={nft.image}
-        height={90}
-        width={90}
-        m="3px"
-      />
-    ) : (
-      <NftBox
-        key={nft.tokenId}
-        onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}
-        src={nft.image}
-        height={90}
-        width={90}
-        m="3px"
-      />
+    const label = nft.collectionName || tokenName || t('Collection')
+    const key = `${nft.collectionAddress}-${nft.tokenId}`
+
+    return (
+      <NftOption key={key} onClick={() => handleSelectNft(nft.collectionAddress, nft.tokenId)}>
+        {isSelected ? (
+          <SelectedNftBox
+            src={nft.image}
+            height={90}
+            width={90}
+          />
+        ) : (
+          <NftBox
+            src={nft.image}
+            height={90}
+            width={90}
+          />
+        )}
+        <Text
+          fontSize="11px"
+          color="textSubtle"
+          mt="6px"
+          textAlign="center"
+          width="100%"
+          style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          title={label}
+        >
+          {label}
+        </Text>
+      </NftOption>
     );
   });
 
@@ -134,7 +154,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
               </Text>
             </Flex>
           ) : nftList.length > 0 ? (
-            <Flex flexWrap="wrap" justifyContent="space-evenly">
+            <Flex flexWrap="wrap" justifyContent="center">
               {nftList}
             </Flex>
           ) : error ? (

@@ -1,7 +1,6 @@
 import useWeb3React from 'hooks/useWeb3React'
 import axios from 'axios'
 import { IPFS_GATEWAY } from 'config'
-import { useEffect, useState } from "react"
 import { getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
 import { useFarmUser } from 'state/nftFarms/hooks'
 import { range } from 'lodash'
@@ -16,6 +15,7 @@ import useSWR from 'swr'
 import { isAddress } from 'utils'
 import { FetchStatus } from 'config/constants/types'
 
+const FALLBACK_COLLECTION_NAME = 'Unknown Collection'
 
 export const useStakedNfts = (selectedPid: number) => {
   const { account } = useWeb3React()
@@ -25,6 +25,23 @@ export const useStakedNfts = (selectedPid: number) => {
   const nftPool = nftFarmsConfig.filter(({ pid }) => pid == selectedPid)[0]
   const collectionAddress = getAddress(nftPool.nftAddresses)
   const smartNftStakeAddress = nftPool.contractAddresses ? getAddress(nftPool.contractAddresses) : null
+  const getFallbackCollectionName = (address: string) => {
+    const normalizedAddress = address?.toLowerCase?.()
+    const exactFarm = nftFarmsConfig.find((farm) => {
+      const farmAddress = farm?.nftAddresses ? getAddress(farm.nftAddresses).toLowerCase() : ''
+      return farmAddress === normalizedAddress && farm.pid === selectedPid
+    })
+    if (exactFarm?.lpSymbol) {
+      return exactFarm.lpSymbol
+    }
+
+    const firstFarmByAddress = nftFarmsConfig.find((farm) => {
+      const farmAddress = farm?.nftAddresses ? getAddress(farm.nftAddresses).toLowerCase() : ''
+      return farmAddress === normalizedAddress
+    })
+
+    return firstFarmByAddress?.lpSymbol || FALLBACK_COLLECTION_NAME
+  }
 
 
   const getNfts = async () => {
@@ -60,9 +77,25 @@ export const useStakedNfts = (selectedPid: number) => {
         }
       })
       const rawTokenURIs = await multicallPolygonv1(erc721ABI, imageCalls)
+      const uniqueCollectionAddresses = [...new Set(
+        parsedTokenIds.map((token) => (smartNftStakeAddress ? token.tokenAddress : collectionAddress).toLowerCase())
+      )]
+      const nameCalls = uniqueCollectionAddresses.map((address) => ({
+        address,
+        name: 'name',
+      }))
+      const rawCollectionNames = uniqueCollectionAddresses.length
+        ? await multicallPolygonv1(erc721ABI, nameCalls)
+        : []
+      const collectionNameByAddress = uniqueCollectionAddresses.reduce<Record<string, string>>((acc, address, index) => {
+        const rawName = rawCollectionNames[index]?.[0]
+        acc[address] = rawName || getFallbackCollectionName(address)
+        return acc
+      }, {})
 
       const tokenIdsNumber = await Promise.all(parsedTokenIds.map(async (token, index) => {
         const { tokenId, tokenAddress } = token;
+        const nftCollectionAddress = smartNftStakeAddress ? tokenAddress : collectionAddress
 
         let meta: any = null;
         try {
@@ -76,8 +109,9 @@ export const useStakedNfts = (selectedPid: number) => {
 
         return {
           tokenId: tokenId,
-          collectionAddress: smartNftStakeAddress ? tokenAddress : collectionAddress,
-          image: meta ? meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`) : 'images/nfts/no-profile-md.png'
+          collectionAddress: nftCollectionAddress,
+          image: meta ? meta.data.image.replace("ipfs://", `${IPFS_GATEWAY}/`) : 'images/nfts/no-profile-md.png',
+          collectionName: collectionNameByAddress[nftCollectionAddress?.toLowerCase?.()] || FALLBACK_COLLECTION_NAME,
         };
       }));
 
