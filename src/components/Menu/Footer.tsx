@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { ButtonMenu, ButtonMenuItem, LinkExternal, Flex, Svg, Image, Button, Text } from '@pancakeswap/uikit'
+import { Flex, Svg, Image, Button, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 
 interface WrapperProps {
@@ -13,20 +13,43 @@ const Wrapper = styled.div<WrapperProps>`
   height: ${({ $isSide }) => ($isSide ? '100%' : 'auto')};
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap;
   align-items: center;
-  padding-top: 16px;
+  justify-content: center;
+  padding-top: 24px;
   padding-right: ${({ $isSide }) => ($isSide ? '32px' : '0px')};
-  ${({ theme }) => theme.mediaQueries.md} {
-    justify-content: space-between;
-    flex-direction: ${({ $isSide }) => ($isSide ? 'column' : 'row')};
+`
+
+const ContentGrid = styled.div<WrapperProps>`
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: center;
+
+  ${({ theme, $isSide }) =>
+    !$isSide &&
+    theme.mediaQueries.md} {
+    grid-template-columns: minmax(260px, 1fr) minmax(360px, 520px);
   }
 `
 
+const SupportCard = styled(Flex)`
+  width: 100%;
+  max-width: 520px;
+  border-radius: 24px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.input} 0%, ${({ theme }) => theme.colors.backgroundAlt} 100%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  padding: 18px 18px 18px 24px;
+`
+
 const BubbleWrapper = styled(Flex)`
+  flex: 1;
+  align-items: center;
+  justify-content: flex-start;
   svg {
     fill: ${({ theme }) => theme.colors.textSubtle};
-    transition: background-color 0.2s, opacity 0.2s;
+    transition: opacity 0.2s;
   }
   &:hover {
     svg {
@@ -40,6 +63,15 @@ const BubbleWrapper = styled(Flex)`
   }
 `
 
+const SupportButton = styled(Button)`
+  font-weight: 600;
+  letter-spacing: 0.01em;
+`
+
+const HelperImage = styled(Image)`
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
+`
+
 type FooterVariant = 'default' | 'side'
 
 const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) => {
@@ -48,51 +80,33 @@ const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) 
   const TextAny = Text as unknown as React.ComponentType<any>
   return (
     <Wrapper $isSide={isSide}>
-      <Flex flexDirection={isSide ? 'column' : ['column', 'column', 'row']} alignItems="center">
-        {/*<ButtonMenu variant="subtle" scale="sm" activeIndex={0}>
-          <ButtonMenuItem>V2</ButtonMenuItem>
-          <ButtonMenuItem as="a" href="https://docs.coincollect.org">
-            {t('V1 (old)')}
-          </ButtonMenuItem>
-        </ButtonMenu>
-        <LinkExternal
-          id="ercBridge"
-          href="https://docs.coincollect.org"
-          ml={[0, 0, '40px']}
-          mt={['20px', '20px', isSide ? '20px' : 0]}
-          mb={['8px', '8px', 0]}
-        >
-          {t('Convert ERC-20 to BEP-20')}
-  </LinkExternal> */}
-      </Flex>
-      {isSide && <Flex flexGrow={1} />}
-      <Flex
-        flexGrow={isSide ? 0 : 1}
-        alignItems="center"
-        width={['100%', '100%', '100%', isSide ? '100%' : 'auto']}
-        justifyContent={['center', 'center', 'center', 'flex-end']}
-      >
-        <BubbleWrapper>
-          <Button
-            id="clickExchangeHelp"
-            as="a"
-            external
-            href="https://docs.coincollect.org"
-            variant="subtle"
-          >
-            {t('Need help ?')}
-          </Button>
-          <Svg viewBox="0 0 16 16">
-            <path d="M0 16V0C0 0 3 1 6 1C9 1 16 -2 16 3.5C16 10.5 7.5 16 0 16Z" />
-          </Svg>
-        </BubbleWrapper>
-        <Image src="/images/help.png" alt="Get some help" width={160} height={108} />
-      </Flex>
-      <Flex mt="16px" justifyContent="center" width="100%">
-        <TextAny fontSize="12px" color="textSubtle" textAlign="center">
-          {t('AI Assistant powered by OpenAI, created by SapienX')}
-        </TextAny>
-      </Flex>
+      <ContentGrid $isSide={isSide}>
+        <Flex justifyContent={['center', 'center', 'flex-start']}>
+          <TextAny fontSize="12px" color="textSubtle" textAlign={['center', 'center', 'left']} style={{ opacity: 0.9 }}>
+            {t('AI Assistant powered by OpenAI, created by SapienX')}
+          </TextAny>
+        </Flex>
+        <Flex alignItems="center" width="100%" justifyContent={['center', 'center', 'flex-end']}>
+          <SupportCard>
+            <BubbleWrapper>
+              <SupportButton
+                id="clickExchangeHelp"
+                as="a"
+                external
+                href="https://docs.coincollect.org"
+                variant="subtle"
+                scale="sm"
+              >
+                {t('Need help?')}
+              </SupportButton>
+              <Svg viewBox="0 0 16 16">
+                <path d="M0 16V0C0 0 3 1 6 1C9 1 16 -2 16 3.5C16 10.5 7.5 16 0 16Z" />
+              </Svg>
+            </BubbleWrapper>
+            <HelperImage src="/images/help.png" alt="Get some help" width={132} height={90} />
+          </SupportCard>
+        </Flex>
+      </ContentGrid>
     </Wrapper>
   )
 }
