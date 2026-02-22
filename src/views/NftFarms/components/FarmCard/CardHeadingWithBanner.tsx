@@ -3,6 +3,7 @@ import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody, useM
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CommunityTag, PartnerTag } from 'components/Tags'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import AllowedNftsModal from 'components/AllowedNftsModal/AllowedNftsModal'
@@ -27,7 +28,7 @@ const MultiplierTag = styled(Tag)`
   margin-left: 4px;
 `
 
-const BannerContainer = styled.div`
+const BannerContainer = styled.div<{ $clickable?: boolean }>`
   position: relative;
   border-radius: 12px;
   overflow: hidden;
@@ -35,6 +36,7 @@ const BannerContainer = styled.div`
   transition: transform 0.3s ease;
   width: 550px;
   height: 220px;
+  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
 
   &:hover {
     transform: scale(1.02);
@@ -135,6 +137,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   pid,
   disabled = false,
 }) => {
+  const router = useRouter()
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
   const collectionDataByPid = mintingConfig.find((collection) => collection.stake_pid === pid)
   const farmAddr137 = nftFarmData?.nftAddresses?.[137]?.toLowerCase()
@@ -217,11 +220,16 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   }
 
   const [onPresentAllowedNftsModal] = useModal(<AllowedNftsModal nfts={largeAvatars} />)
+  const handleOpenPoolPage = () => {
+    if (pid !== undefined) {
+      router.push(`/nftpools/${pid}`)
+    }
+  }
 
   return (
     <CardBody p="0px">
       <Flex justifyContent="center">
-        <BannerContainer>
+        <BannerContainer $clickable={pid !== undefined} onClick={handleOpenPoolPage}>
           <StyledImage src={banner} alt={`${lpLabel} banner`} height={220} width={550} />
           <BannerOverlay />
           <StatusContainer>
@@ -233,6 +241,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
                 to={`/nftpools/${pid}`}
                 aria-label="Open pool page"
                 style={{ display: 'inline-flex' }}
+                onClick={(event) => event.stopPropagation()}
               >
                 <PoolPageIcon>
                   <OpenNewIcon color="currentColor" />
@@ -248,7 +257,10 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
               width={50}
               height={50}
               style={{ left: `${8 + index * 15}px`, top: '8px' }}
-              onClick={onPresentAllowedNftsModal}
+              onClick={(event) => {
+                event.stopPropagation()
+                onPresentAllowedNftsModal()
+              }}
             />
           ))}
 

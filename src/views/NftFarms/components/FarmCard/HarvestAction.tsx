@@ -50,18 +50,29 @@ const RewardRow = styled(Flex)`
   width: 100%;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
   padding: 6px 8px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
 `
 
 const RewardValue = styled(Text)`
+  min-width: 0;
+  max-width: 56%;
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 800;
   color: #ffd966;
   letter-spacing: 0.2px;
 `
 
 const TokenLabel = styled(Flex)`
+  flex: 1;
+  min-width: 0;
   align-items: center;
   gap: 6px;
 `
@@ -164,7 +175,13 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
           <RewardRow>
             <TokenLabel>
               <RewardTokenIcon token={primaryTokenLabel} tokenMeta={earningToken} />
-              <Text bold color="textSubtle" textTransform="uppercase" fontSize="11px">
+              <Text
+                bold
+                color="textSubtle"
+                textTransform="uppercase"
+                fontSize="11px"
+                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              >
                 {primaryTokenLabel}
               </Text>
             </TokenLabel>
@@ -176,7 +193,13 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
             <RewardRow key={index}>
               <TokenLabel>
                 <RewardTokenIcon token={reward.token} tokenMeta={tokenBySymbol[String(reward.token).toUpperCase()]} />
-                <Text bold color="textSubtle" textTransform="uppercase" fontSize="11px">
+                <Text
+                  bold
+                  color="textSubtle"
+                  textTransform="uppercase"
+                  fontSize="11px"
+                  style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
                   {reward.token}
                 </Text>
               </TokenLabel>
