@@ -306,7 +306,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
 
   const renderApprovalOrStakeButton = () => {
     return stakedBalance?.eq(0) || pendingTx ? (
-      <StyledActionButton mt="8px"
+      <StyledActionButton mt="-4px"
         width="100%"
         variant="primary"
         isLoading={pendingTx}
