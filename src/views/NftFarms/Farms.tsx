@@ -191,7 +191,33 @@ const Farms: React.FC = ({ children }) => {
       if (query) {
         const lowercaseQuery = latinise(query.toLowerCase())
         farmsToDisplayWithAPR = farmsToDisplayWithAPR.filter((farm: NftFarmWithStakedValue) => {
-          return latinise(farm.lpSymbol.toLowerCase()).includes(lowercaseQuery)
+          const farmConfig = nftFarmsConfig.find((configFarm) => configFarm.pid === farm.pid)
+
+          const nameFields = [
+            farm.lpSymbol,
+            farm.lpSymbol?.replace('CoinCollect', ''),
+            farm.earningToken?.symbol,
+            ...(farm.sideRewards?.map((reward) => reward.token) ?? []),
+          ]
+
+          const aliasAndLinkFields = [
+            farmConfig?.lpSymbol,
+            farmConfig?.lpSymbol?.replace('CoinCollect', ''),
+            farmConfig?.projectLink?.mainLink,
+            farmConfig?.projectLink?.getNftLink,
+          ]
+
+          const addressFields = [
+            getAddress(farm.nftAddresses),
+            farm.contractAddresses ? getAddress(farm.contractAddresses) : '',
+          ]
+
+          const searchableText = [...nameFields, ...aliasAndLinkFields, ...addressFields]
+            .filter(Boolean)
+            .map((value) => latinise(String(value).toLowerCase()))
+            .join(' ')
+
+          return searchableText.includes(lowercaseQuery)
         })
       }
       return farmsToDisplayWithAPR
@@ -233,6 +259,26 @@ const Farms: React.FC = ({ children }) => {
       }
     }
 
+    const prioritizeStakedFarms = (farms: NftFarmWithStakedValue[]): NftFarmWithStakedValue[] => {
+      if (!account) {
+        return farms
+      }
+
+      const staked: NftFarmWithStakedValue[] = []
+      const unstaked: NftFarmWithStakedValue[] = []
+
+      farms.forEach((farm) => {
+        const hasStake = farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0)
+        if (hasStake) {
+          staked.push(farm)
+        } else {
+          unstaked.push(farm)
+        }
+      })
+
+      return [...staked, ...unstaked]
+    }
+
     if (isActive) {
       chosenFarms = stakedOnly ? farmsList(stakedOnlyFarms) : farmsList(activeFarms)
     }
@@ -243,8 +289,9 @@ const Farms: React.FC = ({ children }) => {
       chosenFarms = stakedOnly ? farmsList(stakedArchivedFarms) : farmsList(archivedFarms)
     }
 
-    return sortFarms(chosenFarms).slice(0, numberOfFarmsVisible)
+    return prioritizeStakedFarms(sortFarms(chosenFarms)).slice(0, numberOfFarmsVisible)
   }, [
+    account,
     sortOption,
     activeFarms,
     farmsList,
