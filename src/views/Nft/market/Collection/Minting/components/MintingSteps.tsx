@@ -86,9 +86,7 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <Box>
       <span>
-        {t(
-          'IFO credit is calculated by average block balance in the IFO pool in over the staking period announced with each IFO proposal.',
-        )}
+        {t('NFT rarity is random. Minting more can improve your chance of getting a stronger one.')}
       </span>{' '}
       <InlineLink
         external
@@ -118,16 +116,14 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
     <CardBody>
       {tooltipVisible && tooltip}
       <Heading as="h4" color="secondary" mb="16px">
-        {t('Press Mint Button')}
+        {t('Mint your NFT')}
       </Heading>
       <Box>
         <Text color="textSubtle" small>
-          {t(
-            'The maximum amount of CAKE user can commit to the Public Sale, is equal to the average CAKE balance in the IFO CAKE pool prior to the IFO. Stake more CAKE to increase the maximum CAKE you can commit to the sale. Missed this IFO? You can keep staking in the IFO CAKE Pool to join the next IFO sale.',
-          )}
+          {t('Press Mint, approve the transaction, and your NFT will be sent to your wallet.')}
         </Text>
         <TooltipText as="span" fontWeight={700} ref={targetRef} color="textSubtle" small>
-          {t('How does the IFO credit calculated?')}
+          {t('How to get a stronger NFT')}
         </TooltipText>
       </Box>
       {false && (
@@ -288,7 +284,7 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
             </Heading>
             <Text color="textSubtle" small>
               {t(
-                'After the IFO ends, claim your purchased tokens and get any unspent CAKE back.',
+                'After the IFO sales finish, you can claim any IFO tokens that you bought, and any unspent CAKE tokens will be returned to your wallet.',
               )}
             </Text>
             <Button external={true} as="a" href="/nftpools" mt="16px">
