@@ -92,7 +92,18 @@ npm install
 npm run dev
 ```
 
-🎉 **That's it!** Open [http://localhost:3001](http://localhost:3001) and start exploring!
+If npm 12 blocks the repository's git dependency with `allow-git = none`, use the verified install path below and then regenerate the local ABI typings:
+
+```bash
+npm_config_allow_git=all npm_config_allow_remote=all npm ci --ignore-scripts --no-audit --no-fund
+npm run typechain
+```
+
+🎉 **That's it!** Open [http://localhost:3000](http://localhost:3000) and start exploring!
+
+### Pool Manager
+
+The browser-wallet Pool Manager lives at [http://localhost:3000/admin](http://localhost:3000/admin). It discovers Polygon CoinStake v2 pools from the live factory, preserves the legacy pool registry, and keeps deployment and ERC20 funding as separate explicit wallet actions. See [docs/pool-manager.md](docs/pool-manager.md) for the operator runbook.
 
 ---
 

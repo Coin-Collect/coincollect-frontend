@@ -1,4 +1,13 @@
 export default {
+  // CoinStake v2 SmartChefFactory used by the Polygon CoinCollect pools.
+  // Verified against the immutable SMART_CHEF_FACTORY value on sousId 1-14
+  // and the NewSmartChefContract deployment events on Polygon.
+  smartChefFactory: {
+    137: '0x3C5B3a8e324bD13D4F74aA2c1932DFF81e646394',
+  },
+  smartChefFactoryDeploymentBlock: {
+    137: 45634311,
+  },
   masterChef: {
     97: '0x1d32c2945C8FDCBc7156c553B7cEa4325a17f4f9',
     56: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',

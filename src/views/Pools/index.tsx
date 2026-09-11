@@ -37,6 +37,7 @@ import BountyCard from './components/BountyCard'
 import HelpButton from './components/HelpButton'
 import PoolsTable from './components/PoolsTable/PoolsTable'
 import { getCakeVaultEarnings } from './helpers'
+import DynamicPoolsSection from 'features/poolManager/components/DynamicPoolsSection'
 
 const CardLayout = styled(FlexLayout)`
   justify-content: center;
@@ -274,6 +275,7 @@ const Pools: React.FC = () => {
         </Flex>
       </PageHeader>
       <Page>
+        <DynamicPoolsSection />
         <PoolControls>
           <PoolTabButtons
             stakedOnly={stakedOnly}

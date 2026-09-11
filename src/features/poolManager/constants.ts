@@ -1,0 +1,10 @@
+export const POOL_MANAGER_CHAIN_ID = 137
+export const POLYGON_FALLBACK_SECONDS_PER_BLOCK = 2.2
+export const POOL_MANAGER_START_BLOCK_BUFFER = 5
+export const FACTORY_LOG_SCAN_CHUNK = 9_000
+export const MAX_RPC_DISCOVERY_BLOCKS = 2_000_000
+export const POOL_MANAGER_INDEXER_TIMEOUT_MS = 10_000
+export const POOL_REGISTRY_CACHE_TTL = 60_000
+export const POOL_MANAGER_INDEXER_URL = 'https://polygon.blockscout.com/api/v2'
+export const POOL_MANAGER_STORAGE_KEY = 'coincollect.pool-manager.v1'
+export const RENEWAL_PLAN_STORAGE_KEY = 'coincollect.pool-manager.renewal-plan.v1'

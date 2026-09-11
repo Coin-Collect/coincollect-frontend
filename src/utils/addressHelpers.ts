@@ -15,6 +15,14 @@ export const getMasterChefAddress = () => {
 export const getCoinCollectPoolAddress = () => {
   return getAddress(addresses.coinCollectPool)
 }
+
+export const getSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+  return addresses.smartChefFactory?.[chainId] || null
+}
+
+export const getSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+  return addresses.smartChefFactoryDeploymentBlock?.[chainId] || null
+}
 // Only Farm Version Masterchef
 export const getCoinCollectFarmAddress = () => {
   return getAddress(addresses.coinCollectFarm)
