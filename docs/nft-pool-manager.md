@@ -1,6 +1,6 @@
 # NFT Pool Studio
 
-NFT Pool Studio is the Polygon-only administration surface for CoinCollect NFT staking pools. Phase 1.5 and Phase 2 add a validated, read-only builder; they do not deploy a pool or move funds.
+NFT Pool Studio is the Polygon-only administration surface for CoinCollect NFT staking pools. Phase 3 adds a human-confirmed, resumable launch engine. Every write still requires an explicit wallet confirmation; tests, preflight and the development server never submit a production transaction.
 
 ## Source-of-truth and provenance
 
@@ -52,8 +52,39 @@ The admin shell keeps NFT factory authority separate from ERC20 factory authorit
 
 ## Write boundary
 
-There are no deploy, approve, swap, fund, `setCollectionWeights`, stop, recovery or ownership writes in this release. The deployment plan and Phase 3 checklist are read-only previews. Collection weights have no pre-start guard in the current contract, so Phase 3 must finalize them before launch completion; existing deposit weight snapshots are not retroactively changed. Public staking routes and ERC20 pool behavior are unchanged.
+Phase 3 writes are limited to the explicit operator actions on the launch screen: factory deployment, collection weights, optional performance fee, direct reward-token transfers and an explicit later schedule update. There is no automatic approval, swap, stop, emergency recovery or ownership transfer. Collection weights have no pre-start guard in the current contract, so the workflow verifies them before completion; existing deposit weight snapshots are not retroactively changed. Public staking routes and ERC20 pool behavior are unchanged.
 
-## Future Phase 3
+## Phase 3 launch architecture
 
-Phase 3 must calculate exact start/end blocks immediately before signing, prepare an idempotent factory transaction, obtain explicit approvals/funding, submit and track receipts, re-read the deployed pool, verify collection weights and funding, and surface the final deployment provenance. It must not reuse a stale Phase 2 block estimate as a final schedule.
+The builder hands a complete `NftPoolDeploymentPlan` to a local `NftPoolLaunchSession`. The session stores only the frozen plan, its keccak hash, stage, receipt hashes, schedules, verification results and funding progress. It never stores a signer, private key, allowance or secret. A plan cannot be changed after the first transaction hash is recorded.
+
+The state machine is explicit:
+
+`DRAFT → PREFLIGHT_RUNNING → PREFLIGHT_READY → AWAITING_DEPLOY_SIGNATURE → DEPLOY_SUBMITTED → DEPLOY_CONFIRMED → DEPLOY_VERIFIED → WEIGHTS_REQUIRED → FEE_CONFIG_REQUIRED → FUNDING_REQUIRED → FINAL_VERIFYING → COMPLETE`
+
+Optional steps are skipped only when the frozen plan does not request them. A rejection returns the relevant step to a retryable state. An RPC error after submission preserves the hash and the session; reopening the launch route reconciles a confirmed deploy receipt. A deployed-but-incomplete pool is never displayed as a generic failed deployment.
+
+### Preflight and schedule
+
+Preflight re-reads chain ID, latest block, configured factory code, factory owner and owner code, connected account, all addresses, ERC-20 decimals/balances, native POL, fee data, deployment gas, `callStatic.deployPool` and `estimateGas`. A contract-owned factory or any owner mismatch blocks the run. The quote data is informational at this point; no quote is silently converted into a funding write.
+
+The final duration is calculated from the measured recent block time immediately before preflight. The start block is `currentBlock + setupBufferBlocks`, with a default 15-minute buffer and a minimum block guard. The end block is `startBlock + finalDurationBlocks`. The Phase 2 estimated blocks are shown as planning context only. If configuration is not complete near the start, `Move start later` performs another explicit owner-checked, simulated transaction and preserves the final duration; it never moves the schedule automatically.
+
+### Deployment and verification
+
+The factory call uses the exact eleven arguments from the Solidity ABI: staked NFT, primary reward, side tokens, encoded side percentages, reward rate, final start/end blocks, user-limit values, `{ poolCapacity, participantThreshold }`, and intended admin. The factory has no return value. The pool address is accepted only from the confirmed `NewSmartChefContract(address indexed smartChef)` receipt event, and the deployed pool is then re-read for factory, owner, tokens, side percentages, schedule, limits, capacity and threshold. Any mismatch stops the workflow.
+
+Collection powers are mandatory when requested and are verified by reading `communityCollections`, `collectionWeights` and the primary weight. Performance fee is optional; when configured, both `feeTo` and the exact integer fee value are set and verified. No later step begins after a failed read-back.
+
+### Funding and idempotency
+
+Funding uses direct ERC-20 transfers only. Primary funding is the plan's `maximumScheduledFunding`; side funding is each `maximumImpliedSideFunding`. Before each transfer the pool balance is re-read. If it already covers the requirement the step is marked skipped. Otherwise only the missing amount is simulated, estimated and sent. Completion requires a fresh post-receipt pool balance at least equal to the requirement, protecting against fee-on-transfer tokens. Primary and side progress are independent, so a failed side reward does not erase confirmed previous transfers.
+
+### Operator runbook
+
+1. Connect the factory-owner EOA on Polygon, review the draft, and choose **Run preflight**.
+2. Confirm the displayed final schedule, gas safety, wallet balances and every PASS/BLOCK row. Choose **Launch pool** only when the plan is correct.
+3. Confirm the factory deployment in the wallet. Wait for the receipt event and deployment read-back.
+4. Explicitly confirm NFT powers, the optional fee, and each missing-only reward transfer as the workflow presents them.
+5. Run final verification. Only a complete verification result marks the session `COMPLETE`.
+6. If the browser closes or an RPC call fails, reopen the saved `/admin/nft-pools/launch/{sessionId}` route and choose **Resume**. Never create a second session or blindly resend a transfer; the session hash and current pool balance are the idempotency keys.

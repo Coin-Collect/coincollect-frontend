@@ -260,6 +260,19 @@ export function validateNftPoolDraft(
     blockers.push('Clear user-limit parameters when the wallet limit is off.')
   }
 
+  if (draft.constraints.performanceFee) {
+    if (!parseUint(draft.constraints.performanceFee, true))
+      blockers.push('Performance fee must be a non-negative integer in wei.')
+    if (!draft.constraints.performanceFeeRecipient)
+      blockers.push('Set a fee recipient when a performance fee is configured.')
+    else if (!isCanonicalAddress(draft.constraints.performanceFeeRecipient))
+      blockers.push('The performance fee recipient address is invalid.')
+  } else if (draft.constraints.performanceFeeRecipient) {
+    if (!isCanonicalAddress(draft.constraints.performanceFeeRecipient))
+      blockers.push('The performance fee recipient address is invalid.')
+    else warnings.push('A fee recipient is configured but no performance fee will be applied.')
+  }
+
   if (draft.source === 'cloned' && draft.sourceEconomics?.userLimitSource !== 'deployment-provenance')
     warnings.push(
       'Original user-limit configuration was not decoded from factory deployment data; verify it before cloning.',
@@ -476,7 +489,7 @@ export function buildNftPoolDeploymentPlan(
     },
     postDeploy: {
       performanceFee: draft.constraints.performanceFee || undefined,
-      feeTo: undefined,
+      feeTo: draft.constraints.performanceFeeRecipient || undefined,
     },
     readiness: {
       status,

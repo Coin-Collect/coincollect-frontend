@@ -421,6 +421,85 @@ export const Readiness = styled.div<{ $tone?: 'good' | 'warn' | 'bad' }>`
   font-weight: 700;
 `
 
+export const LaunchHero = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 18px;
+  background: ${({ theme }) => theme.colors.background};
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+`
+
+export const LaunchSteps = styled.div`
+  display: grid;
+  gap: 8px;
+`
+
+export const LaunchStep = styled.div<{ $active?: boolean; $done?: boolean; $blocked?: boolean }>`
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid ${({ theme, $active }) => ($active ? `${theme.colors.primary}66` : theme.colors.cardBorder)};
+  border-radius: 13px;
+  background: ${({ theme, $active }) => ($active ? `${theme.colors.primary}0d` : theme.colors.background)};
+  color: ${({ theme, $blocked }) => ($blocked ? theme.colors.failure : theme.colors.text)};
+
+  &::before {
+    content: ${({ $done }) => ($done ? "'✓'" : "'•'")};
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: ${({ theme, $done }) => ($done ? `${theme.colors.success}20` : theme.colors.backgroundAlt)};
+    color: ${({ theme, $done }) => ($done ? theme.colors.success : theme.colors.textSubtle)};
+    font-weight: 800;
+  }
+`
+
+export const LaunchCheckList = styled.div`
+  display: grid;
+  gap: 6px;
+`
+
+export const LaunchCheckRow = styled.div<{ $status?: string }>`
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  font-size: 13px;
+  color: ${({ theme, $status }) => ($status === 'BLOCK' ? theme.colors.failure : theme.colors.text)};
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+`
+
+export const LaunchPill = styled.span<{ $tone?: 'good' | 'warn' | 'bad' }>`
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: ${({ theme, $tone }) =>
+    `${$tone === 'good' ? theme.colors.success : $tone === 'bad' ? theme.colors.failure : theme.colors.warning}1b`};
+  color: ${({ theme, $tone }) =>
+    $tone === 'good' ? theme.colors.success : $tone === 'bad' ? theme.colors.failure : theme.colors.warning};
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+`
+
 export const SmallAction = styled.button`
   border: 0;
   padding: 0;

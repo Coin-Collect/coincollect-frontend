@@ -333,6 +333,7 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       userLimitEnabled:
         sourceEconomics.originalConfiguredUserLimit === undefined ? true : sourceEconomics.originalConfiguredUserLimit,
       performanceFee: '',
+      performanceFeeRecipient: '',
     },
     updatedAt: Date.now(),
   }
@@ -366,6 +367,7 @@ export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): Nf
       numberBlocksForUserLimit: '',
       userLimitEnabled: false,
       performanceFee: '',
+      performanceFeeRecipient: '',
     },
     updatedAt: Date.now(),
   }

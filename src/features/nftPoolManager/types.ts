@@ -237,6 +237,7 @@ export interface NftPoolDraftConstraints {
   numberBlocksForUserLimit: string
   userLimitEnabled: boolean
   performanceFee: string
+  performanceFeeRecipient: string
 }
 
 export interface NftPoolDeploymentPlan {

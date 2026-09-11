@@ -14,7 +14,7 @@ export default function NftPoolManagerDocs() {
         authorityScope="nft"
       >
         <Panel>
-          <PanelTitle>What is live in Phase 1.5 + 2</PanelTitle>
+          <PanelTitle>What is live in Phase 3</PanelTitle>
           <ol>
             <li>
               Read factory provenance, original capacity, current capacity and dynamically indexed collections/rewards.
@@ -26,14 +26,25 @@ export default function NftPoolManagerDocs() {
               Calculate exact BigNumber emissions, allocation-sized quotes and Solidity-compatible side reward
               percentages.
             </li>
-            <li>Save multiple local drafts and produce a dry-run deployment plan without a transaction object.</li>
+            <li>Save multiple local drafts and continue a launch session without storing wallet secrets.</li>
+            <li>Run a fresh Polygon preflight, then deploy, verify, configure, fund and verify again.</li>
           </ol>
         </Panel>
         <Panel style={{ marginTop: 16 }}>
           <PanelTitle>Safety boundary</PanelTitle>
           <p>
-            Deployment, reward funding, approvals, swaps, collection-weight updates, stopping and recovery actions are
-            not available. Saving a draft only writes to this browser&apos;s local storage.
+            Every production write is behind an explicit operator button and wallet confirmation. There is no automatic
+            approval, swap, stop, emergency recovery or ownership transfer. Tests and preflight are read-only.
+          </p>
+          <p>
+            The launch session freezes a plan hash after the first submitted hash. Deployment addresses come only from
+            the confirmed <code>NewSmartChefContract</code> event. Funding transfers only the current missing amount and
+            verifies the pool balance afterward, so closing the browser does not require blind resubmission.
+          </p>
+          <p>
+            <strong>Runbook:</strong> connect the Polygon factory-owner wallet, run preflight, review the 15-minute
+            setup buffer and gas/balance checks, confirm each requested wallet action, then run final verification. A
+            saved launch route can be resumed after an RPC error or browser restart.
           </p>
           <p>
             Quotes are explicitly fresh, stale or expired. Same-token budgets use an exact identity quote, and every

@@ -14,6 +14,7 @@ import {
 import { createEmptyNftPoolDraft, createNftPoolCloneDraft, findNftCollection, nftCollectionId } from '../registry'
 import { useNftPoolRegistry } from '../hooks'
 import { loadNftPoolDraft, saveNftPoolDraft } from '../storage'
+import { createNftPoolLaunchSession, findActiveNftPoolLaunchSession, saveNftPoolLaunchSession } from '../launch/storage'
 import { NftCollection, NftPoolDraft as NftPoolDraftModel, NftPoolDraftReward } from '../types'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import { mainnetTokens } from 'config/constants/tokens'
@@ -371,6 +372,22 @@ export default function PoolBuilder() {
   const save = () => {
     saveNftPoolDraft({ ...draft, intendedAdmin: account || draft.intendedAdmin, readiness: validation.readiness })
     setMessage('Draft saved locally. No blockchain transaction was sent.')
+  }
+
+  const startPreflight = () => {
+    if (!plan || validation.readiness !== 'READY_FOR_DRY_RUN' || !account) {
+      setMessage('Complete the blocking review items and connect the intended admin wallet first.')
+      return
+    }
+    const existing = findActiveNftPoolLaunchSession(draft.id)
+    if (existing) {
+      router.push(`/admin/nft-pools/launch/${existing.sessionId}`)
+      return
+    }
+    saveNftPoolDraft({ ...draft, intendedAdmin: account, readiness: validation.readiness })
+    const session = createNftPoolLaunchSession(plan, 137, plan.factoryAddress, account)
+    saveNftPoolLaunchSession(session)
+    router.push(`/admin/nft-pools/launch/${session.sessionId}`)
   }
 
   const renderStep = () => {
@@ -742,7 +759,7 @@ export default function PoolBuilder() {
                 </>
               ) : null}
               <Field>
-                Post-deploy performance fee (future)
+                Post-deploy performance fee (wei, optional)
                 <Input
                   inputMode="decimal"
                   value={draft.constraints.performanceFee}
@@ -750,6 +767,18 @@ export default function PoolBuilder() {
                     updateDraft({ constraints: { ...draft.constraints, performanceFee: event.target.value } })
                   }
                   placeholder="Optional; not a factory input"
+                />
+              </Field>
+              <Field>
+                Performance fee recipient
+                <Input
+                  value={draft.constraints.performanceFeeRecipient}
+                  onChange={(event) =>
+                    updateDraft({
+                      constraints: { ...draft.constraints, performanceFeeRecipient: event.target.value },
+                    })
+                  }
+                  placeholder="0x… (required when fee is set)"
                 />
               </Field>
             </FormGrid>
@@ -1015,7 +1044,12 @@ export default function PoolBuilder() {
           </Muted>
           <ButtonRow>
             <ActionButton onClick={save}>Save dry-run draft</ActionButton>
-            <ActionButton disabled>Continue to deploy</ActionButton>
+            <ActionButton
+              onClick={startPreflight}
+              disabled={!plan || validation.readiness !== 'READY_FOR_DRY_RUN' || !account}
+            >
+              Run preflight
+            </ActionButton>
           </ButtonRow>
         </Panel>
       </>

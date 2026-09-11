@@ -146,6 +146,10 @@ function migrateDraft(input: any): NftPoolDraft | null {
         ...base.constraints,
         ...(input.constraints || {}),
         userLimitEnabled: Boolean(input.constraints?.userLimitEnabled),
+        performanceFeeRecipient:
+          typeof input.constraints?.performanceFeeRecipient === 'string'
+            ? input.constraints.performanceFeeRecipient
+            : '',
       },
       readiness: ['INCOMPLETE', 'NEEDS_REVIEW', 'READY_FOR_DRY_RUN', 'READY_FOR_DEPLOYMENT'].includes(input.readiness)
         ? input.readiness
@@ -229,6 +233,7 @@ function migrateDraft(input: any): NftPoolDraft | null {
       poolLimitPerUser: oldConstraints.poolLimitPerUser || '',
       numberBlocksForUserLimit: oldConstraints.numberBlocksForUserLimit || '',
       performanceFee: '',
+      performanceFeeRecipient: '',
       userLimitEnabled: false,
     },
     updatedAt: Number(input.updatedAt) || Date.now(),
