@@ -35,8 +35,11 @@ const RewardsPanel = styled(Flex)`
   width: 100%;
   padding: 10px;
   border-radius: 12px;
-  background: linear-gradient(145deg, rgba(16, 20, 28, 0.92) 0%, rgba(12, 15, 22, 0.9) 100%);
-  border: 1px solid rgba(255, 215, 84, 0.18);
+  background: ${({ theme }) =>
+    theme.isDark
+      ? 'linear-gradient(145deg, rgba(16, 20, 28, 0.92) 0%, rgba(12, 15, 22, 0.9) 100%)'
+      : theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => (theme.isDark ? 'rgba(255, 215, 84, 0.18)' : theme.colors.cardBorder)};
 `
 
 const RewardsGrid = styled.div`
@@ -54,7 +57,7 @@ const RewardRow = styled(Flex)`
   min-width: 0;
   padding: 6px 8px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: ${({ theme }) => (theme.isDark ? 'rgba(255, 255, 255, 0.05)' : theme.colors.background)};
 `
 
 const RewardValue = styled(Text)`
@@ -66,7 +69,7 @@ const RewardValue = styled(Text)`
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 800;
-  color: #ffd966;
+  color: ${({ theme }) => (theme.isDark ? '#ffd966' : theme.colors.text)};
   letter-spacing: 0.2px;
 `
 
@@ -93,7 +96,7 @@ const RewardTokenFallbackIcon = styled.span`
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.14);
+  background: ${({ theme }) => (theme.isDark ? 'rgba(255, 255, 255, 0.14)' : theme.colors.backgroundDisabled)};
   color: ${({ theme }) => theme.colors.textSubtle};
   font-size: 8px;
   font-weight: 800;

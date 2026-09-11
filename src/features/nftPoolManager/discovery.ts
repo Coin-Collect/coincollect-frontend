@@ -51,7 +51,7 @@ const NFT_FACTORY_MAX_RPC_DISCOVERY_BLOCKS = 2_000_000
 const NFT_FACTORY_INDEXER_TIMEOUT_MS = 10_000
 const NFT_POOL_REGISTRY_CACHE_TTL = 30_000
 const NFT_FACTORY_DEPLOYMENT_FALLBACK = 45_594_882
-const NFT_POOL_INTROSPECTION_CONCURRENCY = 3
+const NFT_POOL_INTROSPECTION_CONCURRENCY = 8
 const NFT_POOL_INTROSPECTION_TIMEOUT_MS = 15_000
 const ZERO = BigNumber.from(0)
 
@@ -353,14 +353,28 @@ async function readV2Pool(
         deploymentHintValue,
       )
     const pool = new Contract(poolAddress, nftStakeAbi, provider)
+    const [owner, factoryAddress, stakingAddress, rewardAddress, rewardPerBlock, startBlock, endBlock] =
+      await Promise.all([
+        readOptional<string>(pool, 'owner'),
+        readOptional<string>(pool, 'SMART_CHEF_FACTORY'),
+        readOptional<string>(pool, 'stakedToken'),
+        readOptional<string>(pool, 'rewardToken'),
+        readOptional<BigNumber>(pool, 'rewardPerBlock'),
+        readOptional<BigNumber>(pool, 'startBlock'),
+        readOptional<BigNumber>(pool, 'bonusEndBlock'),
+      ])
+    if (!stakingAddress || !rewardAddress)
+      return unreadablePool(
+        farm,
+        poolAddress,
+        source,
+        collections,
+        'Pool contract did not expose the expected staking or reward token.',
+        deploymentHintValue,
+      )
+
+    const isShallowFactoryPool = source === 'nft-factory' && !farm
     const [
-      owner,
-      factoryAddress,
-      stakingAddress,
-      rewardAddress,
-      rewardPerBlock,
-      startBlock,
-      endBlock,
       participantThreshold,
       poolCapacity,
       totalShares,
@@ -371,44 +385,47 @@ async function readV2Pool(
       sideRewardActive,
       performanceFee,
       feeTo,
-    ] = await Promise.all([
-      pool.owner(),
-      pool.SMART_CHEF_FACTORY(),
-      pool.stakedToken(),
-      pool.rewardToken(),
-      pool.rewardPerBlock(),
-      pool.startBlock(),
-      pool.bonusEndBlock(),
-      pool.participantThreshold(),
-      pool.poolCapacity(),
-      pool.totalShares(),
-      readOptional<BigNumber>(pool, 'poolLimitPerUser'),
-      readOptional<BigNumber>(pool, 'numberBlocksForUserLimit'),
-      readOptional<boolean>(pool, 'userLimit', [], false),
-      readOptional<boolean>(pool, 'hasUserLimit', [], false),
-      readOptional<boolean>(pool, 'isSideRewardActive', [], false),
-      readOptional<BigNumber>(pool, 'performanceFee'),
-      readOptional<string>(pool, 'feeTo'),
-    ])
+    ] = isShallowFactoryPool
+      ? [undefined, undefined, undefined, undefined, undefined, false, false, false, undefined, undefined]
+      : await Promise.all([
+          readOptional<BigNumber>(pool, 'participantThreshold'),
+          readOptional<BigNumber>(pool, 'poolCapacity'),
+          readOptional<BigNumber>(pool, 'totalShares'),
+          readOptional<BigNumber>(pool, 'poolLimitPerUser'),
+          readOptional<BigNumber>(pool, 'numberBlocksForUserLimit'),
+          readOptional<boolean>(pool, 'userLimit', [], false),
+          readOptional<boolean>(pool, 'hasUserLimit', [], false),
+          readOptional<boolean>(pool, 'isSideRewardActive', [], false),
+          readOptional<BigNumber>(pool, 'performanceFee'),
+          readOptional<string>(pool, 'feeTo'),
+        ])
     const normalizedStakingAddress = normalizeOrFallback(stakingAddress)
     const normalizedRewardAddress = normalizeOrFallback(rewardAddress)
     const configuredSideRewards = getConfiguredSideRewards(farm)
-    const [communityAddressesResult, sideAddressesResult, deployment] = await Promise.all([
-      readIndexedArrayUntilRevert<string>(pool, 'communityCollections', {
-        hardCap: 32,
-        timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
-      }),
-      readIndexedArrayUntilRevert<string>(pool, 'sideRewardTokens', {
-        hardCap: 32,
-        timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
-      }),
-      readDeploymentProvenance(
-        provider,
-        normalizeOrFallback(factoryAddress) || getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID) || undefined,
-        deploymentHint?.transactionHash,
-        deploymentHint?.blockNumber,
-      ),
-    ])
+    const [communityAddressesResult, sideAddressesResult, deployment] = isShallowFactoryPool
+      ? [
+          { values: [], stoppedBy: 'revert' as const },
+          { values: [], stoppedBy: 'revert' as const },
+          deploymentHintValue,
+        ]
+      : await Promise.all([
+          readIndexedArrayUntilRevert<string>(pool, 'communityCollections', {
+            hardCap: 32,
+            timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+          }),
+          readIndexedArrayUntilRevert<string>(pool, 'sideRewardTokens', {
+            hardCap: 32,
+            timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+          }),
+          readDeploymentProvenance(
+            provider,
+            normalizeOrFallback(factoryAddress) ||
+              getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID) ||
+              undefined,
+            deploymentHint?.transactionHash,
+            deploymentHint?.blockNumber,
+          ),
+        ])
     const sideAddresses = sideAddressesResult.values.map(normalizeOrFallback).filter(Boolean)
     const primaryCollection = ensureNftCollection(
       collections,
@@ -485,6 +502,8 @@ async function readV2Pool(
       ),
     )
     const warnings: string[] = []
+    if (isShallowFactoryPool)
+      warnings.push('Basic on-chain data loaded; detailed collection and side-reward reads are deferred for speed.')
     if (communityAddressesResult.stoppedBy === 'hard-cap')
       warnings.push('Community collection discovery reached its safety cap; review the pool manually.')
     if (sideAddressesResult.stoppedBy === 'hard-cap')
