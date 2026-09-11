@@ -17,7 +17,7 @@ export type NavItem = {
   initialOpenState?: boolean
 }
 
-export const getNavConfig = (t: ContextApi['t'], account?: string | null): NavItem[] => {
+export const getNavConfig = (t: ContextApi['t'], account?: string | null, adminHref?: string): NavItem[] => {
   const items: NavItem[] = [
     {
       id: 'collections',
@@ -128,6 +128,19 @@ export const getNavConfig = (t: ContextApi['t'], account?: string | null): NavIt
       ],
     },
   ]
+
+  if (adminHref) {
+    const moreIndex = items.findIndex((item) => item.id === 'more')
+    if (moreIndex !== -1) {
+      items.splice(moreIndex, 0, {
+        id: 'admin',
+        label: t('Admin'),
+        href: adminHref,
+        icon: 'Cog',
+        activeMatch: 'prefix',
+      })
+    }
+  }
 
   if (account) {
     const dashboardHref = `${nftsBaseUrl}/profile/${account.toLowerCase()}`

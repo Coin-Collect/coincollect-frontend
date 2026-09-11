@@ -16,6 +16,9 @@ import { getActiveMenuItem, getActiveSubMenuItem } from './utils'
 import { footerLinks } from './config/footerConfig'
 import { getNavConfig } from './config/navConfig'
 import { getDrawerLinks, getSubLinks, getTopLinks } from './config/navMappers'
+import { getSmartChefFactoryAddress, getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
+import { POOL_MANAGER_CHAIN_ID } from 'features/poolManager/constants'
+import { usePoolManagerAuthority } from 'features/poolManager/hooks'
 
 const Menu = (props) => {
   const { isDark, toggleTheme } = useTheme()
@@ -24,8 +27,16 @@ const Menu = (props) => {
   const { asPath } = useRouter()
   const [showPhishingWarningBanner] = usePhishingBannerManager()
   const { account } = useWeb3React()
+  const erc20Authority = usePoolManagerAuthority(getSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID))
+  const nftAuthority = usePoolManagerAuthority(getNftSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID))
 
-  const navItems = useMemo(() => getNavConfig(t, account), [account, t])
+  const accountMatches = (authority: typeof erc20Authority) =>
+    Boolean(account && authority.account && authority.account.toLowerCase() === account.toLowerCase())
+  const erc20Admin = accountMatches(erc20Authority) && !erc20Authority.loading && erc20Authority.authorized
+  const nftAdmin = accountMatches(nftAuthority) && !nftAuthority.loading && nftAuthority.authorized
+  const adminHref = erc20Admin ? '/admin' : nftAdmin ? '/admin/nft-pools' : undefined
+
+  const navItems = useMemo(() => getNavConfig(t, account, adminHref), [account, adminHref, t])
   const drawerLinks = useMemo(() => getDrawerLinks(navItems), [navItems])
   const topLinks = useMemo(() => getTopLinks(navItems), [navItems])
 

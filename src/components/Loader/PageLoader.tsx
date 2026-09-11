@@ -3,6 +3,14 @@ import styled from 'styled-components'
 import { Spinner } from '@pancakeswap/uikit'
 
 const MAX_TETHER_DISTANCE = 124
+const LOADING_MESSAGES = [
+  'Waking up the flock…',
+  'Checking the network…',
+  'Gathering fresh data…',
+  'Counting your rewards…',
+  'Syncing your wallet…',
+  'Almost ready, friend…',
+]
 
 const floatMotion = `
   0%, 100% { transform: translateY(0); }
@@ -51,8 +59,58 @@ const LoaderVideo = styled.video`
   }
 `
 
+const StatusBubble = styled.div`
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 8px 12px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 14px 14px 14px 5px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: status-in 0.35s ease both;
+
+  &::after {
+    position: absolute;
+    right: 22px;
+    bottom: -6px;
+    width: 10px;
+    height: 10px;
+    border-right: 1px solid ${({ theme }) => theme.colors.cardBorder};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+    background: ${({ theme }) => theme.colors.backgroundAlt};
+    content: '';
+    transform: rotate(45deg);
+  }
+
+  @keyframes status-in {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(5px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`
+
 const PageLoader: React.FC = () => {
   const [videoError, setVideoError] = useState(false)
+  const [messageIndex, setMessageIndex] = useState(0)
   const [motion, setMotion] = useState<{
     x: number
     y: number
@@ -60,6 +118,14 @@ const PageLoader: React.FC = () => {
     pointerY: number
     active: boolean
   } | null>(null)
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setMessageIndex((currentIndex) => (currentIndex + 1) % LOADING_MESSAGES.length)
+    }, 2600)
+
+    return () => window.clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
@@ -124,11 +190,14 @@ const PageLoader: React.FC = () => {
     <Wrapper>
       {tetherStyle ? <Tether style={tetherStyle} /> : null}
       <LoaderOrb style={loaderStyle}>
+        <StatusBubble key={messageIndex} role="status" aria-live="polite" aria-atomic="true">
+          {LOADING_MESSAGES[messageIndex]}
+        </StatusBubble>
         {videoError ? (
           <Spinner />
         ) : (
           <LoaderVideo autoPlay loop muted playsInline onError={() => setVideoError(true)}>
-            <source src="/sheep.webm" type="video/webm" />
+            <source src="/loader.webm" type="video/webm" />
           </LoaderVideo>
         )}
       </LoaderOrb>
