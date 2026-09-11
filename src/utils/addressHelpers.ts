@@ -23,6 +23,12 @@ export const getSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUB
 export const getSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
   return addresses.smartChefFactoryDeploymentBlock?.[chainId] || null
 }
+export const getNftSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+  return addresses.nftSmartChefFactory?.[chainId] || null
+}
+export const getNftSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+  return addresses.nftSmartChefFactoryDeploymentBlock?.[chainId] || null
+}
 // Only Farm Version Masterchef
 export const getCoinCollectFarmAddress = () => {
   return getAddress(addresses.coinCollectFarm)

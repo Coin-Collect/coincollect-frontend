@@ -30,8 +30,9 @@ export async function getFactoryAuthority(
   provider: Provider,
   account?: string | null,
   chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 137,
+  factoryAddressOverride?: string | null,
 ): Promise<PoolManagerAuthority> {
-  const factoryAddress = getSmartChefFactoryAddress(chainId)
+  const factoryAddress = factoryAddressOverride || getSmartChefFactoryAddress(chainId)
 
   if (!factoryAddress) {
     return {

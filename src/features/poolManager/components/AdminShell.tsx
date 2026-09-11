@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import useWeb3React from 'hooks/useWeb3React'
-import { getSmartChefFactoryAddress } from 'utils/addressHelpers'
+import { getNftSmartChefFactoryAddress, getSmartChefFactoryAddress } from 'utils/addressHelpers'
 import { POOL_MANAGER_CHAIN_ID } from '../constants'
 import { usePoolManagerAuthority } from '../hooks'
 import {
@@ -23,25 +23,30 @@ import {
 
 const links = [
   { href: '/admin', label: 'Overview' },
-  { href: '/admin/pools', label: 'Pools' },
-  { href: '/admin/pools/new', label: 'New pool' },
+  { href: '/admin/nft-pools', label: 'NFT pools' },
+  { href: '/admin/pools', label: 'ERC20 pools' },
   { href: '/admin/treasury', label: 'Treasury' },
 ]
 
 export default function AdminShell({
   title,
   subtitle,
+  authorityScope = 'erc20',
   children,
 }: {
   title: string
   subtitle: string
+  authorityScope?: 'erc20' | 'nft'
   children: React.ReactNode
 }) {
   const router = useRouter()
   const { account, chainId } = useWeb3React()
-  const authority = usePoolManagerAuthority()
+  const factoryAddress =
+    authorityScope === 'nft'
+      ? getNftSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
+      : getSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
+  const authority = usePoolManagerAuthority(factoryAddress)
   const activePath = router.asPath.split('?')[0]
-  const factoryAddress = getSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
 
   if (!account) {
     return <AccessGate title="Admin panel" text="Connect your wallet to continue." action />
@@ -82,7 +87,11 @@ export default function AdminShell({
       {chainId && chainId !== POOL_MANAGER_CHAIN_ID ? (
         <NoticeLine>Switch wallet to Polygon (chain {POOL_MANAGER_CHAIN_ID}) for admin actions.</NoticeLine>
       ) : null}
-      {!factoryAddress ? <NoticeLine>SmartChefFactory is not configured for this network.</NoticeLine> : null}
+      {!factoryAddress ? (
+        <NoticeLine>
+          {authorityScope === 'nft' ? 'NFT SmartChefFactory' : 'SmartChefFactory'} is not configured for this network.
+        </NoticeLine>
+      ) : null}
       {children}
     </AdminPage>
   )

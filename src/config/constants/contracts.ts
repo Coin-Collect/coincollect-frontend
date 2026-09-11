@@ -8,6 +8,13 @@ export default {
   smartChefFactoryDeploymentBlock: {
     137: 45634311,
   },
+  // NFT Stake v2 SmartChefFactory. This factory is separate from the CoinStake/ERC20 factory.
+  nftSmartChefFactory: {
+    137: '0xa7983F8B45860626398b391E9Bb71416A26349D4',
+  },
+  nftSmartChefFactoryDeploymentBlock: {
+    137: 45594882,
+  },
   masterChef: {
     97: '0x1d32c2945C8FDCBc7156c553B7cEa4325a17f4f9',
     56: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',

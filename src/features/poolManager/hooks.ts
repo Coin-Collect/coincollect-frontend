@@ -40,7 +40,9 @@ export function usePoolManagerRegistry() {
   return { data, loading, error, refresh }
 }
 
-export function usePoolManagerAuthority(): PoolManagerAuthority & { loading: boolean; refresh: () => Promise<void> } {
+export function usePoolManagerAuthority(
+  factoryAddressOverride?: string | null,
+): PoolManagerAuthority & { loading: boolean; refresh: () => Promise<void> } {
   const { account } = useWeb3React()
   const [authority, setAuthority] = useState<PoolManagerAuthority>({
     factoryAddress: null,
@@ -53,9 +55,9 @@ export function usePoolManagerAuthority(): PoolManagerAuthority & { loading: boo
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    setAuthority(await getFactoryAuthority(simplePolygonRpcProvider, account))
+    setAuthority(await getFactoryAuthority(simplePolygonRpcProvider, account, 137, factoryAddressOverride))
     setLoading(false)
-  }, [account])
+  }, [account, factoryAddressOverride])
 
   useEffect(() => {
     refresh()

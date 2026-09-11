@@ -38,6 +38,10 @@ import {
   StatusPill,
 } from './styles'
 
+// The previous ERC20 manager remains available for historical inspection, but all
+// deployment and funding writes are intentionally disabled while NFT Pool Studio is read-only.
+const ERC20_POOL_WRITES_ENABLED = false
+
 const tokenOptions = Object.values(mainnetTokens)
   .filter((token: any) => token?.chainId === POOL_MANAGER_CHAIN_ID)
   .filter(
@@ -172,6 +176,10 @@ export default function NewPoolWizard() {
   const deploy = async () => {
     setMessage(null)
     try {
+      if (!ERC20_POOL_WRITES_ENABLED) {
+        setMessage('Legacy ERC20 pool deployment is disabled. Use NFT Pool Studio for the read-only Phase 1 flow.')
+        return
+      }
       if (chainId !== POOL_MANAGER_CHAIN_ID) throw new Error('Switch the connected wallet to Polygon before deploying.')
       if (!account || !library) throw new Error('Connect the factory-owner wallet first.')
       if (!authority.authorized)
@@ -200,6 +208,10 @@ export default function NewPoolWizard() {
   }
 
   const fund = async () => {
+    if (!ERC20_POOL_WRITES_ENABLED) {
+      setMessage('Legacy ERC20 pool funding is disabled in this phase.')
+      return
+    }
     if (!deployment || !library || !fundingAmount) return
     try {
       setBusy(true)
@@ -245,6 +257,10 @@ export default function NewPoolWizard() {
           {message}
         </Notice>
       ) : null}
+      <Notice>
+        Legacy ERC20 deployment and funding controls are disabled. This branch is preparing the read-only NFT Pool
+        Studio foundation.
+      </Notice>
       <Panel>
         <PanelTitle>Pair</PanelTitle>
         <FormGrid>
@@ -385,10 +401,13 @@ export default function NewPoolWizard() {
           </div>
         </div>
         <ButtonRow>
-          <ActionButton onClick={deploy} disabled={busy || registryLoading || !plan || !authority.authorized}>
-            {busy ? 'Waiting for wallet…' : 'Deploy pool'}
+          <ActionButton
+            onClick={deploy}
+            disabled={!ERC20_POOL_WRITES_ENABLED || busy || registryLoading || !plan || !authority.authorized}
+          >
+            {ERC20_POOL_WRITES_ENABLED && busy ? 'Waiting for wallet…' : 'Deployment disabled'}
           </ActionButton>
-          <Muted>Deployment submits only after explicit wallet confirmation.</Muted>
+          <Muted>No deployment transaction can be submitted from this legacy flow.</Muted>
         </ButtonRow>
       </Panel>
 
@@ -415,10 +434,10 @@ export default function NewPoolWizard() {
                 <Input value={fundingAmount} onChange={(event) => setFundingAmount(event.target.value)} />
               </Field>
               <ButtonRow>
-                <ActionButton onClick={fund} disabled={busy || !fundingAmount}>
-                  Fund pool
+                <ActionButton onClick={fund} disabled={!ERC20_POOL_WRITES_ENABLED || busy || !fundingAmount}>
+                  Funding disabled
                 </ActionButton>
-                <Muted>Default is the planned maximum emission, editable before confirmation.</Muted>
+                <Muted>Funding is disabled while Phase 1 remains read-only.</Muted>
               </ButtonRow>
             </>
           ) : null}
