@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NftCollection, NftPool, NftPoolDraft, NftPoolDraftReward } from '../../types'
 import type { PoolEconomicsCalculation } from '../../economics'
-import { formatBaseUnits } from '../../economics'
+import { applySoliditySideReward, formatBaseUnits } from '../../economics'
 import type { NftDraftValidationResult } from '../../validation'
 import type { NftPreflightResult } from '../../launch/types'
 import { findNftCollection } from '../../registry'
@@ -293,6 +293,29 @@ export default function NftPoolCardStudio({
   })
   const threshold = safeBigNumber(draft.constraints.participantThreshold)
   const rewardDecimals = draft.rewards.primary?.decimals
+  const dailyPrimaryReward =
+    economics?.primary.rewardPerBlock && !threshold.isZero()
+      ? calculateRewardSharePreview({
+          rewardPerBlock: economics.primary.rewardPerBlock,
+          participantWeight: BigNumber.from(1),
+          totalShares: threshold,
+          participantThreshold: threshold,
+          secondsPerBlock,
+        }).dailyReward
+      : undefined
+
+  const dailyRewardFor = (reward: NftPoolDraftReward): BigNumber | undefined => {
+    if (dailyPrimaryReward === undefined || !draft.rewards.primary) return undefined
+    if (reward.address.toLowerCase() === draft.rewards.primary.address.toLowerCase()) return dailyPrimaryReward
+    const side = economics?.side.find((item) => item.tokenAddress.toLowerCase() === reward.address.toLowerCase())
+    if (!side || draft.rewards.primary.decimals === undefined || reward.decimals === undefined) return undefined
+    return applySoliditySideReward(
+      dailyPrimaryReward,
+      side.encodedPercentage,
+      draft.rewards.primary.decimals,
+      reward.decimals,
+    )
+  }
   const shareExamples = useMemo(() => {
     const rewardPerBlock = economics?.primary.rewardPerBlock
     if (!rewardPerBlock || rewardPerBlock.isZero() || !draft.rewards.primary || threshold.isZero()) return []
@@ -926,7 +949,7 @@ export default function NftPoolCardStudio({
                 ) : null}
                 {economics && draft.economics.totalBudget ? (
                   <div style={{ display: 'grid', gap: 4, marginTop: 9 }}>
-                    <CardMeta>Allocated budget and token estimate</CardMeta>
+                    <CardMeta>Allocated budget, token estimate and daily reward</CardMeta>
                     {economics.allocations.map((allocation) => {
                       const reward = rewards.find(
                         (item) => item.address.toLowerCase() === allocation.tokenAddress.toLowerCase(),
@@ -939,11 +962,18 @@ export default function NftPoolCardStudio({
                         allocation.source === 'missing'
                           ? 'Awaiting quote'
                           : `${formatBaseUnits(allocation.desiredAmount, reward.decimals)} ${reward.symbol}`
+                      const dailyReward = allocation.source === 'missing' ? undefined : dailyRewardFor(reward)
                       return (
                         <CardMeta key={allocation.tokenAddress}>
                           {reward.symbol} {formatAllocationPercent(allocation.allocationBps.toString())}% ·{' '}
                           {formatBaseUnits(budgetAllocation.allocatedBudget, draft.economics.budgetDecimals)}{' '}
                           {draft.economics.budgetDenomination || 'USDT'} → {amount}
+                          {dailyReward !== undefined ? (
+                            <span style={{ display: 'block' }}>
+                              ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day · fixed up to{' '}
+                              {threshold.toString()} total power
+                            </span>
+                          ) : null}
                         </CardMeta>
                       )
                     })}
