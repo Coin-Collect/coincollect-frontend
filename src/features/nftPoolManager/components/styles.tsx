@@ -58,6 +58,35 @@ export const NftPoolList = styled.div`
   }
 `
 
+export const PoolSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
+
+  &:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+`
+
+export const PoolSectionTitle = styled.h3`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 15px;
+  letter-spacing: -0.02em;
+`
+
+export const PoolSectionMeta = styled.span`
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 12px;
+  font-weight: 700;
+`
+
 export const AdminPoolCard = styled.article`
   overflow: hidden;
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
@@ -77,7 +106,8 @@ export const AdminPoolArtwork = styled.div`
   position: relative;
   height: 154px;
   overflow: hidden;
-  background: ${({ theme }) => `radial-gradient(circle at 75% 20%, ${theme.colors.primary}55, transparent 38%), ${theme.colors.background}`};
+  background: ${({ theme }) =>
+    `radial-gradient(circle at 75% 20%, ${theme.colors.primary}55, transparent 38%), ${theme.colors.background}`};
 `
 
 export const AdminPoolArtworkImage = styled.img`
@@ -107,7 +137,11 @@ export const AdminPoolStatus = styled.span<{ $status?: string }>`
   padding: 6px 9px;
   color: #fff;
   background: ${({ theme, $status }) =>
-    $status === 'ACTIVE' ? `${theme.colors.success}dd` : $status === 'FINISHED' ? `${theme.colors.textSubtle}dd` : `${theme.colors.warning}dd`};
+    $status === 'ACTIVE'
+      ? `${theme.colors.success}dd`
+      : $status === 'FINISHED'
+      ? `${theme.colors.textSubtle}dd`
+      : `${theme.colors.warning}dd`};
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.08em;

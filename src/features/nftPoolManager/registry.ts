@@ -13,6 +13,7 @@ import {
   NftPoolStatus,
   NftWeightSource,
 } from './types'
+import { resolveNftAssetUrl } from './assets'
 
 export const NFT_POOL_MANAGER_CHAIN_ID = 137
 
@@ -305,8 +306,8 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     chainId: pool.chainId,
     source: 'cloned',
     name: pool.metadata.name,
-    banner: pool.metadata.banner,
-    avatar: pool.metadata.avatar,
+    banner: resolveNftAssetUrl(pool.metadata.banner),
+    avatar: resolveNftAssetUrl(pool.metadata.avatar),
     projectUrl: pool.metadata.projectUrl,
     getNftUrl: pool.metadata.getNftUrl,
     collections,

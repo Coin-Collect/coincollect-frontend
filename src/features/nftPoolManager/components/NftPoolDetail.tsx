@@ -19,6 +19,7 @@ import {
 } from 'features/poolManager/components/styles'
 import { formatNftDuration } from '../registry'
 import { useNftPoolRegistry } from '../hooks'
+import { saveNftPoolCloneDraft } from '../storage'
 import { NftPool } from '../types'
 import {
   CollectionAddress,
@@ -346,7 +347,10 @@ export default function NftPoolDetail() {
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 18 }}>
             {pool.cloneSupport !== 'UNAVAILABLE' ? (
-              <LinkText href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`}>
+              <LinkText
+                href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`}
+                onClick={() => saveNftPoolCloneDraft(pool, data.secondsPerBlock)}
+              >
                 {pool.status === 'FINISHED' ? 'Renew pool' : 'Duplicate pool'}
               </LinkText>
             ) : (

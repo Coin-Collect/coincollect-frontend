@@ -17,7 +17,18 @@ import { loadNftPoolLaunchSessions } from '../launch/storage'
 import { deleteNftPoolDraft, duplicateNftPoolDraft, loadNftPoolDrafts } from '../storage'
 import { NftPoolDraft, NftPoolStatus } from '../types'
 import type { NftPoolLaunchSession } from '../launch/types'
-import { FilterBar, NftPoolList, PrimaryLink, StudioSummary, SummaryCard, SummaryLabel, SummaryValue } from './styles'
+import {
+  FilterBar,
+  NftPoolList,
+  PoolSectionHeader,
+  PoolSectionMeta,
+  PoolSectionTitle,
+  PrimaryLink,
+  StudioSummary,
+  SummaryCard,
+  SummaryLabel,
+  SummaryValue,
+} from './styles'
 import { NftPoolAdminCard, NftPoolDraftCard } from './studio/NftPoolAdminCard'
 
 type AdminFilter = 'ALL' | NftPoolStatus | 'DRAFTS'
@@ -97,6 +108,13 @@ export default function NftPoolsAdmin() {
       return !normalizedQuery || searchText.includes(normalizedQuery)
     })
   }, [drafts, query, status])
+  const poolGroups = useMemo(
+    () => ({
+      published: pools.filter((pool) => pool.status !== 'FINISHED'),
+      finished: pools.filter((pool) => pool.status === 'FINISHED'),
+    }),
+    [pools],
+  )
 
   return (
     <AdminShell
@@ -170,26 +188,58 @@ export default function NftPoolsAdmin() {
         <Muted style={{ display: 'block', marginBottom: 14 }}>
           The same artwork, collections and rewards model is used here as in the public staking experience.
         </Muted>
-        <NftPoolList>
-          {pools.map((pool) => (
-            <NftPoolAdminCard key={pool.id} pool={pool} secondsPerBlock={data?.secondsPerBlock || 2.2} />
-          ))}
-          {visibleDrafts.map((draft) => (
-            <NftPoolDraftCard
-              key={draft.id}
-              draft={draft}
-              resumeSessionId={launchSessionByDraftId.get(draft.id)}
-              onDuplicate={() => {
-                const copy = duplicateNftPoolDraft(draft.id)
-                if (copy) refreshDrafts()
-              }}
-              onDelete={() => {
-                deleteNftPoolDraft(draft.id)
-                refreshDrafts()
-              }}
-            />
-          ))}
-        </NftPoolList>
+        {visibleDrafts.length ? (
+          <>
+            <PoolSectionHeader>
+              <PoolSectionTitle>Saved drafts</PoolSectionTitle>
+              <PoolSectionMeta>{visibleDrafts.length}</PoolSectionMeta>
+            </PoolSectionHeader>
+            <NftPoolList>
+              {visibleDrafts.map((draft) => (
+                <NftPoolDraftCard
+                  key={draft.id}
+                  draft={draft}
+                  knownCollections={data?.collections || []}
+                  resumeSessionId={launchSessionByDraftId.get(draft.id)}
+                  onDuplicate={() => {
+                    const copy = duplicateNftPoolDraft(draft.id)
+                    if (copy) refreshDrafts()
+                  }}
+                  onDelete={() => {
+                    deleteNftPoolDraft(draft.id)
+                    refreshDrafts()
+                  }}
+                />
+              ))}
+            </NftPoolList>
+          </>
+        ) : null}
+        {poolGroups.published.length ? (
+          <>
+            <PoolSectionHeader>
+              <PoolSectionTitle>Published pools</PoolSectionTitle>
+              <PoolSectionMeta>{poolGroups.published.length}</PoolSectionMeta>
+            </PoolSectionHeader>
+            <NftPoolList>
+              {poolGroups.published.map((pool) => (
+                <NftPoolAdminCard key={pool.id} pool={pool} secondsPerBlock={data?.secondsPerBlock || 2.2} />
+              ))}
+            </NftPoolList>
+          </>
+        ) : null}
+        {poolGroups.finished.length ? (
+          <>
+            <PoolSectionHeader>
+              <PoolSectionTitle>Closed pools</PoolSectionTitle>
+              <PoolSectionMeta>{poolGroups.finished.length}</PoolSectionMeta>
+            </PoolSectionHeader>
+            <NftPoolList>
+              {poolGroups.finished.map((pool) => (
+                <NftPoolAdminCard key={pool.id} pool={pool} secondsPerBlock={data?.secondsPerBlock || 2.2} />
+              ))}
+            </NftPoolList>
+          </>
+        ) : null}
         {!loading && pools.length === 0 && visibleDrafts.length === 0 ? (
           data?.pools?.length || drafts.length ? (
             <Muted>No pool cards matched the current filters.</Muted>

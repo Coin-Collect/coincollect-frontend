@@ -13,7 +13,7 @@ import {
 } from '../validation'
 import { createEmptyNftPoolDraft, createNftPoolCloneDraft, findNftCollection, nftCollectionId } from '../registry'
 import { useNftPoolRegistry } from '../hooks'
-import { loadNftPoolDraft, saveNftPoolDraft } from '../storage'
+import { loadNftPoolDraft, loadNftPoolDraftForSourcePool, saveNftPoolDraft } from '../storage'
 import { createNftPoolLaunchSession, findActiveNftPoolLaunchSession, saveNftPoolLaunchSession } from '../launch/storage'
 import { runNftPoolPreflight } from '../launch/preflight'
 import type { NftPreflightResult } from '../launch/types'
@@ -105,7 +105,13 @@ export default function PoolBuilder() {
   const { account, library } = useWeb3React()
 
   const sourcePool = useMemo(
-    () => data?.pools.find((pool) => pool.id === cloneId || pool.address.toLowerCase() === cloneId.toLowerCase()),
+    () =>
+      data?.pools.find(
+        (pool) =>
+          pool.id.toLowerCase() === cloneId.toLowerCase() ||
+          pool.canonicalId.toLowerCase() === cloneId.toLowerCase() ||
+          pool.address.toLowerCase() === cloneId.toLowerCase(),
+      ),
     [cloneId, data?.pools],
   )
   const validation = useMemo(
@@ -137,17 +143,27 @@ export default function PoolBuilder() {
   }, [account, draft.intendedAdmin])
 
   useEffect(() => {
+    if (!router.isReady) return
     if (savedDraftId) {
       setMode('card')
       const saved = loadNftPoolDraft(savedDraftId)
-      if (saved) setDraft(saved)
+      if (saved && saved.id !== draft.id) {
+        setDraft(saved)
+        setDraftTouched(false)
+      }
       setHydrated(true)
       return
     }
     if (cloneId) {
       setMode('card')
-      if (sourcePool) {
+      const savedClone = loadNftPoolDraftForSourcePool(sourcePool?.id || cloneId)
+      if (savedClone && savedClone.id !== draft.id) {
+        setDraft(savedClone)
+        setDraftTouched(false)
+        setHydrated(true)
+      } else if (sourcePool && draft.sourcePoolId !== sourcePool.id) {
         setDraft(createNftPoolCloneDraft(sourcePool, data?.secondsPerBlock || 2.2))
+        setDraftTouched(false)
         setHydrated(true)
       } else if (!loading) {
         setHydrated(true)
@@ -155,7 +171,7 @@ export default function PoolBuilder() {
       return
     }
     setHydrated(true)
-  }, [cloneId, data?.secondsPerBlock, loading, savedDraftId, sourcePool])
+  }, [cloneId, data?.secondsPerBlock, draft.id, draft.sourcePoolId, loading, router.isReady, savedDraftId, sourcePool])
 
   useEffect(() => {
     if (!hydrated || !draftTouched) return undefined

@@ -6,6 +6,7 @@ import { formatBaseUnits } from '../../economics'
 import type { NftDraftValidationResult } from '../../validation'
 import type { NftPreflightResult } from '../../launch/types'
 import { findNftCollection } from '../../registry'
+import { collectionImageCandidates, resolveNftAssetUrl } from '../../assets'
 import { calculateRewardSharePreview, formatAllocationPercent, percentToBps } from '../../studio/economicsPreview'
 import { poolArtworkRegistry } from '../../studio/artworkRegistry'
 import {
@@ -143,7 +144,15 @@ function RewardTokenIcon({ reward }: { reward: NftPoolDraftReward }) {
 }
 
 function CollectionImage({ collection }: { collection: NftCollection }) {
-  return <PickerIcon src={collection.image || '/images/nfts/no-profile-md.png'} alt="" />
+  const candidates = collectionImageCandidates(collection)
+  const [index, setIndex] = useState(0)
+  return (
+    <PickerIcon
+      src={candidates[index]}
+      alt=""
+      onError={() => setIndex((current) => Math.min(current + 1, candidates.length - 1))}
+    />
+  )
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -187,8 +196,16 @@ function statusText(validation: NftDraftValidationResult): string {
   return validation.blockers.length ? 'DRAFT' : 'READY'
 }
 
-function cardCollectionImage(collection: NftCollection): string {
-  return collection.image || '/images/nfts/no-profile-md.png'
+function CardCollectionImage({ collection }: { collection: NftCollection }) {
+  const candidates = collectionImageCandidates(collection)
+  const [index, setIndex] = useState(0)
+  return (
+    <CollectionStackImage
+      src={candidates[index]}
+      alt=""
+      onError={() => setIndex((current) => Math.min(current + 1, candidates.length - 1))}
+    />
+  )
 }
 
 export default function NftPoolCardStudio({
@@ -299,7 +316,7 @@ export default function NftPoolCardStudio({
     threshold.toString(),
   ])
 
-  const selectedArtwork = draft.banner || draft.avatar
+  const selectedArtwork = resolveNftAssetUrl(draft.banner || draft.avatar)
   const primaryCollection = selectedCollections[0]
   const status = statusText(validation)
   const rewardPerBlock = economics?.primary.rewardPerBlock
@@ -808,7 +825,7 @@ export default function NftPoolCardStudio({
                 >
                   <CollectionStack>
                     {selectedCollections.slice(0, 4).map((collection) => (
-                      <CollectionStackImage key={collection.id} src={cardCollectionImage(collection)} alt="" />
+                      <CardCollectionImage key={collection.id} collection={collection} />
                     ))}
                     {!selectedCollections.length ? <AddCollectionCircle>+</AddCollectionCircle> : null}
                     {selectedCollections.length > 4 ? <StackLabel>+{selectedCollections.length - 4}</StackLabel> : null}

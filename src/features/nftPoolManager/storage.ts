@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { createEmptyNftPoolDraft } from './registry'
-import { NftPoolDraft, NftPoolDraftEconomics, NftPoolDraftQuote, NftPoolSourceEconomics } from './types'
+import { createEmptyNftPoolDraft, createNftPoolCloneDraft } from './registry'
+import { NftPool, NftPoolDraft, NftPoolDraftEconomics, NftPoolDraftQuote, NftPoolSourceEconomics } from './types'
 
 export const NFT_POOL_DRAFT_STORAGE_KEY = 'coincollect.nft-pool-studio.drafts.v2'
 export const NFT_POOL_DRAFT_STORAGE_KEY_V1 = 'coincollect.nft-pool-studio.drafts.v1'
@@ -266,11 +266,22 @@ export function loadNftPoolDraft(id: string): NftPoolDraft | undefined {
   return loadNftPoolDrafts().find((draft) => draft.id === id)
 }
 
+export function loadNftPoolDraftForSourcePool(sourcePoolId: string): NftPoolDraft | undefined {
+  if (!sourcePoolId) return undefined
+  return loadNftPoolDrafts().find((draft) => draft.source === 'cloned' && draft.sourcePoolId === sourcePoolId)
+}
+
 export function saveNftPoolDraft(draft: NftPoolDraft): void {
   if (!canUseStorage()) return
   const next = { ...draft, schemaVersion: 2 as const, updatedAt: Date.now() }
   const drafts = loadNftPoolDrafts().filter((item) => item.id !== draft.id)
   window.localStorage.setItem(NFT_POOL_DRAFT_STORAGE_KEY, JSON.stringify([next, ...drafts]))
+}
+
+export function saveNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): NftPoolDraft {
+  const draft = createNftPoolCloneDraft(pool, secondsPerBlock)
+  saveNftPoolDraft(draft)
+  return draft
 }
 
 export function deleteNftPoolDraft(id: string): void {

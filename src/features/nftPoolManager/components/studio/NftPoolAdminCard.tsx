@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { NftPool, NftPoolDraft, NftPoolDraftReward, NftRewardAsset } from '../../types'
 import { formatBaseUnits } from '../../economics'
 import { formatNftDuration } from '../../registry'
+import { collectionImageCandidates, draftArtworkCandidates, poolArtworkCandidates } from '../../assets'
+import { saveNftPoolCloneDraft } from '../../storage'
 import {
   AdminPoolArtwork,
   AdminPoolArtworkImage,
@@ -66,11 +68,12 @@ function RewardIcon({ reward }: { reward: RewardLike }) {
 }
 
 function PoolArtwork({ pool }: { pool: NftPool }) {
-  const [failed, setFailed] = useState(false)
-  const src = pool.metadata.banner || pool.metadata.avatar
+  const candidates = poolArtworkCandidates(pool)
+  const [index, setIndex] = useState(0)
+  const src = candidates[index]
   return (
     <AdminPoolArtwork>
-      {!src || failed ? (
+      {!src ? (
         <AdminPoolArtworkVideo
           autoPlay
           loop
@@ -80,7 +83,11 @@ function PoolArtwork({ pool }: { pool: NftPool }) {
           aria-hidden="true"
         />
       ) : (
-        <AdminPoolArtworkImage src={src} alt="" onError={() => setFailed(true)} />
+        <AdminPoolArtworkImage
+          src={src}
+          alt=""
+          onError={() => setIndex((current) => Math.min(current + 1, candidates.length))}
+        />
       )}
       <AdminPoolArtworkShade />
       <AdminPoolStatus $status={pool.status}>{pool.status}</AdminPoolStatus>
@@ -89,11 +96,23 @@ function PoolArtwork({ pool }: { pool: NftPool }) {
   )
 }
 
+function PoolCollectionIcon({ collection }: { collection: NftPool['collections'][number]['collection'] }) {
+  const candidates = collectionImageCandidates(collection)
+  const [index, setIndex] = useState(0)
+  return (
+    <AdminPoolIcon
+      src={candidates[index]}
+      alt=""
+      onError={() => setIndex((current) => Math.min(current + 1, candidates.length - 1))}
+    />
+  )
+}
+
 function PoolCollectionStack({ pool }: { pool: NftPool }) {
   return (
     <AdminPoolIconStack aria-label={`${pool.collections.length} NFT collections`}>
       {pool.collections.slice(0, 3).map(({ collection }) => (
-        <AdminPoolIcon key={collection.id} src={collection.image || '/images/nfts/no-profile-md.png'} alt="" />
+        <PoolCollectionIcon key={collection.id} collection={collection} />
       ))}
       {pool.collections.length > 3 ? <AdminPoolIconCount>+{pool.collections.length - 3}</AdminPoolIconCount> : null}
     </AdminPoolIconStack>
@@ -103,6 +122,7 @@ function PoolCollectionStack({ pool }: { pool: NftPool }) {
 export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; secondsPerBlock: number }) {
   const rewards = [pool.rewards.primary, ...pool.rewards.side]
   const renewalLink = `/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`
+  const prepareClone = () => saveNftPoolCloneDraft(pool, secondsPerBlock)
   return (
     <AdminPoolCard>
       <PoolArtwork pool={pool} />
@@ -155,7 +175,7 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
           </Link>
           {pool.cloneSupport !== 'UNAVAILABLE' ? (
             <Link href={renewalLink} passHref legacyBehavior>
-              <SoftLink>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
+              <SoftLink onClick={prepareClone}>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
             </Link>
           ) : null}
         </AdminPoolCardActions>
@@ -166,11 +186,13 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
 }
 
 function DraftArtwork({ draft }: { draft: NftPoolDraft }) {
-  const [failed, setFailed] = useState(false)
-  const src = draft.banner || draft.avatar
-  if (!src || failed) {
+  const candidates = draftArtworkCandidates(draft)
+  const [index, setIndex] = useState(0)
+  const src = candidates[index]
+  if (!src) {
     return (
       <AdminPoolArtwork>
+        <AdminPoolArtworkVideo autoPlay loop muted playsInline src={fallbackHeroVideo(draft.id)} aria-hidden="true" />
         <AdminPoolArtworkShade />
         <AdminPoolStatus $status="DRAFT">DRAFT</AdminPoolStatus>
         <AdminPoolArtworkTitle>{draft.name || 'Untitled pool'}</AdminPoolArtworkTitle>
@@ -179,7 +201,11 @@ function DraftArtwork({ draft }: { draft: NftPoolDraft }) {
   }
   return (
     <AdminPoolArtwork>
-      <AdminPoolArtworkImage src={src} alt="" onError={() => setFailed(true)} />
+      <AdminPoolArtworkImage
+        src={src}
+        alt=""
+        onError={() => setIndex((current) => Math.min(current + 1, candidates.length))}
+      />
       <AdminPoolArtworkShade />
       <AdminPoolStatus $status="DRAFT">DRAFT</AdminPoolStatus>
       <AdminPoolArtworkTitle>{draft.name || 'Untitled pool'}</AdminPoolArtworkTitle>
@@ -189,11 +215,13 @@ function DraftArtwork({ draft }: { draft: NftPoolDraft }) {
 
 export function NftPoolDraftCard({
   draft,
+  knownCollections,
   resumeSessionId,
   onDuplicate,
   onDelete,
 }: {
   draft: NftPoolDraft
+  knownCollections: NftPool['collections'][number]['collection'][]
   resumeSessionId?: string
   onDuplicate: () => void
   onDelete: () => void
@@ -206,7 +234,23 @@ export function NftPoolDraftCard({
         <AdminPoolCardTop>
           <AdminPoolIconStack aria-label={`${draft.collections.length} NFT collections`}>
             {draft.collections.slice(0, 3).map((collection) => (
-              <AdminPoolIcon key={collection.collectionId} src="/images/nfts/no-profile-md.png" alt="" />
+              <PoolCollectionIcon
+                key={collection.collectionId}
+                collection={
+                  knownCollections.find(
+                    (knownCollection) => knownCollection.address.toLowerCase() === collection.address.toLowerCase(),
+                  ) || {
+                    id: collection.collectionId,
+                    chainId: collection.chainId,
+                    address: collection.address,
+                    name: collection.name,
+                    symbol: 'NFT',
+                    displayName: collection.name,
+                    source: 'on-chain' as const,
+                    verification: 'UNREADABLE' as const,
+                  }
+                }
+              />
             ))}
             {draft.collections.length > 3 ? (
               <AdminPoolIconCount>+{draft.collections.length - 3}</AdminPoolIconCount>
