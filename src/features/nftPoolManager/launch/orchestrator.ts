@@ -202,7 +202,7 @@ function setupWindowReasons(session: NftPoolLaunchSession, snapshot: NftLaunchPo
 
 export function canDeploy(session: NftPoolLaunchSession, snapshot: NftLaunchPoolSnapshot): LaunchEligibility {
   const reasons = commonChainReasons(session, snapshot)
-  addReason(reasons, session.currentStage !== 'PREFLIGHT_READY', 'Deploy requires PREFLIGHT_READY.')
+  addReason(reasons, session.currentStage !== 'PREFLIGHT_READY', 'Pool setup checks must pass before creation.')
   addReason(reasons, Boolean(session.transactionHashes.deploy), 'A deployment transaction already exists.')
   addReason(reasons, Boolean(session.poolAddress), 'A pool address already exists for this session.')
   addReason(reasons, !session.preflight?.ok, 'A passing preflight is required.')
@@ -236,13 +236,23 @@ function canPostDeploy(session: NftPoolLaunchSession, snapshot: NftLaunchPoolSna
 
 export function canConfigureWeights(session: NftPoolLaunchSession, snapshot: NftLaunchPoolSnapshot): LaunchEligibility {
   const reasons = canPostDeploy(session, snapshot)
-  addReason(reasons, session.currentStage !== 'WEIGHTS_REQUIRED', 'NFT power configuration requires WEIGHTS_REQUIRED.')
+  addReason(reasons, session.currentStage !== 'WEIGHTS_REQUIRED', 'NFT staking setup is not ready to be confirmed yet.')
+  addReason(
+    reasons,
+    Boolean(session.transactionHashes.weights && !session.verification.weights?.passed),
+    'An NFT power transaction is awaiting receipt and read-back before another write can be sent.',
+  )
   return eligibility(Array.from(new Set(reasons)))
 }
 
 export function canConfigureFee(session: NftPoolLaunchSession, snapshot: NftLaunchPoolSnapshot): LaunchEligibility {
   const reasons = canPostDeploy(session, snapshot)
-  addReason(reasons, session.currentStage !== 'FEE_CONFIG_REQUIRED', 'Fee configuration requires FEE_CONFIG_REQUIRED.')
+  addReason(reasons, session.currentStage !== 'FEE_CONFIG_REQUIRED', 'Fee setup is not ready to be confirmed yet.')
+  addReason(
+    reasons,
+    Boolean(session.transactionHashes.fee && !session.verification.fee?.passed),
+    'A fee transaction is awaiting receipt and read-back before another write can be sent.',
+  )
   addReason(reasons, !isAddress(session.plan.postDeploy.feeTo || ''), 'Frozen fee recipient is invalid.')
   addReason(reasons, !/^\d+$/.test(session.plan.postDeploy.performanceFee || ''), 'Frozen performance fee is invalid.')
   return eligibility(Array.from(new Set(reasons)))
@@ -253,7 +263,7 @@ export function canFund(session: NftPoolLaunchSession, snapshot: NftLaunchPoolSn
   addReason(
     reasons,
     session.currentStage !== 'FUNDING_REQUIRED' && session.currentStage !== 'FUNDING_IN_PROGRESS',
-    'Reward funding requires the funding stage.',
+    'Reward funding is not ready yet.',
   )
   addReason(
     reasons,

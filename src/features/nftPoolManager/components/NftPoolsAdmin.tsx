@@ -30,6 +30,7 @@ import {
   PoolName,
   PoolThumb,
   PoolThumbVideo,
+  PrimaryLink,
   SoftLink,
   StudioSummary,
   SummaryCard,
@@ -56,6 +57,12 @@ function sourceLabel(source: string): string {
   if (source === 'legacy-masterchef') return 'Legacy MasterChef'
   if (source === 'nft-factory') return 'NFT factory'
   return 'Config + chain'
+}
+
+function draftReadinessLabel(readiness?: NftPoolDraft['readiness']): string {
+  if (readiness === 'READY_FOR_DRY_RUN' || readiness === 'READY_FOR_DEPLOYMENT') return 'Ready'
+  if (readiness === 'NEEDS_REVIEW') return 'Needs review'
+  return 'Needs setup'
 }
 
 function fallbackHeroVideo(address: string): string {
@@ -113,7 +120,12 @@ export default function NftPoolsAdmin() {
   return (
     <AdminShell
       title="NFT Pool Studio"
-      subtitle="A read-only operational view of every NFT staking pool, its collections, rewards and contract health."
+      subtitle="Create, review and operate Polygon NFT reward pools from one workspace."
+      headerAction={
+        <Link href="/admin/nft-pools/new" passHref legacyBehavior>
+          <PrimaryLink>+ New Pool</PrimaryLink>
+        </Link>
+      }
       authorityScope="nft"
     >
       {loading ? <PageLoader /> : null}
@@ -205,7 +217,7 @@ export default function NftPoolsAdmin() {
                 </Link>
                 {pool.cloneSupport !== 'UNAVAILABLE' ? (
                   <Link href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`} passHref legacyBehavior>
-                    <SoftLink>Clone</SoftLink>
+                    <SoftLink>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
                   </Link>
                 ) : null}
               </PoolActions>
@@ -215,7 +227,16 @@ export default function NftPoolsAdmin() {
             </NftPoolRow>
           ))}
         </NftPoolList>
-        {!loading && pools.length === 0 ? <Muted>No NFT pools matched the current filters.</Muted> : null}
+        {!loading && pools.length === 0 ? (
+          data?.pools?.length ? (
+            <Muted>No NFT pools matched the current filters.</Muted>
+          ) : (
+            <Muted>
+              No pools yet. Start the first one with Quick Create.{' '}
+              <Link href="/admin/nft-pools/new">Create a pool</Link>
+            </Muted>
+          )
+        ) : null}
       </Panel>
 
       <Panel style={{ marginTop: 16 }}>
@@ -229,7 +250,7 @@ export default function NftPoolsAdmin() {
                   <PoolName>{draft.name || 'Untitled draft'}</PoolName>
                   <PoolMeta>
                     {draft.source === 'cloned' ? `Clone of ${draft.sourcePoolId}` : 'New from scratch'} ·{' '}
-                    {draft.readiness?.replace(/_/g, ' ') || 'INCOMPLETE'}
+                    {draftReadinessLabel(draft.readiness)}
                   </PoolMeta>
                 </div>
               </PoolIdentity>
@@ -243,7 +264,7 @@ export default function NftPoolsAdmin() {
               </PoolColumn>
               <PoolActions>
                 <Link href={`/admin/nft-pools/new?draft=${encodeURIComponent(draft.id)}`} passHref legacyBehavior>
-                  <SoftLink>Continue</SoftLink>
+                  <SoftLink>Continue setup</SoftLink>
                 </Link>
                 <SoftLink
                   href="#"
@@ -274,11 +295,6 @@ export default function NftPoolsAdmin() {
           </Muted>
         )}
       </Panel>
-
-      <Notice>
-        Phase 2 remains dry-run only. Deployment, collection-weight updates, approvals, swaps and reward funding are not
-        available here.
-      </Notice>
     </AdminShell>
   )
 }

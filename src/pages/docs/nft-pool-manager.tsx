@@ -10,24 +10,23 @@ export default function NftPoolManagerDocs() {
       </Head>
       <AdminShell
         title="NFT Pool Studio runbook"
-        subtitle="The read-only Polygon builder, economics model and Phase 3 safety boundary."
+        subtitle="Create, review and operate Polygon NFT reward pools with a guided workflow."
         authorityScope="nft"
       >
         <Panel>
-          <PanelTitle>What is live in Phase 3</PanelTitle>
+          <PanelTitle>Operator experience</PanelTitle>
           <ol>
+            <li>Open NFT Pool Studio and choose Quick Create for the standard one-collection COLLECT pool.</li>
             <li>
-              Read factory provenance, original capacity, current capacity and dynamically indexed collections/rewards.
+              Choose an NFT collection, enter the USDT budget and select a duration. Safe pool defaults are filled in
+              automatically.
             </li>
             <li>
-              Build new or cloned pools through the same NFTs → Rewards → Budget → Duration → Appearance → Review flow.
-            </li>
-            <li>
-              Calculate exact BigNumber emissions, allocation-sized quotes and Solidity-compatible side reward
-              percentages.
+              Review the estimate and wallet checks. Advanced Setup remains available for multiple collections, custom
+              rewards and pool rules.
             </li>
             <li>Save multiple local drafts and continue a launch session without storing wallet secrets.</li>
-            <li>Run a fresh Polygon preflight, then deploy, verify, configure, fund and verify again.</li>
+            <li>Create, verify, configure and fund the pool with explicit wallet confirmations.</li>
           </ol>
         </Panel>
         <Panel style={{ marginTop: 16 }}>
@@ -42,14 +41,13 @@ export default function NftPoolManagerDocs() {
             verifies the pool balance afterward, so closing the browser does not require blind resubmission.
           </p>
           <p>
-            <strong>Runbook:</strong> connect the Polygon factory-owner wallet, run preflight, review the 15-minute
-            setup buffer and deployment gas estimate, confirm each requested wallet action, then run final verification.
-            Setup and funding gas are freshly simulated before each confirmation. A saved launch route can be resumed
-            after an RPC error or browser restart.
+            <strong>Runbook:</strong> connect the Polygon factory-owner wallet, review the setup checks and confirm each
+            requested wallet action. Setup and funding gas are freshly simulated before each confirmation. A saved
+            launch route can be resumed after an RPC error or browser restart.
           </p>
           <p>
-            The Phase 3.1 gate re-reads the connected signer network/account, factory or pool owner, bytecode, pool
-            fingerprint, token mapping, current block and native POL immediately before every write. A stale preflight,
+            The safety gate re-reads the connected signer network/account, factory or pool owner, bytecode, pool
+            fingerprint, token mapping, current block and native POL immediately before every write. A stale check,
             changed frozen plan, failed verification, started pool, unknown receipt or missing read blocks without a
             wallet popup.
           </p>

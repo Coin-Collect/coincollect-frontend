@@ -282,7 +282,7 @@ export function validateNftPoolDraft(
     if (context.factoryAddress && !isCanonicalAddress(context.factoryAddress))
       blockers.push('The configured factory address is invalid.')
     if (context.intendedAdmin === undefined)
-      blockers.push('Connect the intended admin wallet before saving the dry-run plan.')
+      blockers.push('Connect the intended admin wallet before creating the pool.')
     if (context.intendedAdmin && !isCanonicalAddress(context.intendedAdmin))
       blockers.push('The intended admin address is invalid.')
   }

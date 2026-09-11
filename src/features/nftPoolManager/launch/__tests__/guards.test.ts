@@ -1,7 +1,13 @@
 /** @jest-environment jsdom */
 import { createNftPoolLaunchSession } from '../storage'
 import { expectedNftLaunchPoolFingerprint } from '../fingerprint'
-import { canConfigureWeights, canDeploy, canFund, validateLaunchSessionInvariant } from '../orchestrator'
+import {
+  canConfigureFee,
+  canConfigureWeights,
+  canDeploy,
+  canFund,
+  validateLaunchSessionInvariant,
+} from '../orchestrator'
 import { NftPoolDeploymentPlan } from '../../types'
 import { NftLaunchPoolSnapshot, NftLaunchSchedule } from '../types'
 
@@ -146,10 +152,45 @@ describe('NFT launch safety gates', () => {
       fingerprint: expectedFingerprint,
     })
     expect(canConfigureWeights(base, chain).allowed).toBe(true)
+    expect(
+      canConfigureWeights({ ...base, transactionHashes: { ...base.transactionHashes, weights: '0xpending' } }, chain)
+        .reasons,
+    ).toContain('An NFT power transaction is awaiting receipt and read-back before another write can be sent.')
     expect(canConfigureWeights({ ...base, currentStage: 'DEPLOY_CONFIRMED' }, chain).allowed).toBe(false)
     expect(canConfigureWeights(base, { ...chain, fingerprint: '0xwrong' }).allowed).toBe(false)
     expect(canConfigureWeights({ ...base, pendingSchedule: schedule }, chain).reasons).toContain(
       'A schedule update is awaiting confirmation and exact on-chain read-back.',
+    )
+  })
+
+  it('blocks a second fee write while the first receipt is unresolved', () => {
+    const feePlan = { ...plan, postDeploy: { performanceFee: '1', feeTo: operator } } as NftPoolDeploymentPlan
+    const feeSession = createNftPoolLaunchSession(feePlan)
+    const feeFingerprint = expectedNftLaunchPoolFingerprint(feePlan, schedule)
+    const feeBase = {
+      ...feeSession,
+      currentStage: 'FEE_CONFIG_REQUIRED' as const,
+      schedule,
+      poolAddress: pool,
+      transactionHashes: { ...feeSession.transactionHashes, deploy: '0xdeploy', fee: '0xpending' },
+      verification: {
+        deployment: { passed: true, checkedAt: 123, checks: [], fingerprint: feeFingerprint },
+      },
+      poolFingerprint: feeFingerprint,
+    }
+    const chain = snapshot({
+      poolAddress: pool,
+      poolCode: '0x6000',
+      owner: operator,
+      stakedToken: staked,
+      rewardToken: reward,
+      sideRewardTokens: [],
+      sideRewardPercentages: [],
+      fingerprint: feeFingerprint,
+      startBlock: 1300,
+    })
+    expect(canConfigureFee(feeBase, chain).reasons).toContain(
+      'A fee transaction is awaiting receipt and read-back before another write can be sent.',
     )
   })
 

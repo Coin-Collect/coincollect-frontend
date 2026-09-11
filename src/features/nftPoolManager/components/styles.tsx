@@ -163,6 +163,19 @@ export const SoftLink = styled.a`
   text-decoration: none;
 `
 
+export const PrimaryLink = styled(SoftLink)`
+  min-height: 38px;
+  padding: 0 14px;
+  color: ${({ theme }) => theme.colors.invertedContrast};
+  background: ${({ theme }) => theme.colors.primary};
+  box-shadow: 0 8px 18px ${({ theme }) => `${theme.colors.primary}33`};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.invertedContrast};
+    filter: brightness(1.04);
+  }
+`
+
 export const DetailHero = styled.div`
   position: relative;
   overflow: hidden;

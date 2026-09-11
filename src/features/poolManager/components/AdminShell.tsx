@@ -34,11 +34,13 @@ export default function AdminShell({
   title,
   subtitle,
   authorityScope = 'erc20',
+  headerAction,
   children,
 }: {
   title: string
   subtitle: string
   authorityScope?: 'erc20' | 'nft'
+  headerAction?: React.ReactNode
   children: React.ReactNode
 }) {
   const router = useRouter()
@@ -94,13 +96,16 @@ export default function AdminShell({
           <AdminTitle>{title}</AdminTitle>
           <AdminSubtitle>{subtitle}</AdminSubtitle>
         </div>
-        {account ? (
-          <Muted>
-            {account.slice(0, 6)}…{account.slice(-4)}
-          </Muted>
-        ) : (
-          <ConnectWalletButton />
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {headerAction}
+          {account ? (
+            <Muted>
+              {account.slice(0, 6)}…{account.slice(-4)}
+            </Muted>
+          ) : (
+            <ConnectWalletButton />
+          )}
+        </div>
       </AdminHeader>
       <AdminNav aria-label="Pool Manager navigation">
         {links.map((link) => (

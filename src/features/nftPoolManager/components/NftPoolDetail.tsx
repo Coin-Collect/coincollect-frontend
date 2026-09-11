@@ -346,7 +346,9 @@ export default function NftPoolDetail() {
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 18 }}>
             {pool.cloneSupport !== 'UNAVAILABLE' ? (
-              <LinkText href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`}>Clone pool</LinkText>
+              <LinkText href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`}>
+                {pool.status === 'FINISHED' ? 'Renew pool' : 'Duplicate pool'}
+              </LinkText>
             ) : (
               <Muted>Clone unavailable for this pool</Muted>
             )}
