@@ -9,12 +9,13 @@ import { UserMenuItem } from "./styles";
 
 export const StyledUserMenu = styled(Flex)`
   align-items: center;
-  background: linear-gradient(180deg, rgba(22, 22, 22, 0.78) 0%, rgba(10, 10, 10, 0.66) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: ${({ theme }) =>
+    theme.isDark
+      ? "linear-gradient(180deg, rgba(22, 22, 22, 0.78) 0%, rgba(10, 10, 10, 0.66) 100%)"
+      : theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.2)" : theme.colors.cardBorder)};
   border-radius: 16px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.32),
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.32),
     0 8px 20px rgba(0, 0, 0, 0.32);
   cursor: pointer;
   display: inline-flex;
@@ -28,22 +29,18 @@ export const StyledUserMenu = styled(Flex)`
 
   &:hover {
     transform: translateY(-1px);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.16),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    border-color: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.3)" : theme.colors.primary)};
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 rgba(0, 0, 0, 0.35),
       0 12px 24px rgba(0, 0, 0, 0.38);
   }
 `;
 
 export const LabelText = styled.div`
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(227, 232, 255, 0.84) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: ${({ theme }) => (theme.isDark ? theme.colors.text : theme.colors.contrast)};
   display: none;
   font-weight: 600;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 16px rgba(0, 0, 0, 0.35);
+  text-shadow: ${({ theme }) =>
+    theme.isDark ? "0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 16px rgba(0, 0, 0, 0.35)" : "none"};
   letter-spacing: 0.01em;
 
   ${({ theme }) => theme.mediaQueries.sm} {
@@ -54,8 +51,8 @@ export const LabelText = styled.div`
 `;
 
 const Menu = styled.div<{ isOpen: boolean }>`
-  background: rgba(6, 6, 6, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: ${({ theme }) => (theme.isDark ? "rgba(6, 6, 6, 0.96)" : theme.colors.backgroundAlt)};
+  border: 1px solid ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.2)" : theme.colors.cardBorder)};
   border-radius: 16px;
   padding-bottom: 4px;
   padding-top: 4px;
@@ -67,10 +64,10 @@ const Menu = styled.div<{ isOpen: boolean }>`
   overflow: hidden;
   backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    0 16px 34px rgba(0, 0, 0, 0.55);
+  box-shadow: ${({ theme }) =>
+    theme.isDark
+      ? "inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.45), 0 16px 34px rgba(0, 0, 0, 0.55)"
+      : "0 16px 34px rgba(40, 13, 95, 0.16)"};
 
   &::before {
     content: "";
@@ -189,7 +186,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
       >
         <MenuIcon avatarSrc={avatarSrc} variant={variant} />
         <LabelText title={text || account}>{text || accountEllipsis}</LabelText>
-        <ChevronDownIcon color="#F4EEFF" width="24px" />
+        <ChevronDownIcon color="text" width="24px" />
       </StyledUserMenu>
       <Menu style={styles.popper} ref={setTooltipRef} {...attributes.popper} isOpen={isOpen}>
         <Box onClick={() => setIsOpen(false)}>{children}</Box>

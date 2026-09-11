@@ -23,7 +23,7 @@ const LinkLabel = styled.div<{ isPushed: boolean; isActive: boolean }>`
     if (!isPushed) {
       return "transparent";
     }
-    return isActive ? theme.colors.primary : "rgba(244, 238, 255, 0.86)";
+    return isActive ? theme.colors.primary : theme.isDark ? theme.colors.text : theme.colors.contrast;
   }};
   transition: color 0.4s;
   flex-grow: 1;
@@ -41,7 +41,7 @@ const MenuEntry = styled.div<Props>`
     if (isActive) {
       return secondary ? theme.colors.primary : theme.colors.primary;
     }
-    return secondary ? theme.colors.textSubtle : "rgba(244, 238, 255, 0.86)";
+    return secondary ? theme.colors.textSubtle : theme.isDark ? theme.colors.text : theme.colors.contrast;
   }};
 
   a {
@@ -53,7 +53,13 @@ const MenuEntry = styled.div<Props>`
 
   svg {
     fill: ${({ secondary, isActive, theme }) =>
-      isActive ? theme.colors.primary : secondary ? theme.colors.textSubtle : "rgba(244, 238, 255, 0.86)"};
+      isActive
+        ? theme.colors.primary
+        : secondary
+        ? theme.colors.textSubtle
+        : theme.isDark
+        ? theme.colors.text
+        : theme.colors.contrast};
   }
 
   &:hover {
@@ -61,7 +67,11 @@ const MenuEntry = styled.div<Props>`
       if (isActive) {
         return secondary ? theme.colors.background : "transparent";
       }
-      return secondary ? theme.colors.background : "rgba(255, 255, 255, 0.08)";
+      return secondary
+        ? theme.colors.background
+        : theme.isDark
+        ? "rgba(255, 255, 255, 0.08)"
+        : "rgba(25, 19, 38, 0.06)";
     }};
   }
 
@@ -81,6 +91,9 @@ MenuEntry.defaultProps = {
   role: "button",
 };
 
-const LinkLabelMemo = React.memo(LinkLabel, (prev, next) => prev.isPushed === next.isPushed && prev.isActive === next.isActive);
+const LinkLabelMemo = React.memo(
+  LinkLabel,
+  (prev, next) => prev.isPushed === next.isPushed && prev.isActive === next.isActive
+);
 
 export { MenuEntry, LinkLabelMemo as LinkLabel };

@@ -1,6 +1,5 @@
 import React from "react";
-import styled, { keyframes } from "styled-components";
-import { baseColors, darkColors, lightColors } from "../../theme/colors";
+import styled, { css, keyframes } from "styled-components";
 import { Flex, Box } from "../Box";
 import { Link } from "../Link";
 import {
@@ -19,7 +18,6 @@ import LangSelector from "../LangSelector/LangSelector";
 import CakePrice from "../CakePrice/CakePrice";
 import { ArrowForwardIcon } from "../Svg";
 import { Button } from "../Button";
-import { Colors } from "../..";
 
 const rainbowShift = keyframes`
   0% {
@@ -70,18 +68,24 @@ const BrandText = styled.span`
   font-size: 20px;
   font-weight: 700;
   white-space: nowrap;
-  background-image: linear-gradient(120deg, #ffffff 0%, #ff5db1 22%, #43d0ff 48%, #ffd84d 74%, #ffffff 100%);
+  background-image: ${({ theme }) =>
+    theme.isDark ? "linear-gradient(120deg, #ffffff 0%, #ff5db1 22%, #43d0ff 48%, #ffd84d 74%, #ffffff 100%)" : "none"};
   background-size: 240% 240%;
   background-clip: text;
   -webkit-background-clip: text;
-  color: transparent;
-  animation: ${rainbowShift} 1.9s linear infinite;
+  color: ${({ theme }) => (theme.isDark ? "transparent" : theme.colors.contrast)};
+  animation: ${({ theme }) =>
+    theme.isDark
+      ? css`
+          ${rainbowShift} 1.9s linear infinite
+        `
+      : "none"};
   transition: filter 280ms ease;
 
   ${({ theme }) => theme.mediaQueries.md} {
     font-size: 18px;
     background-image: none;
-    color: rgba(244, 238, 255, 0.96);
+    color: ${({ theme }) => (theme.isDark ? theme.colors.text : theme.colors.contrast)};
     animation: none;
   }
 `;
@@ -102,12 +106,20 @@ const BrandWrap = styled(Flex)`
     }
 
     &:hover ${BrandText} {
-      background-image: linear-gradient(120deg, #ffffff 0%, #ff5db1 22%, #43d0ff 48%, #ffd84d 74%, #ffffff 100%);
+      background-image: ${({ theme }) =>
+        theme.isDark
+          ? "linear-gradient(120deg, #ffffff 0%, #ff5db1 22%, #43d0ff 48%, #ffd84d 74%, #ffffff 100%)"
+          : "none"};
       background-size: 240% 240%;
       background-clip: text;
       -webkit-background-clip: text;
-      color: transparent;
-      animation: ${rainbowShift} 1.9s linear infinite;
+      color: ${({ theme }) => (theme.isDark ? "transparent" : theme.colors.contrast)};
+      animation: ${({ theme }) =>
+        theme.isDark
+          ? css`
+              ${rainbowShift} 1.9s linear infinite
+            `
+          : "none"};
       filter: none;
     }
   }
@@ -116,7 +128,14 @@ const BrandWrap = styled(Flex)`
 const FooterBrand: React.FC = () => (
   <BrandWrap alignItems="center">
     <BrandLink href="/" aria-label="CoinCollect home page">
-      <BrandVideo src="/logo-video_transparent.webm" autoPlay loop muted playsInline aria-label="CoinCollect animated logo" />
+      <BrandVideo
+        src="/logo-video_transparent.webm"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-label="CoinCollect animated logo"
+      />
       <BrandText>CoinCollect</BrandText>
     </BrandLink>
   </BrandWrap>
@@ -126,12 +145,12 @@ const LegalBlock = styled.div`
   width: 100%;
   text-align: center;
   order: 2;
-  color: rgba(244, 238, 255, 0.78);
+  color: ${({ theme }) => theme.colors.textSubtle};
   font-size: 12px;
   line-height: 1.5;
   margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid ${darkColors.cardBorder};
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
 
   ${({ theme }) => theme.mediaQueries.sm} {
     width: auto;
@@ -181,7 +200,7 @@ const MenuItem: React.FC<FooterProps> = ({
                       href={href}
                       target="_blank"
                       rel="noreferrer noopener"
-                      color={isHighlighted ? baseColors.warning : darkColors.text}
+                      color={isHighlighted ? "warning" : "text"}
                       bold={false}
                     >
                       {label}
@@ -198,7 +217,11 @@ const MenuItem: React.FC<FooterProps> = ({
           </Box>
         </StyledLinksContainer>
         <StyledSocialLinks order={[2]} pb={["18px", null, "32px"]} mb={["0", null, "32px"]} />
-        <StyledToolsContainer order={[3, null, 3]} flexDirection={["column", null, "row"]} justifyContent="space-between">
+        <StyledToolsContainer
+          order={[3, null, 3]}
+          flexDirection={["column", null, "row"]}
+          justifyContent="space-between"
+        >
           {/*
           <Flex order={[2, null, 1]} alignItems="center">
             <ThemeSwitcher isDark={isDark} toggleTheme={toggleTheme} />
@@ -206,21 +229,21 @@ const MenuItem: React.FC<FooterProps> = ({
               currentLang={currentLang}
               langs={langs}
               setLang={setLang}
-              color={darkColors.textSubtle as keyof Colors}
+              color="textSubtle"
               dropdownPosition="top-right"
             />
           </Flex>
           */}
           <Flex order={[1, null, 2]} mb={["14px", null, "0"]} justifyContent="space-between" alignItems="center">
             <Box mr="20px">
-              <CakePrice cakePriceUsd={cakePriceUsd} color={darkColors.textSubtle as keyof Colors} />
+              <CakePrice cakePriceUsd={cakePriceUsd} color="textSubtle" />
             </Box>
             <Button
               as="a"
               href="/swap?outputCurrency=0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148"
               target="_blank"
               scale="sm"
-              endIcon={<ArrowForwardIcon color={lightColors.backgroundAlt} />}
+              endIcon={<ArrowForwardIcon color="invertedContrast" />}
             >
               {buyCakeLabel}
             </Button>

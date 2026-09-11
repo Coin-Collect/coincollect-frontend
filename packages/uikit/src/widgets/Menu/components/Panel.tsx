@@ -11,18 +11,22 @@ interface Props extends PanelProps, PushedProps {
   showPhishingWarningBanner: boolean;
 }
 
-const StyledPanel = styled.div<{ isPushed: boolean; isMobile: boolean; showMenu: boolean; showPhishingWarningBanner: boolean }>`
+const StyledPanel = styled.div<{
+  isPushed: boolean;
+  isMobile: boolean;
+  showMenu: boolean;
+  showPhishingWarningBanner: boolean;
+}>`
   position: fixed;
-  padding-top: ${({ showMenu, showPhishingWarningBanner }) => (
-  showMenu ? (showPhishingWarningBanner ? "150px" : "80px") : 0
-  )};
+  padding-top: ${({ showMenu, showPhishingWarningBanner }) =>
+    showMenu ? (showPhishingWarningBanner ? "150px" : "80px") : 0};
   top: 0;
   left: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex-shrink: 0;
-  background-color: rgba(0, 0, 0, 0.78);
+  background-color: ${({ theme }) => theme.nav.background};
   width: ${({ isPushed, isMobile }) => {
     if (isMobile) {
       return isPushed ? `${SIDEBAR_WIDTH_FULL}px` : 0;
@@ -31,9 +35,8 @@ const StyledPanel = styled.div<{ isPushed: boolean; isMobile: boolean; showMenu:
   }};
   height: 100vh;
   transition: padding-top 0.2s, width 0.2s;
-  border-right: none;
-  box-shadow: ${({ isPushed, isMobile }) => 
-    isPushed || !isMobile ? '12px 0 32px rgba(0, 0, 0, 0.28)' : 'none'};
+  border-right: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  box-shadow: ${({ isPushed, isMobile }) => (isPushed || !isMobile ? "12px 0 32px rgba(0, 0, 0, 0.28)" : "none")};
   backdrop-filter: blur(16px) saturate(130%);
   -webkit-backdrop-filter: blur(16px) saturate(130%);
   z-index: 11;
@@ -41,7 +44,7 @@ const StyledPanel = styled.div<{ isPushed: boolean; isMobile: boolean; showMenu:
   transform: translate3d(0, 0, 0);
 
   ${({ theme }) => theme.mediaQueries.nav} {
-    border-right: none;
+    border-right: 1px solid ${({ theme }) => theme.colors.cardBorder};
     box-shadow: 12px 0 32px rgba(0, 0, 0, 0.28);
     width: ${({ isPushed }) => `${isPushed ? SIDEBAR_WIDTH_FULL : SIDEBAR_WIDTH_REDUCED}px`};
   }

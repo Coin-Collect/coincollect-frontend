@@ -14,8 +14,8 @@ interface Props extends PanelProps, PushedProps {}
 const Container = styled.div`
   flex: none;
   padding: 8px 4px;
-  background-color: rgba(0, 0, 0, 0.78);
-  border-top: none;
+  background-color: ${({ theme }) => theme.nav.background};
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
   backdrop-filter: blur(16px) saturate(130%);
   -webkit-backdrop-filter: blur(16px) saturate(130%);
 `;
@@ -51,8 +51,8 @@ const PanelFooter: React.FC<Props> = ({
   if (!isPushed) {
     return (
       <Container>
-        <IconButton variant="text" onClick={() => pushNav(true)}>
-          <CogIcon color="#F4EEFF" />
+        <IconButton variant="text" onClick={() => pushNav(true)} aria-label="Open menu settings">
+          <CogIcon color="text" />
         </IconButton>
       </Container>
     );

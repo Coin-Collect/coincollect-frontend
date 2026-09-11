@@ -9,7 +9,14 @@ import { SubMenuItems } from "../../components/SubMenuItems";
 import { useMatchBreakpoints } from "../../hooks";
 import CakePrice from "../../components/CakePrice/CakePrice";
 import Logo from "./components/Logo";
-import { MENU_HEIGHT, MOBILE_MENU_HEIGHT, TOP_BANNER_HEIGHT, TOP_BANNER_HEIGHT_MOBILE, SIDEBAR_WIDTH_FULL, SIDEBAR_WIDTH_REDUCED } from "./config";
+import {
+  MENU_HEIGHT,
+  MOBILE_MENU_HEIGHT,
+  TOP_BANNER_HEIGHT,
+  TOP_BANNER_HEIGHT_MOBILE,
+  SIDEBAR_WIDTH_FULL,
+  SIDEBAR_WIDTH_REDUCED,
+} from "./config";
 import { NavProps } from "./types";
 import LangSelector from "../../components/LangSelector/LangSelector";
 import { MenuContext } from "./context";
@@ -27,9 +34,9 @@ const StyledNav = styled.nav`
   align-items: center;
   width: 100%;
   height: ${MENU_HEIGHT}px;
-  background-color: rgba(0, 0, 0, 0.78);
-  border-bottom: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  background-color: ${({ theme }) => theme.nav.background};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  box-shadow: ${({ theme }) => (theme.isDark ? "0 8px 24px rgba(0, 0, 0, 0.24)" : "0 8px 24px rgba(40, 13, 95, 0.08)")};
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   transform: translate3d(0, 0, 0);
@@ -88,7 +95,7 @@ const Overlay = styled.div<{ isPushed: boolean; isMobile: boolean }>`
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3);
   z-index: 10;
-  display: ${({ isPushed, isMobile }) => (isPushed && isMobile ? 'block' : 'none')};
+  display: ${({ isPushed, isMobile }) => (isPushed && isMobile ? "block" : "none")};
   transition: opacity 0.2s;
 `;
 
@@ -183,9 +190,9 @@ const Menu: React.FC<NavProps> = ({
           {banner && <TopBannerContainer height={topBannerHeight}>{banner}</TopBannerContainer>}
           <StyledNav>
             <Flex>
-            <Logo 
-                isDark={isDark} 
-                href={resolvedHomeHref} 
+              <Logo
+                isDark={isDark}
+                href={resolvedHomeHref}
                 isPushed={isPushed}
                 isMobile={isMobile}
                 togglePush={handleTogglePush}
@@ -193,10 +200,9 @@ const Menu: React.FC<NavProps> = ({
               />
             </Flex>
             <Flex alignItems="center" height="100%">
-              
               {!isMobile && (
                 <Box mr="12px">
-                  <CakePrice cakePriceUsd={cakePriceUsd} color="#F4EEFF" />
+                  <CakePrice cakePriceUsd={cakePriceUsd} color="textSubtle" />
                 </Box>
               )}
               {/*
@@ -230,11 +236,7 @@ const Menu: React.FC<NavProps> = ({
           </Flex>
         )}
         <BodyWrapper mt={!subLinks ? `${totalTopMenuHeight}px` : "0"}>
-          <Overlay 
-            isPushed={isPushed} 
-            isMobile={isMobile} 
-            onClick={() => setIsPushed(false)}
-          />
+          <Overlay isPushed={isPushed} isMobile={isMobile} onClick={() => setIsPushed(false)} />
           <Panel
             isPushed={isPushed}
             isMobile={isMobile}
@@ -251,7 +253,7 @@ const Menu: React.FC<NavProps> = ({
             activeItem={activeItem}
             activeSubItem={activeSubItem}
             panelFooterActions={panelFooterActions}
-          /> 
+          />
           <Inner isPushed={isPushed} showMenu={showMenu} shouldOffset={shouldOffsetContent}>
             {children}
             <Footer

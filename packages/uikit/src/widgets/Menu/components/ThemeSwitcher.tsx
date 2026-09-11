@@ -5,7 +5,7 @@ import Text from "../../../components/Text/Text";
 import Flex from "../../../components/Box/Flex";
 import Button from "../../../components/Button/Button";
 
-const Icons = (IconModule as unknown) as { [key: string]: React.FC<SvgProps> };
+const Icons = IconModule as unknown as { [key: string]: React.FC<SvgProps> };
 const { MoonIcon, SunIcon } = Icons;
 
 interface Props {
@@ -17,11 +17,11 @@ const ThemeSwitcher: React.FC<Props> = ({ isDark, toggleTheme }) => (
   <Button variant="text" onClick={() => toggleTheme(!isDark)}>
     {/* alignItems center is a Safari fix */}
     <Flex alignItems="center">
-      <SunIcon color={isDark ? "rgba(244, 238, 255, 0.56)" : "#F4EEFF"} width="24px" />
-      <Text color="rgba(244, 238, 255, 0.56)" mx="4px">
+      <SunIcon color={isDark ? "textSubtle" : "text"} width="24px" />
+      <Text color="textSubtle" mx="4px">
         /
       </Text>
-      <MoonIcon color={isDark ? "#F4EEFF" : "rgba(244, 238, 255, 0.56)"} width="24px" />
+      <MoonIcon color={isDark ? "text" : "textSubtle"} width="24px" />
     </Flex>
   </Button>
 );

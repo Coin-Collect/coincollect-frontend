@@ -60,7 +60,7 @@ const LogoText = styled.span<LogoTextProps & { isDark: boolean }>`
   font-weight: 700;
   white-space: nowrap;
   display: ${({ isPushed, isMobile }) => (!isMobile || isPushed ? "block" : "none")};
-  color: rgba(244, 238, 255, 0.96);
+  color: ${({ theme }) => (theme.isDark ? theme.colors.text : theme.colors.contrast)};
   transition: filter 280ms ease, text-shadow 280ms ease;
 `;
 
@@ -126,11 +126,7 @@ const Logo: React.FC<Props> = ({ isPushed, togglePush, isMobile, pushNav, href, 
     <LogoWrap alignItems="center" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {isMobile && (
         <MenuButton aria-label="Toggle menu" onClick={togglePush} mr="12px">
-          {isPushed ? (
-            <HamburgerCloseIcon width="24px" color="#F4EEFF" />
-          ) : (
-            <HamburgerIcon width="24px" color="#F4EEFF" />
-          )}
+          {isPushed ? <HamburgerCloseIcon width="24px" color="text" /> : <HamburgerIcon width="24px" color="text" />}
         </MenuButton>
       )}
       {isAbsoluteUrl ? (

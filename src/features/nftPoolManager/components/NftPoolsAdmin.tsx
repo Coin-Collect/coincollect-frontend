@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import PageLoader from 'components/Loader/PageLoader'
 import AdminShell from 'features/poolManager/components/AdminShell'
 import {
   ActionButton,
@@ -28,6 +29,7 @@ import {
   PoolMeta,
   PoolName,
   PoolThumb,
+  PoolThumbVideo,
   SoftLink,
   StudioSummary,
   SummaryCard,
@@ -54,6 +56,23 @@ function sourceLabel(source: string): string {
   if (source === 'legacy-masterchef') return 'Legacy MasterChef'
   if (source === 'nft-factory') return 'NFT factory'
   return 'Config + chain'
+}
+
+function fallbackHeroVideo(address: string): string {
+  const suffix = Number.parseInt(address.slice(-2), 16)
+  const index = Number.isFinite(suffix) ? (suffix % 9) + 1 : 1
+  return `/images/superheroes/${index}.webm`
+}
+
+function PoolMedia({ pool }: { pool: any }) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const image = pool.metadata.avatar || pool.metadata.banner
+
+  if (!image || imageFailed) {
+    return <PoolThumbVideo autoPlay loop muted playsInline src={fallbackHeroVideo(pool.address)} aria-hidden="true" />
+  }
+
+  return <PoolThumb src={image} alt="" onError={() => setImageFailed(true)} />
 }
 
 export default function NftPoolsAdmin() {
@@ -97,6 +116,7 @@ export default function NftPoolsAdmin() {
       subtitle="A read-only operational view of every NFT staking pool, its collections, rewards and contract health."
       authorityScope="nft"
     >
+      {loading ? <PageLoader /> : null}
       {error ? <Notice $error>{error}</Notice> : null}
       {data?.warning ? <Notice>{data.warning}</Notice> : null}
       <StudioSummary>
@@ -154,10 +174,7 @@ export default function NftPoolsAdmin() {
           {pools.map((pool) => (
             <NftPoolRow key={pool.id}>
               <PoolIdentity>
-                <PoolThumb
-                  src={pool.metadata.avatar || pool.metadata.banner || '/images/coincollect-assets/clone/nft350.png'}
-                  alt=""
-                />
+                <PoolMedia pool={pool} />
                 <div style={{ minWidth: 0 }}>
                   <PoolName>{pool.metadata.name}</PoolName>
                   <PoolMeta>

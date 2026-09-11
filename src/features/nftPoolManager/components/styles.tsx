@@ -94,6 +94,16 @@ export const PoolThumb = styled.img`
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
 `
 
+export const PoolThumbVideo = styled.video`
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  object-fit: cover;
+  border-radius: 13px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+`
+
 export const PoolName = styled.div`
   min-width: 0;
   color: ${({ theme }) => theme.colors.text};

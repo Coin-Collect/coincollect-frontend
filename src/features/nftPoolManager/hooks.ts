@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { simplePolygonRpcProvider } from 'utils/providers'
+import { nftPoolRegistryRpcProvider } from 'utils/providers'
 import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
 import { normalizeNftCollectionRegistry, NFT_POOL_MANAGER_CHAIN_ID } from './registry'
 import { getNftPoolRegistry, clearNftPoolRegistryCache } from './discovery'
@@ -23,7 +23,7 @@ export function useNftPoolRegistry() {
     setLoading(true)
     clearNftPoolRegistryCache()
     try {
-      setData(await getNftPoolRegistry(simplePolygonRpcProvider, true))
+      setData(await getNftPoolRegistry(nftPoolRegistryRpcProvider, true))
       setError(null)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'NFT pool registry could not be loaded.')
@@ -34,7 +34,7 @@ export function useNftPoolRegistry() {
 
   useEffect(() => {
     let active = true
-    getNftPoolRegistry(simplePolygonRpcProvider)
+    getNftPoolRegistry(nftPoolRegistryRpcProvider)
       .then((value) => active && setData(value))
       .catch(
         (reason) =>

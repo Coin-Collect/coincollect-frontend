@@ -14,7 +14,7 @@ import {
   getNftSmartChefFactoryAddress,
   getNftSmartChefFactoryDeploymentBlock,
 } from 'utils/addressHelpers'
-import { simplePolygonRpcProvider } from 'utils/providers'
+import { nftPoolRegistryRpcProvider } from 'utils/providers'
 import { POLYGON_BLOCK_TIME } from 'config'
 import {
   configuredPoolCollections,
@@ -51,7 +51,7 @@ const NFT_FACTORY_MAX_RPC_DISCOVERY_BLOCKS = 2_000_000
 const NFT_FACTORY_INDEXER_TIMEOUT_MS = 10_000
 const NFT_POOL_REGISTRY_CACHE_TTL = 30_000
 const NFT_FACTORY_DEPLOYMENT_FALLBACK = 45_594_882
-const NFT_POOL_INTROSPECTION_CONCURRENCY = 6
+const NFT_POOL_INTROSPECTION_CONCURRENCY = 3
 const NFT_POOL_INTROSPECTION_TIMEOUT_MS = 15_000
 const ZERO = BigNumber.from(0)
 
@@ -183,6 +183,19 @@ function mismatch(warnings: string[], message: string) {
   if (!warnings.includes(message)) warnings.push(message)
 }
 
+function summarizePoolReadError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error || '')
+  const normalized = message.toLowerCase()
+  if (normalized.includes('429') || normalized.includes('too many requests'))
+    return 'Polygon RPC rate limit reached while reading this pool. Try Refresh again shortly.'
+  if (normalized.includes('missing response') || normalized.includes('network error'))
+    return 'Polygon RPC did not respond while reading this pool. Try Refresh again shortly.'
+  if (normalized.includes('call_exception') || normalized.includes('missing revert data'))
+    return 'Pool contract did not answer one of the expected read calls.'
+  if (message.length > 180) return `${message.slice(0, 177)}…`
+  return message || 'Pool introspection failed.'
+}
+
 function healthFor(
   onChain: NftPoolOnChainTruth,
   warnings: string[],
@@ -258,6 +271,7 @@ function unreadablePool(
   warning: string,
   deployment: NftPoolDeploymentProvenance = { decodeStatus: 'not-applicable' },
 ): NftPool {
+  const poolId = source === 'legacy-masterchef' && farm ? `legacy-${farm.pid}` : address.toLowerCase()
   const configuredReward = getConfiguredRewardToken(farm as any)
   const primaryAddress = (farm && normalizeNftAddress((farm.nftAddresses as any)?.[NFT_POOL_MANAGER_CHAIN_ID])) || ''
   const primaryCollection = primaryAddress
@@ -274,8 +288,11 @@ function unreadablePool(
   const onChain: NftPoolOnChainTruth = { codeFound: false, abiCompatible: false }
   const health = healthFor(onChain, [warning], false, false)
   return {
-    id: address.toLowerCase(),
-    canonicalId: `${NFT_POOL_MANAGER_CHAIN_ID}:${address.toLowerCase()}`,
+    id: poolId,
+    canonicalId:
+      source === 'legacy-masterchef' && farm
+        ? `${NFT_POOL_MANAGER_CHAIN_ID}:${address.toLowerCase()}:${farm.pid}`
+        : `${NFT_POOL_MANAGER_CHAIN_ID}:${poolId}`,
     pid: farm?.pid || 0,
     chainId: NFT_POOL_MANAGER_CHAIN_ID,
     kind: 'POOL',
@@ -566,7 +583,7 @@ async function readV2Pool(
       poolAddress,
       source,
       collections,
-      error instanceof Error ? `Pool introspection failed: ${error.message}` : 'Pool introspection failed.',
+      `Pool introspection failed: ${summarizePoolReadError(error)}`,
       deploymentHintValue,
     )
   }
@@ -691,7 +708,7 @@ async function readLegacyPool(
       address,
       'legacy-masterchef',
       collections,
-      error instanceof Error ? error.message : 'Legacy pool introspection failed.',
+      `Legacy pool introspection failed: ${summarizePoolReadError(error)}`,
     )
   }
 }
@@ -887,7 +904,7 @@ async function readLegacyPoolWithTimeout(
 }
 
 export async function getNftPoolRegistry(
-  provider: Provider = simplePolygonRpcProvider,
+  provider: Provider = nftPoolRegistryRpcProvider,
   forceRefresh = false,
 ): Promise<NftPoolRegistryResult> {
   if (!forceRefresh && registryCache && Date.now() - registryCache.cachedAt < NFT_POOL_REGISTRY_CACHE_TTL)

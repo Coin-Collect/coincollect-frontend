@@ -1,5 +1,4 @@
 import React from "react";
-import { darkColors } from "../../../theme";
 import { FlexProps } from "../../Box";
 import Flex from "../../Box/Flex";
 import Dropdown from "../../Dropdown/Dropdown";
@@ -13,7 +12,7 @@ const SocialLinks: React.FC<FlexProps> = ({ ...props }) => (
       const iconProps = {
         iconName: social.icon,
         width: "20px",
-        color: darkColors.textSubtle,
+        color: "textSubtle",
         style: { cursor: "pointer" },
       };
       const mr = index < socials.length - 1 ? "24px" : 0;
