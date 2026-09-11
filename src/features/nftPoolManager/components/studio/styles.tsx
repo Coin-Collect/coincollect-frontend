@@ -413,10 +413,13 @@ export const SummaryLine = styled.div`
 
 export const StudioButton = styled.button<{ $secondary?: boolean; $quiet?: boolean }>`
   min-height: 44px;
-  border: 1px solid ${({ theme, $secondary }) => ($secondary ? theme.colors.cardBorder : theme.colors.primary)};
+  border: 1px solid
+    ${({ theme, $secondary, $quiet }) =>
+      $quiet ? 'transparent' : $secondary ? theme.colors.cardBorder : theme.colors.primary};
   border-radius: 13px;
   padding: 0 15px;
-  color: ${({ theme, $secondary }) => ($secondary ? theme.colors.text : theme.colors.invertedContrast)};
+  color: ${({ theme, $secondary, $quiet }) =>
+    $quiet || $secondary ? theme.colors.text : theme.colors.invertedContrast};
   background: ${({ theme, $secondary, $quiet }) =>
     $quiet ? 'transparent' : $secondary ? theme.colors.backgroundAlt : theme.colors.primary};
   font-size: 13px;
