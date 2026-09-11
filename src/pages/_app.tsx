@@ -12,7 +12,7 @@ import useSentryUser from 'hooks/useSentryUser'
 import useUserAgent from 'hooks/useUserAgent'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import { Fragment, useState, useEffect } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { PersistGate } from 'redux-persist/integration/react'
 import { useStore, persistor } from 'state'
 import { usePollBlockNumber } from 'state/block/hooks'
@@ -45,10 +45,10 @@ function GlobalHooks() {
   return null
 }
 
-const WizardLinkBase = styled.a`
+const WizardLinkBase = styled.a<{ $isDragging: boolean; $isReady: boolean }>`
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  left: 0;
+  top: 0;
   z-index: 1000;
   width: 84px;
   height: 84px;
@@ -56,22 +56,30 @@ const WizardLinkBase = styled.a`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at center, rgba(255,255,255,0.6), rgba(255,255,255,0.1));
-  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1));
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  cursor: ${({ $isDragging }) => ($isDragging ? 'grabbing' : 'grab')};
+  opacity: ${({ $isReady }) => ($isReady ? 1 : 0)};
+  pointer-events: ${({ $isReady }) => ($isReady ? 'auto' : 'none')};
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
   text-decoration: none;
-  &:hover { 
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 10px 32px rgba(0,0,0,0.28);
+  &:hover {
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28);
+    filter: brightness(1.04);
   }
   &:active {
-    transform: translateY(0) scale(0.98);
+    filter: brightness(0.98);
+  }
+  &:focus-visible {
+    outline: 3px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 4px;
   }
 
   @media (max-width: 768px) {
-    right: 20px;
-    bottom: 20px;
     width: 68px;
     height: 68px;
   }
@@ -83,6 +91,274 @@ const WizardVideoBase = styled.video`
   border-radius: 50%;
   pointer-events: none; /* allow clicks to hit the anchor */
 `
+
+type WizardPosition = {
+  x: number
+  y: number
+}
+
+type WizardVelocity = WizardPosition
+
+type WizardPointerState = {
+  pointerId: number
+  offsetX: number
+  offsetY: number
+  startX: number
+  startY: number
+  lastX: number
+  lastY: number
+  lastTime: number
+  velocityX: number
+  velocityY: number
+  moved: boolean
+}
+
+type FloatingWizardProps = {
+  assistantUrl: string
+  targetRef?: React.Dispatch<React.SetStateAction<HTMLElement | null>>
+}
+
+const WIZARD_EDGE_GAP = 16
+const WIZARD_DRAG_THRESHOLD = 6
+const WIZARD_BOUNCE = 0.72
+const WIZARD_FRICTION = 0.94
+const WIZARD_MAX_FLING_SPEED = 2200
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
+const getWizardBounds = (element: HTMLElement | null) => {
+  const width = element?.getBoundingClientRect().width ?? 84
+  const height = element?.getBoundingClientRect().height ?? 84
+  const maxX = Math.max(WIZARD_EDGE_GAP, window.innerWidth - width - WIZARD_EDGE_GAP)
+  const maxY = Math.max(WIZARD_EDGE_GAP, window.innerHeight - height - WIZARD_EDGE_GAP)
+
+  return {
+    minX: WIZARD_EDGE_GAP,
+    minY: WIZARD_EDGE_GAP,
+    maxX,
+    maxY,
+  }
+}
+
+const FloatingWizard: React.FC<FloatingWizardProps> = ({ assistantUrl, targetRef }) => {
+  const linkRef = useRef<HTMLAnchorElement | null>(null)
+  const pointerRef = useRef<WizardPointerState | null>(null)
+  const positionRef = useRef<WizardPosition | null>(null)
+  const velocityRef = useRef<WizardVelocity>({ x: 0, y: 0 })
+  const animationFrameRef = useRef<number | null>(null)
+  const animationTimeRef = useRef<number | null>(null)
+  const draggedRef = useRef(false)
+  const [position, setPosition] = useState<WizardPosition | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const setLinkRef = useCallback(
+    (node: HTMLAnchorElement | null) => {
+      linkRef.current = node
+      targetRef?.(node)
+    },
+    [targetRef],
+  )
+
+  const updatePosition = useCallback((nextPosition: WizardPosition) => {
+    positionRef.current = nextPosition
+    setPosition(nextPosition)
+  }, [])
+
+  const stopPhysics = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+    animationTimeRef.current = null
+  }, [])
+
+  const startPhysics = useCallback(() => {
+    stopPhysics()
+
+    const tick = (timestamp: number) => {
+      const currentPosition = positionRef.current
+      if (!currentPosition) {
+        animationFrameRef.current = null
+        return
+      }
+
+      const previousTimestamp = animationTimeRef.current ?? timestamp
+      const deltaSeconds = Math.min((timestamp - previousTimestamp) / 1000, 0.035)
+      animationTimeRef.current = timestamp
+
+      const bounds = getWizardBounds(linkRef.current)
+      const velocity = velocityRef.current
+      const damping = Math.pow(WIZARD_FRICTION, deltaSeconds * 60)
+      let nextX = currentPosition.x + velocity.x * deltaSeconds
+      let nextY = currentPosition.y + velocity.y * deltaSeconds
+      let nextVelocityX = velocity.x * damping
+      let nextVelocityY = velocity.y * damping
+
+      if (nextX <= bounds.minX && nextVelocityX < 0) {
+        nextX = bounds.minX
+        nextVelocityX = Math.abs(nextVelocityX) * WIZARD_BOUNCE
+      } else if (nextX >= bounds.maxX && nextVelocityX > 0) {
+        nextX = bounds.maxX
+        nextVelocityX = -Math.abs(nextVelocityX) * WIZARD_BOUNCE
+      }
+
+      if (nextY <= bounds.minY && nextVelocityY < 0) {
+        nextY = bounds.minY
+        nextVelocityY = Math.abs(nextVelocityY) * WIZARD_BOUNCE
+      } else if (nextY >= bounds.maxY && nextVelocityY > 0) {
+        nextY = bounds.maxY
+        nextVelocityY = -Math.abs(nextVelocityY) * WIZARD_BOUNCE
+      }
+
+      const nextVelocity = { x: nextVelocityX, y: nextVelocityY }
+      velocityRef.current = nextVelocity
+      updatePosition({ x: nextX, y: nextY })
+
+      if (Math.hypot(nextVelocity.x, nextVelocity.y) < 14) {
+        velocityRef.current = { x: 0, y: 0 }
+        animationFrameRef.current = null
+        animationTimeRef.current = null
+        return
+      }
+
+      animationFrameRef.current = window.requestAnimationFrame(tick)
+    }
+
+    animationFrameRef.current = window.requestAnimationFrame(tick)
+  }, [stopPhysics, updatePosition])
+
+  useEffect(() => {
+    const element = linkRef.current
+    if (!element) return undefined
+
+    const bounds = getWizardBounds(element)
+    updatePosition({ x: bounds.maxX, y: bounds.maxY })
+
+    const handleResize = () => {
+      const currentPosition = positionRef.current
+      if (!currentPosition) return
+
+      const nextBounds = getWizardBounds(element)
+      updatePosition({
+        x: clamp(currentPosition.x, nextBounds.minX, nextBounds.maxX),
+        y: clamp(currentPosition.y, nextBounds.minY, nextBounds.maxY),
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      stopPhysics()
+    }
+  }, [stopPhysics, updatePosition])
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || !positionRef.current) return
+
+    stopPhysics()
+    velocityRef.current = { x: 0, y: 0 }
+    draggedRef.current = false
+    pointerRef.current = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - positionRef.current.x,
+      offsetY: event.clientY - positionRef.current.y,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      lastTime: performance.now(),
+      velocityX: 0,
+      velocityY: 0,
+      moved: false,
+    }
+    setIsDragging(true)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLAnchorElement>) => {
+    const pointer = pointerRef.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+
+    const distanceFromStart = Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY)
+    if (!pointer.moved && distanceFromStart < WIZARD_DRAG_THRESHOLD) return
+    pointer.moved = true
+    draggedRef.current = true
+
+    const bounds = getWizardBounds(linkRef.current)
+    const nextPosition = {
+      x: clamp(event.clientX - pointer.offsetX, bounds.minX, bounds.maxX),
+      y: clamp(event.clientY - pointer.offsetY, bounds.minY, bounds.maxY),
+    }
+    const now = performance.now()
+    const deltaSeconds = Math.max((now - pointer.lastTime) / 1000, 0.008)
+    const instantVelocityX = (event.clientX - pointer.lastX) / deltaSeconds
+    const instantVelocityY = (event.clientY - pointer.lastY) / deltaSeconds
+
+    pointer.velocityX = pointer.velocityX * 0.35 + instantVelocityX * 0.65
+    pointer.velocityY = pointer.velocityY * 0.35 + instantVelocityY * 0.65
+    pointer.lastX = event.clientX
+    pointer.lastY = event.clientY
+    pointer.lastTime = now
+    updatePosition(nextPosition)
+  }
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLAnchorElement>) => {
+    const pointer = pointerRef.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+
+    pointerRef.current = null
+    setIsDragging(false)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    if (!pointer.moved) {
+      velocityRef.current = { x: 0, y: 0 }
+      return
+    }
+
+    const speed = Math.hypot(pointer.velocityX, pointer.velocityY)
+    const velocityScale = speed > WIZARD_MAX_FLING_SPEED ? WIZARD_MAX_FLING_SPEED / speed : 1
+    velocityRef.current = {
+      x: pointer.velocityX * velocityScale,
+      y: pointer.velocityY * velocityScale,
+    }
+    startPhysics()
+  }
+
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!draggedRef.current) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    draggedRef.current = false
+  }
+
+  return (
+    <WizardLinkBase
+      ref={setLinkRef}
+      $isDragging={isDragging}
+      $isReady={position !== null}
+      style={position ? { transform: `translate3d(${position.x}px, ${position.y}px, 0)` } : undefined}
+      href={assistantUrl}
+      target={assistantUrl.startsWith('http') ? '_blank' : undefined}
+      rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
+      aria-label="Open AI Assistant"
+      title={
+        assistantUrl === '#' ? 'AI Assistant coming soon' : 'Drag or throw Wizard, or click to open the AI Assistant'
+      }
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onClick={handleClick}
+      onDragStart={(event) => event.preventDefault()}
+    >
+      <WizardVideoBase src="/wizzard.webm" autoPlay loop muted playsInline />
+    </WizardLinkBase>
+  )
+}
 
 function MyApp(props: AppProps) {
   const { pageProps } = props
@@ -217,25 +493,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       </Menu>
       <EasterEgg iterations={2} />
       <ToastListener />
-      {/**
-       * Type-friendly wrappers for styled-components to accept anchor and video attributes.
-       */}
-      {(() => {
-        const WizardLink = WizardLinkBase as unknown as any
-        const WizardVideo = WizardVideoBase as unknown as any
-        return (
-          <WizardLink
-            ref={isMobile ? undefined : targetRef}
-            href={assistantUrl}
-            target={assistantUrl.startsWith('http') ? '_blank' : undefined}
-            rel={assistantUrl.startsWith('http') ? 'noreferrer noopener' : undefined}
-            aria-label="Open AI Assistant"
-            title={assistantUrl === '#' ? 'AI Assistant coming soon' : 'Chat with our AI Assistant'}
-          >
-            <WizardVideo src="/wizzard.webm" autoPlay loop muted playsInline />
-          </WizardLink>
-        )
-      })()}
+      <FloatingWizard assistantUrl={assistantUrl} targetRef={isMobile ? undefined : targetRef} />
       {!isMobile && tooltipVisible && tooltip}
       {/* TODO: Activate later
       <SubgraphHealthIndicator />

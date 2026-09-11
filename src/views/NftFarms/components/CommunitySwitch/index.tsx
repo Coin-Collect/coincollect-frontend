@@ -4,37 +4,51 @@ import { useTranslation } from 'contexts/Localization'
 import { useRouter } from 'next/router'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 
-
 const CommunitySwitch: React.FC<any> = () => {
   const router = useRouter()
   const { t } = useTranslation()
+  const isFinished = router.pathname === '/nftpools/history'
+  const collectionFilter =
+    router.query.collection === 'partner' || router.query.collection === 'community'
+      ? router.query.collection
+      : undefined
+
+  const selectedCollection = router.pathname.includes('partner-collections')
+    ? 'partner'
+    : router.pathname.includes('community-collections')
+    ? 'community'
+    : collectionFilter
 
   let activeIndex
-  switch (router.pathname) {
-    case '/nftpools':
-      activeIndex = 0
-      break
-    case '/nftpools/partner-collections':
+  switch (selectedCollection) {
+    case 'partner':
       activeIndex = 1
       break
-    case '/nftpools/community-collections':
+    case 'community':
       activeIndex = 2
       break
     default:
       activeIndex = 0
-      break
+  }
+
+  const getCollectionPath = (collection?: 'partner' | 'community') => {
+    if (isFinished) {
+      return collection ? `/nftpools/history?collection=${collection}` : '/nftpools/history'
+    }
+
+    return collection ? `/nftpools/${collection}-collections` : '/nftpools'
   }
 
   return (
     <Wrapper>
       <ButtonMenu activeIndex={activeIndex} scale="sm" variant="subtle">
-        <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools">
+        <ButtonMenuItem as={NextLinkFromReactRouter} to={getCollectionPath()}>
           {t('All')}
         </ButtonMenuItem>
-        <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools/partner-collections">
+        <ButtonMenuItem as={NextLinkFromReactRouter} to={getCollectionPath('partner')}>
           {t('Partner')}
         </ButtonMenuItem>
-        <ButtonMenuItem as={NextLinkFromReactRouter} to="/nftpools/community-collections">
+        <ButtonMenuItem as={NextLinkFromReactRouter} to={getCollectionPath('community')}>
           {t('Community')}
         </ButtonMenuItem>
       </ButtonMenu>

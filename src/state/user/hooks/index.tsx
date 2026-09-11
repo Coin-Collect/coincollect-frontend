@@ -184,7 +184,10 @@ export function useUserSlippageTolerance(): [number, (slippage: number) => void]
   return [userSlippageTolerance, setUserSlippageTolerance]
 }
 
-export function useUserFarmStakedOnly(isActive: boolean): [boolean, (stakedOnly: boolean) => void] {
+export function useUserFarmStakedOnly(
+  isActive: boolean,
+  defaultToFinishedTab = true,
+): [boolean, (stakedOnly: boolean) => void] {
   const dispatch = useDispatch<AppDispatch>()
   const userFarmStakedOnly = useSelector<AppState, AppState['user']['userFarmStakedOnly']>((state) => {
     return state.user.userFarmStakedOnly
@@ -199,7 +202,9 @@ export function useUserFarmStakedOnly(isActive: boolean): [boolean, (stakedOnly:
   )
 
   return [
-    userFarmStakedOnly === FarmStakedOnly.ON_FINISHED ? !isActive : userFarmStakedOnly === FarmStakedOnly.TRUE,
+    userFarmStakedOnly === FarmStakedOnly.ON_FINISHED && defaultToFinishedTab
+      ? !isActive
+      : userFarmStakedOnly === FarmStakedOnly.TRUE,
     setUserFarmStakedOnly,
   ]
 }
@@ -381,7 +386,7 @@ export function useRemoveUserAddedToken(): (chainId: number, address: string) =>
 export function useGasPrice(chainIdOverride?: number): string {
   const { chainId: chainId_, library } = useActiveWeb3React()
   const chainId = chainIdOverride ?? chainId_
-  
+
   const userGas = useSelector<AppState, AppState['user']['gasPrice']>((state) => state.user.gasPrice)
   const { data: polygonProviderGasPrice = GAS_PRICE_GWEI.default } = useSWR(
     library &&
@@ -398,7 +403,6 @@ export function useGasPrice(chainIdOverride?: number): string {
     },
   )
 
-  
   if (chainId === ChainId.POLYGON) {
     return userGas === GAS_PRICE_GWEI.rpcDefault ? polygonProviderGasPrice : userGas
   }

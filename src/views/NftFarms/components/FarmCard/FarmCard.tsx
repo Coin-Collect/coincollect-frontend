@@ -101,30 +101,39 @@ const finishedRibbonFlow = keyframes`
 `
 
 const FinishedRibbon = styled(CardRibbon)`
-  background-color: #141414;
-  background-image:
-    linear-gradient(rgba(16, 16, 16, 0.18), rgba(16, 16, 16, 0.18)),
-    repeating-linear-gradient(120deg, #141414 0 10px, #d6ad12 10px 20px);
-  background-size: 40px 40px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  color: #ffffff;
-  animation: ${finishedRibbonFlow} 4.2s linear infinite;
+  ${({ theme }) => {
+    const contrastStripe = theme.isDark ? '#ffffff' : '#141414'
+    const ribbonText = theme.isDark ? theme.colors.invertedContrast : '#ffffff'
 
-  &:before,
-  &:after {
-    background-color: #171717;
-    background-image: inherit;
-    background-size: inherit;
-    animation: inherit;
-  }
+    return css`
+      background-color: ${contrastStripe};
+      background-image: linear-gradient(rgba(16, 16, 16, 0.14), rgba(16, 16, 16, 0.14)),
+        repeating-linear-gradient(120deg, ${contrastStripe} 0 10px, ${theme.colors.primary} 10px 20px);
+      color: ${ribbonText};
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+      &:before,
+      &:after {
+        background-color: ${contrastStripe};
+        background-image: inherit;
+        background-size: inherit;
+        animation: inherit;
+      }
+
+      & > div {
+        color: ${ribbonText};
+        text-shadow: ${theme.isDark ? '0 1px 2px rgba(255, 255, 255, 0.16)' : '0 1px 2px rgba(0, 0, 0, 0.8)'};
+      }
+    `
+  }}
+  background-size: 40px 40px;
+  animation: ${finishedRibbonFlow} 4.2s linear infinite;
 
   & > div {
     position: relative;
-    color: #ffffff;
     overflow: hidden;
     font-weight: 800;
     letter-spacing: 0.04em;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     text-transform: uppercase;
 
     &:after {
