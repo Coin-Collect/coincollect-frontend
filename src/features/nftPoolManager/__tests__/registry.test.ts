@@ -134,14 +134,19 @@ describe('NFT pool status and clone safety', () => {
     const draft = createNftPoolCloneDraft(pool)
 
     expect(draft.sourcePoolId).toBe(pool.id)
+    expect(draft.name).toBe(pool.metadata.name)
     expect(draft.collections[0].weight).toBe('15')
     expect(draft.rewards.primary?.symbol).toBe('LOT')
+    expect(draft.economics.totalBudget).toBe('')
     expect(draft.unsafe).toEqual({})
-    expect(draft.economics.allocationBps).toEqual({})
+    expect(draft.economics.allocationBps).toEqual({ [draft.rewards.primary!.address.toLowerCase()]: '10000' })
     expect((draft.economics as any).primaryRewardAllocation).toBeUndefined()
     expect(draft.sourceEconomics?.originalRewardPerBlock?.toString()).toBe('123')
     expect(draft.constraints.poolCapacity).toBe('75')
     expect(draft.constraints.userLimitEnabled).toBe(true)
+    expect('startBlock' in draft).toBe(false)
+    expect('endBlock' in draft.economics).toBe(false)
+    expect('poolAddress' in draft).toBe(false)
   })
 
   it('preserves the original limit when the runtime window has expired', () => {

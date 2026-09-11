@@ -1,42 +1,64 @@
 # NFT Pool Studio
 
-NFT Pool Studio is the Polygon-only administration surface for CoinCollect NFT staking pools. It has two operator
-entry points: **Quick Create** for the normal one-collection canary, and **Advanced Setup** for the full configuration
-surface. Every on-chain write still requires an explicit wallet confirmation. Tests, local development and preflight do
-not submit a production Polygon transaction.
+NFT Pool Studio is the Polygon-only administration surface for CoinCollect NFT staking pools. The canonical operator
+object is the **NFT Pool Card**: the admin edits the artwork, collections, rewards and visible economics directly on the
+same card users will eventually recognize. **Advanced details** remains available for protocol-level controls, but it
+is secondary to the Card Studio. Every on-chain write still requires an explicit wallet confirmation. Tests, local
+development and review/preflight do not submit a production Polygon transaction.
+
+## Card-First Pool Studio
+
+The Card Studio is a UI layer over the existing `NftPoolDraft`, economics, validation, quote, deployment-plan and launch
+engines. It does not introduce a second deployment path or duplicate reward math.
+
+- Click the artwork to choose a repository-known banner, an existing pool asset or a public image URL. There is no fake
+  upload backend; a URL or local/repository asset is only presentation metadata.
+- Click the NFT stack to select collections and edit positive integer **staking power** values. The first selected
+  collection remains the factory primary unless an operator deliberately changes it in Advanced details. Custom ERC721
+  contracts are validated for the current draft and do not mutate the global registry.
+- Click rewards to choose known Polygon tokens or validate a custom ERC-20. Multiple rewards use human percentages;
+  the editor converts them deterministically to basis points and keeps the contract's primary/side representation
+  warnings visible.
+- Click budget, duration or minimum effective power to edit those decisions. New cards intentionally leave the monetary
+  budget empty; `USDT` is only the suggested denomination and `COLLECT` is only the suggested primary reward identity.
+- Click the title or **Pool details** for presentation metadata. Project/NFT links remain secondary to the card.
+
+The card's reward-sharing preview follows SmartChef v2 semantics. It uses the actual calculated primary
+`rewardPerBlock`, measured block time and weighted shares. `participantThreshold` is a floor in weighted staking power,
+not a participant-wallet count unless the deployed contract implementation proves otherwise. The UI therefore says
+**Minimum effective staking power** and explains that a larger total staking power gives each stake a smaller share of
+the fixed primary reward. Side rewards are shown as derived from primary pending rewards, not as independent emissions.
 
 ## Operator guide
 
-1. Open **NFT Pool Studio** and choose **+ New Pool**.
-2. In Quick Create, choose an NFT collection, enter a reward budget in USDT and choose a duration: 1, 3 or 6 months,
-   1 year, or a custom number of days.
-3. Review the automatically prepared quote and the compact pool summary. The quote is read-only; the product never
-   performs a USDT swap.
-4. Choose **Create Pool**. A saved launch session runs a fresh Polygon preflight automatically before showing any
-   wallet signature.
-5. Review the final schedule, operator, gas estimate, plan hash and PASS/BLOCK checks. Confirm each requested wallet
-   action separately, then wait for the receipt and read-back before continuing.
+1. Open **NFT Pool Studio** and choose **+ New Pool**. The Card Studio opens with no NFT or financial amount silently
+   selected. `COLLECT`, `USDT`, a one-month duration, and the documented creation-policy threshold are suggestions only.
+2. Click the card regions to choose NFT collections, set staking powers, select reward tokens, enter the total budget,
+   choose a duration (including custom days such as `200`), and set minimum effective staking power.
+3. Use the live preview and read-only quotes to inspect allocated reward budgets, actual primary schedule economics and
+   weighted share examples. Quotes never perform a swap.
+4. Choose **Review Pool**. The current draft is converted to one deployment plan and read-only Polygon preflight checks
+   run for network, authority, bytecode, balances, gas, schedule and simulation. No wallet transaction is sent.
+5. Choose **Create Pool** only after the review passes. A saved launch session then runs the existing hardened launch
+   engine. Confirm each requested wallet action separately, then wait for receipt and read-back before continuing.
 6. If the browser closes or an RPC request fails, reopen the saved launch route and choose **Resume**. The session
    reconciles receipt hashes and balances; it never blindly resends an unresolved write.
 
-Finished pools expose **Renew**. Active or upcoming pools expose **Duplicate**. Saved drafts use **Continue setup**.
+Finished pools expose **Renew**. Active or upcoming pools expose **Duplicate**. Both open the same Card Studio with safe
+configuration populated. Saved drafts use **Continue editing** and resume the Card Studio; incomplete launch sessions
+use **Resume launch**.
 
-## Quick Create policy
+## Creation policy and advanced details
 
-Quick Create is a mapper over the same draft, economics, validation, deployment-plan and launch-session engine used by
-Advanced Setup. It deliberately makes fewer decisions visible:
+New cards use an explicit, reviewable policy: `COLLECT` is the suggested primary reward, `USDT` is the suggested budget
+denomination, duration defaults to one month, minimum effective staking power defaults to `20`, initial capacity to
+`1000`, wallet limits are off, and performance fees/side rewards are absent. The budget remains empty until the admin
+enters it. Capacity, primary collection designation, exact BPS, manual amounts, estimated blocks, addresses and the
+deployment plan remain under **Advanced details**.
 
-- Reward: canonical Polygon **COLLECT**, allocated at 100%.
-- Budget: canonical Polygon **USDT** denomination; the entered amount remains the budget input, not a swap instruction.
-- NFT: exactly one selected collection, primary weight `1`.
-- Defaults: participant threshold `1`, initial capacity `1000`, no per-wallet limit, no side rewards and no performance
-  fee.
-- Metadata: the collection name becomes the initial pool name and its configured artwork is used as the preview when
-  available.
-
-Advanced Setup remains available for additional collections, custom ERC-20 rewards, side percentages, user limits,
-performance-fee policy, exact metadata and manual amount fallbacks. Raw addresses are kept out of the primary Quick
-Create controls and remain visible in the advanced review/details surfaces.
+Advanced details is retained for additional collections, custom ERC-20 rewards, side percentages, user limits,
+performance-fee policy, exact metadata and manual amount fallbacks. It is a protocol escape hatch, not a separate launch
+engine.
 
 Quotes are debounced after a valid budget or reward input changes. A manual refresh is available as a fallback. Quotes
 carry their budget, allocation, path, source, timestamp and expiry; changing an input invalidates the old quote. Same-token

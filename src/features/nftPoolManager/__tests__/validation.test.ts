@@ -1,13 +1,16 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { calculatePoolEconomics } from '../economics'
 import { createEmptyNftPoolDraft } from '../registry'
+import { mainnetTokens } from 'config/constants/tokens'
 import { buildNftPoolDeploymentPlan, validateNftPoolDraft } from '../validation'
 
 describe('NFT pool draft validation', () => {
   it('keeps a new draft incomplete without silently selecting assets', () => {
     const draft = createEmptyNftPoolDraft()
     expect(draft.collections).toHaveLength(0)
-    expect(draft.rewards.primary).toBeNull()
+    expect(draft.rewards.primary?.symbol).toBe('COLLECT')
+    expect(draft.economics.totalBudget).toBe('')
+    expect(draft.economics.allocationBps[mainnetTokens.collect.address!.toLowerCase()]).toBe('10000')
     expect(validateNftPoolDraft(draft).readiness).toBe('INCOMPLETE')
   })
 

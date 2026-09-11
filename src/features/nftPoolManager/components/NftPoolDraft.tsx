@@ -15,15 +15,9 @@ import { createEmptyNftPoolDraft, createNftPoolCloneDraft, findNftCollection, nf
 import { useNftPoolRegistry } from '../hooks'
 import { loadNftPoolDraft, saveNftPoolDraft } from '../storage'
 import { createNftPoolLaunchSession, findActiveNftPoolLaunchSession, saveNftPoolLaunchSession } from '../launch/storage'
+import { runNftPoolPreflight } from '../launch/preflight'
+import type { NftPreflightResult } from '../launch/types'
 import { NftCollection, NftPoolDraft as NftPoolDraftModel, NftPoolDraftReward } from '../types'
-import {
-  QUICK_CREATE_DEFAULT_BUDGET,
-  QUICK_CREATE_DURATION_PRESETS,
-  QUICK_CREATE_POLICY,
-  buildQuickCreateDraft,
-  isQuickCreateShape,
-  quickCreateSummary,
-} from '../quickCreate'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import { mainnetTokens } from 'config/constants/tokens'
 import erc20Abi from 'config/abi/erc20.json'
@@ -58,6 +52,7 @@ import {
   TokenChip,
   TokenDot,
 } from './styles'
+import NftPoolCardStudio from './studio/NftPoolCardStudio'
 
 const steps = ['NFTs', 'Rewards', 'Budget', 'Duration', 'Appearance', 'Review']
 const EMPTY_COLLECTIONS: NftCollection[] = []
@@ -92,8 +87,7 @@ export default function PoolBuilder() {
   const savedDraftId = typeof router.query.draft === 'string' ? router.query.draft : ''
   const { data, loading, error } = useNftPoolRegistry()
   const [draft, setDraft] = useState<NftPoolDraftModel>(() => createEmptyNftPoolDraft())
-  const [mode, setMode] = useState<'quick' | 'advanced'>('quick')
-  const [quickCollectionAddress, setQuickCollectionAddress] = useState('')
+  const [mode, setMode] = useState<'card' | 'advanced'>('card')
   const [step, setStep] = useState(0)
   const [hydrated, setHydrated] = useState(false)
   const [draftTouched, setDraftTouched] = useState(false)
@@ -106,7 +100,9 @@ export default function PoolBuilder() {
   const [quoteBusy, setQuoteBusy] = useState(false)
   const [walletBalanceBusy, setWalletBalanceBusy] = useState(false)
   const [walletBalances, setWalletBalances] = useState<Record<string, string>>({})
-  const { account } = useWeb3React()
+  const [reviewBusy, setReviewBusy] = useState(false)
+  const [reviewResult, setReviewResult] = useState<NftPreflightResult | null>(null)
+  const { account, library } = useWeb3React()
 
   const sourcePool = useMemo(
     () => data?.pools.find((pool) => pool.id === cloneId || pool.address.toLowerCase() === cloneId.toLowerCase()),
@@ -132,6 +128,8 @@ export default function PoolBuilder() {
     : null
   const knownCollections = data?.collections ?? EMPTY_COLLECTIONS
   const rewards = [draft.rewards.primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
+  const rewardAddresses = rewards.map((reward) => reward.address.toLowerCase()).join('|')
+  const allocationKey = JSON.stringify(draft.economics.allocationBps)
 
   useEffect(() => {
     if (!account || draft.intendedAdmin?.toLowerCase() === account.toLowerCase()) return
@@ -140,14 +138,14 @@ export default function PoolBuilder() {
 
   useEffect(() => {
     if (savedDraftId) {
-      setMode('advanced')
+      setMode('card')
       const saved = loadNftPoolDraft(savedDraftId)
       if (saved) setDraft(saved)
       setHydrated(true)
       return
     }
     if (cloneId) {
-      setMode('quick')
+      setMode('card')
       if (sourcePool) {
         setDraft(createNftPoolCloneDraft(sourcePool, data?.secondsPerBlock || 2.2))
         setHydrated(true)
@@ -165,39 +163,10 @@ export default function PoolBuilder() {
     return () => clearTimeout(timeout)
   }, [draft, draftTouched, hydrated, validation.readiness])
 
-  useEffect(() => {
-    if (!hydrated || mode !== 'quick' || savedDraftId || cloneId) return
-    if (draft.rewards.primary && (draft.collections.length || !knownCollections.length)) return
-    const baseDraft: NftPoolDraftModel = draft.rewards.primary
-      ? draft
-      : {
-          ...draft,
-          rewards: { primary: QUICK_CREATE_POLICY.reward, side: [] },
-          economics: {
-            ...draft.economics,
-            budgetTokenAddress: QUICK_CREATE_POLICY.budgetToken.address,
-            budgetDenomination: QUICK_CREATE_POLICY.budgetToken.symbol,
-            budgetDecimals: QUICK_CREATE_POLICY.budgetToken.decimals,
-            totalBudget: draft.economics.totalBudget || QUICK_CREATE_DEFAULT_BUDGET,
-            allocationBps: { [QUICK_CREATE_POLICY.reward.address.toLowerCase()]: '10000' },
-          },
-          constraints: {
-            ...draft.constraints,
-            participantThreshold: QUICK_CREATE_POLICY.defaultParticipantThreshold,
-            poolCapacity: QUICK_CREATE_POLICY.defaultPoolCapacity,
-          },
-        }
-    const collection = knownCollections[0]
-    const next = collection
-      ? buildQuickCreateDraft(baseDraft, collection, { budget: baseDraft.economics.totalBudget })
-      : baseDraft
-    setQuickCollectionAddress(next.collections[0]?.address || '')
-    setDraft({ ...next, updatedAt: Date.now() })
-  }, [cloneId, draft, hydrated, knownCollections, mode, savedDraftId])
-
   const updateDraft = (patch: Partial<NftPoolDraftModel>) => {
     setDraftTouched(true)
     setDraft((current) => ({ ...current, ...patch, updatedAt: Date.now() }))
+    setReviewResult(null)
     setMessage('')
   }
 
@@ -228,14 +197,17 @@ export default function PoolBuilder() {
         primary: draft.collections.length === 0,
       },
     ]
-    updateDraft({ collections: next })
+    updateDraft({
+      collections: next,
+      name: draft.name.trim() ? draft.name : `${collection.displayName || collection.name} Rewards`,
+    })
   }
 
-  const addCustomCollection = async () => {
+  const addCustomCollection = async (input = collectionAddress) => {
     setValidating(true)
     setValidationMessage('Checking collection…')
     try {
-      const result = await validateNftCollectionAddress(simplePolygonRpcProvider, collectionAddress)
+      const result = await validateNftCollectionAddress(simplePolygonRpcProvider, input)
       if (!result.valid) {
         setValidationMessage(result.reason || 'Collection validation failed.')
         return
@@ -302,10 +274,9 @@ export default function PoolBuilder() {
     })
   }
 
-  const addCustomReward = async (side: boolean) => {
+  const addCustomReward = async (side: boolean, input = side ? sideRewardAddress : rewardAddress) => {
     setValidating(true)
     setValidationMessage('Checking reward token…')
-    const input = side ? sideRewardAddress : rewardAddress
     try {
       const result = await validateRewardTokenAddress(simplePolygonRpcProvider, input)
       if (!result.valid) {
@@ -337,6 +308,20 @@ export default function PoolBuilder() {
     updateDraft({
       rewards: { ...draft.rewards, side },
       economics: { ...draft.economics, allocationBps, quotes: {}, quoteErrors: {} },
+    })
+  }
+
+  const updateCollectionWeight = (address: string, weight: string) => {
+    updateDraft({
+      collections: draft.collections.map((item) =>
+        item.address.toLowerCase() === address.toLowerCase() ? { ...item, weight } : item,
+      ),
+    })
+  }
+
+  const updateAllocation = (address: string, bps: string) => {
+    updateEconomics({
+      allocationBps: { ...draft.economics.allocationBps, [address.toLowerCase()]: bps },
     })
   }
 
@@ -416,7 +401,7 @@ export default function PoolBuilder() {
   }
 
   useEffect(() => {
-    if (mode !== 'quick' || !hydrated || !draft.rewards.primary || !draft.economics.totalBudget) return undefined
+    if (mode === 'advanced' || !hydrated || !draft.rewards.primary || !draft.economics.totalBudget) return undefined
     if (
       !draft.economics.budgetDecimals ||
       !parseUnitsExact(draft.economics.totalBudget, draft.economics.budgetDecimals)
@@ -424,10 +409,10 @@ export default function PoolBuilder() {
       return undefined
     const timeout = setTimeout(() => void refreshQuotes(), 700)
     return () => clearTimeout(timeout)
-    // refreshQuotes intentionally follows the Quick Create input dependencies;
+    // refreshQuotes intentionally follows the Card Studio input dependencies;
     // its quote result must not retrigger the debounce.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.economics.budgetDecimals, draft.economics.totalBudget, draft.rewards.primary?.address, hydrated, mode])
+  }, [allocationKey, draft.economics.budgetDecimals, draft.economics.totalBudget, hydrated, mode, rewardAddresses])
 
   const readWalletBalances = async () => {
     if (!account) return
@@ -469,175 +454,53 @@ export default function PoolBuilder() {
     router.push(`/admin/nft-pools/launch/${session.sessionId}`)
   }
 
-  const applyQuickCollection = (address: string) => {
-    const collection = findNftCollection(knownCollections, 137, address)
-    if (!collection) return
-    const next = buildQuickCreateDraft(draft, collection, {
-      budget: draft.economics.totalBudget || QUICK_CREATE_DEFAULT_BUDGET,
-      durationPreset: draft.economics.durationPreset || QUICK_CREATE_POLICY.defaultDuration,
-      customDurationDays: draft.economics.customDurationDays,
-    })
-    setQuickCollectionAddress(address)
-    setDraftTouched(true)
-    setDraft({ ...next, updatedAt: Date.now() })
-    setValidationMessage('Quick Create defaults applied. The quote will refresh automatically.')
+  const reviewPool = async () => {
+    if (!plan || validation.blockers.length || !account || !library) {
+      setMessage('Complete the blocking card items and connect the intended Polygon admin wallet first.')
+      return
+    }
+    setReviewBusy(true)
+    setReviewResult(null)
+    setMessage('Checking Polygon setup, balances, gas and the launch simulation…')
+    try {
+      const network = await library.getNetwork()
+      const result = await runNftPoolPreflight({
+        provider: simplePolygonRpcProvider,
+        signer: library.getSigner(),
+        plan,
+        account,
+        walletChainId: network.chainId,
+      })
+      setReviewResult(result)
+      setMessage(
+        result.ok
+          ? 'Review passed. No transaction was sent; Create Pool will open the wallet launch flow.'
+          : 'Review found blockers. Resolve them and run the checks again.',
+      )
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : 'Pool review could not be completed.')
+    } finally {
+      setReviewBusy(false)
+    }
   }
 
-  const renderQuickCreate = () => {
-    const selectedCollection = findNftCollection(
-      knownCollections,
-      137,
-      quickCollectionAddress || draft.collections[0]?.address,
-    )
-    const quote = draft.rewards.primary
-      ? draft.economics.quotes[draft.rewards.primary.address.toLowerCase()]
-      : undefined
-    const simpleDefaultsActive =
-      isQuickCreateShape(draft) &&
-      draft.constraints.participantThreshold === QUICK_CREATE_POLICY.defaultParticipantThreshold &&
-      draft.constraints.poolCapacity === QUICK_CREATE_POLICY.defaultPoolCapacity
-    const rewardLabel = draft.rewards.primary
-      ? `${draft.rewards.primary.symbol} · ${
-          isQuickCreateShape(draft) ? '100% allocation' : 'advanced settings retained'
-        }`
-      : 'Choose a reward in Advanced Setup'
-    const quickReady = Boolean(plan && validation.readiness === 'READY_FOR_DRY_RUN')
-    return (
-      <>
-        <Panel>
-          <PanelTitle>Quick Create</PanelTitle>
-          <Muted>
-            Choose the collection, reward budget and duration. CoinCollect will fill the safe defaults and prepare the
-            same verified launch plan used by Advanced Setup.
-          </Muted>
-          <FormGrid style={{ marginTop: 18 }}>
-            <Field>
-              NFT collection
-              <Select
-                value={selectedCollection?.address || ''}
-                onChange={(event) => applyQuickCollection(event.target.value)}
-              >
-                <option value="">Choose a collection</option>
-                {knownCollections.map((collection) => (
-                  <option key={collection.id} value={collection.address}>
-                    {collection.displayName || collection.name} · {collection.symbol}
-                  </option>
-                ))}
-              </Select>
-              <Muted style={{ fontSize: 11 }}>
-                Verified Polygon collections are shown by name; addresses stay in Advanced Setup.
-              </Muted>
-            </Field>
-            <Field>
-              Reward budget
-              <Input
-                type="number"
-                min="0"
-                step="any"
-                value={draft.economics.totalBudget || ''}
-                onChange={(event) => updateEconomics({ totalBudget: event.target.value })}
-                placeholder={QUICK_CREATE_DEFAULT_BUDGET}
-              />
-              <Muted style={{ fontSize: 11 }}>Denomination: {QUICK_CREATE_POLICY.budgetToken.symbol}</Muted>
-            </Field>
-            <Field>
-              Duration
-              <Select
-                value={draft.economics.durationPreset}
-                onChange={(event) =>
-                  updateEconomics({
-                    durationPreset: event.target.value as NftPoolDraftModel['economics']['durationPreset'],
-                  })
-                }
-              >
-                {QUICK_CREATE_DURATION_PRESETS.map((preset) => (
-                  <option key={preset} value={preset}>
-                    {preset === '1 year' ? '1 year' : preset[0].toUpperCase() + preset.slice(1)}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            {draft.economics.durationPreset === 'custom' ? (
-              <Field>
-                Custom duration (days)
-                <Input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={draft.economics.customDurationDays || ''}
-                  onChange={(event) => updateEconomics({ customDurationDays: event.target.value })}
-                  placeholder="30"
-                />
-              </Field>
-            ) : null}
-          </FormGrid>
-          <Panel style={{ marginTop: 18, padding: 16 }}>
-            <PanelTitle>What will be created</PanelTitle>
-            <FormGrid>
-              <div>
-                <Muted>Pool</Muted>
-                <div>{draft.name || selectedCollection?.displayName || 'Choose an NFT collection'}</div>
-              </div>
-              <div>
-                <Muted>Reward</Muted>
-                <TokenChip>
-                  <TokenDot>{draft.rewards.primary?.symbol.slice(0, 2) || '—'}</TokenDot>
-                  {rewardLabel}
-                </TokenChip>
-              </div>
-              <div>
-                <Muted>Setup</Muted>
-                <div>{simpleDefaultsActive ? 'Simple setup' : 'Advanced settings retained'}</div>
-              </div>
-              <div>
-                <Muted>Estimate</Muted>
-                <div>
-                  {quoteBusy
-                    ? 'Refreshing…'
-                    : quote
-                    ? `≈ ${quote.outputAmount} ${draft.rewards.primary?.symbol || QUICK_CREATE_POLICY.reward.symbol}`
-                    : 'Waiting for a valid budget'}
-                </div>
-              </div>
-            </FormGrid>
-            <Muted style={{ display: 'block', marginTop: 12 }}>{quickCreateSummary(draft)}</Muted>
-          </Panel>
-          <ButtonRow>
-            <ActionButton $secondary onClick={save}>
-              Save draft
-            </ActionButton>
-            <ActionButton
-              $secondary
-              onClick={() => void refreshQuotes()}
-              disabled={quoteBusy || !draft.economics.totalBudget}
-            >
-              {quoteBusy ? 'Refreshing quote…' : 'Refresh quote'}
-            </ActionButton>
-            <Muted>Read-only quote · no swap is performed</Muted>
-          </ButtonRow>
-        </Panel>
-        <Panel>
-          <PanelTitle>Review & create</PanelTitle>
-          <Muted>
-            A final Polygon preflight starts automatically after you choose Create Pool. Wallet signatures appear only
-            after the review passes.
-          </Muted>
-          {validation.blockers.length ? (
-            <Notice $error style={{ marginTop: 14 }}>
-              {validation.blockers[0]}
-            </Notice>
-          ) : validation.warnings.length ? (
-            <Notice style={{ marginTop: 14 }}>{validation.warnings[0]}</Notice>
-          ) : null}
-          <ButtonRow>
-            <ActionButton onClick={startPreflight} disabled={!quickReady || !account}>
-              Create Pool
-            </ActionButton>
-            <Muted>{account ? 'Connected operator required' : 'Connect the operator wallet to continue'}</Muted>
-          </ButtonRow>
-        </Panel>
-      </>
-    )
+  const createReviewedPool = () => {
+    if (!reviewResult?.ok || !plan || !account) return
+    const existing = findActiveNftPoolLaunchSession(draft.id)
+    if (existing) {
+      router.push(`/admin/nft-pools/launch/${existing.sessionId}`)
+      return
+    }
+    const reviewedDraft = { ...draft, intendedAdmin: account, readiness: validation.readiness }
+    saveNftPoolDraft(reviewedDraft)
+    const session = createNftPoolLaunchSession(plan, 137, plan.factoryAddress, account)
+    saveNftPoolLaunchSession({
+      ...session,
+      preflight: reviewResult,
+      schedule: reviewResult.schedule,
+      currentStage: 'PREFLIGHT_READY',
+    })
+    router.push(`/admin/nft-pools/launch/${session.sessionId}`)
   }
 
   const renderStep = () => {
@@ -677,7 +540,7 @@ export default function PoolBuilder() {
             </Field>
           </FormGrid>
           <ButtonRow>
-            <ActionButton onClick={addCustomCollection} disabled={validating || !collectionAddress}>
+            <ActionButton onClick={() => void addCustomCollection()} disabled={validating || !collectionAddress}>
               Validate and add
             </ActionButton>
           </ButtonRow>
@@ -1302,7 +1165,7 @@ export default function PoolBuilder() {
   return (
     <AdminShell
       title={sourcePool ? (sourcePool.status === 'FINISHED' ? 'Renew NFT pool' : 'Duplicate NFT pool') : 'New NFT pool'}
-      subtitle="Create a Polygon NFT pool with a guided setup or full control."
+      subtitle="Edit the NFT staking card your community will eventually see."
       authorityScope="nft"
     >
       {error ? <Notice $error>{error}</Notice> : null}
@@ -1324,53 +1187,80 @@ export default function PoolBuilder() {
       {validationMessage ? <Notice>{validationMessage}</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
       <ButtonRow style={{ marginTop: 0, marginBottom: 14 }}>
-        <ActionButton $secondary={mode !== 'quick'} onClick={() => setMode('quick')}>
-          Quick Create
+        <ActionButton $secondary={mode !== 'card'} onClick={() => setMode('card')}>
+          Card Studio
         </ActionButton>
         <ActionButton $secondary={mode !== 'advanced'} onClick={() => setMode('advanced')}>
-          Advanced Setup
+          Advanced details
         </ActionButton>
         <Muted>
-          {mode === 'quick' ? 'Fast path with safe defaults' : 'Full collection, reward and policy controls'}
+          {mode === 'card' ? 'Edit the pool users will see' : 'Protocol controls for experienced operators'}
         </Muted>
       </ButtonRow>
-      <BuilderShell>
-        {mode === 'quick' ? (
-          <div style={{ gridColumn: '1 / -1' }}>
-            <BuilderContent>{renderQuickCreate()}</BuilderContent>
-          </div>
-        ) : (
-          <>
-            <StepNav aria-label="Pool builder steps">
-              {steps.map((label, index) => (
-                <StepButton
-                  type="button"
-                  key={label}
-                  $active={step === index}
-                  $complete={index < step}
-                  onClick={() => setStep(index)}
-                >
-                  {label}
-                </StepButton>
-              ))}
-            </StepNav>
-            <BuilderContent>
-              {renderStep()}
-              <ButtonRow style={{ justifyContent: 'space-between' }}>
-                <ActionButton $secondary onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>
-                  Back
-                </ActionButton>
-                <Muted>
-                  Step {step + 1} of {steps.length} · Autosaves locally
-                </Muted>
-                {step < steps.length - 1 ? (
-                  <ActionButton onClick={() => setStep(Math.min(steps.length - 1, step + 1))}>Continue</ActionButton>
-                ) : null}
-              </ButtonRow>
-            </BuilderContent>
-          </>
-        )}
-      </BuilderShell>
+      {mode === 'card' ? (
+        <NftPoolCardStudio
+          draft={draft}
+          knownCollections={knownCollections}
+          knownRewards={knownRewards as NftPoolDraftReward[]}
+          economics={economics}
+          validation={validation}
+          secondsPerBlock={data?.secondsPerBlock || 2.2}
+          sourcePool={sourcePool}
+          quoteBusy={quoteBusy}
+          walletBalanceBusy={walletBalanceBusy}
+          walletBalances={walletBalances}
+          account={account || undefined}
+          reviewBusy={reviewBusy}
+          reviewResult={reviewResult}
+          onUpdateDraft={updateDraft}
+          onUpdateEconomics={updateEconomics}
+          onAddCollection={addCollection}
+          onRemoveCollection={removeCollection}
+          onUpdateCollectionWeight={updateCollectionWeight}
+          onAddCustomCollection={(address) => addCustomCollection(address)}
+          onSetPrimaryReward={setPrimaryRewardAsset}
+          onAddSideReward={addSideReward}
+          onRemoveSideReward={removeSideReward}
+          onAddCustomReward={(side, address) => addCustomReward(side, address)}
+          onUpdateAllocation={updateAllocation}
+          onRefreshQuotes={() => void refreshQuotes()}
+          onReadWalletBalances={() => void readWalletBalances()}
+          onSave={save}
+          onReview={() => void reviewPool()}
+          onCreatePool={createReviewedPool}
+          onOpenAdvanced={() => setMode('advanced')}
+        />
+      ) : (
+        <BuilderShell>
+          <StepNav aria-label="Advanced pool configuration steps">
+            {steps.map((label, index) => (
+              <StepButton
+                type="button"
+                key={label}
+                $active={step === index}
+                $complete={index < step}
+                onClick={() => setStep(index)}
+              >
+                {label}
+              </StepButton>
+            ))}
+          </StepNav>
+          <BuilderContent>
+            {renderStep()}
+            <ButtonRow style={{ justifyContent: 'space-between' }}>
+              <ActionButton $secondary onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>
+                Back
+              </ActionButton>
+              <Muted>
+                Step {step + 1} of {steps.length} · Autosaves locally
+              </Muted>
+              {step < steps.length - 1 ? (
+                <ActionButton onClick={() => setStep(Math.min(steps.length - 1, step + 1))}>Continue</ActionButton>
+              ) : null}
+            </ButtonRow>
+          </BuilderContent>
+        </BuilderShell>
+      )}
       <p style={{ marginTop: 18 }}>
         <Link href="/admin/nft-pools">Back to NFT pools</Link>
         {' · '}

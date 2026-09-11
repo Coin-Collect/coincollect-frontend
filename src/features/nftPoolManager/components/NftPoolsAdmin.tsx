@@ -5,90 +5,48 @@ import AdminShell from 'features/poolManager/components/AdminShell'
 import {
   ActionButton,
   Field,
-  FormGrid,
   Input,
   Muted,
   Notice,
   Panel,
   PanelTitle,
   Select,
-  StatusPill,
 } from 'features/poolManager/components/styles'
 import { useNftPoolRegistry } from '../hooks'
+import { loadNftPoolLaunchSessions } from '../launch/storage'
 import { deleteNftPoolDraft, duplicateNftPoolDraft, loadNftPoolDrafts } from '../storage'
-import { NftPoolDraft } from '../types'
-import { NftPoolStatus } from '../types'
-import {
-  ColumnLabel,
-  FilterBar,
-  NftPoolList,
-  NftPoolRow,
-  PoolActions,
-  PoolColumn,
-  PoolIdentity,
-  PoolMeta,
-  PoolName,
-  PoolThumb,
-  PoolThumbVideo,
-  PrimaryLink,
-  SoftLink,
-  StudioSummary,
-  SummaryCard,
-  SummaryLabel,
-  SummaryValue,
-} from './styles'
+import { NftPoolDraft, NftPoolStatus } from '../types'
+import type { NftPoolLaunchSession } from '../launch/types'
+import { FilterBar, NftPoolList, PrimaryLink, StudioSummary, SummaryCard, SummaryLabel, SummaryValue } from './styles'
+import { NftPoolAdminCard, NftPoolDraftCard } from './studio/NftPoolAdminCard'
 
-const statusFilters: Array<'ALL' | NftPoolStatus> = ['ALL', 'ACTIVE', 'UPCOMING', 'FINISHED', 'UNKNOWN']
+type AdminFilter = 'ALL' | NftPoolStatus | 'DRAFTS'
 
-function shorten(address: string): string {
-  return address.length > 14 ? `${address.slice(0, 8)}…${address.slice(-6)}` : address
-}
-
-function rewardSummary(pool: any): string {
-  return [pool.rewards.primary.token.symbol, ...pool.rewards.side.map((reward: any) => reward.token.symbol)].join(' + ')
-}
-
-function collectionSummary(pool: any): string {
-  const names = pool.collections.map((entry: any) => entry.collection.displayName)
-  return names.length > 2 ? `${names.slice(0, 2).join(', ')} +${names.length - 2}` : names.join(', ')
-}
-
-function sourceLabel(source: string): string {
-  if (source === 'legacy-masterchef') return 'Legacy MasterChef'
-  if (source === 'nft-factory') return 'NFT factory'
-  return 'Config + chain'
-}
-
-function draftReadinessLabel(readiness?: NftPoolDraft['readiness']): string {
-  if (readiness === 'READY_FOR_DRY_RUN' || readiness === 'READY_FOR_DEPLOYMENT') return 'Ready'
-  if (readiness === 'NEEDS_REVIEW') return 'Needs review'
-  return 'Needs setup'
-}
-
-function fallbackHeroVideo(address: string): string {
-  const suffix = Number.parseInt(address.slice(-2), 16)
-  const index = Number.isFinite(suffix) ? (suffix % 9) + 1 : 1
-  return `/images/superheroes/${index}.webm`
-}
-
-function PoolMedia({ pool }: { pool: any }) {
-  const [imageFailed, setImageFailed] = useState(false)
-  const image = pool.metadata.avatar || pool.metadata.banner
-
-  if (!image || imageFailed) {
-    return <PoolThumbVideo autoPlay loop muted playsInline src={fallbackHeroVideo(pool.address)} aria-hidden="true" />
-  }
-
-  return <PoolThumb src={image} alt="" onError={() => setImageFailed(true)} />
-}
+const statusFilters: AdminFilter[] = ['ALL', 'ACTIVE', 'UPCOMING', 'FINISHED', 'DRAFTS', 'UNKNOWN']
 
 export default function NftPoolsAdmin() {
   const { data, loading, error, refresh } = useNftPoolRegistry()
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<'ALL' | NftPoolStatus>('ALL')
+  const [status, setStatus] = useState<AdminFilter>('ALL')
   const [drafts, setDrafts] = useState<NftPoolDraft[]>([])
-  useEffect(() => setDrafts(loadNftPoolDrafts()), [])
-  const refreshDrafts = () => setDrafts(loadNftPoolDrafts())
+  const [launchSessions, setLaunchSessions] = useState<NftPoolLaunchSession[]>([])
+  useEffect(() => {
+    setDrafts(loadNftPoolDrafts())
+    setLaunchSessions(loadNftPoolLaunchSessions())
+  }, [])
+  const refreshDrafts = () => {
+    setDrafts(loadNftPoolDrafts())
+    setLaunchSessions(loadNftPoolLaunchSessions())
+  }
+  const launchSessionByDraftId = useMemo(
+    () =>
+      new Map(
+        launchSessions
+          .filter((session) => session.currentStage !== 'COMPLETE')
+          .map((session) => [session.draftId, session.sessionId]),
+      ),
+    [launchSessions],
+  )
   const counts = useMemo(() => {
     const pools = data?.pools || []
     return {
@@ -96,8 +54,9 @@ export default function NftPoolsAdmin() {
       active: pools.filter((pool) => pool.status === 'ACTIVE').length,
       upcoming: pools.filter((pool) => pool.status === 'UPCOMING').length,
       finished: pools.filter((pool) => pool.status === 'FINISHED').length,
+      drafts: drafts.length,
     }
-  }, [data?.pools])
+  }, [data?.pools, drafts.length])
   const pools = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
     return (data?.pools || []).filter((pool) => {
@@ -113,9 +72,31 @@ export default function NftPoolsAdmin() {
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
-      return (!normalizedQuery || searchText.includes(normalizedQuery)) && (status === 'ALL' || pool.status === status)
+      return (
+        (!normalizedQuery || searchText.includes(normalizedQuery)) &&
+        status !== 'DRAFTS' &&
+        (status === 'ALL' || pool.status === status)
+      )
     })
   }, [data?.pools, query, status])
+
+  const visibleDrafts = useMemo(() => {
+    if (status !== 'ALL' && status !== 'DRAFTS') return []
+    const normalizedQuery = query.trim().toLowerCase()
+    return drafts.filter((draft) => {
+      const searchText = [
+        draft.name,
+        draft.sourcePoolId,
+        ...draft.collections.map((collection) => collection.name),
+        draft.rewards.primary?.symbol,
+        ...draft.rewards.side.map((reward) => reward.symbol),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return !normalizedQuery || searchText.includes(normalizedQuery)
+    })
+  }, [drafts, query, status])
 
   return (
     <AdminShell
@@ -162,10 +143,14 @@ export default function NftPoolsAdmin() {
           </Field>
           <Field>
             Status
-            <Select value={status} onChange={(event) => setStatus(event.target.value as 'ALL' | NftPoolStatus)}>
+            <Select value={status} onChange={(event) => setStatus(event.target.value as AdminFilter)}>
               {statusFilters.map((value) => (
                 <option key={value} value={value}>
-                  {value === 'ALL' ? 'All pools' : value[0] + value.slice(1).toLowerCase()}
+                  {value === 'ALL'
+                    ? 'All pools'
+                    : value === 'DRAFTS'
+                    ? 'Drafts'
+                    : value[0] + value.slice(1).toLowerCase()}
                 </option>
               ))}
             </Select>
@@ -181,119 +166,40 @@ export default function NftPoolsAdmin() {
       </Panel>
 
       <Panel style={{ marginTop: 16 }}>
-        <PanelTitle>All NFT pools</PanelTitle>
+        <PanelTitle>Pool cards</PanelTitle>
+        <Muted style={{ display: 'block', marginBottom: 14 }}>
+          The same artwork, collections and rewards model is used here as in the public staking experience.
+        </Muted>
         <NftPoolList>
           {pools.map((pool) => (
-            <NftPoolRow key={pool.id}>
-              <PoolIdentity>
-                <PoolMedia pool={pool} />
-                <div style={{ minWidth: 0 }}>
-                  <PoolName>{pool.metadata.name}</PoolName>
-                  <PoolMeta>
-                    {sourceLabel(pool.source)} · {pool.protocolVersion} · {shorten(pool.address)}
-                  </PoolMeta>
-                </div>
-              </PoolIdentity>
-              <PoolColumn>
-                <ColumnLabel>Staking NFTs</ColumnLabel>
-                {collectionSummary(pool) || 'Unavailable'}
-                <PoolMeta>
-                  {pool.collections.length} collection{pool.collections.length === 1 ? '' : 's'}
-                </PoolMeta>
-              </PoolColumn>
-              <PoolColumn>
-                <ColumnLabel>Rewards</ColumnLabel>
-                {rewardSummary(pool)}
-                <PoolMeta>
-                  {pool.onChain.startBlock !== undefined && pool.onChain.endBlock !== undefined
-                    ? `${pool.onChain.startBlock.toLocaleString()} → ${pool.onChain.endBlock.toLocaleString()}`
-                    : 'Schedule unavailable'}
-                </PoolMeta>
-              </PoolColumn>
-              <PoolActions>
-                <StatusPill $status={pool.status}>{pool.status}</StatusPill>
-                <Link href={`/admin/nft-pools/${pool.id}`} passHref legacyBehavior>
-                  <SoftLink>View</SoftLink>
-                </Link>
-                {pool.cloneSupport !== 'UNAVAILABLE' ? (
-                  <Link href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`} passHref legacyBehavior>
-                    <SoftLink>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
-                  </Link>
-                ) : null}
-              </PoolActions>
-              {pool.warnings.length > 0 ? (
-                <PoolMeta style={{ gridColumn: '1 / -1', color: 'inherit' }}>⚠ {pool.warnings[0]}</PoolMeta>
-              ) : null}
-            </NftPoolRow>
+            <NftPoolAdminCard key={pool.id} pool={pool} secondsPerBlock={data?.secondsPerBlock || 2.2} />
+          ))}
+          {visibleDrafts.map((draft) => (
+            <NftPoolDraftCard
+              key={draft.id}
+              draft={draft}
+              resumeSessionId={launchSessionByDraftId.get(draft.id)}
+              onDuplicate={() => {
+                const copy = duplicateNftPoolDraft(draft.id)
+                if (copy) refreshDrafts()
+              }}
+              onDelete={() => {
+                deleteNftPoolDraft(draft.id)
+                refreshDrafts()
+              }}
+            />
           ))}
         </NftPoolList>
-        {!loading && pools.length === 0 ? (
-          data?.pools?.length ? (
-            <Muted>No NFT pools matched the current filters.</Muted>
+        {!loading && pools.length === 0 && visibleDrafts.length === 0 ? (
+          data?.pools?.length || drafts.length ? (
+            <Muted>No pool cards matched the current filters.</Muted>
           ) : (
             <Muted>
-              No pools yet. Start the first one with Quick Create.{' '}
+              No pools yet. Start the first one from the Card Studio.{' '}
               <Link href="/admin/nft-pools/new">Create a pool</Link>
             </Muted>
           )
         ) : null}
-      </Panel>
-
-      <Panel style={{ marginTop: 16 }}>
-        <PanelTitle>Saved drafts</PanelTitle>
-        <Muted>Drafts stay in this browser only. They contain no wallet secrets and never send a transaction.</Muted>
-        {drafts.length ? (
-          drafts.map((draft) => (
-            <NftPoolRow key={draft.id} style={{ marginTop: 10 }}>
-              <PoolIdentity>
-                <div>
-                  <PoolName>{draft.name || 'Untitled draft'}</PoolName>
-                  <PoolMeta>
-                    {draft.source === 'cloned' ? `Clone of ${draft.sourcePoolId}` : 'New from scratch'} ·{' '}
-                    {draftReadinessLabel(draft.readiness)}
-                  </PoolMeta>
-                </div>
-              </PoolIdentity>
-              <PoolColumn>
-                <ColumnLabel>Updated</ColumnLabel>
-                {new Date(draft.updatedAt).toLocaleString()}
-              </PoolColumn>
-              <PoolColumn>
-                <ColumnLabel>Configuration</ColumnLabel>
-                {draft.collections.length} NFTs · {draft.rewards.primary?.symbol || 'No reward'}
-              </PoolColumn>
-              <PoolActions>
-                <Link href={`/admin/nft-pools/new?draft=${encodeURIComponent(draft.id)}`} passHref legacyBehavior>
-                  <SoftLink>Continue setup</SoftLink>
-                </Link>
-                <SoftLink
-                  href="#"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    const copy = duplicateNftPoolDraft(draft.id)
-                    if (copy) refreshDrafts()
-                  }}
-                >
-                  Duplicate
-                </SoftLink>
-                <SoftLink
-                  href="#"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    deleteNftPoolDraft(draft.id)
-                    refreshDrafts()
-                  }}
-                >
-                  Delete
-                </SoftLink>
-              </PoolActions>
-            </NftPoolRow>
-          ))
-        ) : (
-          <Muted style={{ display: 'block', marginTop: 12 }}>
-            No saved drafts yet. Start a new builder flow to create one.
-          </Muted>
-        )}
       </Panel>
     </AdminShell>
   )

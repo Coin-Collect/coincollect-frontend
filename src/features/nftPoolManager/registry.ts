@@ -304,7 +304,7 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     sourcePoolId: pool.id,
     chainId: pool.chainId,
     source: 'cloned',
-    name: `${pool.metadata.name} copy`,
+    name: pool.metadata.name,
     banner: pool.metadata.banner,
     avatar: pool.metadata.avatar,
     projectUrl: pool.metadata.projectUrl,
@@ -319,15 +319,21 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       totalBudget: '',
       budgetTokenAddress: mainnetTokens.usdt.address,
       budgetDecimals: mainnetTokens.usdt.decimals,
-      allocationBps: {},
+      // Existing on-chain pools expose side-reward ratios, not the original
+      // budget split. Keep the primary allocation valid and ask the operator
+      // to choose a split if side rewards are retained in the Card Studio.
+      allocationBps: {
+        [primaryReward.address.toLowerCase()]: '10000',
+        ...Object.fromEntries(sideRewards.map((reward) => [reward.address.toLowerCase(), '0'])),
+      },
       manualAmounts: {},
       quotes: {},
       quoteErrors: {},
       budgetDenomination: 'USDT',
     },
     constraints: {
-      participantThreshold: sourceEconomics.originalParticipantThreshold?.toString() || '',
-      poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '',
+      participantThreshold: sourceEconomics.originalParticipantThreshold?.toString() || '20',
+      poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '1000',
       poolLimitPerUser: sourceEconomics.originalPoolLimitPerUser?.toString() || '',
       numberBlocksForUserLimit: sourceEconomics.originalNumberBlocksForUserLimit?.toString() || '',
       userLimitEnabled:
@@ -348,21 +354,30 @@ export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): Nf
     source: 'manual',
     name: '',
     collections: [],
-    rewards: { primary: null, side: [] },
+    rewards: {
+      // COLLECT is a suggested reward identity, not a financial commitment.
+      primary: {
+        address: mainnetTokens.collect.address!,
+        symbol: mainnetTokens.collect.symbol || 'COLLECT',
+        name: mainnetTokens.collect.name || 'CoinCollect Token',
+        decimals: mainnetTokens.collect.decimals,
+      },
+      side: [],
+    },
     economics: {
       durationPreset: '1 month',
       totalBudget: '',
       budgetTokenAddress: mainnetTokens.usdt.address,
       budgetDecimals: mainnetTokens.usdt.decimals,
       budgetDenomination: 'USDT',
-      allocationBps: {},
+      allocationBps: { [mainnetTokens.collect.address!.toLowerCase()]: '10000' },
       manualAmounts: {},
       quotes: {},
       quoteErrors: {},
     },
     constraints: {
-      participantThreshold: '',
-      poolCapacity: '',
+      participantThreshold: '20',
+      poolCapacity: '1000',
       poolLimitPerUser: '',
       numberBlocksForUserLimit: '',
       userLimitEnabled: false,

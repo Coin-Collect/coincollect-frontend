@@ -46,7 +46,207 @@ export const FilterBar = styled.div`
 
 export const NftPoolList = styled.div`
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+
+  @media (max-width: 1040px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const AdminPoolCard = styled.article`
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: ${({ theme }) => `${theme.colors.primary}66`};
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
+  }
+`
+
+export const AdminPoolArtwork = styled.div`
+  position: relative;
+  height: 154px;
+  overflow: hidden;
+  background: ${({ theme }) => `radial-gradient(circle at 75% 20%, ${theme.colors.primary}55, transparent 38%), ${theme.colors.background}`};
+`
+
+export const AdminPoolArtworkImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`
+
+export const AdminPoolArtworkVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`
+
+export const AdminPoolArtworkShade = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 7, 18, 0.03) 25%, rgba(5, 7, 18, 0.85) 100%);
+  pointer-events: none;
+`
+
+export const AdminPoolStatus = styled.span<{ $status?: string }>`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: #fff;
+  background: ${({ theme, $status }) =>
+    $status === 'ACTIVE' ? `${theme.colors.success}dd` : $status === 'FINISHED' ? `${theme.colors.textSubtle}dd` : `${theme.colors.warning}dd`};
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`
+
+export const AdminPoolArtworkTitle = styled.div`
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  left: 14px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+`
+
+export const AdminPoolCardBody = styled.div`
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+`
+
+export const AdminPoolCardTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
+`
+
+export const AdminPoolIconStack = styled.div`
+  display: flex;
+  align-items: center;
+  padding-left: 9px;
+`
+
+export const AdminPoolIcon = styled.img`
+  width: 34px;
+  height: 34px;
+  margin-left: -9px;
+  border: 2px solid ${({ theme }) => theme.colors.backgroundAlt};
+  border-radius: 50%;
+  object-fit: cover;
+  background: ${({ theme }) => theme.colors.background};
+`
+
+export const AdminPoolIconCount = styled.span`
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-left: -9px;
+  border: 2px solid ${({ theme }) => theme.colors.backgroundAlt};
+  border-radius: 50%;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  background: ${({ theme }) => theme.colors.background};
+  font-size: 11px;
+  font-weight: 900;
+`
+
+export const AdminPoolRewardRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+`
+
+export const AdminPoolRewardChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => `${theme.colors.primary}15`};
+  font-size: 11px;
+  font-weight: 800;
+`
+
+export const AdminPoolTokenIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+`
+
+export const AdminPoolTokenFallback = styled.span`
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => `${theme.colors.primary}2b`};
+  font-size: 8px;
+  font-weight: 900;
+`
+
+export const AdminPoolMetricRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+`
+
+export const AdminPoolMetric = styled.div`
+  min-width: 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.background};
+`
+
+export const AdminPoolMetricLabel = styled.div`
+  margin-bottom: 4px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+`
+
+export const AdminPoolMetricValue = styled.div`
+  overflow: hidden;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const AdminPoolCardActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 2px;
 `
 
 export const NftPoolRow = styled.article`
