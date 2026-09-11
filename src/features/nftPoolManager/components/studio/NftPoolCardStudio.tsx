@@ -196,6 +196,25 @@ function statusText(validation: NftDraftValidationResult): string {
   return validation.blockers.length ? 'DRAFT' : 'READY'
 }
 
+function formatEncodedPercentage(value: BigNumber | string): string {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+function sourceSideRewardPercentage(
+  draft: NftPoolDraft,
+  sourcePool: NftPool | undefined,
+  reward: NftPoolDraftReward,
+): string | undefined {
+  const sourceEntry = draft.sourceEconomics?.originalSideRewardPercentages.find(
+    (entry) => entry.tokenAddress.toLowerCase() === reward.address.toLowerCase(),
+  )
+  if (sourceEntry?.percentage !== undefined) return sourceEntry.percentage.toString()
+  const poolReward = sourcePool?.rewards.side.find(
+    (entry) => entry.token.address.toLowerCase() === reward.address.toLowerCase(),
+  )
+  return poolReward?.onChainPercentage?.toString() || poolReward?.configuredPercentage
+}
+
 function CardCollectionImage({ collection }: { collection: NftCollection }) {
   const candidates = collectionImageCandidates(collection)
   const [index, setIndex] = useState(0)
@@ -268,6 +287,10 @@ export default function NftPoolCardStudio({
   const rewardAllocationTotal =
     rewards.reduce((sum, reward) => sum + Number(draft.economics.allocationBps[reward.address.toLowerCase()] || 0), 0) /
     100
+  const sourceSideRatios = draft.rewards.side.flatMap((reward) => {
+    const percentage = sourceSideRewardPercentage(draft, sourcePool, reward)
+    return percentage === undefined ? [] : [{ symbol: reward.symbol, percentage }]
+  })
   const threshold = safeBigNumber(draft.constraints.participantThreshold)
   const rewardDecimals = draft.rewards.primary?.decimals
   const shareExamples = useMemo(() => {
@@ -523,8 +546,23 @@ export default function NftPoolCardStudio({
           )
         })}
       </div>
+      {sourceSideRatios.length ? (
+        <Hint>
+          Original contract ratios recovered:{' '}
+          {sourceSideRatios
+            .map(({ symbol, percentage }) => `${symbol} ${formatEncodedPercentage(percentage)}%`)
+            .join(' · ')}
+          . These are side-reward ratios, not the new budget split.
+        </Hint>
+      ) : null}
       <ModalDivider />
       <strong>Selected rewards</strong>
+      {rewards.length > 1 ? (
+        <Hint>
+          New funding split for this renewal. The old pool did not store a budget allocation, so the safe default is
+          100% primary and 0% side rewards until you set the new split.
+        </Hint>
+      ) : null}
       {rewards.map((reward) => {
         const key = reward.address.toLowerCase()
         const isPrimary = draft.rewards.primary?.address.toLowerCase() === key
@@ -862,6 +900,7 @@ export default function NftPoolCardStudio({
                     Edit
                   </StudioButton>
                 </CardSectionHeading>
+                {rewards.length > 1 ? <CardMeta>New funding split</CardMeta> : null}
                 <RewardAreaButton type="button" onClick={() => setModal('rewards')} aria-label="Edit reward tokens">
                   {rewards.length ? (
                     rewards.map((reward, index) => (
@@ -877,6 +916,14 @@ export default function NftPoolCardStudio({
                     <CardMeta>Add reward tokens</CardMeta>
                   )}
                 </RewardAreaButton>
+                {sourceSideRatios.length ? (
+                  <CardMeta style={{ display: 'block', marginTop: 8 }}>
+                    Original side ratios:{' '}
+                    {sourceSideRatios
+                      .map(({ symbol, percentage }) => `${symbol} ${formatEncodedPercentage(percentage)}%`)
+                      .join(' · ')}
+                  </CardMeta>
+                ) : null}
                 {economics && draft.economics.totalBudget ? (
                   <div style={{ display: 'grid', gap: 4, marginTop: 9 }}>
                     <CardMeta>Allocated budget and token estimate</CardMeta>
