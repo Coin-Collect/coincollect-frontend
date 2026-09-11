@@ -256,11 +256,19 @@ export const DraftGrid = styled.div`
 
 export const DraftCollectionRow = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 100px;
+  grid-template-columns: minmax(0, 1fr) 100px auto;
   gap: 12px;
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+
+  @media (max-width: 620px) {
+    grid-template-columns: minmax(0, 1fr) 92px;
+
+    > :last-child {
+      grid-column: 1 / -1;
+    }
+  }
 `
 
 export const WarningList = styled.ul`
@@ -269,4 +277,157 @@ export const WarningList = styled.ul`
   color: ${({ theme }) => theme.colors.warning};
   font-size: 13px;
   line-height: 1.6;
+`
+
+export const BuilderShell = styled.div`
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 780px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const StepNav = styled.nav`
+  position: sticky;
+  top: 20px;
+  display: grid;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.background};
+
+  @media (max-width: 780px) {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+  }
+`
+
+export const StepButton = styled.button<{ $active?: boolean; $complete?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 11px;
+  padding: 10px 11px;
+  text-align: left;
+  white-space: nowrap;
+  color: ${({ theme, $active }) => ($active ? theme.colors.text : theme.colors.textSubtle)};
+  background: ${({ theme, $active }) => ($active ? theme.colors.backgroundAlt : 'transparent')};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &::before {
+    content: ${({ $complete }) => ($complete ? "'✓'" : "'•'")};
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: ${({ theme, $complete }) => ($complete ? theme.colors.success : theme.colors.textSubtle)};
+    background: ${({ theme, $active }) => ($active ? `${theme.colors.primary}20` : theme.colors.backgroundAlt)};
+    font-size: 12px;
+  }
+`
+
+export const BuilderContent = styled.div`
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+`
+
+export const AssetRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px auto;
+  gap: 12px;
+  align-items: end;
+  padding: 13px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  @media (max-width: 620px) {
+    grid-template-columns: minmax(0, 1fr) 92px;
+    > :last-child {
+      grid-column: 1 / -1;
+    }
+  }
+`
+
+export const TokenChip = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
+  font-weight: 700;
+`
+
+export const TokenDot = styled.span`
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  border-radius: 10px;
+  color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => `${theme.colors.primary}18`};
+  font-size: 11px;
+  font-weight: 800;
+`
+
+export const PreviewCard = styled.div`
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 18px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+`
+
+export const PreviewImage = styled.div<{ $src?: string }>`
+  height: 112px;
+  background: ${({ theme, $src }) =>
+    $src
+      ? `linear-gradient(90deg, ${theme.colors.backgroundAlt}22, ${theme.colors.backgroundAlt}88), url(${$src}) center/cover`
+      : theme.colors.backgroundAlt};
+`
+
+export const PreviewBody = styled.div`
+  padding: 16px;
+`
+
+export const Readiness = styled.div<{ $tone?: 'good' | 'warn' | 'bad' }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  color: ${({ theme, $tone }) =>
+    $tone === 'good' ? theme.colors.success : $tone === 'bad' ? theme.colors.failure : theme.colors.warning};
+  background: ${({ theme, $tone }) =>
+    $tone === 'good'
+      ? `${theme.colors.success}16`
+      : $tone === 'bad'
+      ? `${theme.colors.failure}16`
+      : `${theme.colors.warning}16`};
+  font-size: 13px;
+  font-weight: 700;
+`
+
+export const SmallAction = styled.button`
+  border: 0;
+  padding: 0;
+  color: ${({ theme }) => theme.colors.primary};
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 `

@@ -29,6 +29,8 @@ import {
   normalizeNftCollectionRegistry,
   NFT_POOL_MANAGER_CHAIN_ID,
 } from './registry'
+import { readIndexedArrayUntilRevert } from './chainReads'
+import { readDeploymentProvenance } from './provenance'
 import {
   NftCollection,
   NftPool,
@@ -39,6 +41,8 @@ import {
   NftPoolSource,
   NftRewardAsset,
   NftTokenMetadata,
+  NftPoolDeploymentProvenance,
+  NftPoolSourceEconomics,
 } from './types'
 
 const NFT_FACTORY_INDEXER_URL = 'https://polygon.blockscout.com/api/v2'
@@ -110,10 +114,11 @@ async function readTokenMetadata(provider: Provider, address: string): Promise<N
   const normalized = normalizeOrFallback(address)
   const configured = configuredTokenByAddress.get(normalized.toLowerCase())
   const token = new Contract(normalized, erc20Abi, provider)
-  const [decimals, symbol, name] = await Promise.all([
+  const [decimals, symbol, name, totalSupply] = await Promise.all([
     readOptional<number>(token, 'decimals'),
     readOptional<string>(token, 'symbol'),
     readOptional<string>(token, 'name'),
+    readOptional<BigNumber>(token, 'totalSupply'),
   ])
   return {
     address: normalized,
@@ -122,6 +127,7 @@ async function readTokenMetadata(provider: Provider, address: string): Promise<N
     symbol: symbol || configured?.symbol || 'UNKNOWN',
     name: name || configured?.name || symbol || 'Unknown token',
     isReadable: decimals !== undefined || Boolean(symbol || name || configured),
+    totalSupply: asBigNumber(totalSupply),
   }
 }
 
@@ -156,14 +162,20 @@ function updateCollectionRegistry(collections: NftCollection[], updated: NftColl
 function configuredSideRewardAsset(
   provider: Provider,
   address: string,
+  poolAddress: string,
   configured?: { symbol?: string; percentage?: string },
   percentage?: BigNumber,
 ): Promise<NftRewardAsset> {
-  return readTokenMetadata(provider, address).then((token) => ({
+  const tokenContract = new Contract(address, erc20Abi, provider)
+  return Promise.all([
+    readTokenMetadata(provider, address),
+    readOptional<BigNumber>(tokenContract, 'balanceOf', [poolAddress], ZERO),
+  ]).then(([token, poolBalance]) => ({
     token,
     configuredSymbol: configured?.symbol,
     configuredPercentage: configured?.percentage,
     onChainPercentage: percentage,
+    poolBalance: asBigNumber(poolBalance) || ZERO,
   }))
 }
 
@@ -189,12 +201,49 @@ function healthFor(
   }
 }
 
+function sourceEconomicsFor(
+  onChain: NftPoolOnChainTruth,
+  deployment: NftPoolDeploymentProvenance,
+  sideRewards: NftRewardAsset[],
+): NftPoolSourceEconomics {
+  const decoded = deployment.decodedInputs
+  return {
+    originalRewardPerBlock: decoded?.rewardPerBlock || onChain.rewardPerBlock,
+    originalStartBlock: decoded?.startBlock !== undefined ? decoded.startBlock : onChain.startBlock,
+    originalEndBlock: decoded?.endBlock !== undefined ? decoded.endBlock : onChain.endBlock,
+    originalDurationBlocks:
+      decoded?.startBlock !== undefined && decoded?.endBlock !== undefined
+        ? decoded.endBlock - decoded.startBlock
+        : onChain.startBlock !== undefined && onChain.endBlock !== undefined
+        ? onChain.endBlock - onChain.startBlock
+        : undefined,
+    originalSideRewardPercentages: decoded
+      ? decoded.sideRewardTokens.map((tokenAddress, index) => ({
+          tokenAddress,
+          percentage: decoded.sideRewardPercentages[index],
+        }))
+      : sideRewards
+          .filter((reward) => reward.onChainPercentage !== undefined)
+          .map((reward) => ({ tokenAddress: reward.token.address, percentage: reward.onChainPercentage as BigNumber })),
+    originalParticipantThreshold: decoded?.participantThreshold || onChain.participantThreshold,
+    originalInitialPoolCapacity: decoded?.initialPoolCapacity,
+    currentRemainingCapacity: onChain.currentRemainingPoolCapacity || onChain.poolCapacity,
+    originalPoolLimitPerUser: decoded?.poolLimitPerUser || onChain.poolLimitPerUser,
+    originalNumberBlocksForUserLimit:
+      decoded?.numberBlocksForUserLimit !== undefined
+        ? decoded.numberBlocksForUserLimit
+        : onChain.numberBlocksForUserLimit,
+    originalAdmin: decoded?.admin || onChain.owner,
+  }
+}
+
 function unreadablePool(
   farm: FarmConfigLike | undefined,
   address: string,
   source: NftPoolSource,
   collections: NftCollection[],
   warning: string,
+  deployment: NftPoolDeploymentProvenance = { decodeStatus: 'not-applicable' },
 ): NftPool {
   const configuredReward = getConfiguredRewardToken(farm as any)
   const primaryAddress = (farm && normalizeNftAddress((farm.nftAddresses as any)?.[NFT_POOL_MANAGER_CHAIN_ID])) || ''
@@ -230,6 +279,10 @@ function unreadablePool(
       configuredFinished: farm?.isFinished,
     },
     onChain,
+    sourceEconomics: {
+      originalSideRewardPercentages: [],
+    },
+    deployment,
     collections: primaryCollection
       ? [{ collection: primaryCollection, primary: true, weight: BigNumber.from(1), weightSource: 'default' }]
       : [],
@@ -249,12 +302,26 @@ async function readV2Pool(
   source: NftPoolSource,
   collections: NftCollection[],
   currentBlock: number,
+  deploymentHint?: FactoryEvent,
 ): Promise<NftPool> {
   const poolAddress = normalizeOrFallback(address)
+  const deploymentHintValue: NftPoolDeploymentProvenance = {
+    factoryAddress: getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID) || undefined,
+    transactionHash: deploymentHint?.transactionHash,
+    blockNumber: deploymentHint?.blockNumber,
+    decodeStatus: deploymentHint?.transactionHash ? 'unavailable' : 'not-applicable',
+  }
   try {
     const code = await provider.getCode(poolAddress)
     if (!code || code === '0x')
-      return unreadablePool(farm, poolAddress, source, collections, 'No contract code was found at this address.')
+      return unreadablePool(
+        farm,
+        poolAddress,
+        source,
+        collections,
+        'No contract code was found at this address.',
+        deploymentHintValue,
+      )
     const pool = new Contract(poolAddress, nftStakeAbi, provider)
     const [
       owner,
@@ -290,33 +357,55 @@ async function readV2Pool(
     const normalizedStakingAddress = normalizeOrFallback(stakingAddress)
     const normalizedRewardAddress = normalizeOrFallback(rewardAddress)
     const configuredSideRewards = getConfiguredSideRewards(farm)
-    const sideCount = Math.max(configuredSideRewards.length, sideRewardActive ? 5 : 0)
-    const sideAddresses = (
-      await Promise.all(
-        Array.from({ length: sideCount }, (_, index) => readOptional<string>(pool, 'sideRewardTokens', [index])),
-      )
+    const [communityAddressesResult, sideAddressesResult, deployment] = await Promise.all([
+      readIndexedArrayUntilRevert<string>(pool, 'communityCollections', {
+        hardCap: 32,
+        timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+      }),
+      readIndexedArrayUntilRevert<string>(pool, 'sideRewardTokens', {
+        hardCap: 32,
+        timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+      }),
+      readDeploymentProvenance(
+        provider,
+        normalizeOrFallback(factoryAddress) || getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID) || undefined,
+        deploymentHint?.transactionHash,
+        deploymentHint?.blockNumber,
+      ),
+    ])
+    const sideAddresses = sideAddressesResult.values.map(normalizeOrFallback).filter(Boolean)
+    const primaryCollection = ensureNftCollection(
+      collections,
+      normalizedStakingAddress,
+      NFT_POOL_MANAGER_CHAIN_ID,
+      'Primary NFT collection',
     )
-      .filter(Boolean)
+    const communityAddresses = communityAddressesResult.values
       .map(normalizeOrFallback)
-    const primaryConfigured = configuredPoolCollections(farm, collections)
-    let poolCollections = primaryConfigured
-    if (poolCollections.length === 0) {
-      poolCollections = [
-        {
+      .filter((candidate) => candidate && candidate.toLowerCase() !== normalizedStakingAddress.toLowerCase())
+    const configuredPool = configuredPoolCollections(farm, collections)
+    const configuredByCollection = new Map(
+      configuredPool.map((entry) => [entry.collection.address.toLowerCase(), entry]),
+    )
+    const poolCollections: NftPoolCollection[] = [
+      { collection: primaryCollection, primary: true, weight: BigNumber.from(1), weightSource: 'default' },
+      ...communityAddresses.map((communityAddress) => {
+        const configured = configuredByCollection.get(communityAddress.toLowerCase())
+        return {
           collection: ensureNftCollection(
             collections,
-            normalizedStakingAddress,
+            communityAddress,
             NFT_POOL_MANAGER_CHAIN_ID,
-            'Primary NFT collection',
+            configured?.collection.name || 'Community NFT collection',
           ),
-          primary: true,
-          weight: BigNumber.from(1),
-          weightSource: 'default',
-        },
-      ]
-    }
+          primary: false,
+          weight: configured?.weight || BigNumber.from(1),
+          weightSource: configured ? 'frontend-config' : 'default',
+        } as NftPoolCollection
+      }),
+    ]
     const [stakingToken, rewardToken, rewardBalance, collectionMetadata] = await Promise.all([
-      readCollectionMetadata(provider, poolCollections[0].collection),
+      readCollectionMetadata(provider, primaryCollection),
       readTokenMetadata(provider, normalizedRewardAddress),
       readOptional<BigNumber>(
         new Contract(normalizedRewardAddress, erc20Abi, provider),
@@ -328,14 +417,16 @@ async function readV2Pool(
     ])
     const updatedById = new Map(collectionMetadata.map((collection) => [collection.id, collection]))
     updateCollectionRegistry(collections, collectionMetadata)
-    poolCollections = poolCollections.map((entry) => ({
+    let resolvedPoolCollections = poolCollections.map((entry) => ({
       ...entry,
       collection: updatedById.get(entry.collection.id) || entry.collection,
     }))
     const weightResults = await Promise.all(
-      poolCollections.map((entry) => readOptional<BigNumber>(pool, 'collectionWeights', [entry.collection.address])),
+      resolvedPoolCollections.map((entry) =>
+        readOptional<BigNumber>(pool, 'collectionWeights', [entry.collection.address]),
+      ),
     )
-    poolCollections = poolCollections.map((entry, index) => ({
+    resolvedPoolCollections = resolvedPoolCollections.map((entry, index) => ({
       ...entry,
       weight: asBigNumber(weightResults[index]) || entry.weight,
       weightSource: weightResults[index] === undefined ? entry.weightSource : 'on-chain',
@@ -343,12 +434,25 @@ async function readV2Pool(
     const sidePercentages = await Promise.all(
       sideAddresses.map((sideAddress) => readOptional<BigNumber>(pool, 'sideRewardPercentage', [sideAddress])),
     )
+    const configuredSideByAddress = new Map(
+      configuredSideRewards.filter((item) => item.address).map((item) => [item.address.toLowerCase(), item]),
+    )
     const sideRewards = await Promise.all(
       sideAddresses.map((sideAddress, index) =>
-        configuredSideRewardAsset(provider, sideAddress, configuredSideRewards[index], sidePercentages[index]),
+        configuredSideRewardAsset(
+          provider,
+          sideAddress,
+          poolAddress,
+          configuredSideByAddress.get(sideAddress.toLowerCase()),
+          sidePercentages[index],
+        ),
       ),
     )
     const warnings: string[] = []
+    if (communityAddressesResult.stoppedBy === 'hard-cap')
+      warnings.push('Community collection discovery reached its safety cap; review the pool manually.')
+    if (sideAddressesResult.stoppedBy === 'hard-cap')
+      warnings.push('Side reward discovery reached its safety cap; review the pool manually.')
     const configuredPrimary = normalizeNftAddress((farm?.nftAddresses as any)?.[NFT_POOL_MANAGER_CHAIN_ID])
     const configuredReward = getConfiguredRewardToken(farm as any)
     if (configuredPrimary && configuredPrimary.toLowerCase() !== normalizedStakingAddress.toLowerCase())
@@ -358,14 +462,19 @@ async function readV2Pool(
     const configuredMainWeight = farm?.mainCollectionWeight
     if (
       configuredMainWeight !== undefined &&
-      asBigNumber(configuredMainWeight)?.toString() !== poolCollections[0].weight.toString()
+      asBigNumber(configuredMainWeight)?.toString() !== resolvedPoolCollections[0].weight.toString()
     )
       mismatch(warnings, 'Primary collection weight mismatch with on-chain collectionWeights.')
     if (farm?.isFinished !== undefined && farm.isFinished !== Number(endBlock) <= currentBlock)
       mismatch(warnings, 'Frontend finished flag disagrees with on-chain block status.')
     const expectedSide = configuredSideRewards.map((side) => side.address.toLowerCase()).filter(Boolean)
-    if (expectedSide.length && expectedSide.some((expected, index) => sideAddresses[index]?.toLowerCase() !== expected))
+    if (
+      expectedSide.length &&
+      expectedSide.some((expected) => !sideAddresses.some((actual) => actual.toLowerCase() === expected))
+    )
       mismatch(warnings, 'Side reward configuration mismatch with on-chain sideRewardTokens.')
+    if (farm && communityAddresses.length !== configuredPool.filter((entry) => !entry.primary).length)
+      mismatch(warnings, 'Community collection configuration differs from the on-chain collection list.')
     const onChain: NftPoolOnChainTruth = {
       codeFound: true,
       abiCompatible: true,
@@ -379,6 +488,8 @@ async function readV2Pool(
       rewardPerBlock: asBigNumber(rewardPerBlock),
       participantThreshold: asBigNumber(participantThreshold),
       poolCapacity: asBigNumber(poolCapacity),
+      configuredInitialPoolCapacity: deployment.decodedInputs?.initialPoolCapacity,
+      currentRemainingPoolCapacity: asBigNumber(poolCapacity),
       totalShares: asBigNumber(totalShares),
       poolLimitPerUser: asBigNumber(poolLimitPerUser),
       numberBlocksForUserLimit: valueAsNumber(numberBlocksForUserLimit),
@@ -388,6 +499,7 @@ async function readV2Pool(
     }
     const status = deriveNftPoolStatus(currentBlock, onChain.startBlock, onChain.endBlock)
     onChain.status = status
+    const sourceEconomics = sourceEconomicsFor(onChain, deployment, sideRewards)
     const health = healthFor(
       onChain,
       warnings,
@@ -413,7 +525,9 @@ async function readV2Pool(
         configuredFinished: farm?.isFinished,
       },
       onChain,
-      collections: poolCollections,
+      sourceEconomics,
+      deployment,
+      collections: resolvedPoolCollections,
       rewards: {
         primary: { token: rewardToken },
         side: sideRewards,
@@ -431,6 +545,7 @@ async function readV2Pool(
       source,
       collections,
       error instanceof Error ? `Pool introspection failed: ${error.message}` : 'Pool introspection failed.',
+      deploymentHintValue,
     )
   }
 }
@@ -506,6 +621,7 @@ async function readLegacyPool(
       startBlock: valueAsNumber(startBlock),
       rewardPerBlock: asBigNumber(rewardPerBlock),
       poolCapacity: asBigNumber(poolInfo[5]),
+      currentRemainingPoolCapacity: asBigNumber(poolInfo[5]),
       stakedBalance: asBigNumber(stakedBalance) || ZERO,
       rewardBalance: ZERO,
       currentBlock,
@@ -531,6 +647,14 @@ async function readLegacyPool(
         configuredFinished: farm.isFinished,
       },
       onChain,
+      sourceEconomics: {
+        originalRewardPerBlock: asBigNumber(rewardPerBlock),
+        originalStartBlock: valueAsNumber(startBlock),
+        originalSideRewardPercentages: [],
+        currentRemainingCapacity: asBigNumber(poolInfo[5]),
+        originalAdmin: normalizeOrFallback(owner),
+      },
+      deployment: { decodeStatus: 'not-applicable' },
       collections: [collectionEntry],
       rewards: { primary: { token: rewardToken }, side: [] },
       status,
@@ -578,6 +702,7 @@ export async function discoverNftFactoryPoolAddresses(
       if (!response.ok) throw new Error(`Indexer returned HTTP ${response.status}`)
       const payload: any = await response.json()
       ;(payload.items || []).forEach((item: any) => {
+        if (item.topics?.[0] && item.topics[0].toLowerCase() !== newPoolTopic.toLowerCase()) return
         const decoded = item.decoded?.parameters?.find((parameter: any) => parameter.name === 'smartChef')
         const address = decoded?.value || (item.topics?.[1] ? `0x${item.topics[1].slice(-40)}` : '')
         if (address)
@@ -689,13 +814,22 @@ async function readV2PoolWithTimeout(
             source,
             collections,
             `Pool introspection timed out after ${NFT_POOL_INTROSPECTION_TIMEOUT_MS / 1000} seconds.`,
+            {
+              factoryAddress: getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID) || undefined,
+              transactionHash: event.transactionHash,
+              blockNumber: event.blockNumber,
+              decodeStatus: event.transactionHash ? 'unavailable' : 'not-applicable',
+            },
           ),
         ),
       NFT_POOL_INTROSPECTION_TIMEOUT_MS,
     )
   })
   try {
-    return await Promise.race([readV2Pool(provider, event.address, farm, source, collections, currentBlock), fallback])
+    return await Promise.race([
+      readV2Pool(provider, event.address, farm, source, collections, currentBlock, event),
+      fallback,
+    ])
   } finally {
     if (timeout) clearTimeout(timeout)
   }

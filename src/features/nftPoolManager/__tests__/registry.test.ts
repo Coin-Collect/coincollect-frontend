@@ -69,7 +69,20 @@ describe('NFT pool status and clone safety', () => {
         rewardPerBlock: BigNumber.from(123),
         participantThreshold: BigNumber.from(3),
         poolCapacity: BigNumber.from(50),
+        currentRemainingPoolCapacity: BigNumber.from(50),
       },
+      sourceEconomics: {
+        originalRewardPerBlock: BigNumber.from(123),
+        originalStartBlock: 10,
+        originalEndBlock: 20,
+        originalDurationBlocks: 10,
+        originalSideRewardPercentages: [],
+        originalParticipantThreshold: BigNumber.from(3),
+        originalInitialPoolCapacity: BigNumber.from(75),
+        currentRemainingCapacity: BigNumber.from(50),
+        originalAdmin: '0x2222222222222222222222222222222222222222',
+      },
+      deployment: { decodeStatus: 'unavailable' },
       collections: [
         {
           collection: {
@@ -119,7 +132,11 @@ describe('NFT pool status and clone safety', () => {
 
     expect(draft.sourcePoolId).toBe(pool.id)
     expect(draft.collections[0].weight).toBe('15')
-    expect(draft.rewards.primary.symbol).toBe('LOT')
+    expect(draft.rewards.primary?.symbol).toBe('LOT')
     expect(draft.unsafe).toEqual({})
+    expect(draft.economics.allocationBps).toEqual({})
+    expect((draft.economics as any).primaryRewardAllocation).toBeUndefined()
+    expect(draft.sourceEconomics?.originalRewardPerBlock?.toString()).toBe('123')
+    expect(draft.constraints.poolCapacity).toBe('75')
   })
 })

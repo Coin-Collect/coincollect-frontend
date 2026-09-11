@@ -173,7 +173,9 @@ export default function NftPoolDetail() {
                       <CollectionName>{reward.token.symbol}</CollectionName>
                       <CollectionAddress>{reward.token.address}</CollectionAddress>
                     </div>
-                    <WeightValue>Side reward</WeightValue>
+                    <WeightValue>
+                      {amount(reward.poolBalance, reward.token.decimals)} {reward.token.symbol}
+                    </WeightValue>
                   </CollectionLine>
                 ))}
               </CollectionList>
@@ -215,8 +217,12 @@ export default function NftPoolDetail() {
                       <td>{pool.onChain.participantThreshold?.toString() || 'Unavailable'}</td>
                     </tr>
                     <tr>
-                      <th>Capacity</th>
-                      <td>{pool.onChain.poolCapacity?.toString() || 'Unavailable'}</td>
+                      <th>Initial capacity</th>
+                      <td>{pool.sourceEconomics.originalInitialPoolCapacity?.toString() || 'Unavailable'}</td>
+                    </tr>
+                    <tr>
+                      <th>Remaining capacity</th>
+                      <td>{pool.sourceEconomics.currentRemainingCapacity?.toString() || 'Unavailable'}</td>
                     </tr>
                     <tr>
                       <th>User limit</th>
@@ -269,6 +275,39 @@ export default function NftPoolDetail() {
           </DetailGrid>
 
           <Panel style={{ marginTop: 16 }}>
+            <PanelTitle>Deployment provenance</PanelTitle>
+            <TableWrap>
+              <Table>
+                <tbody>
+                  <tr>
+                    <th>Factory</th>
+                    <td>
+                      <code>{pool.deployment.factoryAddress || 'Unavailable'}</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Transaction</th>
+                    <td>
+                      <code>{pool.deployment.transactionHash || 'Unavailable'}</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Decode status</th>
+                    <td>{pool.deployment.decodeStatus}</td>
+                  </tr>
+                  <tr>
+                    <th>Deployment block</th>
+                    <td>{pool.deployment.blockNumber?.toLocaleString() || 'Unavailable'}</td>
+                  </tr>
+                </tbody>
+              </Table>
+            </TableWrap>
+            {pool.deployment.error ? (
+              <Muted style={{ display: 'block', marginTop: 10 }}>{pool.deployment.error}</Muted>
+            ) : null}
+          </Panel>
+
+          <Panel style={{ marginTop: 16 }}>
             <PanelTitle>Advanced details</PanelTitle>
             <details>
               <summary>Show raw addresses and side reward configuration</summary>
@@ -286,7 +325,9 @@ export default function NftPoolDetail() {
                     .join(', ') || 'None detected'}
                 </div>
                 <div>
-                  <Muted>Pool capacity:</Muted> {pool.onChain.poolCapacity?.toString() || 'Unavailable'}
+                  <Muted>Initial capacity:</Muted>{' '}
+                  {pool.sourceEconomics.originalInitialPoolCapacity?.toString() || 'Unavailable'} ·{' '}
+                  <Muted>remaining:</Muted> {pool.sourceEconomics.currentRemainingCapacity?.toString() || 'Unavailable'}
                 </div>
               </div>
             </details>

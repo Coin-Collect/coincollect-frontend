@@ -1,57 +1,51 @@
-# NFT Pool Manager
+# NFT Pool Studio
 
-This document describes the Phase 0 audit and Phase 1 read-only foundation for NFT staking administration.
+NFT Pool Studio is the Polygon-only administration surface for CoinCollect NFT staking pools. Phase 1.5 and Phase 2 add a validated, read-only builder; they do not deploy a pool or move funds.
 
-## What the audit found
+## Source-of-truth and provenance
 
-The frontend has two NFT staking generations:
+- Legacy MasterChef pids 1–4 are read through the legacy ABI and remain explicitly `PARTIAL`.
+- V2 pools are discovered from `NewSmartChefContract` events emitted by `0xa7983F8B45860626398b391E9Bb71416A26349D4`; configured addresses are a fallback only.
+- `stakedToken` is always the primary NFT. `communityCollections(index)` is read until its getter reverts, with a 32-entry safety cap and an item timeout. Frontend configuration enriches labels only.
+- `sideRewardTokens(index)` is discovered the same way. Percentages, token metadata and pool balances are associated by canonical token address, not frontend array position.
+- For factory deployments, the original `deployPool(...)` transaction is decoded and retained as `{ factoryAddress, transactionHash, blockNumber, decodedInputs, decodeStatus }`. The decoded `ConfigExtra.poolCapacity` is the original configured capacity. `poolCapacity()` is mutable runtime remaining capacity and is displayed separately.
 
-- `src/config/constants/nftFarms.ts` contains legacy MasterChef definitions for pids 1–4. These use the shared `coinCollectNftStake` contract and do not have pool-specific contract addresses.
-- Pids 5 and later are SmartChef V2 pools. Each configured pool has its own contract address and uses `NftStake/SmartChefInitializable`.
-- The Polygon NFT SmartChefFactory is `0xa7983F8B45860626398b391E9Bb71416A26349D4`, deployed at block `45594882`. The current factory owner is `0x8fC2e77C47D5D9fDe1ff35098d6e22EB6F9e8258`.
+The source economics card keeps the old reward rate, schedule, side percentages, threshold, original capacity, remaining capacity, user-limit settings and admin separate from new draft economics. A clone never carries the old start/end blocks, address, balances, stakes, liabilities or runtime capacity into new deployment inputs.
 
-The relevant contract sources are in `projects/smartchef/v2/contracts/NftStake/`. The frontend remains the source of presentation metadata and known collection relationships; it is no longer treated as the sole source of deployed-pool truth.
+## Builder flow
 
-## Source-of-truth rules
+The single `PoolBuilder` flow is used for new and clone entry points:
 
-The registry is chain-first for deployed pools:
+1. NFTs — choose a registry collection or validate any Polygon ERC-721; add/remove collections, select exactly one primary, and use positive integer weights.
+2. Rewards — choose one required primary ERC-20 and zero or more side tokens. Known tokens and arbitrary Polygon addresses are supported; code, metadata and `decimals < 30` are checked.
+3. Budget — budget denomination is USDT and is independent of reward tokens. Allocations are integer basis points and must total 10,000. A read-only adapter calls the router already used by the swap UI; if no route exists, exact manual token amounts are accepted instead. No fake price is shown.
+4. Duration — presets are converted using the latest sampled Polygon block time. Custom days are supported. Exact start/end blocks are intentionally deferred until the future Phase 3 preparation step.
+5. Appearance — public URL/local preview only; this phase has no permanent upload.
+6. Review — human values first, collapsed exact deployment plan second. The plan contains inputs, funding previews, encoded side percentages and estimated blocks, but never a transaction object or final start block.
 
-1. Discover V2 pool addresses from the NFT factory event, with configured addresses retained as a fallback.
-2. Read contract code and V2 fields through `smartNftStake.json`.
-3. Read token and collection names/symbols from their contracts when possible.
-4. Compare frontend configuration with on-chain values and surface mismatches as warnings.
-5. Read legacy pids through the legacy MasterChef ABI and label their limitations explicitly.
+## Economics and readiness
 
-Frontend-only fields such as banner, avatar, links, labels, and community flags remain metadata. The registry keeps them separate from `onChain` values.
+All base-unit arithmetic uses ethers `BigNumber`. Primary reward rate is `floor(total primary allocation / blocks)`; the max emission and residual are shown. Side rewards mirror Solidity `distributeSideRewards`: pending primary emission is multiplied by the integer percentage, divided by 100, and scaled for decimal differences. Requested, achievable, encoded percentage, residual and deviation are retained; deviations outside tolerance block the dry run.
 
-## Collection registry
+Readiness is explicit:
 
-Collections are deduplicated by `chainId:lowercase(address)`. A collection can be referenced by multiple pools and can be primary in one pool while being a supported community collection in another. Configured weights are shown alongside on-chain weights; V2 reads are authoritative when available.
+- `INCOMPLETE`: required asset, collection, address, amount, duration, capacity/limit or allocation is missing/invalid.
+- `NEEDS_REVIEW`: the draft is structurally valid but has quote freshness, manual amount or integer-residual warnings.
+- `READY_FOR_DRY_RUN`: all read-only checks and exact calculations pass.
+- `READY_FOR_DEPLOYMENT`: reserved for a future explicitly enabled Phase 3 workflow; Phase 2 never emits it.
 
-The legacy MasterChef ABI does not expose an enumerable pool-specific collection-weight model, so legacy entries are marked partial and explain that limitation.
+The minimum effective staking power is shown as the participant threshold. Capacity means the original configured capacity when provenance is decoded, not the current remaining number. User limit fields explain whether a per-user limit and block window are enabled. Performance fee remains a future post-deploy policy because it is not a factory input.
 
-## Clone and draft safety
+## Persistence and safety
 
-Clone creates a local editable draft under the browser storage key `coincollect.nft-pool-studio.drafts.v1`. It carries presentation metadata, collection addresses and weights, reward identities, and editable constraints.
+Drafts use `coincollect.nft-pool-studio.drafts.v2`, support multiple drafts, continue/duplicate/delete, and autosave with a debounce. The v1 key is migrated defensively: raw old reward rate is moved to source economics, old runtime capacity is discarded as a new input, and unsafe deployment identifiers are removed. No private key, signature, transaction, allowance or secret is stored.
 
-It deliberately does not copy a deployed contract address, start/end blocks, deployment transaction hash, or previous owner into deployment inputs. The source pool id is retained only as an audit/reference label. Saving is local; deployment and funding are disabled in Phase 1.
+The admin shell keeps NFT factory authority separate from ERC20 factory authority. States are distinct: disconnected shows `Connect Wallet`, a connected non-Polygon wallet shows `Switch to Polygon`, Polygon access checking shows `Checking admin access`, and a non-owner shows `This wallet is not authorized`.
 
-## Current safety boundary
+## Write boundary
 
-The new NFT routes are read-only. No wallet transaction is opened for deploy, setCollectionWeights, reward funding, approvals, stopping, recovery, or ownership operations. The existing ERC20 wizard remains visible only as an explicitly read-only surface, with its deploy and fund actions disabled.
+There are no deploy, approve, swap, fund, `setCollectionWeights`, stop, recovery or ownership writes in this release. The deployment plan and post-deploy checklist are read-only previews. Public staking routes and ERC20 pool behavior are unchanged.
 
-NFT routes read the NFT SmartChefFactory owner directly; ERC20 routes keep their CoinStake factory-owner gate. The two audited owners currently resolve to the same EOA, but the separate checks preserve the product boundary if governance changes later.
+## Future Phase 3
 
-## Contract risk to carry into Phase 2
-
-`setCollectionWeights` is owner-only but is not blocked after the pool starts. Existing deposits retain their token-weight snapshots, while later deposits can use the changed collection weight. The manager must warn about this behavior and must not expose the write until an explicit policy and transaction workflow exist.
-
-The V2 contract also does not provide a simple collection-array length getter. The current reader uses frontend configuration to enumerate expected community collections and reports incomplete or unreadable data instead of silently inventing entries.
-
-## Phase 2 and Phase 3 prerequisites
-
-Phase 2 needs a non-writing builder model for duration-to-block conversion, reward budgets, per-block allocations, side-reward percentages, collection weights, capacity, participant threshold, and validation against token decimals and chain limits. Token pricing/oracle integration is not implemented here.
-
-Phase 3 needs wallet-signed, resumable, idempotent deployment and verification flows: factory deployment, initialization, collection weights, reward approvals/funding, receipt tracking, and post-write re-reads. Those operations are intentionally outside this phase.
-
-Factory-discovered pools without matching frontend metadata remain visible but may have limited labels and clone support. Per-pool read failures remain visible as unhealthy/unreadable entries so one bad contract does not hide the registry.
+Phase 3 must calculate exact start/end blocks immediately before signing, prepare an idempotent factory transaction, obtain explicit approvals/funding, submit and track receipts, re-read the deployed pool, verify collection weights and funding, and surface the final deployment provenance. It must not reuse a stale Phase 2 block estimate as a final schedule.

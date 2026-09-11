@@ -6,6 +6,9 @@ export type NftPoolSource = 'nft-farms-config' | 'nft-factory' | 'legacy-masterc
 export type NftPoolKind = 'POOL' | 'COLLECTION_DEFINITION'
 export type NftWeightSource = 'on-chain' | 'frontend-config' | 'default'
 export type NftCloneSupport = 'FULL' | 'PARTIAL' | 'UNAVAILABLE'
+export type NftDecodeStatus = 'decoded' | 'unavailable' | 'malformed' | 'not-applicable'
+export type NftPoolReadiness = 'INCOMPLETE' | 'NEEDS_REVIEW' | 'READY_FOR_DRY_RUN' | 'READY_FOR_DEPLOYMENT'
+export type NftPoolDurationPreset = '1 month' | '3 months' | '6 months' | '1 year' | 'custom'
 
 export interface NftTokenMetadata {
   address: string
@@ -14,6 +17,7 @@ export interface NftTokenMetadata {
   symbol: string
   name: string
   isReadable: boolean
+  totalSupply?: BigNumber
 }
 
 export interface NftCollection {
@@ -41,6 +45,7 @@ export interface NftRewardAsset {
   configuredSymbol?: string
   configuredPercentage?: string
   onChainPercentage?: BigNumber
+  poolBalance?: BigNumber
 }
 
 export interface NftPoolFrontendMetadata {
@@ -51,6 +56,44 @@ export interface NftPoolFrontendMetadata {
   getNftUrl?: string
   isCommunity?: boolean
   configuredFinished?: boolean
+}
+
+export interface NftDeploymentDecodedInputs {
+  stakedTokenAddress: string
+  rewardTokenAddress: string
+  sideRewardTokens: string[]
+  sideRewardPercentages: BigNumber[]
+  rewardPerBlock: BigNumber
+  startBlock: number
+  endBlock: number
+  poolLimitPerUser: BigNumber
+  numberBlocksForUserLimit: number
+  initialPoolCapacity: BigNumber
+  participantThreshold: BigNumber
+  admin: string
+}
+
+export interface NftPoolDeploymentProvenance {
+  factoryAddress?: string
+  transactionHash?: string
+  blockNumber?: number
+  decodedInputs?: NftDeploymentDecodedInputs
+  decodeStatus: NftDecodeStatus
+  error?: string
+}
+
+export interface NftPoolSourceEconomics {
+  originalRewardPerBlock?: BigNumber
+  originalStartBlock?: number
+  originalEndBlock?: number
+  originalDurationBlocks?: number
+  originalSideRewardPercentages: Array<{ tokenAddress: string; percentage: BigNumber }>
+  originalParticipantThreshold?: BigNumber
+  originalInitialPoolCapacity?: BigNumber
+  currentRemainingCapacity?: BigNumber
+  originalPoolLimitPerUser?: BigNumber
+  originalNumberBlocksForUserLimit?: number
+  originalAdmin?: string
 }
 
 export interface NftPoolOnChainTruth {
@@ -65,7 +108,10 @@ export interface NftPoolOnChainTruth {
   endBlock?: number
   rewardPerBlock?: BigNumber
   participantThreshold?: BigNumber
+  /** Compatibility alias for current remaining capacity. */
   poolCapacity?: BigNumber
+  configuredInitialPoolCapacity?: BigNumber
+  currentRemainingPoolCapacity?: BigNumber
   totalShares?: BigNumber
   stakedBalance?: BigNumber
   poolLimitPerUser?: BigNumber
@@ -97,6 +143,8 @@ export interface NftPool {
   source: NftPoolSource
   metadata: NftPoolFrontendMetadata
   onChain: NftPoolOnChainTruth
+  sourceEconomics: NftPoolSourceEconomics
+  deployment: NftPoolDeploymentProvenance
   collections: NftPoolCollection[]
   rewards: {
     primary: NftRewardAsset
@@ -137,7 +185,62 @@ export interface NftPoolDraftReward {
   decimals?: number
 }
 
+export interface NftPoolDraftQuote {
+  budgetTokenAddress: string
+  rewardTokenAddress: string
+  inputAmount: string
+  outputAmount: string
+  source: string
+  quotedAt: number
+  freshnessSeconds: number
+}
+
+export interface NftPoolDraftEconomics {
+  /** The denomination is deliberately independent from reward assets. */
+  budgetTokenAddress?: string
+  budgetDenomination?: string
+  budgetDecimals?: number
+  totalBudget?: string
+  allocationBps: Record<string, string>
+  manualAmounts: Record<string, string>
+  quotes: Record<string, NftPoolDraftQuote>
+  durationPreset: NftPoolDurationPreset
+  customDurationDays?: string
+  estimatedBlocks?: number
+  secondsPerBlock?: number
+}
+
+export interface NftPoolDraftConstraints {
+  participantThreshold: string
+  poolCapacity: string
+  poolLimitPerUser: string
+  numberBlocksForUserLimit: string
+  userLimitEnabled: boolean
+  performanceFee: string
+}
+
+export interface NftPoolDeploymentPlan {
+  chainId: number
+  factoryAddress?: string
+  stakedTokenAddress: string
+  rewardTokenAddress: string
+  sideRewardTokens: string[]
+  sideRewardPercentages: string[]
+  collectionAddresses: string[]
+  collectionWeights: string[]
+  budgetTokenAddress?: string
+  budgetAmount?: string
+  rewardAllocations: Array<{ tokenAddress: string; amount: string; allocationBps: string }>
+  rewardPerBlock?: string
+  numberBlocks?: number
+  /** Populated only by the future Phase 3 transaction-preparation step. */
+  startBlock?: never
+  endBlock?: never
+  transactions?: never
+}
+
 export interface NftPoolDraft {
+  schemaVersion: 2
   id: string
   sourcePoolId: string
   chainId: number
@@ -149,30 +252,14 @@ export interface NftPoolDraft {
   getNftUrl?: string
   collections: NftPoolDraftCollection[]
   rewards: {
-    primary: NftPoolDraftReward
+    primary: NftPoolDraftReward | null
     side: NftPoolDraftReward[]
   }
-  economics: {
-    budgetDenomination?: string
-    totalBudget?: string
-    durationPreset?: '1 month' | '3 months' | '6 months' | '1 year' | 'custom'
-    customDurationDays?: string
-    primaryRewardAllocation?: string
-    additionalRewardAllocations?: Record<string, string>
-  }
-  constraints: {
-    participantThreshold: string
-    poolCapacity: string
-    poolLimitPerUser: string
-    numberBlocksForUserLimit: string
-    performanceFee: string
-  }
-  unsafe: {
-    deployedContractAddress?: string
-    startBlock?: number
-    endBlock?: number
-    deploymentTransactionHash?: string
-    oldOwner?: string
-  }
+  sourceEconomics?: NftPoolSourceEconomics
+  economics: NftPoolDraftEconomics
+  constraints: NftPoolDraftConstraints
+  readiness?: NftPoolReadiness
+  /** Kept as an empty migration compatibility field; unsafe source identifiers are never persisted. */
+  unsafe?: Record<string, never>
   updatedAt: number
 }

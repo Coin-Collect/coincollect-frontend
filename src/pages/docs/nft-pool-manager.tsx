@@ -10,16 +10,20 @@ export default function NftPoolManagerDocs() {
       </Head>
       <AdminShell
         title="NFT Pool Studio runbook"
-        subtitle="Phase 0 audit findings and the Phase 1 read-only operating boundary."
+        subtitle="The read-only Polygon builder, economics model and Phase 3 safety boundary."
         authorityScope="nft"
       >
         <Panel>
-          <PanelTitle>What is live in Phase 1</PanelTitle>
+          <PanelTitle>What is live in Phase 1.5 + 2</PanelTitle>
           <ol>
-            <li>Read configured NFT farms, NFT SmartChefFactory events and deployed V2 pool state.</li>
-            <li>Keep legacy MasterChef pids 1–4 visible with their ABI limitations.</li>
-            <li>Separate on-chain truth from frontend labels, links, images and collection metadata.</li>
-            <li>Clone a pool into a local editable draft without reusing deployment or runtime identifiers.</li>
+            <li>
+              Read factory provenance, original capacity, current capacity and dynamically indexed collections/rewards.
+            </li>
+            <li>
+              Build new or cloned pools through the same NFTs → Rewards → Budget → Duration → Appearance → Review flow.
+            </li>
+            <li>Calculate exact BigNumber emissions and Solidity-compatible side reward percentages.</li>
+            <li>Save multiple local drafts and produce a dry-run deployment plan without a transaction object.</li>
           </ol>
         </Panel>
         <Panel style={{ marginTop: 16 }}>

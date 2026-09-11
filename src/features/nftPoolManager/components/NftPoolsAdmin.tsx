@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import AdminShell from 'features/poolManager/components/AdminShell'
 import {
@@ -14,6 +14,8 @@ import {
   StatusPill,
 } from 'features/poolManager/components/styles'
 import { useNftPoolRegistry } from '../hooks'
+import { deleteNftPoolDraft, duplicateNftPoolDraft, loadNftPoolDrafts } from '../storage'
+import { NftPoolDraft } from '../types'
 import { NftPoolStatus } from '../types'
 import {
   ColumnLabel,
@@ -58,6 +60,9 @@ export default function NftPoolsAdmin() {
   const { data, loading, error, refresh } = useNftPoolRegistry()
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<'ALL' | NftPoolStatus>('ALL')
+  const [drafts, setDrafts] = useState<NftPoolDraft[]>([])
+  useEffect(() => setDrafts(loadNftPoolDrafts()), [])
+  const refreshDrafts = () => setDrafts(loadNftPoolDrafts())
   const counts = useMemo(() => {
     const pools = data?.pools || []
     return {
@@ -196,8 +201,65 @@ export default function NftPoolsAdmin() {
         {!loading && pools.length === 0 ? <Muted>No NFT pools matched the current filters.</Muted> : null}
       </Panel>
 
+      <Panel style={{ marginTop: 16 }}>
+        <PanelTitle>Saved drafts</PanelTitle>
+        <Muted>Drafts stay in this browser only. They contain no wallet secrets and never send a transaction.</Muted>
+        {drafts.length ? (
+          drafts.map((draft) => (
+            <NftPoolRow key={draft.id} style={{ marginTop: 10 }}>
+              <PoolIdentity>
+                <div>
+                  <PoolName>{draft.name || 'Untitled draft'}</PoolName>
+                  <PoolMeta>
+                    {draft.source === 'cloned' ? `Clone of ${draft.sourcePoolId}` : 'New from scratch'} ·{' '}
+                    {draft.readiness?.replace(/_/g, ' ') || 'INCOMPLETE'}
+                  </PoolMeta>
+                </div>
+              </PoolIdentity>
+              <PoolColumn>
+                <ColumnLabel>Updated</ColumnLabel>
+                {new Date(draft.updatedAt).toLocaleString()}
+              </PoolColumn>
+              <PoolColumn>
+                <ColumnLabel>Configuration</ColumnLabel>
+                {draft.collections.length} NFTs · {draft.rewards.primary?.symbol || 'No reward'}
+              </PoolColumn>
+              <PoolActions>
+                <Link href={`/admin/nft-pools/new?draft=${encodeURIComponent(draft.id)}`} passHref legacyBehavior>
+                  <SoftLink>Continue</SoftLink>
+                </Link>
+                <SoftLink
+                  href="#"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    const copy = duplicateNftPoolDraft(draft.id)
+                    if (copy) refreshDrafts()
+                  }}
+                >
+                  Duplicate
+                </SoftLink>
+                <SoftLink
+                  href="#"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    deleteNftPoolDraft(draft.id)
+                    refreshDrafts()
+                  }}
+                >
+                  Delete
+                </SoftLink>
+              </PoolActions>
+            </NftPoolRow>
+          ))
+        ) : (
+          <Muted style={{ display: 'block', marginTop: 12 }}>
+            No saved drafts yet. Start a new builder flow to create one.
+          </Muted>
+        )}
+      </Panel>
+
       <Notice>
-        Phase 1 is read-only. Pool deployment, collection-weight updates, approvals, swaps and reward funding are not
+        Phase 2 remains dry-run only. Deployment, collection-weight updates, approvals, swaps and reward funding are not
         available here.
       </Notice>
     </AdminShell>

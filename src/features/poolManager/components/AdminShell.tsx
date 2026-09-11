@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import useWeb3React from 'hooks/useWeb3React'
+import { useSwitchChain } from 'wagmi'
 import { getNftSmartChefFactoryAddress, getSmartChefFactoryAddress } from 'utils/addressHelpers'
 import { POOL_MANAGER_CHAIN_ID } from '../constants'
 import { usePoolManagerAuthority } from '../hooks'
@@ -19,6 +20,7 @@ import {
   LinkText,
   Muted,
   NavLink,
+  ActionButton,
 } from './styles'
 
 const links = [
@@ -41,6 +43,7 @@ export default function AdminShell({
 }) {
   const router = useRouter()
   const { account, chainId } = useWeb3React()
+  const { switchChain, isPending: switchingNetwork } = useSwitchChain()
   const factoryAddress =
     authorityScope === 'nft'
       ? getNftSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
@@ -49,15 +52,29 @@ export default function AdminShell({
   const activePath = router.asPath.split('?')[0]
 
   if (!account) {
-    return <AccessGate title="Admin panel" text="Connect your wallet to continue." action />
+    return <AccessGate title="Admin panel" text="Connect Wallet" action />
+  }
+
+  if (chainId !== POOL_MANAGER_CHAIN_ID) {
+    return (
+      <AccessGate
+        title="Wrong network"
+        text="Switch to Polygon"
+        action={
+          <ActionButton onClick={() => switchChain({ chainId: POOL_MANAGER_CHAIN_ID })} disabled={switchingNetwork}>
+            {switchingNetwork ? 'Switching…' : 'Switch to Polygon'}
+          </ActionButton>
+        }
+      />
+    )
   }
 
   if (authority.loading) {
-    return <AccessGate title="Admin panel" text="Checking access…" />
+    return <AccessGate title="Admin panel" text="Checking admin access" />
   }
 
-  if (chainId !== POOL_MANAGER_CHAIN_ID || !authority.authorized) {
-    return <AccessGate title="Admin access required" text="This wallet does not have admin access." />
+  if (!authority.authorized) {
+    return <AccessGate title="Admin access required" text="This wallet is not authorized" />
   }
 
   return (
@@ -97,14 +114,22 @@ export default function AdminShell({
   )
 }
 
-function AccessGate({ title, text, action = false }: { title: string; text: string; action?: boolean }) {
+function AccessGate({
+  title,
+  text,
+  action = false,
+}: {
+  title: string
+  text: string
+  action?: boolean | React.ReactNode
+}) {
   return (
     <AccessPage>
       <AccessCard>
         <AccessMark aria-hidden="true">◈</AccessMark>
         <AccessTitle>{title}</AccessTitle>
         <AccessText>{text}</AccessText>
-        {action ? <ConnectWalletButton /> : null}
+        {action === true ? <ConnectWalletButton /> : action || null}
       </AccessCard>
     </AccessPage>
   )

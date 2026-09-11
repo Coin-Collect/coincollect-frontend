@@ -234,6 +234,15 @@ export function formatNftDuration(pool: NftPool, secondsPerBlock: number): strin
   return `${days} days`
 }
 
+export function durationPresetFromDays(days?: number): NftPoolDraft['economics']['durationPreset'] {
+  if (!days || !Number.isFinite(days)) return 'custom'
+  if (days >= 20 && days <= 45) return '1 month'
+  if (days >= 75 && days <= 105) return '3 months'
+  if (days >= 165 && days <= 200) return '6 months'
+  if (days >= 330 && days <= 400) return '1 year'
+  return 'custom'
+}
+
 function draftReward(reward: NftRewardConfig | undefined, fallback = 'UNKNOWN'): NftPoolDraftReward {
   return {
     address: reward?.address || '',
@@ -243,7 +252,7 @@ function draftReward(reward: NftRewardConfig | undefined, fallback = 'UNKNOWN'):
   }
 }
 
-export function createNftPoolCloneDraft(pool: NftPool): NftPoolDraft {
+export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): NftPoolDraft {
   const collections: NftPoolDraftCollection[] = pool.collections.map(({ collection, primary, weight }) => ({
     chainId: collection.chainId,
     address: collection.address,
@@ -253,6 +262,29 @@ export function createNftPoolCloneDraft(pool: NftPool): NftPoolDraft {
     primary,
   }))
   const primaryReward = pool.rewards.primary.token
+  const sourceEconomics = pool.sourceEconomics || {
+    originalRewardPerBlock: pool.onChain.rewardPerBlock,
+    originalStartBlock: pool.onChain.startBlock,
+    originalEndBlock: pool.onChain.endBlock,
+    originalDurationBlocks:
+      pool.onChain.startBlock !== undefined && pool.onChain.endBlock !== undefined
+        ? pool.onChain.endBlock - pool.onChain.startBlock
+        : undefined,
+    originalSideRewardPercentages: pool.rewards.side
+      .filter((reward) => reward.onChainPercentage !== undefined)
+      .map((reward) => ({ tokenAddress: reward.token.address, percentage: reward.onChainPercentage as BigNumber })),
+    originalParticipantThreshold: pool.onChain.participantThreshold,
+    originalInitialPoolCapacity: pool.onChain.configuredInitialPoolCapacity,
+    currentRemainingCapacity: pool.onChain.currentRemainingPoolCapacity || pool.onChain.poolCapacity,
+    originalPoolLimitPerUser: pool.onChain.poolLimitPerUser,
+    originalNumberBlocksForUserLimit: pool.onChain.numberBlocksForUserLimit,
+    originalAdmin: pool.onChain.owner,
+  }
+  const durationDays =
+    sourceEconomics.originalDurationBlocks && sourceEconomics.originalDurationBlocks > 0
+      ? (sourceEconomics.originalDurationBlocks * secondsPerBlock) / 86400
+      : undefined
+  const durationPreset = durationPresetFromDays(durationDays)
   const sideRewards = pool.rewards.side.map((reward) =>
     draftReward({
       address: reward.token.address,
@@ -262,6 +294,7 @@ export function createNftPoolCloneDraft(pool: NftPool): NftPoolDraft {
     }),
   )
   return {
+    schemaVersion: 2,
     id: `nft-draft-${Date.now()}`,
     sourcePoolId: pool.id,
     chainId: pool.chainId,
@@ -273,65 +306,59 @@ export function createNftPoolCloneDraft(pool: NftPool): NftPoolDraft {
     getNftUrl: pool.metadata.getNftUrl,
     collections,
     rewards: { primary: draftReward(primaryReward), side: sideRewards },
+    sourceEconomics,
+    unsafe: {},
     economics: {
-      durationPreset: 'custom',
-      customDurationDays: '',
-      primaryRewardAllocation: pool.onChain.rewardPerBlock?.toString(),
-      additionalRewardAllocations: Object.fromEntries(
-        pool.rewards.side.map((reward) => [
-          reward.token.address.toLowerCase(),
-          reward.onChainPercentage?.toString() || '',
-        ]),
-      ),
+      durationPreset,
+      customDurationDays: durationPreset === 'custom' ? String(Math.max(1, Math.round(durationDays || 30))) : '',
+      totalBudget: '',
+      budgetTokenAddress: mainnetTokens.usdt.address,
+      budgetDecimals: mainnetTokens.usdt.decimals,
+      allocationBps: {},
+      manualAmounts: {},
+      quotes: {},
+      budgetDenomination: 'USDT',
     },
     constraints: {
-      participantThreshold: pool.onChain.participantThreshold?.toString() || '',
-      poolCapacity: pool.onChain.poolCapacity?.toString() || '',
-      poolLimitPerUser: pool.onChain.poolLimitPerUser?.toString() || '',
-      numberBlocksForUserLimit: pool.onChain.numberBlocksForUserLimit?.toString() || '',
+      participantThreshold: sourceEconomics.originalParticipantThreshold?.toString() || '',
+      poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '',
+      poolLimitPerUser: sourceEconomics.originalPoolLimitPerUser?.toString() || '',
+      numberBlocksForUserLimit: sourceEconomics.originalNumberBlocksForUserLimit?.toString() || '',
+      userLimitEnabled: Boolean(pool.onChain.userLimit),
       performanceFee: '',
     },
-    unsafe: {},
     updatedAt: Date.now(),
   }
 }
 
 export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): NftPoolDraft {
-  const fallbackCollection = normalizeNftCollectionRegistry(undefined, chainId)[0]
-  const fallbackReward: NftPoolDraftReward = {
-    address: '',
-    symbol: 'COLLECT',
-    name: 'COLLECT',
-    decimals: 18,
-  }
   return {
+    schemaVersion: 2,
     id: `nft-draft-${Date.now()}`,
     sourcePoolId: '',
     chainId,
     source: 'manual',
     name: '',
-    collections: fallbackCollection
-      ? [
-          {
-            chainId,
-            address: fallbackCollection.address,
-            collectionId: fallbackCollection.id,
-            name: fallbackCollection.displayName,
-            weight: '1',
-            primary: true,
-          },
-        ]
-      : [],
-    rewards: { primary: fallbackReward, side: [] },
-    economics: { durationPreset: '1 month', totalBudget: '', budgetDenomination: 'USDT' },
+    collections: [],
+    rewards: { primary: null, side: [] },
+    economics: {
+      durationPreset: '1 month',
+      totalBudget: '',
+      budgetTokenAddress: mainnetTokens.usdt.address,
+      budgetDecimals: mainnetTokens.usdt.decimals,
+      budgetDenomination: 'USDT',
+      allocationBps: {},
+      manualAmounts: {},
+      quotes: {},
+    },
     constraints: {
       participantThreshold: '',
       poolCapacity: '',
       poolLimitPerUser: '',
       numberBlocksForUserLimit: '',
+      userLimitEnabled: false,
       performanceFee: '',
     },
-    unsafe: {},
     updatedAt: Date.now(),
   }
 }
