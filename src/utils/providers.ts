@@ -103,8 +103,9 @@ export const simplePolygonRpcProvider = createFallbackProvider(maticNodes, {
   chainId: ChainId.POLYGON,
   name: 'polygon',
 })
+const registryRpcUrls = typeof window === 'undefined' ? maticNodes : ['/api/rpc/polygon']
 export const nftPoolRegistryRpcProvider = new QueuedStaticJsonRpcProvider(
-  ['/api/rpc/polygon', ...maticNodes],
+  registryRpcUrls,
   { chainId: ChainId.POLYGON, name: 'polygon' },
   8,
 )

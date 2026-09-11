@@ -45,3 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return res.status(502).json({ error: lastError })
 }
+
+export const config = {
+  api: {
+    externalResolver: true,
+  },
+}
