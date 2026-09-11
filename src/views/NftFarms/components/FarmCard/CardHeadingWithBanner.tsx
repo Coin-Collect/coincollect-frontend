@@ -8,6 +8,7 @@ import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import AllowedNftsModal from 'components/AllowedNftsModal/AllowedNftsModal'
 import { NextLinkFromReactRouter } from 'components/NextLink'
+import { useNftFallbackSource } from 'utils/nftFallback'
 
 export interface ExpandableSectionProps {
   lpLabel?: string
@@ -150,6 +151,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
     : undefined
   const banner =
     nftFarmData?.banner || collectionDataByPid?.banner?.small || collectionDataByAddress?.banner?.small
+  const { currentSrc: bannerSrc, handleError: handleBannerError } = useNftFallbackSource(banner)
 
   const firstFarmOfMainNft =
     (farmAddr137
@@ -240,7 +242,13 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
     <CardBody p="0px">
       <Flex justifyContent="center">
         <BannerContainer $clickable={pid !== undefined} onClick={handleOpenPoolPage}>
-          <StyledImage src={banner} alt={`${lpLabel} banner`} height={220} width={550} />
+          <StyledImage
+            src={bannerSrc}
+            alt={`${lpLabel} banner`}
+            height={220}
+            width={550}
+            onError={handleBannerError}
+          />
           <BannerOverlay />
           <StatusContainer>
             <StatusBadge status={disabled ? 'finished' : 'active'}>

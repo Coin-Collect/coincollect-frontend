@@ -69,6 +69,92 @@ const StyledCard = styled(Card)<{ $variant: 'default' | 'expanded' }>`
         `}
 `
 
+const finishedRibbonShine = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateX(-180%) skewX(-18deg);
+  }
+
+  22% {
+    opacity: 0;
+  }
+
+  38% {
+    opacity: 0.72;
+  }
+
+  62%,
+  100% {
+    opacity: 0;
+    transform: translateX(320%) skewX(-18deg);
+  }
+`
+
+const finishedRibbonFlow = keyframes`
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 40px 40px;
+  }
+`
+
+const FinishedRibbon = styled(CardRibbon)`
+  background-color: #141414;
+  background-image:
+    linear-gradient(rgba(16, 16, 16, 0.18), rgba(16, 16, 16, 0.18)),
+    repeating-linear-gradient(120deg, #141414 0 10px, #d6ad12 10px 20px);
+  background-size: 40px 40px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  animation: ${finishedRibbonFlow} 4.2s linear infinite;
+
+  &:before,
+  &:after {
+    background-color: #171717;
+    background-image: inherit;
+    background-size: inherit;
+    animation: inherit;
+  }
+
+  & > div {
+    position: relative;
+    color: #ffffff;
+    overflow: hidden;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    text-transform: uppercase;
+
+    &:after {
+      position: absolute;
+      top: -40%;
+      bottom: -40%;
+      left: 0;
+      width: 24%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+      content: '';
+      pointer-events: none;
+      transform: translateX(-180%) skewX(-18deg);
+      animation: ${finishedRibbonShine} 4s ease-in-out infinite;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+
+    &:before,
+    &:after {
+      animation: none;
+    }
+
+    & > div:after {
+      animation: none;
+    }
+  }
+`
+
 const FarmCardInnerContainer = styled(Flex)`
   flex-direction: column;
   justify-content: space-around;
@@ -524,7 +610,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   return (
     <StyledCard
       $variant={variant}
-      ribbon={farm.isFinished && <CardRibbon variantColor="textDisabled" text={t('Finished')} />}
+      ribbon={farm.isFinished && <FinishedRibbon text={t('Finished')} />}
       isActive={isPromotedFarm}
     >
       <FarmCardInnerContainer>

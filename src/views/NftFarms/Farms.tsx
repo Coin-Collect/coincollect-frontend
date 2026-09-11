@@ -163,6 +163,9 @@ const Farms: React.FC = ({ children }) => {
     (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
   )
 
+  // The Staked only filter should keep a user's finished positions visible on the Live tab.
+  const stakedLiveFarms = [...stakedOnlyFarms, ...stakedInactiveFarms]
+
   const stakedArchivedFarms = archivedFarms.filter(
     (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
   )
@@ -182,7 +185,7 @@ const Farms: React.FC = ({ children }) => {
 
         const isSmartNftStakePool = Boolean(farm.contractAddresses)
         const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()))
-        const { cakeRewardsApr, lpRewardsApr } = isActive
+        const { cakeRewardsApr, lpRewardsApr } = isActive && !farm.isFinished
           ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold, mainCollectionWeight)
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
@@ -280,7 +283,7 @@ const Farms: React.FC = ({ children }) => {
     }
 
     if (isActive) {
-      chosenFarms = stakedOnly ? farmsList(stakedOnlyFarms) : farmsList(activeFarms)
+      chosenFarms = stakedOnly ? farmsList(stakedLiveFarms) : farmsList(activeFarms)
     }
     if (isInactive) {
       chosenFarms = stakedOnly ? farmsList(stakedInactiveFarms) : farmsList(inactiveFarms)
@@ -304,6 +307,7 @@ const Farms: React.FC = ({ children }) => {
     stakedInactiveFarms,
     stakedOnly,
     stakedOnlyFarms,
+    stakedLiveFarms,
     numberOfFarmsVisible,
   ])
 
