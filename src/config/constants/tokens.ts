@@ -73,7 +73,7 @@ export const mainnetTokens = defineTokens({
   ),
   hunt: new Token(
     POLYGON_MAINNET,
-    '0xeacde3e3c5aae81d435d9a592827803296e25aae',
+    '0xeAcde3e3c5aAE81D435D9A592827803296E25aAE',
     18,
     'HUNT',
     'HUNT Token',
@@ -243,7 +243,7 @@ export const mainnetTokens = defineTokens({
 
   weth: new Token(
     POLYGON_MAINNET,
-    '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+    '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
     18,
     'ETH',
     'Polygon ETH',
@@ -1088,7 +1088,7 @@ export const mainnetTokens = defineTokens({
   ),
   uni: new Token(
     POLYGON_MAINNET,
-    '0xb33eaad8d922b1083446dc23f610c2567fb5180f',
+    '0xb33EaAd8d922B1083446DC23f610c2567fB5180f',
     18,
     'UNI',
     'Polygon-Peg Uniswap Token',

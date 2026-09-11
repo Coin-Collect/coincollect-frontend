@@ -45,7 +45,7 @@
     {
       "name": "Hunt Token",
       "symbol": "HUNT",
-      "address": "0xeacde3e3c5aae81d435d9a592827803296e25aae",
+      "address": "0xeAcde3e3c5aAE81D435D9A592827803296E25aAE",
       "chainId": 137,
       "decimals": 18,
       "logoURI": "https://coincollect.org/assets/images/partners/BeastHunter/tlogo128.png"

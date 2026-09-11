@@ -1063,7 +1063,11 @@ export default function PoolBuilder() {
       authorityScope="nft"
     >
       {error ? <Notice $error>{error}</Notice> : null}
-      {loading ? <Notice>Reading Polygon registry…</Notice> : null}
+      {loading ? (
+        <Notice>
+          Registry details are loading in the background. Configured collections and rewards are available now.
+        </Notice>
+      ) : null}
       {cloneId && !loading && !sourcePool ? (
         <Notice $error>Clone source was not found in the current registry.</Notice>
       ) : null}

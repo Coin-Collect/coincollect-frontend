@@ -89,7 +89,7 @@ const claims: any[] = [
     nftLimit: 5,
     totalReward: 120000000,
     isFinished: false,
-    rewardTokenAddress: '0xeacde3e3c5aae81d435d9a592827803296e25aae',
+    rewardTokenAddress: '0xeAcde3e3c5aAE81D435D9A592827803296E25aAE',
     projectSite: 'https://beasthunter.app/',
     version: 2,
   },

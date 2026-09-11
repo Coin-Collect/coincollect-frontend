@@ -73,6 +73,16 @@ export default function AdminShell({
     return <AccessGate title="Admin panel" text="Checking admin access" />
   }
 
+  if (authority.state === 'UNAVAILABLE') {
+    return (
+      <AccessGate
+        title="Admin access unavailable"
+        text="Could not check this wallet's access."
+        action={<ActionButton onClick={() => void authority.refresh()}>Retry</ActionButton>}
+      />
+    )
+  }
+
   if (!authority.authorized) {
     return <AccessGate title="Admin access required" text="This wallet is not authorized" />
   }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import useWeb3React from 'hooks/useWeb3React'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import { getFactoryAuthority } from './authority'
@@ -43,7 +43,7 @@ export function usePoolManagerRegistry() {
 export function usePoolManagerAuthority(
   factoryAddressOverride?: string | null,
 ): PoolManagerAuthority & { loading: boolean; refresh: () => Promise<void> } {
-  const { account } = useWeb3React()
+  const { account, library } = useWeb3React()
   const [authority, setAuthority] = useState<PoolManagerAuthority>({
     factoryAddress: null,
     account,
@@ -52,15 +52,43 @@ export function usePoolManagerAuthority(
     state: 'UNAVAILABLE',
   })
   const [loading, setLoading] = useState(true)
+  const requestId = useRef(0)
 
   const refresh = useCallback(async () => {
+    const currentRequestId = ++requestId.current
     setLoading(true)
-    setAuthority(await getFactoryAuthority(simplePolygonRpcProvider, account, 137, factoryAddressOverride))
-    setLoading(false)
-  }, [account, factoryAddressOverride])
+
+    if (!account) {
+      setAuthority({
+        factoryAddress: factoryAddressOverride || null,
+        account: null,
+        ownerIsContract: false,
+        authorized: false,
+        state: 'WALLET_REQUIRED',
+      })
+      setLoading(false)
+      return
+    }
+
+    try {
+      const nextAuthority = await getFactoryAuthority(
+        library || simplePolygonRpcProvider,
+        account,
+        137,
+        factoryAddressOverride,
+      )
+      if (currentRequestId !== requestId.current) return
+      setAuthority(nextAuthority)
+    } finally {
+      if (currentRequestId === requestId.current) setLoading(false)
+    }
+  }, [account, factoryAddressOverride, library])
 
   useEffect(() => {
-    refresh()
+    void refresh()
+    return () => {
+      requestId.current += 1
+    }
   }, [refresh])
 
   return { ...authority, loading, refresh }

@@ -714,7 +714,7 @@ export async function discoverNftFactoryPoolAddresses(
     do {
       const query = nextPageParams
         ? `?${new URLSearchParams(Object.entries(nextPageParams).map(([key, value]) => [key, String(value)]))}`
-        : ''
+        : `?topic=${encodeURIComponent(newPoolTopic)}`
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), NFT_FACTORY_INDEXER_TIMEOUT_MS)
       const response = await fetch(`${NFT_FACTORY_INDEXER_URL}/addresses/${factoryAddress}/logs${query}`, {
