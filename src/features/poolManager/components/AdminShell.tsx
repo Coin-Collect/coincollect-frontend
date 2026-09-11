@@ -44,15 +44,15 @@ export default function AdminShell({
   const factoryAddress = getSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
 
   if (!account) {
-    return <AccessGate title="Admin paneli" text="Devam etmek için cüzdanını bağla." action />
+    return <AccessGate title="Admin panel" text="Connect your wallet to continue." action />
   }
 
   if (authority.loading) {
-    return <AccessGate title="Admin paneli" text="Yetki kontrol ediliyor." />
+    return <AccessGate title="Admin panel" text="Checking access…" />
   }
 
   if (chainId !== POOL_MANAGER_CHAIN_ID || !authority.authorized) {
-    return <AccessGate title="Yetkin yok" text="Bu cüzdanın admin yetkisi yok." />
+    return <AccessGate title="Admin access required" text="This wallet does not have admin access." />
   }
 
   return (

@@ -13,6 +13,7 @@ export const AccessPage = styled.main`
   align-items: center;
   justify-content: center;
   padding: 40px 20px 72px;
+  color: ${({ theme }) => theme.colors.text};
 `
 
 export const AccessCard = styled.section`
@@ -22,8 +23,9 @@ export const AccessCard = styled.section`
   padding: 38px 30px 34px;
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
   border-radius: 24px;
-  background: ${({ theme }) => theme.colors.background};
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  color: ${({ theme }) => theme.colors.text};
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
 `
 
 export const AccessMark = styled.div`
@@ -41,6 +43,7 @@ export const AccessMark = styled.div`
 
 export const AccessTitle = styled.h1`
   margin: 0 0 9px;
+  color: ${({ theme }) => theme.colors.text};
   font-size: 25px;
   letter-spacing: -0.04em;
 `
