@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { createEmptyNftPoolDraft } from './registry'
-import { NftPoolDraft, NftPoolDraftEconomics, NftPoolSourceEconomics } from './types'
+import { NftPoolDraft, NftPoolDraftEconomics, NftPoolDraftQuote, NftPoolSourceEconomics } from './types'
 
 export const NFT_POOL_DRAFT_STORAGE_KEY = 'coincollect.nft-pool-studio.drafts.v2'
 export const NFT_POOL_DRAFT_STORAGE_KEY_V1 = 'coincollect.nft-pool-studio.drafts.v1'
@@ -13,7 +13,48 @@ function idFor(prefix = 'nft-draft'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+function stringRecord(input: any): Record<string, string> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {}
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => typeof value === 'string') as Array<[string, string]>,
+  )
+}
+
+function safeQuote(input: any): NftPoolDraftQuote | undefined {
+  if (!input || typeof input !== 'object') return undefined
+  if (input.source !== 'router' && input.source !== 'identity') return undefined
+  if (typeof input.budgetTokenAddress !== 'string' || typeof input.rewardTokenAddress !== 'string') return undefined
+  if (typeof input.inputAmount !== 'string' || typeof input.outputAmount !== 'string') return undefined
+  const quotedAt = Number(input.quotedAt)
+  const freshnessSeconds = Number(input.freshnessSeconds)
+  const expirySeconds = Number(input.expirySeconds)
+  if (!Number.isFinite(quotedAt) || !Number.isFinite(freshnessSeconds) || !Number.isFinite(expirySeconds))
+    return undefined
+  return {
+    budgetTokenAddress: input.budgetTokenAddress,
+    rewardTokenAddress: input.rewardTokenAddress,
+    inputAmount: input.inputAmount,
+    outputAmount: input.outputAmount,
+    source: input.source,
+    sourceLabel: typeof input.sourceLabel === 'string' ? input.sourceLabel : input.source,
+    path: Array.isArray(input.path) ? input.path.filter((item: any) => typeof item === 'string') : [],
+    allocationBps: typeof input.allocationBps === 'string' ? input.allocationBps : '',
+    totalBudget: typeof input.totalBudget === 'string' ? input.totalBudget : '',
+    quotedAt,
+    freshnessSeconds,
+    expirySeconds,
+    quoteState: ['FRESH', 'STALE', 'EXPIRED', 'INVALID'].includes(input.quoteState) ? input.quoteState : undefined,
+    error: typeof input.error === 'string' ? input.error : undefined,
+  }
+}
+
 function safeEconomics(input: any): NftPoolDraftEconomics {
+  const rawQuotes = input?.quotes && typeof input.quotes === 'object' ? input.quotes : {}
+  const quotes = Object.fromEntries(
+    Object.entries(rawQuotes)
+      .map(([key, value]) => [key, safeQuote(value)] as const)
+      .filter(([, value]) => value !== undefined),
+  ) as Record<string, NftPoolDraftQuote>
   return {
     durationPreset: input?.durationPreset || '1 month',
     customDurationDays: input?.customDurationDays || '',
@@ -21,11 +62,14 @@ function safeEconomics(input: any): NftPoolDraftEconomics {
     budgetDenomination: input?.budgetDenomination || 'USDT',
     budgetDecimals: input?.budgetDecimals,
     totalBudget: input?.totalBudget || '',
-    allocationBps: input?.allocationBps || {},
-    manualAmounts: input?.manualAmounts || {},
-    quotes: input?.quotes || {},
-    estimatedBlocks: input?.estimatedBlocks,
-    secondsPerBlock: input?.secondsPerBlock,
+    allocationBps: stringRecord(input?.allocationBps),
+    manualAmounts: stringRecord(input?.manualAmounts),
+    quotes,
+    quoteErrors: stringRecord(input?.quoteErrors),
+    // Duration-dependent block estimates are always recomputed from the current
+    // measured block time; never revive a stale cached schedule.
+    estimatedBlocks: undefined,
+    secondsPerBlock: undefined,
   }
 }
 
@@ -64,6 +108,13 @@ function safeSourceEconomics(input: any): NftPoolSourceEconomics | undefined {
       ? Number(input.originalNumberBlocksForUserLimit)
       : undefined,
     originalAdmin: typeof input.originalAdmin === 'string' ? input.originalAdmin : undefined,
+    originalConfiguredUserLimit:
+      typeof input.originalConfiguredUserLimit === 'boolean' ? input.originalConfiguredUserLimit : undefined,
+    userLimitSource: ['deployment-provenance', 'on-chain-configuration', 'unavailable'].includes(input.userLimitSource)
+      ? input.userLimitSource
+      : undefined,
+    originalPerformanceFee: reviveBigNumber(input.originalPerformanceFee),
+    originalFeeTo: typeof input.originalFeeTo === 'string' ? input.originalFeeTo : undefined,
   }
 }
 
@@ -83,6 +134,7 @@ function migrateDraft(input: any): NftPoolDraft | null {
       avatar: typeof input.avatar === 'string' ? input.avatar : undefined,
       projectUrl: typeof input.projectUrl === 'string' ? input.projectUrl : undefined,
       getNftUrl: typeof input.getNftUrl === 'string' ? input.getNftUrl : undefined,
+      intendedAdmin: typeof input.intendedAdmin === 'string' ? input.intendedAdmin : undefined,
       collections: Array.isArray(input.collections) ? input.collections : [],
       rewards: {
         primary: input.rewards?.primary || null,
@@ -127,6 +179,7 @@ function migrateDraft(input: any): NftPoolDraft | null {
     avatar: typeof input.avatar === 'string' ? input.avatar : undefined,
     projectUrl: typeof input.projectUrl === 'string' ? input.projectUrl : undefined,
     getNftUrl: typeof input.getNftUrl === 'string' ? input.getNftUrl : undefined,
+    intendedAdmin: typeof input.intendedAdmin === 'string' ? input.intendedAdmin : undefined,
     collections: Array.isArray(input.collections)
       ? input.collections.map((item: any) => ({
           chainId: Number(item.chainId) || 137,
@@ -166,6 +219,7 @@ function migrateDraft(input: any): NftPoolDraft | null {
       allocationBps: {},
       manualAmounts: {},
       quotes: {},
+      quoteErrors: {},
     },
     constraints: {
       ...base.constraints,

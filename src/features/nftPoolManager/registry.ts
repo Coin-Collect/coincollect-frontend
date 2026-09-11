@@ -279,6 +279,11 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     originalPoolLimitPerUser: pool.onChain.poolLimitPerUser,
     originalNumberBlocksForUserLimit: pool.onChain.numberBlocksForUserLimit,
     originalAdmin: pool.onChain.owner,
+    originalConfiguredUserLimit:
+      pool.onChain.poolLimitPerUser !== undefined ? pool.onChain.poolLimitPerUser.gt(0) : undefined,
+    userLimitSource: pool.onChain.poolLimitPerUser !== undefined ? 'on-chain-configuration' : 'unavailable',
+    originalPerformanceFee: pool.onChain.performanceFee,
+    originalFeeTo: pool.onChain.feeTo,
   }
   const durationDays =
     sourceEconomics.originalDurationBlocks && sourceEconomics.originalDurationBlocks > 0
@@ -317,6 +322,7 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       allocationBps: {},
       manualAmounts: {},
       quotes: {},
+      quoteErrors: {},
       budgetDenomination: 'USDT',
     },
     constraints: {
@@ -324,7 +330,8 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '',
       poolLimitPerUser: sourceEconomics.originalPoolLimitPerUser?.toString() || '',
       numberBlocksForUserLimit: sourceEconomics.originalNumberBlocksForUserLimit?.toString() || '',
-      userLimitEnabled: Boolean(pool.onChain.userLimit),
+      userLimitEnabled:
+        sourceEconomics.originalConfiguredUserLimit === undefined ? true : sourceEconomics.originalConfiguredUserLimit,
       performanceFee: '',
     },
     updatedAt: Date.now(),
@@ -350,6 +357,7 @@ export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): Nf
       allocationBps: {},
       manualAmounts: {},
       quotes: {},
+      quoteErrors: {},
     },
     constraints: {
       participantThreshold: '',

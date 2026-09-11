@@ -233,6 +233,13 @@ export default function NftPoolDetail() {
                       </td>
                     </tr>
                     <tr>
+                      <th>Performance fee</th>
+                      <td>
+                        {pool.onChain.performanceFee?.toString() || '0'} · fee receiver{' '}
+                        <code>{pool.onChain.feeTo || 'unset'}</code>
+                      </td>
+                    </tr>
+                    <tr>
                       <th>Reward balance</th>
                       <td>
                         {amount(pool.onChain.rewardBalance, pool.rewards.primary.token.decimals)}{' '}
@@ -298,6 +305,10 @@ export default function NftPoolDetail() {
                   <tr>
                     <th>Deployment block</th>
                     <td>{pool.deployment.blockNumber?.toLocaleString() || 'Unavailable'}</td>
+                  </tr>
+                  <tr>
+                    <th>Original user limit source</th>
+                    <td>{pool.sourceEconomics.userLimitSource || 'Unavailable'}</td>
                   </tr>
                 </tbody>
               </Table>

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Contract } from '@ethersproject/contracts'
-import { formatBaseUnits, calculatePoolEconomics, parseUnitsExact } from '../economics'
+import { formatBaseUnits, formatBaseUnitsExact, calculatePoolEconomics, parseUnitsExact } from '../economics'
+import { getNftQuoteState } from '../quotes'
 import { createNftRewardQuoteProvider } from '../quotes'
 import {
   validateNftCollectionAddress,
@@ -99,15 +100,30 @@ export default function PoolBuilder() {
     [cloneId, data?.pools],
   )
   const validation = useMemo(
-    () => validateNftPoolDraft(draft, data?.secondsPerBlock || 2.2),
-    [data?.secondsPerBlock, draft],
+    () =>
+      validateNftPoolDraft(draft, data?.secondsPerBlock || 2.2, false, {
+        factoryAddress: data?.factoryAddress,
+        intendedAdmin: account || draft.intendedAdmin,
+      }),
+    [account, data?.factoryAddress, data?.secondsPerBlock, draft],
   )
   const economics =
     validation.economics ||
     (draft.rewards.primary ? calculatePoolEconomics(draft, data?.secondsPerBlock || 2.2) : undefined)
-  const plan = economics ? buildNftPoolDeploymentPlan(draft, economics, data?.factoryAddress) : null
+  const budgetPreview = useMemo(
+    () => calculatePoolEconomics(draft, data?.secondsPerBlock || 2.2),
+    [data?.secondsPerBlock, draft],
+  )
+  const plan = economics
+    ? buildNftPoolDeploymentPlan(draft, economics, data?.factoryAddress, account || draft.intendedAdmin, validation)
+    : null
   const knownCollections = data?.collections || []
   const rewards = [draft.rewards.primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
+
+  useEffect(() => {
+    if (!account || draft.intendedAdmin?.toLowerCase() === account.toLowerCase()) return
+    setDraft((current) => ({ ...current, intendedAdmin: account, updatedAt: Date.now() }))
+  }, [account, draft.intendedAdmin])
 
   useEffect(() => {
     if (savedDraftId) {
@@ -259,32 +275,71 @@ export default function PoolBuilder() {
   }
 
   const refreshQuotes = async () => {
-    if (!draft.economics.budgetTokenAddress || !draft.economics.totalBudget || !draft.economics.budgetDecimals) return
+    if (
+      !draft.economics.budgetTokenAddress ||
+      !draft.economics.totalBudget ||
+      draft.economics.budgetDecimals === undefined
+    )
+      return
     setQuoteBusy(true)
     setValidationMessage('Reading router quotes…')
     try {
       const inputBaseUnits = parseUnitsExact(draft.economics.totalBudget, draft.economics.budgetDecimals)
       if (!inputBaseUnits) throw new Error('Enter a valid total budget first.')
       const provider = createNftRewardQuoteProvider(simplePolygonRpcProvider)
+      const quoteEconomics = calculatePoolEconomics(draft, data?.secondsPerBlock || 2.2)
       const quotes = { ...draft.economics.quotes }
-      for (const reward of rewards) {
-        const quote = await provider.quote({
-          budgetTokenAddress: draft.economics.budgetTokenAddress,
-          rewardTokenAddress: reward.address,
-          amountBaseUnits: inputBaseUnits,
-        })
-        quotes[reward.address.toLowerCase()] = {
-          budgetTokenAddress: quote.budgetTokenAddress,
-          rewardTokenAddress: quote.rewardTokenAddress,
-          inputAmount: draft.economics.totalBudget || '',
-          outputAmount: formatBaseUnits(quote.outputAmountBaseUnits, reward.decimals),
-          source: quote.source,
-          quotedAt: quote.quotedAt,
-          freshnessSeconds: quote.freshnessSeconds,
+      const quoteErrors = { ...draft.economics.quoteErrors }
+      const results = await Promise.allSettled(
+        rewards.map(async (reward) => {
+          const allocation = quoteEconomics.budgetAllocations.find(
+            (item) => item.tokenAddress.toLowerCase() === reward.address.toLowerCase(),
+          )
+          if (!allocation || allocation.allocatedBudget.isZero()) throw new Error('Reward allocation must be positive.')
+          const quote = await provider.quote({
+            budgetTokenAddress: draft.economics.budgetTokenAddress!,
+            rewardTokenAddress: reward.address,
+            amountBaseUnits: allocation.allocatedBudget,
+          })
+          return {
+            key: reward.address.toLowerCase(),
+            quote: {
+              budgetTokenAddress: quote.budgetTokenAddress,
+              rewardTokenAddress: quote.rewardTokenAddress,
+              inputAmount: formatBaseUnitsExact(quote.inputAmountBaseUnits, draft.economics.budgetDecimals),
+              outputAmount: formatBaseUnitsExact(quote.outputAmountBaseUnits, reward.decimals),
+              source: quote.source,
+              sourceLabel: quote.sourceLabel,
+              path: quote.path,
+              allocationBps: allocation.allocationBps.toString(),
+              totalBudget: draft.economics.totalBudget || '',
+              quotedAt: quote.quotedAt,
+              freshnessSeconds: quote.freshnessSeconds,
+              expirySeconds: quote.expirySeconds,
+            },
+          }
+        }),
+      )
+      const failed: string[] = []
+      results.forEach((result, index) => {
+        const reward = rewards[index]
+        const key = reward.address.toLowerCase()
+        if (result.status === 'fulfilled') {
+          quotes[key] = result.value.quote
+          delete quoteErrors[key]
+        } else {
+          delete quotes[key]
+          const reason = result.reason instanceof Error ? result.reason.message : 'Quote unavailable.'
+          quoteErrors[key] = reason
+          failed.push(`${reward.symbol}: ${reason}`)
         }
-      }
-      updateEconomics({ quotes })
-      setValidationMessage('Quotes updated. They are read-only and expire quickly.')
+      })
+      updateEconomics({ quotes, quoteErrors })
+      setValidationMessage(
+        failed.length
+          ? `Some quotes need manual amounts. ${failed.join(' · ')}`
+          : 'Quotes updated. They are read-only and expire quickly.',
+      )
     } catch (quoteError) {
       setValidationMessage(
         quoteError instanceof Error ? quoteError.message : 'No read-only quote was found. Add exact manual amounts.',
@@ -314,7 +369,7 @@ export default function PoolBuilder() {
   }
 
   const save = () => {
-    saveNftPoolDraft({ ...draft, readiness: validation.readiness })
+    saveNftPoolDraft({ ...draft, intendedAdmin: account || draft.intendedAdmin, readiness: validation.readiness })
     setMessage('Draft saved locally. No blockchain transaction was sent.')
   }
 
@@ -521,6 +576,8 @@ export default function PoolBuilder() {
             {rewards.map((reward) => {
               const key = reward.address.toLowerCase()
               const quote = draft.economics.quotes[key]
+              const allocation = budgetPreview.budgetAllocations.find((item) => item.tokenAddress.toLowerCase() === key)
+              const quoteState = quote ? getNftQuoteState(quote) : undefined
               return (
                 <AssetRow key={reward.address}>
                   <TokenChip>
@@ -528,12 +585,8 @@ export default function PoolBuilder() {
                     <span>
                       {reward.symbol}
                       <Muted style={{ display: 'block', fontSize: 11 }}>
-                        {quote
-                          ? `Quote ${quote.outputAmount} · ${Math.max(
-                              0,
-                              Math.round((Date.now() - quote.quotedAt) / 1000),
-                            )}s old`
-                          : 'No quote yet'}
+                        Budget input {formatBaseUnitsExact(allocation?.allocatedBudget, draft.economics.budgetDecimals)}{' '}
+                        · {quote ? `${quote.sourceLabel} · ${quoteState}` : 'No quote yet'}
                       </Muted>
                     </span>
                   </TokenChip>
@@ -563,6 +616,9 @@ export default function PoolBuilder() {
                       }
                       placeholder="Manual fallback"
                     />
+                    <Muted style={{ display: 'block', fontSize: 11 }}>
+                      Exact token amount; valuation is not verified.
+                    </Muted>
                   </Field>
                 </AssetRow>
               )
@@ -632,7 +688,7 @@ export default function PoolBuilder() {
                 />
               </Field>
               <Field>
-                User limit enabled
+                Per-wallet limit
                 <Select
                   value={draft.constraints.userLimitEnabled ? 'yes' : 'no'}
                   onChange={(event) =>
@@ -648,7 +704,7 @@ export default function PoolBuilder() {
               {draft.constraints.userLimitEnabled ? (
                 <>
                   <Field>
-                    NFTs per user
+                    Maximum NFTs per wallet
                     <Input
                       type="number"
                       min="1"
@@ -660,7 +716,7 @@ export default function PoolBuilder() {
                     />
                   </Field>
                   <Field>
-                    Limit window in blocks
+                    Limit duration (advanced blocks)
                     <Input
                       type="number"
                       min="1"
@@ -672,12 +728,34 @@ export default function PoolBuilder() {
                         })
                       }
                     />
+                    <Muted style={{ display: 'block', fontSize: 11 }}>
+                      ≈{' '}
+                      {draft.constraints.numberBlocksForUserLimit &&
+                      Number(draft.constraints.numberBlocksForUserLimit) > 0
+                        ? `${Math.round(
+                            (Number(draft.constraints.numberBlocksForUserLimit) * (data?.secondsPerBlock || 2.2)) /
+                              86400,
+                          )} days at the current estimate`
+                        : 'Human duration appears after a block value is entered.'}
+                    </Muted>
                   </Field>
                 </>
               ) : null}
+              <Field>
+                Post-deploy performance fee (future)
+                <Input
+                  inputMode="decimal"
+                  value={draft.constraints.performanceFee}
+                  onChange={(event) =>
+                    updateDraft({ constraints: { ...draft.constraints, performanceFee: event.target.value } })
+                  }
+                  placeholder="Optional; not a factory input"
+                />
+              </Field>
             </FormGrid>
             <Muted style={{ display: 'block', marginTop: 12 }}>
-              Performance fee is a future post-deploy policy; it is not an input to the NFT factory.
+              Performance fee is a future post-deploy policy; it is not an input to the NFT factory. A clone never
+              copies the live fee automatically.
             </Muted>
           </Panel>
           <Notice style={{ marginTop: 16 }}>
@@ -769,6 +847,14 @@ export default function PoolBuilder() {
                 <Muted>Current remaining capacity</Muted>
                 <div>{sourcePool.sourceEconomics.currentRemainingCapacity?.toString() || 'Unavailable'}</div>
               </div>
+              <div>
+                <Muted>Previous performance fee</Muted>
+                <div>{sourcePool.sourceEconomics.originalPerformanceFee?.toString() || '0'}</div>
+              </div>
+              <div>
+                <Muted>Original user-limit source</Muted>
+                <div>{sourcePool.sourceEconomics.userLimitSource || 'Unavailable'}</div>
+              </div>
             </FormGrid>
           </Panel>
         ) : null}
@@ -801,6 +887,16 @@ export default function PoolBuilder() {
               </ul>
             </Notice>
           ) : null}
+          {validation.information.length ? (
+            <Notice style={{ marginTop: 12 }}>
+              <strong>Planning notes</strong>
+              <ul>
+                {validation.information.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </Notice>
+          ) : null}
           <FormGrid style={{ marginTop: 16 }}>
             <div>
               <Muted>Pool</Muted>
@@ -822,15 +918,19 @@ export default function PoolBuilder() {
           {economics ? (
             <Panel style={{ marginTop: 16, padding: 14 }}>
               <PanelTitle>Funding preview</PanelTitle>
+              <Muted>
+                Budget {draft.economics.totalBudget || '—'} {draft.economics.budgetDenomination || 'USDT'} · budget
+                rounding remainder {formatBaseUnits(economics.budgetRoundingRemainder, draft.economics.budgetDecimals)}
+              </Muted>
               <ButtonRow style={{ marginTop: 0 }}>
                 <ActionButton $secondary onClick={readWalletBalances} disabled={walletBalanceBusy || !account}>
                   {walletBalanceBusy ? 'Reading wallet…' : 'Read wallet balances'}
                 </ActionButton>
                 <Muted>Optional, read-only</Muted>
               </ButtonRow>
-              {economics.allocations.map((item) => (
+              <div style={{ marginTop: 12 }}>
+                <Muted>Primary maximum scheduled funding</Muted>
                 <div
-                  key={item.tokenAddress}
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -841,40 +941,66 @@ export default function PoolBuilder() {
                   }}
                 >
                   <span>
-                    {rewards.find((reward) => reward.address.toLowerCase() === item.tokenAddress.toLowerCase())
-                      ?.symbol || short(item.tokenAddress)}
+                    {draft.rewards.primary?.symbol || short(economics.primary.tokenAddress)}
                     <Muted style={{ display: 'block', fontSize: 11 }}>
-                      {item.source} · residual {formatBaseUnits(item.residual, item.decimals)}
-                      {walletBalances[item.tokenAddress.toLowerCase()]
-                        ? ` · wallet ${walletBalances[item.tokenAddress.toLowerCase()]}`
+                      Desired {formatBaseUnits(economics.primary.desiredAmount, economics.primary.decimals)} ·{' '}
+                      {economics.primary.source} · residual{' '}
+                      {formatBaseUnits(economics.primary.residual, economics.primary.decimals)}
+                      {walletBalances[economics.primary.tokenAddress.toLowerCase()]
+                        ? ` · wallet ${walletBalances[economics.primary.tokenAddress.toLowerCase()]}`
                         : ''}
                     </Muted>
                   </span>
-                  <strong>{formatBaseUnits(item.achievable, item.decimals)}</strong>
+                  <strong>
+                    {formatBaseUnits(economics.primary.maximumScheduledFunding, economics.primary.decimals)}
+                  </strong>
                 </div>
-              ))}
+              </div>
               {economics.side.map((item) => (
                 <div key={`side-${item.tokenAddress}`} style={{ marginTop: 9, fontSize: 12 }}>
-                  <Muted>
+                  <strong>
                     {rewards.find((reward) => reward.address.toLowerCase() === item.tokenAddress.toLowerCase())
                       ?.symbol || short(item.tokenAddress)}{' '}
-                    side percentage:
-                  </Muted>{' '}
-                  {item.encodedPercentage.toString()} · deviation{' '}
-                  {formatBaseUnits(
-                    item.deviation,
-                    draft.rewards.side.find((reward) => reward.address === item.tokenAddress)?.decimals,
-                  )}
+                    maximum implied side funding:{' '}
+                    {formatBaseUnits(
+                      item.maximumImpliedSideFunding,
+                      draft.rewards.side.find(
+                        (reward) => reward.address.toLowerCase() === item.tokenAddress.toLowerCase(),
+                      )?.decimals,
+                    )}
+                  </strong>
+                  <br />
+                  <Muted>
+                    Desired{' '}
+                    {formatBaseUnits(
+                      item.desiredSideAmount,
+                      draft.rewards.side.find(
+                        (reward) => reward.address.toLowerCase() === item.tokenAddress.toLowerCase(),
+                      )?.decimals,
+                    )}{' '}
+                    · encoded ratio {item.encodedPercentage.toString()}% · deviation{' '}
+                    {formatBaseUnits(
+                      item.deviationFromDesired,
+                      draft.rewards.side.find(
+                        (reward) => reward.address.toLowerCase() === item.tokenAddress.toLowerCase(),
+                      )?.decimals,
+                    )}{' '}
+                    ({item.deviationBps.toString()} bps) · {item.representability}
+                  </Muted>
                 </div>
               ))}
+              <Muted style={{ display: 'block', marginTop: 12 }}>
+                Actual side payouts may be lower because the contract calculates side rewards when primary rewards are
+                claimed.
+              </Muted>
             </Panel>
           ) : null}
           <Panel style={{ marginTop: 16, padding: 14 }}>
-            <PanelTitle>Post-deploy checklist</PanelTitle>
+            <PanelTitle>Phase 3 checklist</PanelTitle>
             <ul>
-              <li>Apply collection weights and verify the primary collection.</li>
-              <li>Approve and fund exact primary and side reward amounts.</li>
-              <li>Re-read the new pool, schedule, owner, balances and provenance.</li>
+              <li>Refresh the Polygon block, authority, balances, gas and quotes immediately before signing.</li>
+              <li>Configure collection powers before the pool is considered launch-complete.</li>
+              <li>Simulate, approve and fund only the final verified plan.</li>
             </ul>
           </Panel>
           <details style={{ marginTop: 16 }}>
@@ -888,7 +1014,7 @@ export default function PoolBuilder() {
             swap, funding, or write is produced.
           </Muted>
           <ButtonRow>
-            <ActionButton onClick={save}>Save deployment-ready draft</ActionButton>
+            <ActionButton onClick={save}>Save dry-run draft</ActionButton>
             <ActionButton disabled>Continue to deploy</ActionButton>
           </ButtonRow>
         </Panel>

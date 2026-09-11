@@ -9,6 +9,11 @@ export type NftCloneSupport = 'FULL' | 'PARTIAL' | 'UNAVAILABLE'
 export type NftDecodeStatus = 'decoded' | 'unavailable' | 'malformed' | 'not-applicable'
 export type NftPoolReadiness = 'INCOMPLETE' | 'NEEDS_REVIEW' | 'READY_FOR_DRY_RUN' | 'READY_FOR_DEPLOYMENT'
 export type NftPoolDurationPreset = '1 month' | '3 months' | '6 months' | '1 year' | 'custom'
+export type NftQuoteState = 'FRESH' | 'STALE' | 'EXPIRED' | 'INVALID'
+export type NftQuoteSource = 'router' | 'identity'
+export type NftRewardAmountSource = 'quote' | 'identity' | 'manual' | 'missing'
+export type NftSideRewardRepresentability = 'EXACT' | 'WITHIN_TOLERANCE' | 'OUTSIDE_TOLERANCE'
+export type NftUserLimitSource = 'deployment-provenance' | 'on-chain-configuration' | 'unavailable'
 
 export interface NftTokenMetadata {
   address: string
@@ -94,6 +99,10 @@ export interface NftPoolSourceEconomics {
   originalPoolLimitPerUser?: BigNumber
   originalNumberBlocksForUserLimit?: number
   originalAdmin?: string
+  originalConfiguredUserLimit?: boolean
+  userLimitSource?: NftUserLimitSource
+  originalPerformanceFee?: BigNumber
+  originalFeeTo?: string
 }
 
 export interface NftPoolOnChainTruth {
@@ -117,6 +126,9 @@ export interface NftPoolOnChainTruth {
   poolLimitPerUser?: BigNumber
   numberBlocksForUserLimit?: number
   userLimit?: boolean
+  hasUserLimitRuntime?: boolean
+  performanceFee?: BigNumber
+  feeTo?: string
   rewardBalance?: BigNumber
   currentBlock?: number
   status?: NftPoolStatus
@@ -190,9 +202,16 @@ export interface NftPoolDraftQuote {
   rewardTokenAddress: string
   inputAmount: string
   outputAmount: string
-  source: string
+  source: NftQuoteSource
+  sourceLabel: string
+  path: string[]
+  allocationBps: string
+  totalBudget: string
   quotedAt: number
   freshnessSeconds: number
+  expirySeconds: number
+  quoteState?: NftQuoteState
+  error?: string
 }
 
 export interface NftPoolDraftEconomics {
@@ -204,6 +223,7 @@ export interface NftPoolDraftEconomics {
   allocationBps: Record<string, string>
   manualAmounts: Record<string, string>
   quotes: Record<string, NftPoolDraftQuote>
+  quoteErrors: Record<string, string>
   durationPreset: NftPoolDurationPreset
   customDurationDays?: string
   estimatedBlocks?: number
@@ -220,19 +240,87 @@ export interface NftPoolDraftConstraints {
 }
 
 export interface NftPoolDeploymentPlan {
+  draftId: string
+  sourcePoolId?: string
   chainId: number
-  factoryAddress?: string
-  stakedTokenAddress: string
-  rewardTokenAddress: string
-  sideRewardTokens: string[]
-  sideRewardPercentages: string[]
-  collectionAddresses: string[]
-  collectionWeights: string[]
-  budgetTokenAddress?: string
-  budgetAmount?: string
-  rewardAllocations: Array<{ tokenAddress: string; amount: string; allocationBps: string }>
-  rewardPerBlock?: string
-  numberBlocks?: number
+  factoryAddress: string
+  scheduleIntent: {
+    durationDays: number
+    estimatedDurationBlocks: number
+    measuredSecondsPerBlock: number
+    desiredStartMode: 'immediately-before-deployment'
+  }
+  factoryParameters: {
+    stakedTokenAddress: string
+    rewardTokenAddress: string
+    sideRewardTokens: string[]
+    sideRewardPercentages: string[]
+    rewardPerBlock: string
+    poolLimitPerUser: string
+    numberBlocksForUserLimit: string
+    poolCapacity: string
+    participantThreshold: string
+    intendedAdmin: string
+  }
+  collectionConfiguration: {
+    primaryCollection: string
+    communityCollections: string[]
+    collectionWeights: string[]
+    setCollectionWeightsArguments: {
+      communityNftAddresses: string[]
+      weights: string[]
+      stakedTokenWeight: string
+    }
+    collectionWeightConfigurationRequired: boolean
+  }
+  fundingRequirements: {
+    primary: {
+      tokenAddress: string
+      desiredAmount: string
+      maximumScheduledFunding: string
+      residual: string
+      source: NftRewardAmountSource
+    }
+    side: Array<{
+      tokenAddress: string
+      desiredAmount: string
+      encodedPercentage: string
+      maximumImpliedSideFunding: string
+      deviationFromDesired: string
+      deviationBps: string
+      representability: NftSideRewardRepresentability
+      source: NftRewardAmountSource
+    }>
+    budget: {
+      tokenAddress: string
+      amount: string
+      allocations: Array<{ tokenAddress: string; allocationBps: string; allocatedBudget: string }>
+      roundingRemainder: string
+    }
+  }
+  quotes: {
+    budgetTokenAddress: string
+    totalBudget: string
+    rewards: Array<{
+      tokenAddress: string
+      inputAmount: string
+      outputAmount: string
+      source: NftRewardAmountSource
+      state?: NftQuoteState
+      quotedAt?: number
+      freshnessSeconds?: number
+    }>
+  }
+  postDeploy: {
+    performanceFee?: string
+    feeTo?: string
+  }
+  readiness: {
+    status: NftPoolReadiness
+    blockers: string[]
+    warnings: string[]
+    information: string[]
+  }
   /** Populated only by the future Phase 3 transaction-preparation step. */
   startBlock?: never
   endBlock?: never
@@ -250,6 +338,7 @@ export interface NftPoolDraft {
   avatar?: string
   projectUrl?: string
   getNftUrl?: string
+  intendedAdmin?: string
   collections: NftPoolDraftCollection[]
   rewards: {
     primary: NftPoolDraftReward | null

@@ -1,43 +1,68 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { formatUnits } from '@ethersproject/units'
-import { NftPoolDraft, NftPoolDraftReward, NftPoolDurationPreset } from './types'
+import { NftPoolDraft, NftPoolDraftQuote, NftPoolDraftReward, NftQuoteState, NftRewardAmountSource } from './types'
+import { getNftQuoteState, quoteMatchesInputs } from './quotes'
 
 export const BPS_BASE = BigNumber.from(10_000)
 export const PERCENT_BASE = BigNumber.from(100)
 
-export interface SideRewardCalculation {
+export interface BudgetAllocationCalculation {
   tokenAddress: string
-  requested: BigNumber
-  achievable: BigNumber
-  encodedPercentage: BigNumber
-  residual: BigNumber
-  deviation: BigNumber
-  tolerance: BigNumber
-  blocking: boolean
+  allocationBps: BigNumber
+  allocatedBudget: BigNumber
 }
 
-export interface RewardEmissionCalculation {
+export interface RewardAllocationCalculation {
   tokenAddress: string
-  requested: BigNumber
-  achievable: BigNumber
-  rewardPerBlock?: BigNumber
-  residual: BigNumber
+  allocationBps: BigNumber
+  allocatedBudget: BigNumber
+  desiredAmount: BigNumber
   decimals?: number
-  source: 'manual' | 'quote' | 'missing'
+  source: NftRewardAmountSource
+  quoteState?: NftQuoteState
+  quote?: NftPoolDraftQuote
+  valuationVerified: boolean
+}
+
+export interface PrimaryEmissionCalculation extends RewardAllocationCalculation {
+  rewardPerBlock?: BigNumber
+  maximumScheduledFunding: BigNumber
+  residual: BigNumber
+}
+
+export interface SideRewardCalculation {
+  tokenAddress: string
+  desiredSideAmount: BigNumber
+  encodedPercentage: BigNumber
+  maximumImpliedSideFunding: BigNumber
+  deviationFromDesired: BigNumber
+  deviationBps: BigNumber
+  toleranceBps: number
+  representability: 'EXACT' | 'WITHIN_TOLERANCE' | 'OUTSIDE_TOLERANCE'
+  blocking: boolean
+  source: NftRewardAmountSource
+  quoteState?: NftQuoteState
 }
 
 export interface PoolEconomicsCalculation {
+  durationDays?: number
+  estimatedDurationBlocks: number
+  measuredSecondsPerBlock: number
   blocks: number
   totalBudgetBaseUnits?: BigNumber
-  primary: RewardEmissionCalculation
+  budgetAllocations: BudgetAllocationCalculation[]
+  budgetRoundingRemainder: BigNumber
+  primary: PrimaryEmissionCalculation
   side: SideRewardCalculation[]
-  allocations: RewardEmissionCalculation[]
+  /** Reward amounts are desired targets; side rewards are not independent emissions. */
+  allocations: RewardAllocationCalculation[]
   warnings: string[]
+  information: string[]
   blockingIssues: string[]
 }
 
 export function parseUnitsExact(value: string | undefined, decimals: number | undefined): BigNumber | undefined {
-  if (!value || decimals === undefined || decimals < 0 || decimals > 77) return undefined
+  if (value === undefined || decimals === undefined || decimals < 0 || decimals > 77) return undefined
   const normalized = value.trim()
   if (!/^\d+(?:\.\d+)?$/.test(normalized)) return undefined
   const [whole, fraction = ''] = normalized.split('.')
@@ -52,19 +77,26 @@ export function parseUnitsExact(value: string | undefined, decimals: number | un
   }
 }
 
-export function formatBaseUnits(value: BigNumber | undefined, decimals: number | undefined, precision = 6): string {
+export function formatBaseUnitsExact(value: BigNumber | undefined, decimals: number | undefined): string {
   if (!value || decimals === undefined) return 'Unavailable'
   try {
-    const formatted = formatUnits(value, decimals)
-    if (!formatted.includes('.')) return formatted
-    const [whole, fraction] = formatted.split('.')
-    return `${whole}.${fraction.slice(0, precision).replace(/0+$/, '') || '0'}`
+    return formatUnits(value, decimals)
   } catch {
     return 'Unavailable'
   }
 }
 
-export function durationPresetDays(preset: NftPoolDurationPreset, customDays?: string): number | undefined {
+export function formatBaseUnits(value: BigNumber | undefined, decimals: number | undefined, precision = 6): string {
+  const formatted = formatBaseUnitsExact(value, decimals)
+  if (formatted === 'Unavailable' || !formatted.includes('.')) return formatted
+  const [whole, fraction] = formatted.split('.')
+  return `${whole}.${fraction.slice(0, precision).replace(/0+$/, '') || '0'}`
+}
+
+export function durationPresetDays(
+  preset: NftPoolDraft['economics']['durationPreset'],
+  customDays?: string,
+): number | undefined {
   if (preset === '1 month') return 30
   if (preset === '3 months') return 90
   if (preset === '6 months') return 180
@@ -74,7 +106,7 @@ export function durationPresetDays(preset: NftPoolDurationPreset, customDays?: s
 }
 
 export function estimateBlocksForDuration(
-  preset: NftPoolDurationPreset,
+  preset: NftPoolDraft['economics']['durationPreset'],
   customDays: string | undefined,
   secondsPerBlock: number,
 ): number | undefined {
@@ -83,7 +115,7 @@ export function estimateBlocksForDuration(
   return Math.max(1, Math.floor((days * 86400) / secondsPerBlock))
 }
 
-/** Mirrors SmartChefInitializable.distributeSideRewards exactly. */
+/** Mirrors SmartChefInitializable.distributeSideRewards exactly for one payout. */
 export function applySoliditySideReward(
   pendingPrimaryBaseUnits: BigNumber,
   percentage: BigNumber,
@@ -97,141 +129,273 @@ export function applySoliditySideReward(
   return result
 }
 
-function abs(value: BigNumber): BigNumber {
+function absolute(value: BigNumber): BigNumber {
   return value.isNegative() ? value.mul(-1) : value
 }
 
-function max(left: BigNumber, right: BigNumber): BigNumber {
-  return left.gte(right) ? left : right
-}
-
+/** Encodes the largest integer percentage that does not exceed the desired ratio. */
 export function encodeSideRewardPercentage(
-  primaryPerBlock: BigNumber,
-  requestedSidePerBlock: BigNumber,
+  primaryAmount: BigNumber,
+  desiredSideAmount: BigNumber,
   primaryDecimals: number,
   sideDecimals: number,
 ): BigNumber {
-  if (primaryPerBlock.isZero() || requestedSidePerBlock.isZero()) return BigNumber.from(0)
+  if (primaryAmount.isZero() || desiredSideAmount.isZero()) return BigNumber.from(0)
   const scale = BigNumber.from(10).pow(Math.abs(sideDecimals - primaryDecimals))
   const numerator =
     sideDecimals >= primaryDecimals
-      ? requestedSidePerBlock.mul(PERCENT_BASE)
-      : requestedSidePerBlock.mul(PERCENT_BASE).mul(scale)
-  const denominator = sideDecimals >= primaryDecimals ? primaryPerBlock.mul(scale) : primaryPerBlock
+      ? desiredSideAmount.mul(PERCENT_BASE)
+      : desiredSideAmount.mul(PERCENT_BASE).mul(scale)
+  const denominator = sideDecimals >= primaryDecimals ? primaryAmount.mul(scale) : primaryAmount
   return numerator.div(denominator)
 }
 
 export function calculateSideReward(
   tokenAddress: string,
-  requestedTotal: BigNumber,
-  primaryPerBlock: BigNumber,
-  blocks: number,
+  desiredSideAmount: BigNumber,
+  maxPrimaryEmission: BigNumber,
   primaryDecimals: number,
   sideDecimals: number,
+  source: NftRewardAmountSource = 'missing',
+  quoteState?: NftQuoteState,
   toleranceBps = 10,
 ): SideRewardCalculation {
-  const requestedPerBlock = blocks > 0 ? requestedTotal.div(blocks) : BigNumber.from(0)
   const encodedPercentage = encodeSideRewardPercentage(
-    primaryPerBlock,
-    requestedPerBlock,
+    maxPrimaryEmission,
+    desiredSideAmount,
     primaryDecimals,
     sideDecimals,
   )
-  const achievablePerBlock = applySoliditySideReward(primaryPerBlock, encodedPercentage, primaryDecimals, sideDecimals)
-  const achievable = achievablePerBlock.mul(blocks)
-  const residual = requestedTotal.gte(achievable) ? requestedTotal.sub(achievable) : BigNumber.from(0)
-  const deviation = abs(requestedTotal.sub(achievable))
-  const tolerance = max(BigNumber.from(1), requestedTotal.mul(toleranceBps).div(10_000))
+  const maximumImpliedSideFunding = applySoliditySideReward(
+    maxPrimaryEmission,
+    encodedPercentage,
+    primaryDecimals,
+    sideDecimals,
+  )
+  const deviationFromDesired = absolute(desiredSideAmount.sub(maximumImpliedSideFunding))
+  const withinTolerance = desiredSideAmount.isZero()
+    ? deviationFromDesired.isZero()
+    : deviationFromDesired.mul(BPS_BASE).lte(desiredSideAmount.mul(toleranceBps))
+  const representability = deviationFromDesired.isZero()
+    ? 'EXACT'
+    : withinTolerance
+    ? 'WITHIN_TOLERANCE'
+    : 'OUTSIDE_TOLERANCE'
+  const deviationBps = desiredSideAmount.isZero()
+    ? BigNumber.from(0)
+    : deviationFromDesired.mul(BPS_BASE).div(desiredSideAmount)
   return {
     tokenAddress,
-    requested: requestedTotal,
-    achievable,
+    desiredSideAmount,
     encodedPercentage,
-    residual,
-    deviation,
-    tolerance,
-    blocking: deviation.gt(tolerance),
+    maximumImpliedSideFunding,
+    deviationFromDesired,
+    deviationBps,
+    toleranceBps,
+    representability,
+    blocking: representability === 'OUTSIDE_TOLERANCE',
+    source,
+    quoteState,
+  }
+}
+
+function parseBps(value: string | undefined): BigNumber | undefined {
+  if (value === undefined || !/^\d+$/.test(value)) return undefined
+  try {
+    const parsed = BigNumber.from(value)
+    return parsed.lte(BPS_BASE) ? parsed : undefined
+  } catch {
+    return undefined
   }
 }
 
 function amountForReward(
   reward: NftPoolDraftReward,
   draft: NftPoolDraft,
-  totalBudgetBaseUnits: BigNumber | undefined,
+  allocatedBudget: BigNumber,
   budgetDecimals: number | undefined,
-): { amount?: BigNumber; source: 'manual' | 'quote' | 'missing' } {
+  allocationBps: BigNumber,
+  now = Date.now(),
+): {
+  amount: BigNumber
+  source: NftRewardAmountSource
+  quoteState?: NftQuoteState
+  quote?: NftPoolDraftQuote
+  valuationVerified: boolean
+} {
   const key = reward.address.toLowerCase()
-  const manual = parseUnitsExact(draft.economics.manualAmounts[key], reward.decimals)
-  if (manual !== undefined) return { amount: manual, source: 'manual' }
-  const quote = draft.economics.quotes[key]
-  if (!quote || !totalBudgetBaseUnits || !budgetDecimals) return { source: 'missing' }
-  const quoteInput = parseUnitsExact(quote.inputAmount, budgetDecimals)
-  const quoteOutput = parseUnitsExact(quote.outputAmount, reward.decimals)
-  const bps = BigNumber.from(draft.economics.allocationBps[key] || 0)
-  if (!quoteInput || !quoteOutput || quoteInput.isZero()) return { source: 'missing' }
-  return { amount: totalBudgetBaseUnits.mul(bps).div(BPS_BASE).mul(quoteOutput).div(quoteInput), source: 'quote' }
+  const manualInput = draft.economics.manualAmounts?.[key]
+  if (manualInput?.trim()) {
+    const manual = parseUnitsExact(manualInput, reward.decimals)
+    if (manual !== undefined) return { amount: manual, source: 'manual', valuationVerified: false }
+    return { amount: BigNumber.from(0), source: 'missing', valuationVerified: false }
+  }
+  const quote = draft.economics.quotes?.[key]
+  const state = quote ? getNftQuoteState(quote, now) : undefined
+  if (
+    !quote ||
+    budgetDecimals === undefined ||
+    reward.decimals === undefined ||
+    !quoteMatchesInputs(quote, {
+      budgetTokenAddress: draft.economics.budgetTokenAddress || '',
+      rewardTokenAddress: reward.address,
+      totalBudget: draft.economics.totalBudget || '',
+      allocationBps: allocationBps.toString(),
+      allocatedBudget,
+      budgetDecimals,
+    })
+  ) {
+    return {
+      amount: BigNumber.from(0),
+      source: 'missing',
+      quoteState: quote ? 'INVALID' : undefined,
+      quote,
+      valuationVerified: false,
+    }
+  }
+  const output = parseUnitsExact(quote.outputAmount, reward.decimals)
+  if (!output || output.isZero())
+    return { amount: BigNumber.from(0), source: 'missing', quoteState: state, quote, valuationVerified: false }
+  const source: NftRewardAmountSource = quote.source === 'identity' ? 'identity' : 'quote'
+  return { amount: output, source, quoteState: state, quote, valuationVerified: state === 'FRESH' }
 }
 
 export function calculatePoolEconomics(
   draft: NftPoolDraft,
   secondsPerBlock: number,
   budgetDecimals = draft.economics.budgetDecimals,
+  now = Date.now(),
 ): PoolEconomicsCalculation {
-  const blocks =
-    draft.economics.estimatedBlocks ||
-    estimateBlocksForDuration(draft.economics.durationPreset, draft.economics.customDurationDays, secondsPerBlock) ||
-    0
+  const durationDays = durationPresetDays(draft.economics.durationPreset, draft.economics.customDurationDays)
+  const estimatedDurationBlocks =
+    estimateBlocksForDuration(draft.economics.durationPreset, draft.economics.customDurationDays, secondsPerBlock) || 0
+  const blocks = estimatedDurationBlocks
   const totalBudgetBaseUnits = parseUnitsExact(draft.economics.totalBudget, budgetDecimals)
-  const rewards = [draft.rewards.primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
   const warnings: string[] = []
+  const information: string[] = []
   const blockingIssues: string[] = []
-  if (!blocks) blockingIssues.push('Duration must resolve to a positive number of blocks.')
-  if (!totalBudgetBaseUnits) warnings.push('Budget is not available in base units yet.')
+  const rewards = [draft.rewards.primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
 
-  const allocations = rewards.map((reward) => {
-    const resolved = amountForReward(reward, draft, totalBudgetBaseUnits, budgetDecimals)
-    const requested = resolved.amount || BigNumber.from(0)
-    const rewardPerBlock = blocks > 0 ? requested.div(blocks) : undefined
-    const residual = rewardPerBlock && blocks > 0 ? requested.sub(rewardPerBlock.mul(blocks)) : requested
-    if (resolved.source === 'missing') blockingIssues.push(`Add a quote or exact manual amount for ${reward.symbol}.`)
+  if (!blocks) blockingIssues.push('Duration must resolve to a positive number of blocks.')
+  if (!totalBudgetBaseUnits) blockingIssues.push('Budget is not available in exact base units yet.')
+  if (draft.constraints.participantThreshold && draft.constraints.participantThreshold !== '0')
+    information.push(
+      'Participant threshold can reduce actual distributed primary rewards; funding uses the maximum scheduled emission.',
+    )
+
+  const budgetAllocations = rewards.map((reward) => {
+    const allocationBps = parseBps(draft.economics.allocationBps?.[reward.address.toLowerCase()]) || BigNumber.from(0)
     return {
       tokenAddress: reward.address,
-      requested,
-      achievable: rewardPerBlock && blocks > 0 ? rewardPerBlock.mul(blocks) : BigNumber.from(0),
-      rewardPerBlock,
-      residual,
-      decimals: reward.decimals,
-      source: resolved.source,
+      allocationBps,
+      allocatedBudget: totalBudgetBaseUnits ? totalBudgetBaseUnits.mul(allocationBps).div(BPS_BASE) : BigNumber.from(0),
     }
   })
+  const allocatedBudgetTotal = budgetAllocations.reduce((sum, item) => sum.add(item.allocatedBudget), BigNumber.from(0))
+  const budgetRoundingRemainder = totalBudgetBaseUnits
+    ? totalBudgetBaseUnits.sub(allocatedBudgetTotal)
+    : BigNumber.from(0)
+  if (!budgetRoundingRemainder.isZero())
+    information.push('Budget rounding remainder is left unallocated in the smallest budget-token units.')
+
+  const allocations = rewards.map((reward, index) => {
+    const budgetAllocation = budgetAllocations[index]
+    const resolved = amountForReward(
+      reward,
+      draft,
+      budgetAllocation.allocatedBudget,
+      budgetDecimals,
+      budgetAllocation.allocationBps,
+      now,
+    )
+    if (resolved.source === 'missing') {
+      const error = draft.economics.quoteErrors?.[reward.address.toLowerCase()]
+      blockingIssues.push(error || `Add a fresh quote or exact manual amount for ${reward.symbol}.`)
+    }
+    if (resolved.quoteState === 'INVALID')
+      blockingIssues.push(`Refresh the ${reward.symbol} quote after changing its inputs.`)
+    if (resolved.quoteState === 'STALE')
+      warnings.push(`${reward.symbol} quote is stale; refresh it before deployment preparation.`)
+    if (resolved.quoteState === 'EXPIRED')
+      warnings.push(`${reward.symbol} quote is expired; refresh it before deployment preparation.`)
+    if (resolved.source === 'manual')
+      warnings.push(`${reward.symbol} amount was entered manually and is not validated against the budget.`)
+    return {
+      tokenAddress: reward.address,
+      allocationBps: budgetAllocation.allocationBps,
+      allocatedBudget: budgetAllocation.allocatedBudget,
+      desiredAmount: resolved.amount,
+      decimals: reward.decimals,
+      source: resolved.source,
+      quoteState: resolved.quoteState,
+      quote: resolved.quote,
+      valuationVerified: resolved.valuationVerified,
+    }
+  })
+
   const primaryAllocation = allocations[0] || {
     tokenAddress: '',
-    requested: BigNumber.from(0),
-    achievable: BigNumber.from(0),
-    residual: BigNumber.from(0),
+    allocationBps: BigNumber.from(0),
+    allocatedBudget: BigNumber.from(0),
+    desiredAmount: BigNumber.from(0),
     decimals: undefined,
     source: 'missing' as const,
+    valuationVerified: false,
   }
-  const primary = {
+  const rewardPerBlock = blocks > 0 ? primaryAllocation.desiredAmount.div(blocks) : undefined
+  const maximumScheduledFunding = rewardPerBlock ? rewardPerBlock.mul(blocks) : BigNumber.from(0)
+  const primaryResidual = primaryAllocation.desiredAmount.sub(maximumScheduledFunding)
+  if (!rewardPerBlock || rewardPerBlock.isZero())
+    blockingIssues.push('The selected reward amount is too small for this duration.')
+
+  const primary: PrimaryEmissionCalculation = {
     ...primaryAllocation,
-    rewardPerBlock: primaryAllocation.rewardPerBlock,
+    rewardPerBlock,
+    maximumScheduledFunding,
+    residual: primaryResidual,
   }
-  if (primaryAllocation.rewardPerBlock === undefined) blockingIssues.push('Choose a primary reward token and amount.')
+  if (primaryResidual.gt(0))
+    information.push('Primary reward residual remains because rewardPerBlock uses integer division.')
+
   const side = draft.rewards.side.map((reward) => {
     const allocation = allocations.find((item) => item.tokenAddress.toLowerCase() === reward.address.toLowerCase())
-    const requested = allocation?.requested || BigNumber.from(0)
     const result = calculateSideReward(
       reward.address,
-      requested,
-      primary.rewardPerBlock || BigNumber.from(0),
-      blocks,
+      allocation?.desiredAmount || BigNumber.from(0),
+      maximumScheduledFunding,
       primary.decimals || 0,
       reward.decimals || 0,
+      allocation?.source || 'missing',
+      allocation?.quoteState,
     )
-    if (result.blocking) blockingIssues.push(`${reward.symbol} side reward cannot be encoded within tolerance.`)
+    if (result.blocking)
+      blockingIssues.push(`${reward.symbol} side reward cannot be represented within the 10 bps tolerance.`)
+    if (!result.deviationFromDesired.isZero() && !result.blocking)
+      warnings.push(`${reward.symbol} side reward has a representability deviation within the accepted tolerance.`)
     return result
   })
-  if (side.some((item) => item.residual.gt(0)))
-    warnings.push('Integer Solidity percentages leave a residual that must be reviewed.')
-  return { blocks, totalBudgetBaseUnits, primary, side, allocations, warnings, blockingIssues }
+  if (side.length)
+    information.push(
+      'Side rewards are calculated from paid primary pending rewards, not from an independent side-reward emission schedule.',
+    )
+  if (side.length)
+    information.push(
+      'Maximum implied side funding applies the encoded ratio once to the maximum primary schedule; fragmented payouts can be lower because Solidity truncates each payout.',
+    )
+
+  return {
+    durationDays,
+    estimatedDurationBlocks,
+    measuredSecondsPerBlock: secondsPerBlock,
+    blocks,
+    totalBudgetBaseUnits,
+    budgetAllocations,
+    budgetRoundingRemainder,
+    primary,
+    side,
+    allocations,
+    warnings: Array.from(new Set(warnings)),
+    information: Array.from(new Set(information)),
+    blockingIssues: Array.from(new Set(blockingIssues)),
+  }
 }

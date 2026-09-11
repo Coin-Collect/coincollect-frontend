@@ -234,6 +234,19 @@ function sourceEconomicsFor(
         ? decoded.numberBlocksForUserLimit
         : onChain.numberBlocksForUserLimit,
     originalAdmin: decoded?.admin || onChain.owner,
+    originalConfiguredUserLimit:
+      decoded !== undefined
+        ? decoded.poolLimitPerUser.gt(0)
+        : onChain.poolLimitPerUser !== undefined
+        ? onChain.poolLimitPerUser.gt(0)
+        : undefined,
+    userLimitSource: decoded
+      ? 'deployment-provenance'
+      : onChain.poolLimitPerUser !== undefined
+      ? 'on-chain-configuration'
+      : 'unavailable',
+    originalPerformanceFee: onChain.performanceFee,
+    originalFeeTo: onChain.feeTo,
   }
 }
 
@@ -337,7 +350,10 @@ async function readV2Pool(
       poolLimitPerUser,
       numberBlocksForUserLimit,
       userLimit,
+      hasUserLimitRuntime,
       sideRewardActive,
+      performanceFee,
+      feeTo,
     ] = await Promise.all([
       pool.owner(),
       pool.SMART_CHEF_FACTORY(),
@@ -352,7 +368,10 @@ async function readV2Pool(
       readOptional<BigNumber>(pool, 'poolLimitPerUser'),
       readOptional<BigNumber>(pool, 'numberBlocksForUserLimit'),
       readOptional<boolean>(pool, 'userLimit', [], false),
+      readOptional<boolean>(pool, 'hasUserLimit', [], false),
       readOptional<boolean>(pool, 'isSideRewardActive', [], false),
+      readOptional<BigNumber>(pool, 'performanceFee'),
+      readOptional<string>(pool, 'feeTo'),
     ])
     const normalizedStakingAddress = normalizeOrFallback(stakingAddress)
     const normalizedRewardAddress = normalizeOrFallback(rewardAddress)
@@ -494,6 +513,9 @@ async function readV2Pool(
       poolLimitPerUser: asBigNumber(poolLimitPerUser),
       numberBlocksForUserLimit: valueAsNumber(numberBlocksForUserLimit),
       userLimit: Boolean(userLimit),
+      hasUserLimitRuntime: Boolean(hasUserLimitRuntime),
+      performanceFee: asBigNumber(performanceFee),
+      feeTo: normalizeOrFallback(feeTo),
       rewardBalance: asBigNumber(rewardBalance) || ZERO,
       currentBlock,
     }

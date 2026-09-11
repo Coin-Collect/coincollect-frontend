@@ -70,6 +70,7 @@ describe('NFT pool status and clone safety', () => {
         participantThreshold: BigNumber.from(3),
         poolCapacity: BigNumber.from(50),
         currentRemainingPoolCapacity: BigNumber.from(50),
+        userLimit: false,
       },
       sourceEconomics: {
         originalRewardPerBlock: BigNumber.from(123),
@@ -81,6 +82,8 @@ describe('NFT pool status and clone safety', () => {
         originalInitialPoolCapacity: BigNumber.from(75),
         currentRemainingCapacity: BigNumber.from(50),
         originalAdmin: '0x2222222222222222222222222222222222222222',
+        originalConfiguredUserLimit: true,
+        userLimitSource: 'deployment-provenance',
       },
       deployment: { decodeStatus: 'unavailable' },
       collections: [
@@ -138,5 +141,39 @@ describe('NFT pool status and clone safety', () => {
     expect((draft.economics as any).primaryRewardAllocation).toBeUndefined()
     expect(draft.sourceEconomics?.originalRewardPerBlock?.toString()).toBe('123')
     expect(draft.constraints.poolCapacity).toBe('75')
+    expect(draft.constraints.userLimitEnabled).toBe(true)
+  })
+
+  it('preserves the original limit when the runtime window has expired', () => {
+    const pool = {
+      id: 'limited',
+      chainId: 137,
+      collections: [],
+      rewards: {
+        primary: {
+          token: { address: '0x4444444444444444444444444444444444444444', symbol: 'LOT', name: 'Lot', decimals: 18 },
+        },
+        side: [],
+      },
+      metadata: { name: 'Limited' },
+      onChain: {
+        poolLimitPerUser: BigNumber.from(2),
+        numberBlocksForUserLimit: 100,
+        userLimit: false,
+        currentRemainingPoolCapacity: BigNumber.from(10),
+        poolCapacity: BigNumber.from(10),
+      },
+      sourceEconomics: {
+        originalSideRewardPercentages: [],
+        originalPoolLimitPerUser: BigNumber.from(2),
+        originalNumberBlocksForUserLimit: 100,
+        originalConfiguredUserLimit: true,
+        userLimitSource: 'deployment-provenance',
+      },
+    } as unknown as NftPool
+    const draft = createNftPoolCloneDraft(pool)
+    expect(draft.constraints.userLimitEnabled).toBe(true)
+    expect(draft.constraints.poolLimitPerUser).toBe('2')
+    expect(draft.constraints.numberBlocksForUserLimit).toBe('100')
   })
 })
