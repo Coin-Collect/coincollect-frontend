@@ -49,7 +49,48 @@ describe('NFT launch transaction preparation', () => {
     const iface = new Interface(nftFactoryAbi)
     const encoded = iface.encodeEventLog(iface.getEvent('NewSmartChefContract'), [deployed])
     expect(
-      parseNftPoolAddress({ logs: [{ topics: encoded.topics, data: encoded.data }] } as any, factory).toLowerCase(),
+      parseNftPoolAddress(
+        {
+          to: factory,
+          logs: [{ address: factory, topics: encoded.topics, data: encoded.data }],
+        } as any,
+        factory,
+      ).toLowerCase(),
+    ).toBe(deployed)
+  })
+
+  it('rejects a matching event emitted by another contract', () => {
+    const factory = '0x8fC2e77C47D5D9fDe1ff35098d6e22EB6F9e8258'
+    const deployed = '0x00000000000000000000000000000000000000aa'
+    const iface = new Interface(nftFactoryAbi)
+    const encoded = iface.encodeEventLog(iface.getEvent('NewSmartChefContract'), [deployed])
+    expect(() =>
+      parseNftPoolAddress(
+        {
+          to: factory,
+          logs: [{ address: '0x00000000000000000000000000000000000000cc', topics: encoded.topics, data: encoded.data }],
+        } as any,
+        factory,
+      ),
+    ).toThrow('did not contain NewSmartChefContract')
+  })
+
+  it('ignores unrelated logs while accepting the single expected factory event', () => {
+    const factory = '0x8fC2e77C47D5D9fDe1ff35098d6e22EB6F9e8258'
+    const deployed = '0x00000000000000000000000000000000000000aa'
+    const iface = new Interface(nftFactoryAbi)
+    const encoded = iface.encodeEventLog(iface.getEvent('NewSmartChefContract'), [deployed])
+    expect(
+      parseNftPoolAddress(
+        {
+          to: factory,
+          logs: [
+            { address: '0x00000000000000000000000000000000000000cc', topics: ['0x1234'], data: '0x' },
+            { address: factory, topics: encoded.topics, data: encoded.data },
+          ],
+        } as any,
+        factory,
+      ).toLowerCase(),
     ).toBe(deployed)
   })
 })

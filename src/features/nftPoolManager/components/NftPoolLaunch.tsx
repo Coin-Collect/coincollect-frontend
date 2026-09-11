@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { BigNumber } from '@ethersproject/bignumber'
-import { Contract } from '@ethersproject/contracts'
 import AdminShell from 'features/poolManager/components/AdminShell'
 import {
   ActionButton,
@@ -18,7 +17,7 @@ import {
 } from 'features/poolManager/components/styles'
 import useWeb3React from 'hooks/useWeb3React'
 import { simplePolygonRpcProvider } from 'utils/providers'
-import { loadNftPoolLaunchSession, saveNftPoolLaunchSession } from '../launch/storage'
+import { loadNftPoolLaunchSession } from '../launch/storage'
 import {
   mapNftLaunchError,
   configureNftCollectionWeights,
@@ -34,16 +33,26 @@ import {
   verifyDeployedNftPool,
   verifyNftCollectionWeights,
   verifyNftPerformanceFee,
+  verifyNftFunding,
   verifyFinalNftLaunch,
 } from '../launch/verification'
+import { readNftLaunchChainSnapshot } from '../launch/fingerprint'
 import {
+  canConfigureFee,
+  canConfigureWeights,
+  canDeploy,
+  canFinalVerify,
+  canFund,
+  canMoveSchedule,
   canRetryLaunch,
+  getNftCanaryRecommendation,
   nextNftLaunchStageAfterDeploy,
   nextNftLaunchStageAfterWeights,
+  validateLaunchSessionInvariant,
   updateNftLaunchSession,
 } from '../launch/orchestrator'
-import { nftPoolAbi } from '../launch/abi'
-import { NftPoolLaunchSession, LaunchCheck, LaunchStage } from '../launch/types'
+import type { LaunchEligibility } from '../launch/orchestrator'
+import { NftLaunchPoolSnapshot, NftPoolLaunchSession, LaunchCheck, LaunchStage } from '../launch/types'
 import { LaunchCheckList, LaunchCheckRow, LaunchHero, LaunchPill, LaunchStep, LaunchSteps } from './styles'
 
 const steps: Array<{ key: string; title: string }> = [
@@ -106,7 +115,10 @@ export default function NftPoolLaunch() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [confirmDeploy, setConfirmDeploy] = useState(false)
+  const [chainSnapshot, setChainSnapshot] = useState<NftLaunchPoolSnapshot | null>(null)
+  const [snapshotError, setSnapshotError] = useState('')
   const sessionRef = useRef<NftPoolLaunchSession | null>(null)
+  const reconciledDeployRef = useRef<string>()
 
   useEffect(() => {
     sessionRef.current = session
@@ -118,24 +130,112 @@ export default function NftPoolLaunch() {
   }, [router.isReady, sessionId])
 
   useEffect(() => {
-    if (!session || !library || !session.transactionHashes.deploy || session.poolAddress) return
+    if (!session || !library) {
+      setChainSnapshot(null)
+      return
+    }
+    let active = true
+    const refresh = async () => {
+      try {
+        const [walletNetwork, actualAccount] = await Promise.all([
+          library.getNetwork(),
+          library.getSigner().getAddress(),
+        ])
+        const snapshot = await readNftLaunchChainSnapshot(simplePolygonRpcProvider, session, actualAccount)
+        snapshot.chainId = walletNetwork.chainId
+        if (active) {
+          setChainSnapshot(snapshot)
+          setSnapshotError(snapshot.readError || '')
+        }
+      } catch (reason: any) {
+        if (active) setSnapshotError(reason?.message || 'Required chain reads are unavailable.')
+      }
+    }
+    void refresh()
+    return () => {
+      active = false
+    }
+  }, [library, session?.sessionId, session?.updatedAt, account])
+
+  useEffect(() => {
+    const deployHash = session?.transactionHashes.deploy
+    if (
+      !session ||
+      !library ||
+      !deployHash ||
+      reconciledDeployRef.current === `${session.sessionId}:${deployHash}` ||
+      (session.poolAddress && session.verification.deployment?.fingerprint && session.poolFingerprint)
+    )
+      return
     let active = true
     library
-      .getTransactionReceipt(session.transactionHashes.deploy)
-      .then((receipt: any) => {
-        if (!active || !receipt || receipt.status !== 1) return
-        try {
-          const poolAddress = parseNftPoolAddress(receipt, session.factoryAddress)
+      .getTransactionReceipt(deployHash)
+      .then(async (receipt: any) => {
+        if (!active || !receipt) return
+        reconciledDeployRef.current = `${session.sessionId}:${deployHash}`
+        if (receipt.status !== 1) {
           setSession(
             updateNftLaunchSession(session, {
-              poolAddress,
-              currentStage: 'DEPLOY_CONFIRMED',
-              retryable: true,
-              error: 'Deployment confirmed. Resume verification and setup.',
+              currentStage: 'FAILED',
+              retryable: false,
+              error: 'Deployment transaction failed on Polygon. Review the receipt before starting a new session.',
             }),
           )
-        } catch {
-          // The receipt may still be pending or may belong to a replacement transaction.
+          return
+        }
+        try {
+          const poolAddress = parseNftPoolAddress(receipt, session.factoryAddress)
+          if (session.poolAddress && session.poolAddress.toLowerCase() !== poolAddress.toLowerCase()) {
+            setSession(
+              updateNftLaunchSession(session, {
+                currentStage: 'CORRUPTED',
+                retryable: false,
+                error: 'Stored pool address differs from the deployment receipt. No transactions are allowed.',
+              }),
+            )
+            return
+          }
+          const withDeployment = updateNftLaunchSession(session, {
+            poolAddress,
+            currentStage: session.poolAddress ? session.currentStage : 'DEPLOY_CONFIRMED',
+            retryable: true,
+            error: session.poolAddress ? session.error : 'Deployment confirmed. Resume verification and setup.',
+          })
+          const verified = await verifyDeployedNftPool(
+            simplePolygonRpcProvider,
+            withDeployment.plan,
+            withDeployment.schedule!,
+            poolAddress,
+          )
+          const verifiedSession = updateNftLaunchSession(withDeployment, {
+            verification: { ...withDeployment.verification, deployment: verified },
+            poolFingerprint: verified.fingerprint,
+            currentStage: session.poolAddress
+              ? session.currentStage
+              : verified.passed
+              ? 'DEPLOY_VERIFIED'
+              : 'DEPLOY_CONFIRMED',
+            error: verified.passed
+              ? undefined
+              : 'Pool deployed — setup incomplete. Deployment verification did not pass.',
+          })
+          setSession(
+            verified.passed && !session.poolAddress
+              ? updateNftLaunchSession(verifiedSession, {
+                  currentStage: nextNftLaunchStageAfterDeploy(verifiedSession),
+                })
+              : verifiedSession,
+          )
+        } catch (reason: any) {
+          if (active) {
+            setSession(
+              updateNftLaunchSession(session, {
+                currentStage: 'CORRUPTED',
+                retryable: false,
+                error: reason?.message || 'Deployment receipt could not be reconciled safely.',
+              }),
+            )
+          }
         }
       })
       .catch(() => undefined)
@@ -152,6 +252,19 @@ export default function NftPoolLaunch() {
     setSession(next)
     return next
   }
+
+  const readFreshSnapshot = async (current: NftPoolLaunchSession): Promise<NftLaunchPoolSnapshot> => {
+    if (!library) throw new Error('Connect the operator wallet before continuing.')
+    const [walletNetwork, actualAccount] = await Promise.all([library.getNetwork(), library.getSigner().getAddress()])
+    const snapshot = await readNftLaunchChainSnapshot(simplePolygonRpcProvider, current, actualAccount)
+    snapshot.chainId = walletNetwork.chainId
+    setChainSnapshot(snapshot)
+    setSnapshotError(snapshot.readError || '')
+    return snapshot
+  }
+
+  const gateError = (gate: LaunchEligibility): Error =>
+    new Error(gate.reasons[0] || 'Safety gate did not allow this action.')
 
   const runPreflight = async () => {
     if (!session || !library || !account) return
@@ -171,6 +284,7 @@ export default function NftPoolLaunch() {
         signer: library.getSigner(),
         plan: session.plan,
         account,
+        walletChainId: (await library.getNetwork()).chainId,
       })
       update({
         preflight,
@@ -192,11 +306,27 @@ export default function NftPoolLaunch() {
   }
 
   const deploy = async () => {
-    if (!session || !library || !session.preflight?.ok || !session.schedule || session.poolAddress) return
-    setBusy(true)
+    const currentSession = sessionRef.current || session
+    if (!currentSession || !library || !currentSession.schedule || currentSession.poolAddress) return
     setError('')
+    setMessage('Revalidating Polygon, factory ownership, wallet and schedule before signing…')
+    try {
+      const snapshot = await readFreshSnapshot(currentSession)
+      const gate = canDeploy(currentSession, snapshot)
+      if (!gate.allowed) {
+        setMessage(gate.reasons[0] || 'Deployment safety gate blocked the wallet action.')
+        setConfirmDeploy(false)
+        return
+      }
+    } catch (reason: any) {
+      setError(mapNftLaunchError(reason))
+      setConfirmDeploy(false)
+      return
+    }
+    setBusy(true)
     setMessage('Confirm the deployment in your wallet…')
-    const current = update({ currentStage: 'AWAITING_DEPLOY_SIGNATURE', error: undefined, retryable: true }) || session
+    const current =
+      update({ currentStage: 'AWAITING_DEPLOY_SIGNATURE', error: undefined, retryable: true }) || currentSession
     try {
       const deployment = await deployNftPool(
         library.getSigner(),
@@ -226,10 +356,18 @@ export default function NftPoolLaunch() {
       )
       update({
         verification: { ...withDeployment.verification, deployment: verified },
-        currentStage: verified.passed ? nextNftLaunchStageAfterDeploy(withDeployment) : 'DEPLOY_CONFIRMED',
+        poolFingerprint: verified.fingerprint,
+        currentStage: verified.passed ? 'DEPLOY_VERIFIED' : 'DEPLOY_CONFIRMED',
         error: verified.passed ? undefined : 'Pool deployed — setup incomplete. Deployment verification did not pass.',
         retryable: true,
       })
+      if (verified.passed)
+        update({
+          currentStage: nextNftLaunchStageAfterDeploy({
+            ...withDeployment,
+            verification: { ...withDeployment.verification, deployment: verified },
+          }),
+        })
       setMessage(
         verified.passed
           ? 'Pool deployed and verified. Continue with the remaining setup.'
@@ -248,11 +386,23 @@ export default function NftPoolLaunch() {
   }
 
   const configureWeights = async () => {
-    if (!session || !library || !session.poolAddress) return
+    const currentSession = sessionRef.current || session
+    if (!currentSession || !library || !currentSession.poolAddress) return
+    try {
+      const snapshot = await readFreshSnapshot(currentSession)
+      const gate = canConfigureWeights(currentSession, snapshot)
+      if (!gate.allowed) {
+        setError(gate.reasons[0] || 'NFT power configuration was blocked by the safety gate.')
+        return
+      }
+    } catch (reason) {
+      setError(mapNftLaunchError(reason))
+      return
+    }
     setBusy(true)
     setError('')
     setMessage('Confirm the NFT power configuration in your wallet…')
-    const current = update({ currentStage: 'AWAITING_WEIGHTS_SIGNATURE', error: undefined }) || session
+    const current = update({ currentStage: 'AWAITING_WEIGHTS_SIGNATURE', error: undefined }) || currentSession
     try {
       const receipt = await configureNftCollectionWeights(
         library.getSigner(),
@@ -265,12 +415,13 @@ export default function NftPoolLaunch() {
           }),
       )
       const verified = await verifyNftCollectionWeights(simplePolygonRpcProvider, current.plan, current.poolAddress!)
-      update({
+      const verifiedSession = update({
         verification: { ...current.verification, weights: verified },
         transactionHashes: { ...current.transactionHashes, weights: receipt.transactionHash },
-        currentStage: verified.passed ? nextNftLaunchStageAfterWeights(current) : 'WEIGHTS_REQUIRED',
+        currentStage: verified.passed ? 'WEIGHTS_VERIFIED' : 'WEIGHTS_REQUIRED',
         error: verified.passed ? undefined : 'NFT power verification failed; no later step was started.',
       })
+      if (verified.passed && verifiedSession) update({ currentStage: nextNftLaunchStageAfterWeights(verifiedSession) })
       setMessage(verified.passed ? 'NFT powers verified.' : 'NFT powers were not verified.')
     } catch (reason) {
       update({ currentStage: 'WEIGHTS_REQUIRED', error: mapNftLaunchError(reason), retryable: true })
@@ -281,18 +432,30 @@ export default function NftPoolLaunch() {
   }
 
   const configureFee = async () => {
+    const currentSession = sessionRef.current || session
     if (
-      !session ||
+      !currentSession ||
       !library ||
-      !session.poolAddress ||
-      !session.plan.postDeploy.feeTo ||
-      !session.plan.postDeploy.performanceFee
+      !currentSession.poolAddress ||
+      !currentSession.plan.postDeploy.feeTo ||
+      !currentSession.plan.postDeploy.performanceFee
     )
       return
+    try {
+      const snapshot = await readFreshSnapshot(currentSession)
+      const gate = canConfigureFee(currentSession, snapshot)
+      if (!gate.allowed) {
+        setError(gate.reasons[0] || 'Fee configuration was blocked by the safety gate.')
+        return
+      }
+    } catch (reason) {
+      setError(mapNftLaunchError(reason))
+      return
+    }
     setBusy(true)
     setError('')
     setMessage('Confirm the performance fee configuration in your wallet…')
-    const current = update({ currentStage: 'AWAITING_FEE_SIGNATURE', error: undefined }) || session
+    const current = update({ currentStage: 'AWAITING_FEE_SIGNATURE', error: undefined }) || currentSession
     try {
       const receipt = await configureNftPerformanceFee(
         library.getSigner(),
@@ -303,12 +466,13 @@ export default function NftPoolLaunch() {
           update({ currentStage: 'FEE_SUBMITTED', transactionHashes: { ...current.transactionHashes, fee: hash } }),
       )
       const verified = await verifyNftPerformanceFee(simplePolygonRpcProvider, current.plan, current.poolAddress!)
-      update({
+      const verifiedSession = update({
         verification: { ...current.verification, fee: verified },
         transactionHashes: { ...current.transactionHashes, fee: receipt.transactionHash },
-        currentStage: verified.passed ? 'FUNDING_REQUIRED' : 'FEE_CONFIG_REQUIRED',
+        currentStage: verified.passed ? 'FEE_VERIFIED' : 'FEE_CONFIG_REQUIRED',
         error: verified.passed ? undefined : 'Fee configuration verification failed.',
       })
+      if (verified.passed && verifiedSession) update({ currentStage: 'FUNDING_REQUIRED' })
       setMessage(verified.passed ? 'Performance fee verified.' : 'Performance fee was not verified.')
     } catch (reason) {
       update({ currentStage: 'FEE_CONFIG_REQUIRED', error: mapNftLaunchError(reason), retryable: true })
@@ -319,11 +483,23 @@ export default function NftPoolLaunch() {
   }
 
   const fund = async () => {
-    if (!session || !library || !session.poolAddress) return
+    const currentSession = sessionRef.current || session
+    if (!currentSession || !library || !currentSession.poolAddress) return
+    try {
+      const snapshot = await readFreshSnapshot(currentSession)
+      const gate = canFund(currentSession, snapshot)
+      if (!gate.allowed) {
+        setError(gate.reasons[0] || 'Reward funding was blocked by the safety gate.')
+        return
+      }
+    } catch (reason) {
+      setError(mapNftLaunchError(reason))
+      return
+    }
     setBusy(true)
     setError('')
     setMessage('Funding is sequential and verifies each pool balance after confirmation…')
-    const current = update({ currentStage: 'FUNDING_IN_PROGRESS', error: undefined }) || session
+    const current = update({ currentStage: 'FUNDING_IN_PROGRESS', error: undefined }) || currentSession
     try {
       const pendingHash = sessionRef.current?.transactionHashes.primaryFunding
       if (pendingHash && !(await library.getTransactionReceipt(pendingHash))) {
@@ -368,6 +544,9 @@ export default function NftPoolLaunch() {
         },
       })
       for (const side of current.plan.fundingRequirements.side) {
+        const sideSnapshot = await readFreshSnapshot(sessionRef.current || current)
+        const sideGate = canFund(sessionRef.current || current, sideSnapshot)
+        if (!sideGate.allowed) throw gateError(sideGate)
         const existingSideHash = sessionRef.current?.transactionHashes.sideFunding[side.tokenAddress.toLowerCase()]
         if (existingSideHash && !(await library.getTransactionReceipt(existingSideHash))) {
           throw new Error(`Side funding transaction for ${side.tokenAddress} is still pending. No duplicate was sent.`)
@@ -429,19 +608,35 @@ export default function NftPoolLaunch() {
         })
       }
       update({ currentStage: 'FINAL_VERIFYING', retryable: true })
-      const verified = await verifyFinalNftLaunch(
+      const fundingVerified = await verifyNftFunding(simplePolygonRpcProvider, current.plan, current.poolAddress!)
+      const finalVerified = await verifyFinalNftLaunch(
         simplePolygonRpcProvider,
         current.plan,
         current.schedule!,
         current.poolAddress!,
       )
+      const nextSession = {
+        ...(sessionRef.current || current),
+        verification: {
+          ...(sessionRef.current || current).verification,
+          funding: fundingVerified,
+          final: finalVerified,
+        },
+        currentStage:
+          fundingVerified.passed && finalVerified.passed ? ('COMPLETE' as const) : ('FUNDING_REQUIRED' as const),
+      }
+      const invariantErrors = validateLaunchSessionInvariant(nextSession)
+      if (nextSession.currentStage === 'COMPLETE' && invariantErrors.length) throw new Error(invariantErrors[0])
       update({
-        verification: { ...(sessionRef.current || current).verification, final: verified },
-        currentStage: verified.passed ? 'COMPLETE' : 'FUNDING_REQUIRED',
-        error: verified.passed ? undefined : 'Final verification did not pass. Funding/setup remains incomplete.',
+        verification: nextSession.verification,
+        currentStage: nextSession.currentStage,
+        error:
+          fundingVerified.passed && finalVerified.passed
+            ? undefined
+            : 'Final verification did not pass. Funding/setup remains incomplete.',
       })
       setMessage(
-        verified.passed
+        fundingVerified.passed && finalVerified.passed
           ? 'NFT pool launch is complete.'
           : 'Funding completed, but final verification still has blockers.',
       )
@@ -454,21 +649,41 @@ export default function NftPoolLaunch() {
   }
 
   const finalVerify = async () => {
-    if (!session || !session.poolAddress || !session.schedule) return
+    const currentSession = sessionRef.current || session
+    if (!currentSession || !currentSession.poolAddress || !currentSession.schedule) return
+    try {
+      const snapshot = await readFreshSnapshot(currentSession)
+      const gate = canFinalVerify(currentSession, snapshot)
+      if (!gate.allowed) {
+        setError(gate.reasons[0] || 'Final verification was blocked by the safety gate.')
+        return
+      }
+    } catch (reason) {
+      setError(mapNftLaunchError(reason))
+      return
+    }
     setBusy(true)
     setError('')
-    const current = update({ currentStage: 'FINAL_VERIFYING', error: undefined }) || session
+    const current = update({ currentStage: 'FINAL_VERIFYING', error: undefined }) || currentSession
     try {
+      const fundingVerified = await verifyNftFunding(simplePolygonRpcProvider, current.plan, current.poolAddress!)
       const verified = await verifyFinalNftLaunch(
         simplePolygonRpcProvider,
         current.plan,
         current.schedule!,
         current.poolAddress!,
       )
+      const nextSession = {
+        ...current,
+        verification: { ...current.verification, funding: fundingVerified, final: verified },
+        currentStage: fundingVerified.passed && verified.passed ? ('COMPLETE' as const) : ('FUNDING_REQUIRED' as const),
+      }
+      const invariantErrors = validateLaunchSessionInvariant(nextSession)
+      if (nextSession.currentStage === 'COMPLETE' && invariantErrors.length) throw new Error(invariantErrors[0])
       update({
-        verification: { ...current.verification, final: verified },
-        currentStage: verified.passed ? 'COMPLETE' : 'FUNDING_REQUIRED',
-        error: verified.passed ? undefined : 'Final verification did not pass.',
+        verification: nextSession.verification,
+        currentStage: nextSession.currentStage,
+        error: fundingVerified.passed && verified.passed ? undefined : 'Final verification did not pass.',
       })
     } catch (reason) {
       update({ currentStage: 'FUNDING_REQUIRED', error: mapNftLaunchError(reason) })
@@ -479,62 +694,179 @@ export default function NftPoolLaunch() {
   }
 
   const resume = async () => {
-    if (!session || !library) return
-    if (!session.transactionHashes.deploy && !session.poolAddress) {
+    const currentSession = sessionRef.current || session
+    if (!currentSession || !library) return
+    if (!currentSession.transactionHashes.deploy && !currentSession.poolAddress) {
       await runPreflight()
       return
     }
     setBusy(true)
     setError('')
     try {
-      if (session.transactionHashes.deploy && !session.poolAddress) {
-        const receipt = await library.getTransactionReceipt(session.transactionHashes.deploy)
+      if (currentSession.transactionHashes.deploy) {
+        const receipt = await library.getTransactionReceipt(currentSession.transactionHashes.deploy)
         if (!receipt) {
           setMessage('Deployment transaction is still pending. No duplicate deployment will be sent.')
           return
         }
-        if (receipt.status !== 1) throw new Error('Deployment transaction failed on Polygon.')
-        const poolAddress = parseNftPoolAddress(receipt, session.factoryAddress)
-        const withDeployment = update({ poolAddress, currentStage: 'DEPLOY_CONFIRMED', error: undefined }) || session
+        if (receipt.status !== 1) {
+          update({
+            currentStage: 'FAILED',
+            retryable: false,
+            error: 'Deployment transaction failed on Polygon. Review the receipt before starting a new session.',
+          })
+          return
+        }
+        let poolAddress: string
+        try {
+          poolAddress = parseNftPoolAddress(receipt, currentSession.factoryAddress)
+        } catch (reason) {
+          update({
+            currentStage: 'CORRUPTED',
+            retryable: false,
+            error: mapNftLaunchError(reason),
+          })
+          return
+        }
+        if (currentSession.poolAddress && currentSession.poolAddress.toLowerCase() !== poolAddress.toLowerCase()) {
+          update({
+            currentStage: 'CORRUPTED',
+            retryable: false,
+            error: 'Stored pool address differs from the deployment receipt. No transactions are allowed.',
+          })
+          return
+        }
+        const withDeployment =
+          update({ poolAddress, currentStage: 'DEPLOY_CONFIRMED', error: undefined }) || currentSession
         const verified = await verifyDeployedNftPool(
           simplePolygonRpcProvider,
           withDeployment.plan,
           withDeployment.schedule!,
           poolAddress,
         )
-        update({
+        const verifiedSession = update({
           verification: { ...withDeployment.verification, deployment: verified },
-          currentStage: verified.passed ? nextNftLaunchStageAfterDeploy(withDeployment) : 'DEPLOY_CONFIRMED',
+          poolFingerprint: verified.fingerprint,
+          currentStage: verified.passed ? 'DEPLOY_VERIFIED' : 'DEPLOY_CONFIRMED',
           error: verified.passed ? undefined : 'Pool deployed — setup incomplete.',
         })
+        if (verified.passed && verifiedSession) update({ currentStage: nextNftLaunchStageAfterDeploy(verifiedSession) })
         return
       }
-      if (session.currentStage === 'WEIGHTS_SUBMITTED' && session.transactionHashes.weights && session.poolAddress) {
-        const receipt = await library.getTransactionReceipt(session.transactionHashes.weights)
+      const refreshed = sessionRef.current || currentSession
+      if (refreshed.transactionHashes.scheduleUpdate && refreshed.pendingSchedule && refreshed.poolAddress) {
+        const receipt = await library.getTransactionReceipt(refreshed.transactionHashes.scheduleUpdate)
+        if (!receipt) {
+          setMessage('Schedule update transaction is still pending. The canonical schedule remains unchanged.')
+          return
+        }
+        if (receipt.status !== 1) {
+          update({
+            pendingSchedule: undefined,
+            error: 'Schedule update transaction failed; the canonical schedule remains unchanged.',
+          })
+          return
+        }
+        const confirmed = await readFreshSnapshot(refreshed)
+        if (
+          confirmed.startBlock !== refreshed.pendingSchedule.startBlock ||
+          confirmed.endBlock !== refreshed.pendingSchedule.endBlock
+        ) {
+          update({
+            currentStage: 'CORRUPTED',
+            pendingSchedule: undefined,
+            retryable: false,
+            error:
+              'Schedule update receipt did not match the confirmed on-chain schedule. No transactions are allowed.',
+          })
+          return
+        }
+        const deploymentVerified = await verifyDeployedNftPool(
+          simplePolygonRpcProvider,
+          refreshed.plan,
+          refreshed.pendingSchedule,
+          refreshed.poolAddress,
+        )
+        if (!deploymentVerified.passed) {
+          update({
+            currentStage: 'CORRUPTED',
+            pendingSchedule: undefined,
+            retryable: false,
+            error:
+              'Schedule update changed the pool, but deployment verification did not pass. No transactions are allowed.',
+          })
+          return
+        }
+        update({
+          schedule: refreshed.pendingSchedule,
+          pendingSchedule: undefined,
+          poolFingerprint: deploymentVerified.fingerprint,
+          verification: {
+            ...refreshed.verification,
+            deployment: deploymentVerified,
+            final: undefined,
+          },
+          error: undefined,
+        })
+        setMessage('Schedule update confirmed and read back exactly. The later start is now canonical.')
+        return
+      }
+      if (
+        refreshed.currentStage === 'WEIGHTS_SUBMITTED' &&
+        refreshed.transactionHashes.weights &&
+        refreshed.poolAddress
+      ) {
+        const receipt = await library.getTransactionReceipt(refreshed.transactionHashes.weights)
         if (!receipt) {
           setMessage('NFT power transaction is still pending.')
           return
         }
-        const verified = await verifyNftCollectionWeights(simplePolygonRpcProvider, session.plan, session.poolAddress)
-        update({
-          verification: { ...session.verification, weights: verified },
-          currentStage: verified.passed ? nextNftLaunchStageAfterWeights(session) : 'WEIGHTS_REQUIRED',
+        if (receipt.status !== 1) {
+          update({
+            currentStage: 'WEIGHTS_REQUIRED',
+            error: 'NFT power transaction failed; review the receipt before retrying.',
+          })
+          return
+        }
+        const verified = await verifyNftCollectionWeights(
+          simplePolygonRpcProvider,
+          refreshed.plan,
+          refreshed.poolAddress,
+        )
+        const verifiedSession = update({
+          verification: { ...refreshed.verification, weights: verified },
+          currentStage: verified.passed ? 'WEIGHTS_VERIFIED' : 'WEIGHTS_REQUIRED',
           error: verified.passed ? undefined : 'NFT power verification failed.',
         })
+        if (verified.passed && verifiedSession)
+          update({ currentStage: nextNftLaunchStageAfterWeights(verifiedSession) })
         return
       }
-      if (session.currentStage === 'FEE_SUBMITTED' && session.transactionHashes.fee && session.poolAddress) {
-        const receipt = await library.getTransactionReceipt(session.transactionHashes.fee)
+      if (refreshed.currentStage === 'FEE_SUBMITTED' && refreshed.transactionHashes.fee && refreshed.poolAddress) {
+        const receipt = await library.getTransactionReceipt(refreshed.transactionHashes.fee)
         if (!receipt) {
           setMessage('Fee configuration transaction is still pending.')
           return
         }
-        const verified = await verifyNftPerformanceFee(simplePolygonRpcProvider, session.plan, session.poolAddress)
-        update({
-          verification: { ...session.verification, fee: verified },
-          currentStage: verified.passed ? 'FUNDING_REQUIRED' : 'FEE_CONFIG_REQUIRED',
+        if (receipt.status !== 1) {
+          update({
+            currentStage: 'FEE_CONFIG_REQUIRED',
+            error: 'Fee configuration transaction failed; review the receipt before retrying.',
+          })
+          return
+        }
+        const verified = await verifyNftPerformanceFee(simplePolygonRpcProvider, refreshed.plan, refreshed.poolAddress)
+        const verifiedSession = update({
+          verification: { ...refreshed.verification, fee: verified },
+          currentStage: verified.passed ? 'FEE_VERIFIED' : 'FEE_CONFIG_REQUIRED',
           error: verified.passed ? undefined : 'Fee configuration verification failed.',
         })
+        if (verified.passed && verifiedSession) update({ currentStage: 'FUNDING_REQUIRED' })
+        return
+      }
+      if (refreshed.currentStage === 'FUNDING_IN_PROGRESS') {
+        setBusy(false)
+        await fund()
         return
       }
       setMessage('Session is ready to continue from its current verified checkpoint.')
@@ -546,33 +878,61 @@ export default function NftPoolLaunch() {
   }
 
   const moveStartLater = async () => {
-    if (!session || !library || !session.poolAddress || !session.schedule) return
+    const currentSession = sessionRef.current || session
+    if (!currentSession || !library || !currentSession.poolAddress || !currentSession.schedule) return
+    try {
+      const snapshot = await readFreshSnapshot(currentSession)
+      const gate = canMoveSchedule(currentSession, snapshot)
+      if (!gate.allowed) {
+        setError(gate.reasons[0] || 'Schedule update was blocked by the safety gate.')
+        return
+      }
+    } catch (reason) {
+      setError(mapNftLaunchError(reason))
+      return
+    }
     setBusy(true)
     setError('')
     setMessage('Reading the current pool schedule before requesting a later start…')
     try {
-      const pool = new Contract(session.poolAddress, nftPoolAbi, simplePolygonRpcProvider)
-      const [owner, currentBlock, oldStart] = await Promise.all([
-        pool.owner(),
-        simplePolygonRpcProvider.getBlockNumber(),
-        pool.startBlock(),
-      ])
-      if (!account || owner.toLowerCase() !== account.toLowerCase())
-        throw new Error('Connected wallet is not the deployed pool owner.')
-      if (currentBlock >= Number(oldStart)) throw new Error('The pool start block has already passed.')
-      const nextSchedule = moveNftLaunchScheduleLater(session.schedule, currentBlock)
+      const current = await readFreshSnapshot(currentSession)
+      if (current.startBlock === undefined) throw new Error('Pool start block could not be read.')
+      const nextSchedule = moveNftLaunchScheduleLater(currentSession.schedule, current.currentBlock)
       const receipt = await updateNftPoolSchedule(
         library.getSigner(),
-        session.poolAddress,
+        currentSession.poolAddress,
         nextSchedule.startBlock,
         nextSchedule.endBlock,
         (hash) =>
-          update({ transactionHashes: { ...session.transactionHashes, scheduleUpdate: hash }, schedule: nextSchedule }),
+          update({
+            transactionHashes: { ...(sessionRef.current || currentSession).transactionHashes, scheduleUpdate: hash },
+            pendingSchedule: nextSchedule,
+          }),
       )
+      const confirmed = await readFreshSnapshot(sessionRef.current || currentSession)
+      if (confirmed.startBlock !== nextSchedule.startBlock || confirmed.endBlock !== nextSchedule.endBlock)
+        throw new Error('Schedule update receipt did not match the confirmed on-chain schedule.')
+      const deploymentVerified = await verifyDeployedNftPool(
+        simplePolygonRpcProvider,
+        currentSession.plan,
+        nextSchedule,
+        currentSession.poolAddress,
+      )
+      if (!deploymentVerified.passed)
+        throw new Error('Schedule update changed the pool, but deployment verification did not pass.')
       update({
         schedule: nextSchedule,
-        transactionHashes: { ...session.transactionHashes, scheduleUpdate: receipt.transactionHash },
-        currentStage: session.currentStage === 'COMPLETE' ? 'FUNDING_REQUIRED' : session.currentStage,
+        pendingSchedule: undefined,
+        poolFingerprint: deploymentVerified.fingerprint,
+        verification: {
+          ...(sessionRef.current || currentSession).verification,
+          deployment: deploymentVerified,
+          final: undefined,
+        },
+        transactionHashes: {
+          ...(sessionRef.current || currentSession).transactionHashes,
+          scheduleUpdate: receipt.transactionHash,
+        },
         error: undefined,
       })
       setMessage('Start moved later. Run final verification again when setup is ready.')
@@ -586,13 +946,27 @@ export default function NftPoolLaunch() {
   const activeIndex = session ? stageIndex(session.currentStage) : 0
   const needsWeights = Boolean(session?.plan.collectionConfiguration.collectionWeightConfigurationRequired)
   const needsFee = Boolean(session?.plan.postDeploy.performanceFee || session?.plan.postDeploy.feeTo)
-  const canLaunch = Boolean(
-    session?.preflight?.ok &&
-      session.schedule &&
-      !session.poolAddress &&
-      !session.transactionHashes.deploy &&
-      session.currentStage === 'PREFLIGHT_READY',
-  )
+  const blockedUntilRead: LaunchEligibility = {
+    allowed: false,
+    reasons: [snapshotError || 'Refreshing the read-only chain safety snapshot…'],
+  }
+  const launchEligibility = session && chainSnapshot ? canDeploy(session, chainSnapshot) : blockedUntilRead
+  const weightsEligibility = session && chainSnapshot ? canConfigureWeights(session, chainSnapshot) : blockedUntilRead
+  const feeEligibility = session && chainSnapshot ? canConfigureFee(session, chainSnapshot) : blockedUntilRead
+  const fundingEligibility = session && chainSnapshot ? canFund(session, chainSnapshot) : blockedUntilRead
+  const finalEligibility = session && chainSnapshot ? canFinalVerify(session, chainSnapshot) : blockedUntilRead
+  const moveScheduleEligibility = session && chainSnapshot ? canMoveSchedule(session, chainSnapshot) : blockedUntilRead
+  const canLaunch = launchEligibility.allowed
+  const activeGateReason =
+    session?.currentStage === 'PREFLIGHT_READY'
+      ? launchEligibility.reasons[0]
+      : session?.currentStage === 'WEIGHTS_REQUIRED'
+      ? weightsEligibility.reasons[0]
+      : session?.currentStage === 'FEE_CONFIG_REQUIRED'
+      ? feeEligibility.reasons[0]
+      : session?.currentStage === 'FUNDING_REQUIRED' || session?.currentStage === 'FUNDING_IN_PROGRESS'
+      ? fundingEligibility.reasons[0]
+      : undefined
   const poolScan = session?.poolAddress ? `https://polygonscan.com/address/${session.poolAddress}` : ''
   const deployScan = session?.transactionHashes.deploy
     ? `https://polygonscan.com/tx/${session.transactionHashes.deploy}`
@@ -604,6 +978,7 @@ export default function NftPoolLaunch() {
         : 'No side reward',
     [session],
   )
+  const invariantErrors = session ? validateLaunchSessionInvariant(session) : []
 
   if (!session)
     return (
@@ -626,6 +1001,9 @@ export default function NftPoolLaunch() {
     >
       {message ? <Notice>{message}</Notice> : null}
       {error || session.error ? <Notice $error>{error || session.error}</Notice> : null}
+      {invariantErrors.length && session.currentStage !== 'CORRUPTED' ? (
+        <Notice $error>Launch session safety invariant failed: {invariantErrors[0]}</Notice>
+      ) : null}
       <LaunchHero>
         <div>
           <Muted>Frozen plan · {short(session.planHash)}</Muted>
@@ -684,35 +1062,33 @@ export default function NftPoolLaunch() {
           >
             {busy && session.currentStage === 'PREFLIGHT_RUNNING' ? 'Running…' : 'Run preflight'}
           </ActionButton>
-          {canLaunch ? (
-            <ActionButton onClick={() => setConfirmDeploy(true)} disabled={busy}>
+          {session.currentStage === 'PREFLIGHT_READY' ? (
+            <ActionButton onClick={() => setConfirmDeploy(true)} disabled={busy || !canLaunch}>
               Launch pool
             </ActionButton>
           ) : null}
-          {session.poolAddress &&
-          needsWeights &&
-          ['WEIGHTS_REQUIRED', 'DEPLOY_VERIFIED', 'DEPLOY_CONFIRMED'].includes(session.currentStage) ? (
-            <ActionButton onClick={configureWeights} disabled={busy}>
+          {session.poolAddress && needsWeights && session.currentStage === 'WEIGHTS_REQUIRED' ? (
+            <ActionButton onClick={configureWeights} disabled={busy || !weightsEligibility.allowed}>
               Configure NFT powers
             </ActionButton>
           ) : null}
-          {session.poolAddress && needsFee && ['FEE_CONFIG_REQUIRED'].includes(session.currentStage) ? (
-            <ActionButton onClick={configureFee} disabled={busy}>
+          {session.poolAddress && needsFee && session.currentStage === 'FEE_CONFIG_REQUIRED' ? (
+            <ActionButton onClick={configureFee} disabled={busy || !feeEligibility.allowed}>
               Configure fee
             </ActionButton>
           ) : null}
           {session.poolAddress && ['FUNDING_REQUIRED', 'FUNDING_IN_PROGRESS'].includes(session.currentStage) ? (
-            <ActionButton onClick={fund} disabled={busy}>
+            <ActionButton onClick={fund} disabled={busy || !fundingEligibility.allowed}>
               Fund rewards
             </ActionButton>
           ) : null}
           {session.poolAddress && session.currentStage !== 'COMPLETE' ? (
-            <ActionButton $secondary onClick={finalVerify} disabled={busy}>
+            <ActionButton $secondary onClick={finalVerify} disabled={busy || !finalEligibility.allowed}>
               Final verification
             </ActionButton>
           ) : null}
           {session.poolAddress && session.currentStage !== 'COMPLETE' ? (
-            <ActionButton $secondary onClick={moveStartLater} disabled={busy}>
+            <ActionButton $secondary onClick={moveStartLater} disabled={busy || !moveScheduleEligibility.allowed}>
               Move start later
             </ActionButton>
           ) : null}
@@ -722,6 +1098,22 @@ export default function NftPoolLaunch() {
             </ActionButton>
           ) : null}
         </ButtonRow>
+        {activeGateReason ? (
+          <Muted style={{ display: 'block', marginTop: 10 }}>Safety gate: {activeGateReason}</Muted>
+        ) : null}
+      </Panel>
+      {session.currentStage === 'COMPLETE' && chainSnapshot && !finalEligibility.allowed ? (
+        <Notice $error style={{ marginTop: 16 }}>
+          Completed session no longer matches expected on-chain state.
+        </Notice>
+      ) : null}
+      <Panel style={{ marginTop: 16 }}>
+        <PanelTitle>Canary readiness</PanelTitle>
+        <Muted>{getNftCanaryRecommendation(session.plan).message}</Muted>
+        <Muted style={{ display: 'block', marginTop: 8 }}>
+          First canary: one collection, primary reward only, no fee, a deliberately tiny reward and a short test
+          duration.
+        </Muted>
       </Panel>
       {confirmDeploy ? (
         <Panel style={{ marginTop: 16, borderColor: '#D97706' }}>
@@ -798,13 +1190,24 @@ export default function NftPoolLaunch() {
               </div>
             </div>
             <div>
-              <Muted>Deployment gas safety</Muted>
+              <Muted>Deployment gas estimate</Muted>
               <div>{session.preflight.deploymentGas ? `${session.preflight.deploymentGas.safetyCost} wei` : '—'}</div>
+            </div>
+            <div>
+              <Muted>Preflight validity</Muted>
+              <div>
+                block {session.preflight.currentBlockAtPreflight.toLocaleString()} · expires at{' '}
+                {session.preflight.expiresAtBlock.toLocaleString()}
+              </div>
             </div>
           </FormGrid>
           <div style={{ marginTop: 16 }}>
             <CheckTable checks={session.preflight.checks} />
           </div>
+          <Muted style={{ display: 'block', marginTop: 14 }}>
+            Deployment gas estimated. Setup and funding gas will be freshly simulated and checked immediately before
+            each wallet confirmation.
+          </Muted>
         </Panel>
       ) : null}
       {session.poolAddress ? (

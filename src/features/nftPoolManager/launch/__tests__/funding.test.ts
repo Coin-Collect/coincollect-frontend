@@ -41,7 +41,10 @@ describe('NFT launch funding amounts', () => {
     }
     ;(Contract as unknown as jest.Mock).mockImplementation(() => token)
     const signer: any = {
-      provider: {},
+      provider: {
+        getFeeData: jest.fn().mockResolvedValue({ gasPrice: BigNumber.from(1) }),
+        getBalance: jest.fn().mockResolvedValue(BigNumber.from('1000000000000000000')),
+      },
       getAddress: jest.fn().mockResolvedValue('0x4444444444444444444444444444444444444444'),
     }
     const first = await fundNftPoolTokenIfNeeded(
@@ -83,7 +86,10 @@ describe('NFT launch funding amounts', () => {
     }
     ;(Contract as unknown as jest.Mock).mockImplementation(() => token)
     const signer: any = {
-      provider: {},
+      provider: {
+        getFeeData: jest.fn().mockResolvedValue({ gasPrice: BigNumber.from(1) }),
+        getBalance: jest.fn().mockResolvedValue(BigNumber.from('1000000000000000000')),
+      },
       getAddress: jest.fn().mockResolvedValue('0x4444444444444444444444444444444444444444'),
     }
     await expect(

@@ -63,15 +63,38 @@ function isStage(value: any): value is LaunchStage {
       'FUNDING_IN_PROGRESS',
       'FINAL_VERIFYING',
       'COMPLETE',
+      'CORRUPTED',
       'FAILED',
     ].includes(value)
   )
 }
 
+export const LAUNCH_INTEGRITY_ERROR =
+  'Frozen launch plan failed integrity verification. No transactions are allowed from this session.'
+
+export function getNftLaunchSessionIntegrityError(input: any): string | undefined {
+  if (!input || !input.plan) return LAUNCH_INTEGRITY_ERROR
+  try {
+    if (hashNftPoolDeploymentPlan(input.plan).toLowerCase() !== String(input.planHash).toLowerCase())
+      return LAUNCH_INTEGRITY_ERROR
+    if (input.draftId !== input.plan.draftId)
+      return 'Launch session identity does not match the frozen draft. No transactions are allowed.'
+    if (Number(input.chainId) !== Number(input.plan.chainId))
+      return 'Launch session chain does not match the frozen plan. No transactions are allowed.'
+    if (String(input.factoryAddress).toLowerCase() !== String(input.plan.factoryAddress).toLowerCase())
+      return 'Launch session factory does not match the frozen plan. No transactions are allowed.'
+    if (String(input.intendedAdmin).toLowerCase() !== String(input.plan.factoryParameters?.intendedAdmin).toLowerCase())
+      return 'Launch session operator does not match the frozen plan. No transactions are allowed.'
+  } catch {
+    return LAUNCH_INTEGRITY_ERROR
+  }
+  return undefined
+}
+
 function reviveSession(input: any): NftPoolLaunchSession | null {
   if (!input || input.schemaVersion !== 1 || typeof input.sessionId !== 'string' || !input.plan) return null
   if (!isStage(input.currentStage) || typeof input.planHash !== 'string') return null
-  return {
+  const session = {
     ...input,
     transactionHashes: {
       deploy: input.transactionHashes?.deploy,
@@ -83,8 +106,25 @@ function reviveSession(input: any): NftPoolLaunchSession | null {
     },
     verification: input.verification || {},
     funding: { primary: input.funding?.primary, side: input.funding?.side || {} },
+    preflight: input.preflight
+      ? {
+          ...input.preflight,
+          currentBlockAtPreflight: input.preflight.currentBlockAtPreflight ?? input.preflight.currentBlock ?? 0,
+          expiresAtBlock:
+            input.preflight.expiresAtBlock ??
+            input.preflight.currentBlockAtPreflight ??
+            input.preflight.currentBlock ??
+            0,
+          schedulePreparedAt: input.preflight.schedulePreparedAt ?? input.preflight.schedule?.preparedAt ?? 0,
+        }
+      : undefined,
     retryable: Boolean(input.retryable),
   } as NftPoolLaunchSession
+  const integrityError = getNftLaunchSessionIntegrityError(session)
+  if (integrityError) {
+    return { ...session, currentStage: 'CORRUPTED', retryable: false, error: integrityError }
+  }
+  return session
 }
 
 export function loadNftPoolLaunchSessions(): NftPoolLaunchSession[] {

@@ -30,6 +30,14 @@ describe('NFT launch state transitions', () => {
   })
   it('routes a confirmed deployment to mandatory weights before later steps', () => {
     const session = createNftPoolLaunchSession(plan)
-    expect(nextNftLaunchStageAfterDeploy(session)).toBe('WEIGHTS_REQUIRED')
+    const verified = {
+      passed: true,
+      checkedAt: Date.now(),
+      checks: [],
+      fingerprint: '0xfingerprint',
+    }
+    expect(nextNftLaunchStageAfterDeploy({ ...session, verification: { deployment: verified } })).toBe(
+      'WEIGHTS_REQUIRED',
+    )
   })
 })

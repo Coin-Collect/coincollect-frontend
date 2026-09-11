@@ -6,6 +6,7 @@ import erc20Abi from 'config/abi/erc20.json'
 import { NftPoolDeploymentPlan } from '../types'
 import { NftLaunchSchedule, LaunchCheck, VerificationResult } from './types'
 import { nftPoolAbi } from './abi'
+import { expectedNftLaunchPoolFingerprint, readNftLaunchPoolFingerprint } from './fingerprint'
 
 const passed = (key: string, label: string, expected?: string, actual?: string): LaunchCheck => ({
   key,
@@ -37,8 +38,8 @@ async function readIndexedArrayUntilRevert(pool: any, method: string, max = 64):
   return values
 }
 
-function result(checks: LaunchCheck[], error?: string): VerificationResult {
-  return { passed: checks.every((item) => item.status !== 'BLOCK'), checkedAt: Date.now(), checks, error }
+function result(checks: LaunchCheck[], error?: string, fingerprint?: string): VerificationResult {
+  return { passed: checks.every((item) => item.status !== 'BLOCK'), checkedAt: Date.now(), checks, error, fingerprint }
 }
 
 export async function verifyDeployedNftPool(
@@ -178,6 +179,24 @@ export async function verifyDeployedNftPool(
             ),
       )
     }
+    const actualFingerprint = await readNftLaunchPoolFingerprint(provider, poolAddress)
+    const expectedFingerprint = expectedNftLaunchPoolFingerprint(plan, schedule)
+    checks.push(
+      actualFingerprint.fingerprint === expectedFingerprint
+        ? passed(
+            'pool-fingerprint',
+            'Pool fingerprint matches the frozen launch',
+            expectedFingerprint,
+            actualFingerprint.fingerprint,
+          )
+        : failed(
+            'pool-fingerprint',
+            'Pool fingerprint matches the frozen launch',
+            expectedFingerprint,
+            actualFingerprint.fingerprint,
+          ),
+    )
+    return result(checks, undefined, actualFingerprint.fingerprint)
   } catch (error: any) {
     checks.push(
       failed(

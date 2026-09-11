@@ -35,4 +35,16 @@ describe('NFT launch session persistence', () => {
     saveNftPoolLaunchSession({ ...session, currentStage: 'COMPLETE' })
     expect(findActiveNftPoolLaunchSession('draft-1')).toBeUndefined()
   })
+
+  it('marks a session corrupted when the frozen plan is changed in localStorage', () => {
+    const session = createNftPoolLaunchSession(plan)
+    saveNftPoolLaunchSession(session)
+    const raw = JSON.parse(window.localStorage.getItem('coincollect.nft-pool-launch-sessions.v1') || '[]')
+    raw[0].plan.factoryParameters.intendedAdmin = '0x00000000000000000000000000000000000000aa'
+    window.localStorage.setItem('coincollect.nft-pool-launch-sessions.v1', JSON.stringify(raw))
+    const restored = loadNftPoolLaunchSession(session.sessionId)
+    expect(restored?.currentStage).toBe('CORRUPTED')
+    expect(restored?.retryable).toBe(false)
+    expect(restored?.error).toContain('integrity')
+  })
 })

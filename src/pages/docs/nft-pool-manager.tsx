@@ -43,8 +43,21 @@ export default function NftPoolManagerDocs() {
           </p>
           <p>
             <strong>Runbook:</strong> connect the Polygon factory-owner wallet, run preflight, review the 15-minute
-            setup buffer and gas/balance checks, confirm each requested wallet action, then run final verification. A
-            saved launch route can be resumed after an RPC error or browser restart.
+            setup buffer and deployment gas estimate, confirm each requested wallet action, then run final verification.
+            Setup and funding gas are freshly simulated before each confirmation. A saved launch route can be resumed
+            after an RPC error or browser restart.
+          </p>
+          <p>
+            The Phase 3.1 gate re-reads the connected signer network/account, factory or pool owner, bytecode, pool
+            fingerprint, token mapping, current block and native POL immediately before every write. A stale preflight,
+            changed frozen plan, failed verification, started pool, unknown receipt or missing read blocks without a
+            wallet popup.
+          </p>
+          <p>
+            <strong>First-canary checklist:</strong> factory-owner wallet connected; Polygon selected; enough POL and
+            reward token; correct NFT collection; intentionally tiny reward; no side reward; no performance fee; start
+            buffer and plan hash reviewed; fresh preflight. After deployment, review the emitted address and every
+            deployment, NFT power, funding and final verification PASS before using the admin registry.
           </p>
           <p>
             Quotes are explicitly fresh, stale or expired. Same-token budgets use an exact identity quote, and every

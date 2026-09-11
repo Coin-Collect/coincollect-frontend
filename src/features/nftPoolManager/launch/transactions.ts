@@ -8,8 +8,7 @@ import erc20Abi from 'config/abi/erc20.json'
 import { NftPoolDeploymentPlan } from '../types'
 import { NftLaunchSchedule, DeploymentResult } from './types'
 import { nftPoolAbi } from './abi'
-
-const SAFETY_BPS = 125
+import { assertNftLaunchWriteGas, checkNftLaunchWriteGas } from './gas'
 
 export function buildNftDeployArguments(plan: NftPoolDeploymentPlan, schedule: NftLaunchSchedule): any[] {
   if (schedule.startBlock <= 0 || schedule.endBlock <= schedule.startBlock)
@@ -31,10 +30,6 @@ export function buildNftDeployArguments(plan: NftPoolDeploymentPlan, schedule: N
     },
     getAddress(params.intendedAdmin),
   ]
-}
-
-function paddedGas(gas: BigNumber): BigNumber {
-  return gas.mul(SAFETY_BPS).div(100)
 }
 
 export async function simulateNftDeploy(
@@ -66,15 +61,21 @@ async function waitForReceipt(transaction: TransactionResponse): Promise<Transac
 }
 
 export function parseNftPoolAddress(receipt: TransactionReceipt, factoryAddress: string): string {
+  if (!receipt.to || receipt.to.toLowerCase() !== factoryAddress.toLowerCase())
+    throw new Error('Deployment receipt was not sent to the expected NFT factory.')
   const factory = new Contract(factoryAddress, nftFactoryAbi)
+  const matches: string[] = []
   for (const log of receipt.logs) {
+    if (!log.address || log.address.toLowerCase() !== factoryAddress.toLowerCase()) continue
     try {
       const parsed = factory.interface.parseLog(log)
-      if (parsed.name === 'NewSmartChefContract') return getAddress(parsed.args.smartChef || parsed.args[0])
+      if (parsed.name === 'NewSmartChefContract') matches.push(getAddress(parsed.args.smartChef || parsed.args[0]))
     } catch {
       // Deployment receipts contain unrelated token/initialization logs.
     }
   }
+  if (matches.length === 1) return matches[0]
+  if (matches.length > 1) throw new Error('Deployment receipt contained multiple factory pool events.')
   throw new Error('Deployment receipt did not contain NewSmartChefContract.')
 }
 
@@ -88,12 +89,15 @@ export async function deployNftPool(
   const provider = signer.provider
   if (!provider) throw new Error('Connected wallet did not expose a provider.')
   const gasEstimate = await simulateNftDeploy(provider, factoryAddress, plan, schedule, await signer.getAddress())
+  const gas = await checkNftLaunchWriteGas(provider, signer, gasEstimate)
+  assertNftLaunchWriteGas(gas)
   const factory = new Contract(factoryAddress, nftFactoryAbi, signer)
   const transaction: TransactionResponse = await factory.deployPool(...buildNftDeployArguments(plan, schedule), {
-    gasLimit: paddedGas(gasEstimate),
+    gasLimit: gas.gasLimit,
   })
   onSubmitted?.(transaction.hash)
   const receipt = await waitForReceipt(transaction)
+  if (receipt.transactionHash !== transaction.hash) onSubmitted?.(receipt.transactionHash)
   return {
     poolAddress: parseNftPoolAddress(receipt, factoryAddress),
     transactionHash: receipt.transactionHash,
@@ -116,10 +120,14 @@ async function writePoolAction(
   const writePool = new Contract(poolAddress, nftPoolAbi, signer)
   const overrides = { from: await signer.getAddress() }
   await readPool.callStatic[method](...args, overrides)
-  const gas = BigNumber.from(await readPool.estimateGas[method](...args, overrides))
-  const transaction: TransactionResponse = await writePool[method](...args, { gasLimit: paddedGas(gas) })
+  const estimatedGas = BigNumber.from(await readPool.estimateGas[method](...args, overrides))
+  const gas = await checkNftLaunchWriteGas(provider, signer, estimatedGas)
+  assertNftLaunchWriteGas(gas)
+  const transaction: TransactionResponse = await writePool[method](...args, { gasLimit: gas.gasLimit })
   onSubmitted?.(transaction.hash)
-  return waitForReceipt(transaction)
+  const receipt = await waitForReceipt(transaction)
+  if (receipt.transactionHash !== transaction.hash) onSubmitted?.(receipt.transactionHash)
+  return receipt
 }
 
 export function configureNftCollectionWeights(

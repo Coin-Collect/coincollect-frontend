@@ -6,12 +6,7 @@ import type { Provider, TransactionReceipt, TransactionResponse } from '@ethersp
 import erc20Abi from 'config/abi/erc20.json'
 import { NftPoolDeploymentPlan } from '../types'
 import { FundingResult } from './types'
-
-const SAFETY_BPS = 125
-
-function paddedGas(gas: BigNumber): BigNumber {
-  return gas.mul(SAFETY_BPS).div(100)
-}
+import { assertNftLaunchWriteGas, checkNftLaunchWriteGas } from './gas'
 
 async function waitForReceipt(transaction: TransactionResponse): Promise<TransactionReceipt> {
   try {
@@ -62,10 +57,13 @@ export async function fundNftPoolTokenIfNeeded(
     throw new Error(`Insufficient ${getAddress(tokenAddress)} balance: missing ${missing.toString()} base units.`)
   }
   await readToken.callStatic.transfer(poolAddress, missing)
-  const gas = BigNumber.from(await readToken.estimateGas.transfer(poolAddress, missing))
-  const transaction: TransactionResponse = await writeToken.transfer(poolAddress, missing, { gasLimit: paddedGas(gas) })
+  const estimatedGas = BigNumber.from(await readToken.estimateGas.transfer(poolAddress, missing))
+  const gas = await checkNftLaunchWriteGas(provider, signer, estimatedGas)
+  assertNftLaunchWriteGas(gas)
+  const transaction: TransactionResponse = await writeToken.transfer(poolAddress, missing, { gasLimit: gas.gasLimit })
   onSubmitted?.(transaction.hash)
   const receipt = await waitForReceipt(transaction)
+  if (receipt.transactionHash !== transaction.hash) onSubmitted?.(receipt.transactionHash)
   const afterPoolBalance = BigNumber.from(await readToken.balanceOf(poolAddress))
   if (afterPoolBalance.lt(requiredAmount)) {
     throw new Error(

@@ -8,7 +8,7 @@ import nftFactoryAbi from 'config/abi/nftSmartChefFactory.json'
 import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
 import { NftPoolDeploymentPlan } from '../types'
 import { NftLaunchSchedule, LaunchCheck, NftPreflightResult, LaunchGasEstimate, LaunchTokenBalance } from './types'
-import { prepareNftLaunchSchedule } from './schedule'
+import { MIN_PREFLIGHT_VALIDITY_BLOCKS, prepareNftLaunchSchedule } from './schedule'
 import { simulateNftDeploy } from './transactions'
 
 function check(
@@ -48,6 +48,7 @@ export async function runNftPoolPreflight(args: {
   signer: Signer
   plan: NftPoolDeploymentPlan
   account?: string | null
+  walletChainId?: number
 }): Promise<NftPreflightResult> {
   const { provider, signer, plan } = args
   const checks: LaunchCheck[] = []
@@ -55,6 +56,7 @@ export async function runNftPoolPreflight(args: {
   let chainId = 0
   let currentBlock = 0
   let account = args.account || ''
+  const reportedAccount = args.account || ''
   let owner: string | undefined
   let ownerIsContract = false
   let nativeBalance = BigNumber.from(0)
@@ -62,9 +64,19 @@ export async function runNftPoolPreflight(args: {
   let deploymentGas: LaunchGasEstimate | undefined
   try {
     const network = await provider.getNetwork()
-    chainId = network.chainId
+    chainId = args.walletChainId ?? network.chainId
     currentBlock = await provider.getBlockNumber()
-    account = account || (await signer.getAddress())
+    account = await signer.getAddress()
+    checks.push(
+      check(
+        'wallet-account-sync',
+        'Connected wallet account is current',
+        !reportedAccount || reportedAccount.toLowerCase() === account.toLowerCase() ? 'PASS' : 'BLOCK',
+        undefined,
+        reportedAccount || account,
+        account,
+      ),
+    )
     const secondsPerBlock = await measureSecondsPerBlock(
       provider,
       currentBlock,
@@ -254,11 +266,15 @@ export async function runNftPoolPreflight(args: {
       schedule = prepareNftLaunchSchedule(plan, Math.max(0, currentBlock), plan.scheduleIntent.measuredSecondsPerBlock)
   }
   const ok = checks.every((item) => item.status !== 'BLOCK')
+  const checkedAt = Date.now()
   return {
     ok,
-    checkedAt: Date.now(),
+    checkedAt,
     chainId,
     currentBlock,
+    currentBlockAtPreflight: currentBlock,
+    expiresAtBlock: currentBlock + MIN_PREFLIGHT_VALIDITY_BLOCKS,
+    schedulePreparedAt: schedule.preparedAt,
     account,
     factoryOwner: owner,
     ownerIsContract,

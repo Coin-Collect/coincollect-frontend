@@ -26,6 +26,7 @@ export type LaunchStage =
   | 'FUNDING_IN_PROGRESS'
   | 'FINAL_VERIFYING'
   | 'COMPLETE'
+  | 'CORRUPTED'
   | 'FAILED'
 
 export type LaunchCheckStatus = 'PASS' | 'WARN' | 'BLOCK'
@@ -73,6 +74,9 @@ export interface NftPreflightResult {
   checkedAt: number
   chainId: number
   currentBlock: number
+  currentBlockAtPreflight: number
+  expiresAtBlock: number
+  schedulePreparedAt: number
   account: string
   factoryOwner?: string
   ownerIsContract: boolean
@@ -88,7 +92,34 @@ export interface VerificationResult {
   passed: boolean
   checkedAt: number
   checks: LaunchCheck[]
+  fingerprint?: string
   error?: string
+}
+
+export interface NftLaunchPoolSnapshot {
+  chainId: number
+  currentBlock: number
+  account?: string
+  factoryAddress?: string
+  factoryOwner?: string
+  factoryCode?: string
+  poolAddress?: string
+  poolCode?: string
+  owner?: string
+  stakedToken?: string
+  rewardToken?: string
+  sideRewardTokens?: string[]
+  sideRewardPercentages?: string[]
+  sideRewardActive?: boolean
+  rewardPerBlock?: string
+  startBlock?: number
+  endBlock?: number
+  poolLimitPerUser?: string
+  numberBlocksForUserLimit?: number
+  poolCapacity?: string
+  participantThreshold?: string
+  fingerprint?: string
+  readError?: string
 }
 
 export interface FundingProgress {
@@ -115,6 +146,7 @@ export interface NftPoolLaunchSession {
   updatedAt: number
   currentStage: LaunchStage
   schedule?: NftLaunchSchedule
+  pendingSchedule?: NftLaunchSchedule
   poolAddress?: string
   transactionHashes: {
     deploy?: string
@@ -128,6 +160,7 @@ export interface NftPoolLaunchSession {
     deployment?: VerificationResult
     weights?: VerificationResult
     fee?: VerificationResult
+    funding?: VerificationResult
     final?: VerificationResult
   }
   funding: {
@@ -138,6 +171,7 @@ export interface NftPoolLaunchSession {
   error?: string
   retryable: boolean
   frozenAt?: number
+  poolFingerprint?: string
 }
 
 export interface DeploymentResult {
