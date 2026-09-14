@@ -45,3 +45,4 @@ debug.log*
 
 # turbo
 .turbo
+public/images/.DS_Store
