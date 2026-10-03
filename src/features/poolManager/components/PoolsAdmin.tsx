@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import AdminShell from './AdminShell'
 import { usePoolManagerRegistry } from '../hooks'
@@ -30,7 +30,10 @@ export default function PoolsAdmin() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [durationDays, setDurationDays] = useState('30')
   const [budget, setBudget] = useState<Record<string, string>>({})
-  const [plan, setPlan] = useState<RenewalPlan | null>(() => (typeof window === 'undefined' ? null : loadRenewalPlan()))
+  const [plan, setPlan] = useState<RenewalPlan | null>(null)
+  useEffect(() => {
+    setPlan(loadRenewalPlan())
+  }, [])
   const pools = useMemo(
     () =>
       (data?.pools || []).filter((pool) => {
@@ -92,9 +95,13 @@ export default function PoolsAdmin() {
 
   return (
     <AdminShell
-      title="Pools"
-      subtitle="The registry merges legacy sous IDs with every SmartChef emitted by the configured factory."
+      title="Legacy ERC20 Pools"
+      subtitle="Existing ERC20 pool data remains available for inspection and renewal planning."
+      authorityScope="erc20"
     >
+      <Notice>
+        Legacy ERC20 pools remain available for inspection and renewal planning. New browser deployments are disabled.
+      </Notice>
       {error ? <Notice $error>{error}</Notice> : null}
       {data?.discoveryWarning ? <Notice>{data.discoveryWarning}</Notice> : null}
       <Panel>

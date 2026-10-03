@@ -18,6 +18,7 @@ import {
 import useWeb3React from 'hooks/useWeb3React'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import { loadNftPoolLaunchSession } from '../launch/storage'
+import { launchStageLabel } from '../launch/presentation'
 import {
   mapNftLaunchError,
   configureNftCollectionWeights,
@@ -78,29 +79,6 @@ function stageIndex(stage: LaunchStage): number {
   if (stage.startsWith('FUNDING')) return 5
   if (stage === 'FINAL_VERIFYING' || stage === 'COMPLETE') return 6
   return 2
-}
-
-function stageLabel(stage: LaunchStage): string {
-  if (stage === 'DRAFT' || stage === 'PREFLIGHT_RUNNING') return 'Checking setup'
-  if (stage === 'PREFLIGHT_READY') return 'Ready to create'
-  if (stage === 'PREFLIGHT_FAILED') return 'Needs attention'
-  if (stage === 'AWAITING_DEPLOY_SIGNATURE') return 'Wallet confirmation needed'
-  if (stage === 'DEPLOY_SUBMITTED' || stage === 'DEPLOY_CONFIRMING') return 'Creating contract'
-  if (stage === 'DEPLOY_CONFIRMED') return 'Verifying setup'
-  if (stage === 'DEPLOY_VERIFIED') return 'NFT setup ready'
-  if (stage === 'WEIGHTS_REQUIRED') return 'NFT setup needed'
-  if (stage === 'AWAITING_WEIGHTS_SIGNATURE') return 'Wallet confirmation needed'
-  if (stage === 'WEIGHTS_SUBMITTED' || stage === 'WEIGHTS_CONFIRMING') return 'Confirming NFT setup'
-  if (stage === 'WEIGHTS_VERIFIED') return 'NFT setup complete'
-  if (stage === 'FEE_CONFIG_REQUIRED') return 'Fee setup needed'
-  if (stage === 'AWAITING_FEE_SIGNATURE') return 'Wallet confirmation needed'
-  if (stage === 'FEE_SUBMITTED' || stage === 'FEE_CONFIRMING') return 'Confirming fee setup'
-  if (stage === 'FEE_VERIFIED') return 'Fee setup complete'
-  if (stage === 'FUNDING_REQUIRED') return 'Rewards funding needed'
-  if (stage === 'FUNDING_IN_PROGRESS') return 'Funding rewards'
-  if (stage === 'FINAL_VERIFYING') return 'Final check'
-  if (stage === 'COMPLETE') return 'Complete'
-  return 'Needs attention'
 }
 
 function CheckTable({ checks }: { checks: LaunchCheck[] }) {
@@ -1182,11 +1160,11 @@ export default function NftPoolLaunch() {
             {session.currentStage === 'COMPLETE' ? 'Pool ready' : 'Creating your pool'}
           </h2>
           <Muted>
-            {summary} · {stageLabel(session.currentStage).toLowerCase()}
+            {summary} · {launchStageLabel(session.currentStage).toLowerCase()}
           </Muted>
         </div>
         <LaunchPill $tone={session.currentStage === 'COMPLETE' ? 'good' : session.error ? 'bad' : 'warn'}>
-          {stageLabel(session.currentStage)}
+          {launchStageLabel(session.currentStage)}
         </LaunchPill>
       </LaunchHero>
       <Panel style={{ marginTop: 16 }}>

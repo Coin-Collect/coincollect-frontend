@@ -5,6 +5,10 @@ export const AdminPage = styled.main`
   margin: 0 auto;
   padding: 32px 20px 72px;
   color: ${({ theme }) => theme.colors.text};
+
+  @media (max-width: 720px) {
+    padding: 24px 16px 56px;
+  }
 `
 
 export const AccessPage = styled.main`
@@ -82,8 +86,16 @@ export const AdminNav = styled.nav`
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
   padding-bottom: 2px;
   margin-bottom: 28px;
+  scrollbar-width: thin;
+
+  @media (max-width: 560px) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
 `
 
 export const NavLink = styled.a<{ $active?: boolean }>`
@@ -100,6 +112,94 @@ export const NavLink = styled.a<{ $active?: boolean }>`
   &:hover {
     background: ${({ theme }) => theme.colors.backgroundAlt};
     color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+export const AdminModePill = styled.span<{ $ready?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme, $ready }) => ($ready ? `${theme.colors.success}44` : theme.colors.cardBorder)};
+  background: ${({ theme, $ready }) => ($ready ? `${theme.colors.success}18` : theme.colors.backgroundAlt)};
+  color: ${({ theme, $ready }) => ($ready ? theme.colors.success : theme.colors.textSubtle)};
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+`
+
+export const AdminModeNotice = styled.aside`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -8px 0 18px;
+  padding: 11px 14px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 12px;
+  line-height: 1.5;
+
+  strong {
+    display: block;
+    margin-bottom: 2px;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 13px;
+  }
+
+  details {
+    margin-top: 6px;
+  }
+
+  summary {
+    cursor: pointer;
+    color: ${({ theme }) => theme.colors.primary};
+  }
+
+  code {
+    display: block;
+    max-width: 100%;
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    gap: 10px;
+  }
+`
+
+export const AdminCreateLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.invertedContrast};
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: filter 120ms ease, transform 120ms ease;
+
+  &:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${({ theme }) => `${theme.colors.primary}55`};
+    outline-offset: 2px;
   }
 `
 

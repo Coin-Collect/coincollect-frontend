@@ -122,7 +122,7 @@ export default function NftPoolsAdmin() {
       subtitle="Create, review and operate Polygon NFT reward pools from one workspace."
       headerAction={
         <Link href="/admin/nft-pools/new" passHref legacyBehavior>
-          <PrimaryLink>+ New Pool</PrimaryLink>
+          <PrimaryLink>+ Create Pool</PrimaryLink>
         </Link>
       }
       authorityScope="nft"

@@ -242,6 +242,7 @@ export default function NewPoolWizard() {
     <AdminShell
       title="New pool"
       subtitle="Five clear inputs become one exact v2 factory deployment. Review first; deploy and fund are always separate wallet actions."
+      authorityScope="erc20"
     >
       {sourcePool ? (
         <Notice>

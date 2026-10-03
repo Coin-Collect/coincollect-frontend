@@ -28,6 +28,7 @@ export default function PoolDetail() {
     <AdminShell
       title="Pool detail"
       subtitle="All values below are introspected from the SmartChef contract and its ERC20 balances."
+      authorityScope="erc20"
     >
       {error ? <Notice $error>{error}</Notice> : null}
       {loading ? <Panel>Reading Polygon…</Panel> : null}

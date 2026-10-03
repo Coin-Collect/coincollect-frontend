@@ -102,6 +102,7 @@ export default function Treasury() {
     <AdminShell
       title="Treasury"
       subtitle="Aggregated reward balances and schedule caps help operators prepare funding without implying that a pool is fully funded."
+      authorityScope="erc20"
     >
       {error ? <Notice $error>{error}</Notice> : null}
       <MetricGrid>

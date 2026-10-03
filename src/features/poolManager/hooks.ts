@@ -43,7 +43,7 @@ export function usePoolManagerRegistry() {
 export function usePoolManagerAuthority(
   factoryAddressOverride?: string | null,
 ): PoolManagerAuthority & { loading: boolean; refresh: () => Promise<void> } {
-  const { account, library } = useWeb3React()
+  const { account } = useWeb3React()
   const [authority, setAuthority] = useState<PoolManagerAuthority>({
     factoryAddress: null,
     account,
@@ -58,31 +58,14 @@ export function usePoolManagerAuthority(
     const currentRequestId = ++requestId.current
     setLoading(true)
 
-    if (!account) {
-      setAuthority({
-        factoryAddress: factoryAddressOverride || null,
-        account: null,
-        ownerIsContract: false,
-        authorized: false,
-        state: 'WALLET_REQUIRED',
-      })
-      setLoading(false)
-      return
-    }
-
     try {
-      const nextAuthority = await getFactoryAuthority(
-        library || simplePolygonRpcProvider,
-        account,
-        137,
-        factoryAddressOverride,
-      )
+      const nextAuthority = await getFactoryAuthority(simplePolygonRpcProvider, account, 137, factoryAddressOverride)
       if (currentRequestId !== requestId.current) return
       setAuthority(nextAuthority)
     } finally {
       if (currentRequestId === requestId.current) setLoading(false)
     }
-  }, [account, factoryAddressOverride, library])
+  }, [account, factoryAddressOverride])
 
   useEffect(() => {
     void refresh()
