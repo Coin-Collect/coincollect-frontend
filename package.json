@@ -8,6 +8,13 @@
   "scripts": {
     "analyze": "ANALYZE=true yarn build",
     "dev": "next dev",
+    "fork:install": "npm install --prefix scripts/local-fork-tool --no-audit --no-fund",
+    "fork:start": "node scripts/local-fork-tool/main.cjs start",
+    "fork:seed": "node scripts/local-fork-tool/main.cjs seed",
+    "fork:status": "node scripts/local-fork-tool/main.cjs status",
+    "fork:reset": "node scripts/local-fork-tool/main.cjs reset",
+    "dev:fork": "node scripts/local-fork-tool/main.cjs dev",
+    "test:fork": "node scripts/local-fork-tool/main.cjs test",
     "build": "next build",
     "start": "next start",
     "test": "jest",

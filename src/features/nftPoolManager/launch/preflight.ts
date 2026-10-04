@@ -10,6 +10,7 @@ import { NftPoolDeploymentPlan } from '../types'
 import { NftLaunchSchedule, LaunchCheck, NftPreflightResult, LaunchGasEstimate, LaunchTokenBalance } from './types'
 import { MIN_PREFLIGHT_VALIDITY_BLOCKS, prepareNftLaunchSchedule } from './schedule'
 import { simulateNftDeploy } from './transactions'
+import { getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
 
 function check(
   key: string,
@@ -86,10 +87,10 @@ export async function runNftPoolPreflight(args: {
     checks.push(
       check(
         'chain',
-        'Connected network is Polygon',
-        chainId === 137 ? 'PASS' : 'BLOCK',
+        isLocalForkMode ? 'Connected network is the isolated local Polygon fork' : 'Connected network is Polygon',
+        chainId === getPolygonRuntimeChainId() ? 'PASS' : 'BLOCK',
         undefined,
-        '137',
+        String(getPolygonRuntimeChainId()),
         String(chainId),
       ),
     )

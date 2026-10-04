@@ -1,6 +1,7 @@
 import sample from 'lodash/sample'
 import { ChainId } from '@coincollect/sdk'
 import { PUBLIC_NODES } from 'config/nodes'
+import { getLocalForkRpcUrl, isLocalForkMode } from 'config/localFork'
 
 if (
   process.env.NODE_ENV !== 'production' &&
@@ -13,7 +14,9 @@ if (
 export const nodes = [process.env.NEXT_PUBLIC_NODE_1, process.env.NEXT_PUBLIC_NODE_2, process.env.NEXT_PUBLIC_NODE_3]
 
 // Array of available nodes to connect to
-export const maticNodes = (
+export const maticNodes = isLocalForkMode
+  ? [getLocalForkRpcUrl()!]
+  : (
   [
     process.env.NEXT_PUBLIC_MATIC_NODE_1,
     process.env.NEXT_PUBLIC_MATIC_NODE_2,
@@ -35,6 +38,7 @@ const getNodeUrl = () => {
 }
 
 export const getPolygonNodeUrl = () => {
+  if (isLocalForkMode) return getLocalForkRpcUrl()!
   // Use custom node if available (both for development and production)
   // However on the testnet it wouldn't work, so if on testnet - comment out the NEXT_PUBLIC_NODE_PRODUCTION from env file
   if (process.env.NEXT_PUBLIC_POLYGON_NODE_PRODUCTION) {

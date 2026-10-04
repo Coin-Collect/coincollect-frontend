@@ -16,6 +16,7 @@ import {
 } from 'utils/addressHelpers'
 import { nftPoolRegistryRpcProvider } from 'utils/providers'
 import { POLYGON_BLOCK_TIME } from 'config'
+import { getPolygonRuntimeChainId } from 'config/localFork'
 import {
   configuredPoolCollections,
   deriveNftPoolStatus,
@@ -1104,7 +1105,7 @@ export async function getNftPoolRegistry(
 /** Exact-address read, independent from indexer discovery and legacy pid lookup. */
 async function readExactV2Pool(provider: Provider, address: string): Promise<NftPool> {
   const network = await provider.getNetwork()
-  if (network.chainId !== NFT_POOL_MANAGER_CHAIN_ID) throw new Error('Expected Polygon network.')
+  if (network.chainId !== getPolygonRuntimeChainId()) throw new Error('Expected Polygon network or its isolated local fork.')
   const currentBlock = await provider.getBlockNumber()
   const pool = await readV2PoolWithTimeout(
     provider,

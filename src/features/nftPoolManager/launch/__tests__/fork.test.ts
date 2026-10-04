@@ -28,6 +28,7 @@ import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
 
 const forkUrl = process.env.COINCOLLECT_FORK_RPC
 const forkTest = forkUrl ? it : it.skip
+const preservePublishedTestPool = process.env.COINCOLLECT_FORK_PRESERVE_TEST_POOL === '1'
 
 forkTest(
   'uses the real factory and existing engine to deploy, configure, fund, verify and publish on an isolated fork',
@@ -41,18 +42,22 @@ forkTest(
     )
       throw new Error('Fork writes require an explicit loopback HTTP endpoint.')
     const provider = new JsonRpcProvider(forkUrl)
-    expect((await provider.getNetwork()).chainId).toBe(137)
+    expect((await provider.getNetwork()).chainId).toBe(Number(process.env.COINCOLLECT_FORK_CHAIN_ID || 137))
     // This method proves the endpoint is a local Anvil instance before any write.
     await provider.send('anvil_nodeInfo', [])
     const checkpoint = await provider.send('evm_snapshot', [])
     const factoryAddress = getNftSmartChefFactoryAddress(137)!
     let owner: string | undefined
+    let preservedPublishedPool = false
     try {
       owner = await new Contract(factoryAddress, ['function owner() view returns (address)'], provider).owner()
       await provider.send('anvil_impersonateAccount', [owner])
       await provider.send('anvil_setBalance', [owner, '0x3635c9adc5dea00000'])
       const signer = provider.getSigner(owner)
-      const compiler = require(process.env.COINCOLLECT_SOLC_MODULE || 'solc')
+      const compilerModule =
+        process.env.COINCOLLECT_SOLC_MODULE ||
+        require.resolve('solc', { paths: [process.cwd(), join(process.cwd(), 'scripts/local-fork-tool')] })
+      const compiler = require(compilerModule)
       const output = JSON.parse(
         compiler.compile(
           JSON.stringify({
@@ -167,14 +172,22 @@ forkTest(
       expect(published.snapshot.rewards[1].percentage).toBe(plan.factoryParameters.sideRewardPercentages[0])
       expect(published.snapshot.collections.map((item) => item.weight)).toEqual(['30', '1'])
       expect(published.snapshot.status).toBe('UPCOMING')
+      const publicationCheckpoint = await provider.send('evm_snapshot', [])
       await provider.send('anvil_mine', [`0x${(schedule.startBlock - (await provider.getBlockNumber())).toString(16)}`])
       console.info('Fork: mined to start block')
       expect((await hydratePublishedPool(published, provider)).snapshot.status).toBe('ACTIVE')
       await provider.send('anvil_mine', [`0x${(schedule.endBlock - (await provider.getBlockNumber())).toString(16)}`])
       expect((await hydratePublishedPool(published, provider)).snapshot.status).toBe('FINISHED')
+      if (preservePublishedTestPool) {
+        const restored = await provider.send('evm_revert', [publicationCheckpoint])
+        if (!restored) throw new Error('Could not restore the locally published pool to its upcoming state.')
+        preservedPublishedPool = true
+        console.info(`COINCOLLECT_FORK_PUBLICATION=${JSON.stringify(published)}`)
+        console.info('Fork: verified upcoming pool retained locally for /nftpools UI verification')
+      }
     } finally {
       if (owner) await provider.send('anvil_stopImpersonatingAccount', [owner])
-      await provider.send('evm_revert', [checkpoint])
+      if (!preservedPublishedPool) await provider.send('evm_revert', [checkpoint])
     }
   },
   180_000,

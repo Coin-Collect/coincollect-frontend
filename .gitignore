@@ -13,6 +13,7 @@ cypress/fixtures/example.json
 
 # next.js
 .next/
+.next-fork/
 .next-verification/
 out/
 .idea/
@@ -46,4 +47,5 @@ debug.log*
 
 # turbo
 .turbo
+.coincollect-fork/
 public/images/.DS_Store

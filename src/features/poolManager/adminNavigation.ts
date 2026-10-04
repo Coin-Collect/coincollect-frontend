@@ -1,4 +1,5 @@
 import { PoolManagerAuthorityState } from './types'
+import { isLocalForkMode } from 'config/localFork'
 
 export const PRIMARY_CREATE_POOL_HREF = '/admin/nft-pools/new'
 
@@ -88,7 +89,9 @@ export function getAdminAuthorityPresentation(input: AdminAuthorityPresentationI
       writeEnabled: false,
       notice: {
         title: 'Wrong network',
-        message: `Switch your wallet to Polygon (chain ${input.requiredChainId}) to perform pool actions.`,
+        message: isLocalForkMode
+          ? `Switch your wallet to the local Polygon fork (chain ${input.requiredChainId}) to perform pool actions.`
+          : `Switch your wallet to Polygon (chain ${input.requiredChainId}) to perform pool actions.`,
       },
     }
   }

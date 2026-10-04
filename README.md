@@ -78,6 +78,8 @@
 
 ### Installation
 
+For a safe local Polygon-fork workflow for NFT Pool Studio, see [Local Polygon Fork](docs/local-polygon-fork.md).
+
 ```bash
 # Clone the repository
 git clone https://github.com/your-username/coincollect-frontend.git

@@ -3,8 +3,9 @@ import { toUtf8Bytes } from '@ethersproject/strings'
 import { NftPoolDeploymentPlan } from '../types'
 import { NftPoolLaunchSession, LaunchStage } from './types'
 import type { PublicationMetadata } from '../publication'
+import { getLocalForkStorageKey } from 'config/localFork'
 
-export const LAUNCH_STORAGE_KEY = 'coincollect.nft-pool-launch-sessions.v1'
+export const LAUNCH_STORAGE_KEY = getLocalForkStorageKey('coincollect.nft-pool-launch-sessions.v1')
 
 function canUseStorage(): boolean {
   try {

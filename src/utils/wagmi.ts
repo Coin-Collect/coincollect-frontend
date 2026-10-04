@@ -1,6 +1,8 @@
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config'
 import memoize from 'lodash/memoize'
-import { polygon, polygonAmoy } from 'wagmi/chains'
+import { defineChain } from 'viem'
+import { polygon } from 'wagmi/chains'
+import { getLocalForkRpcUrl, isLocalForkMode, LOCAL_FORK_CHAIN_ID } from 'config/localFork'
 
 // Get projectId from https://cloud.walletconnect.com
 export const projectId = 'e0c7decec4ed90ec17fd3c5f3cba1c4c'
@@ -11,11 +13,21 @@ export const metadata = {
   name: 'CoinCollect',
   description: 'Generate Passive Income through NFTs',
   url: 'https://app.coincollect.org/', // origin must match your domain & subdomain
-  icons: ['https://coincollect.org/assets/images/logos/512logo-1.png']
+  icons: ['/images/logos/512logo-1.png'],
 }
 
 // Create wagmiConfig
-const chains = [polygon] as const
+const localForkChain = isLocalForkMode
+  ? defineChain({
+      id: LOCAL_FORK_CHAIN_ID,
+      name: 'CoinCollect Polygon Fork (LOCAL)',
+      nativeCurrency: { name: 'Polygon Ecosystem Token', symbol: 'POL', decimals: 18 },
+      rpcUrls: { default: { http: [getLocalForkRpcUrl()!] } },
+    })
+  : undefined
+
+const chains = localForkChain ? ([localForkChain] as const) : ([polygon] as const)
+export const defaultChain = chains[0]
 export const config = defaultWagmiConfig({
   chains,
   projectId,

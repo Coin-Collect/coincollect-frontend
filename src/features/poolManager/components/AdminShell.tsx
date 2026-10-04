@@ -12,6 +12,7 @@ import {
   PRIMARY_CREATE_POOL_HREF,
 } from '../adminNavigation'
 import { usePoolManagerAuthority } from '../hooks'
+import { getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
 import {
   AccessCard,
   AccessMark,
@@ -53,10 +54,11 @@ export default function AdminShell({
       : getSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
   const authority = usePoolManagerAuthority(factoryAddress)
   const activePath = router.asPath.split('?')[0]
+  const requiredChainId = getPolygonRuntimeChainId()
   const access = getAdminAuthorityPresentation({
     account,
     chainId,
-    requiredChainId: POOL_MANAGER_CHAIN_ID,
+    requiredChainId,
     authorityState: authority.state,
     ownerIsContract: authority.ownerIsContract,
     authorized: authority.authorized,
@@ -135,7 +137,9 @@ export default function AdminShell({
           {resolvedHeaderAction}
           <AdminModePill $ready={access.writeEnabled}>{access.statusLabel}</AdminModePill>
           {chainId ? (
-            <AdminModePill>{chainId === POOL_MANAGER_CHAIN_ID ? 'Polygon' : `Chain ${chainId}`}</AdminModePill>
+            <AdminModePill>
+              {chainId === requiredChainId ? (isLocalForkMode ? 'LOCAL FORK' : 'Polygon') : `Chain ${chainId}`}
+            </AdminModePill>
           ) : null}
           {account ? (
             <Muted>
@@ -159,9 +163,9 @@ export default function AdminShell({
               </details>
             ) : null}
           </div>
-          {chainId && chainId !== POOL_MANAGER_CHAIN_ID ? (
-            <ActionButton onClick={() => switchChain({ chainId: POOL_MANAGER_CHAIN_ID })} disabled={switchingNetwork}>
-              {switchingNetwork ? 'Switching…' : 'Switch to Polygon'}
+          {chainId && chainId !== requiredChainId ? (
+            <ActionButton onClick={() => switchChain({ chainId: requiredChainId })} disabled={switchingNetwork}>
+              {switchingNetwork ? 'Switching…' : isLocalForkMode ? 'Switch to local fork' : 'Switch to Polygon'}
             </ActionButton>
           ) : authority.state === 'UNAVAILABLE' ? (
             <ActionButton $secondary onClick={() => void authority.refresh()}>

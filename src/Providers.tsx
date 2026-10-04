@@ -9,9 +9,8 @@ import { fetchStatusMiddleware } from 'hooks/useSWRContract'
 import { Store } from '@reduxjs/toolkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
-import { config, metadata, projectId } from 'utils/wagmi'
+import { config, defaultChain, metadata, projectId } from 'utils/wagmi'
 import { createWeb3Modal } from '@web3modal/wagmi/react'
-import { polygon } from 'viem/chains'
 import { PropsWithChildren } from 'react'
 import { MusicProvider } from 'contexts/MusicContext'
 
@@ -31,7 +30,7 @@ if (!projectId) throw new Error('Project ID is not defined')
     wagmiConfig: config,
     projectId,
     enableAnalytics: false, // Optional - defaults to your Cloud configuration
-    defaultChain: polygon,
+    defaultChain,
     themeVariables: {
       '--w3m-accent': '#E91E63',
     },

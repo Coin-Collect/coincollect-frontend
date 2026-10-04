@@ -1,11 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { getLocalForkRpcUrl, isLocalForkMode } from 'config/localFork'
 
 const UPSTREAM_TIMEOUT_MS = 8_000
-const UPSTREAMS = [
-  process.env.NEXT_PUBLIC_MATIC_NODE_1,
-  'https://polygon-bor-rpc.publicnode.com',
-  'https://polygon.gateway.tenderly.co',
-].filter(Boolean) as string[]
+const UPSTREAMS = isLocalForkMode
+  ? [getLocalForkRpcUrl()!]
+  : [
+      process.env.NEXT_PUBLIC_MATIC_NODE_1,
+      'https://polygon-bor-rpc.publicnode.com',
+      'https://polygon.gateway.tenderly.co',
+    ].filter(Boolean) as string[]
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -14,7 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const requestBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
-  let lastError = 'Polygon RPC upstream unavailable.'
+  let lastError = isLocalForkMode
+    ? 'Local Polygon fork RPC is unavailable; no remote fallback is allowed.'
+    : 'Polygon RPC upstream unavailable.'
 
   for (const upstream of UPSTREAMS) {
     const controller = new AbortController()

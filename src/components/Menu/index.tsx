@@ -20,6 +20,26 @@ import { getActiveMenuItem, getActiveSubMenuItem } from './utils'
 import { footerLinks } from './config/footerConfig'
 import { getNavConfig } from './config/navConfig'
 import { getDrawerLinks, getSubLinks, getTopLinks } from './config/navMappers'
+import { isLocalForkMode } from 'config/localFork'
+
+const LocalForkNotice = () => (
+  <div
+    role="status"
+    style={{
+      position: 'relative',
+      zIndex: 1100,
+      padding: '8px 16px',
+      background: '#5b1a2b',
+      color: '#fff',
+      textAlign: 'center',
+      fontSize: 12,
+      fontWeight: 800,
+      letterSpacing: '0.06em',
+    }}
+  >
+    LOCAL FORK · Chain 31337 · Transactions stay on this computer; no Polygon mainnet writes
+  </div>
+)
 
 const Menu = (props) => {
   const { isDark, toggleTheme } = useTheme()
@@ -55,7 +75,9 @@ const Menu = (props) => {
     : undefined
 
   return (
-    <UikitMenu
+    <>
+      {isLocalForkMode ? <LocalForkNotice /> : null}
+      <UikitMenu
       linkComponent={(linkProps) => {
         return <NextLinkFromReactRouter to={linkProps.href} {...linkProps} prefetch={false} />
       }}
@@ -78,8 +100,9 @@ const Menu = (props) => {
       homeHref="/"
       buyCakeLabel={t('Buy COLLECT')}
       panelFooterActions={<FooterControls />}
-      {...props}
-    />
+        {...props}
+      />
+    </>
   )
 }
 

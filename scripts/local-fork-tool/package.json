@@ -1,0 +1,14 @@
+{
+  "name": "coincollect-local-fork-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Isolated local-only Polygon fork tools for CoinCollect development",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@foundry-rs/anvil": "1.7.1",
+    "ethers": "5.8.0",
+    "solc": "0.8.30"
+  }
+}

@@ -2,9 +2,10 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { normalizeWrappedReward } from './rewardTokens'
 import { createEmptyNftPoolDraft, createNftPoolCloneDraft } from './registry'
 import { NftPool, NftPoolDraft, NftPoolDraftEconomics, NftPoolDraftQuote, NftPoolSourceEconomics } from './types'
+import { getLocalForkStorageKey } from 'config/localFork'
 
-export const NFT_POOL_DRAFT_STORAGE_KEY = 'coincollect.nft-pool-studio.drafts.v2'
-export const NFT_POOL_DRAFT_STORAGE_KEY_V1 = 'coincollect.nft-pool-studio.drafts.v1'
+export const NFT_POOL_DRAFT_STORAGE_KEY = getLocalForkStorageKey('coincollect.nft-pool-studio.drafts.v2')
+export const NFT_POOL_DRAFT_STORAGE_KEY_V1 = getLocalForkStorageKey('coincollect.nft-pool-studio.drafts.v1')
 
 function canUseStorage(): boolean {
   try {

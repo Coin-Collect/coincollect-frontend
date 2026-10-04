@@ -8,6 +8,7 @@ import {
   MIN_PREFLIGHT_VALIDITY_BLOCKS,
 } from './schedule'
 import { LaunchStage, NftLaunchPoolSnapshot, NftPoolLaunchSession } from './types'
+import { getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
 
 export interface LaunchEligibility {
   allowed: boolean
@@ -114,7 +115,8 @@ function hasFreshPreflight(session: NftPoolLaunchSession, currentBlock: number):
   const preflight = session.preflight
   const schedule = session.schedule
   if (!preflight || !schedule || !preflight.ok) return false
-  if (preflight.chainId !== 137 || preflight.currentBlockAtPreflight !== preflight.currentBlock) return false
+  if (preflight.chainId !== getPolygonRuntimeChainId() || preflight.currentBlockAtPreflight !== preflight.currentBlock)
+    return false
   if (preflight.expiresAtBlock <= 0 || currentBlock > preflight.expiresAtBlock) return false
   if (schedule.preparedAt !== preflight.schedulePreparedAt) return false
   if (
@@ -134,7 +136,11 @@ function commonChainReasons(session: NftPoolLaunchSession, snapshot: NftLaunchPo
   const reasons = planIntegrityReasons(session)
   reasons.push(...validateLaunchSessionInvariant(session).filter((reason) => !reasons.includes(reason)))
   addReason(reasons, snapshot.readError !== undefined, snapshot.readError || 'Required chain reads are unavailable.')
-  addReason(reasons, snapshot.chainId !== 137, 'Connected chain is not Polygon (chain 137).')
+  addReason(
+    reasons,
+    snapshot.chainId !== getPolygonRuntimeChainId(),
+    isLocalForkMode ? 'Connected chain is not the isolated local Polygon fork.' : 'Connected chain is not Polygon (chain 137).',
+  )
   addReason(reasons, !snapshot.account, 'Connected wallet address could not be revalidated.')
   addReason(
     reasons,

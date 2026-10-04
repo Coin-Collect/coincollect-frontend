@@ -5,6 +5,7 @@ import { polygon } from 'viem/chains'
 
 import { CHAINS } from 'config/chains'
 import { PUBLIC_NODES } from 'config/nodes'
+import { getLocalForkRpcUrl, isLocalForkMode } from 'config/localFork'
 
 export type CreatePublicClientParams = {
   transportSignal?: AbortSignal
@@ -17,7 +18,7 @@ export function createViemPublicClients({ transportSignal }: CreatePublicClientP
       [cur.id]: createPublicClient({
         chain: cur,
         transport: fallback(
-          (PUBLIC_NODES[cur.id] as string[]).map((url) =>
+          (isLocalForkMode ? [getLocalForkRpcUrl()!] : (PUBLIC_NODES[cur.id] as string[])).map((url) =>
             http(url, {
               timeout: 10_000,
               fetchOptions: {
@@ -73,6 +74,13 @@ export const CLIENT_CONFIG = {
 }
 
 export const publicClient = ({ chainId }: { chainId?: ChainId }) => {
+  if (isLocalForkMode) {
+    return createPublicClient({
+      chain: polygon,
+      transport: http(getLocalForkRpcUrl()!),
+      ...CLIENT_CONFIG,
+    })
+  }
   if (chainId && viemClients[chainId]) {
     return viemClients[chainId]
   }

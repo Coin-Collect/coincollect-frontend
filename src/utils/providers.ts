@@ -1,6 +1,7 @@
 import { FallbackProvider, StaticJsonRpcProvider, type Networkish } from '@ethersproject/providers'
 import { ChainId } from '@coincollect/sdk'
 import getRpcUrl, { maticNodes } from 'utils/getRpcUrl'
+import { getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
 
 const RPC_URL = getRpcUrl()
 
@@ -100,13 +101,13 @@ class QueuedStaticJsonRpcProvider extends StaticJsonRpcProvider {
 
 export const simpleRpcProvider = new StaticJsonRpcProvider(RPC_URL)
 export const simplePolygonRpcProvider = createFallbackProvider(maticNodes, {
-  chainId: ChainId.POLYGON,
-  name: 'polygon',
+  chainId: getPolygonRuntimeChainId(),
+  name: isLocalForkMode ? 'coincollect-polygon-fork' : 'polygon',
 })
 const registryRpcUrls = typeof window === 'undefined' ? maticNodes : ['/api/rpc/polygon']
 export const nftPoolRegistryRpcProvider = new QueuedStaticJsonRpcProvider(
   registryRpcUrls,
-  { chainId: ChainId.POLYGON, name: 'polygon' },
+  { chainId: getPolygonRuntimeChainId(), name: isLocalForkMode ? 'coincollect-polygon-fork' : 'polygon' },
   8,
 )
 

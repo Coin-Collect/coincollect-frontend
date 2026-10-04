@@ -8,8 +8,9 @@ import { loadNftPoolDraft } from './storage'
 import { readNftPoolByAddress } from './discovery'
 import { normalizeWrappedReward } from './rewardTokens'
 import { resolveNftAssetUrl } from './assets'
+import { getLocalForkStorageKey, getPolygonRuntimeChainId } from 'config/localFork'
 
-export const PUBLICATION_STORAGE_KEY = 'coincollect.nft-pool-publications.v1'
+export const PUBLICATION_STORAGE_KEY = getLocalForkStorageKey('coincollect.nft-pool-publications.v1')
 export const PUBLICATION_EVENT = 'coincollect:nft-pool-publication'
 
 export interface PublicationMetadata extends NftPoolFrontendMetadata {
@@ -267,7 +268,8 @@ export async function publishCompletedNftPool(
     !session.schedule
   )
     throw new Error(errors[0] || 'Only a verified complete launch can be published.')
-  if ((await provider.getNetwork()).chainId !== 137) throw new Error('Expected Polygon network.')
+  if ((await provider.getNetwork()).chainId !== getPolygonRuntimeChainId())
+    throw new Error('Expected Polygon network or its isolated local fork.')
   const receipt = await provider.getTransactionReceipt(session.transactionHashes.deploy)
   if (
     !receipt ||

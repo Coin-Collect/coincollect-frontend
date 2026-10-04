@@ -11,6 +11,7 @@ import {
   useCombinedActiveList,
   useCombinedInactiveList,
 } from '../state/lists/hooks'
+import { getTokensForChain } from '../state/lists/tokenMap'
 
 import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
 import useUserAddedTokens from '../state/user/hooks/useUserAddedTokens'
@@ -28,11 +29,9 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
   return useMemo(() => {
     if (!chainId) return {}
 
-    // reduce to just tokens
-    const mapWithoutUrls = Object.keys(tokenMap[chainId]).reduce<{ [address: string]: Token }>((newMap, address) => {
-      newMap[address] = tokenMap[chainId][address].token
-      return newMap
-    }, {})
+    // Unsupported networks (for example the local Polygon fork, chain 31337)
+    // have no canonical list entry. Keep the app usable instead of crashing.
+    const mapWithoutUrls = getTokensForChain(tokenMap, chainId)
 
     if (includeUserAdded) {
       return (
