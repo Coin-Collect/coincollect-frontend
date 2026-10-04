@@ -56,12 +56,12 @@ describe('NFT Pool Studio economics preview', () => {
     expect(gold.dailyReward.toString()).toBe(String(Number(starter.dailyReward.toString()) * 10))
   })
 
-  it("includes a solo NFT's own weight in the pool total when it exceeds the minimum power floor", () => {
+  it.each([0, 1])("includes a solo NFT's own weight when the threshold is %s", (threshold) => {
     const emission = calculateDailyPrimaryEmission(rewardPerBlock, 2)
     const keyNft = calculateSoloStakeRewardSharePreview({
       rewardPerBlock,
       participantWeight: BigNumber.from(30),
-      participantThreshold: BigNumber.from(1),
+      participantThreshold: BigNumber.from(threshold),
       secondsPerBlock: 2,
     })
 

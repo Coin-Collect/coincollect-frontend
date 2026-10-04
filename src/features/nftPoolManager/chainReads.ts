@@ -16,7 +16,7 @@ export interface IndexedArrayResult<T> {
 export async function readIndexedArrayUntilRevert<T>(
   contract: Contract,
   method: string,
-  options: { hardCap?: number; timeoutMs?: number } = {},
+  options: { hardCap?: number; timeoutMs?: number; strict?: boolean } = {},
 ): Promise<IndexedArrayResult<T>> {
   const hardCap = options.hardCap || 32
   const timeoutMs = options.timeoutMs || 10_000
@@ -30,6 +30,7 @@ export async function readIndexedArrayUntilRevert<T>(
       })
       values.push(await Promise.race([call, timeoutCall]))
     } catch (error) {
+      if (options.strict && (error as { code?: string })?.code !== 'CALL_EXCEPTION') throw error
       const message = error instanceof Error ? error.message : `Indexed ${method}[${index}] reverted.`
       return {
         values,

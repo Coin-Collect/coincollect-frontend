@@ -143,6 +143,7 @@ describe('NFT pool status and clone safety', () => {
     expect((draft.economics as any).primaryRewardAllocation).toBeUndefined()
     expect(draft.sourceEconomics?.originalRewardPerBlock?.toString()).toBe('123')
     expect(draft.constraints.poolCapacity).toBe('75')
+    expect(draft.constraints.participantThreshold).toBe('3')
     expect(draft.constraints.userLimitEnabled).toBe(true)
     expect('startBlock' in draft).toBe(false)
     expect('endBlock' in draft.economics).toBe(false)

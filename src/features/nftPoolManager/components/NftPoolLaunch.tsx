@@ -18,6 +18,7 @@ import {
 import useWeb3React from 'hooks/useWeb3React'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import { loadNftPoolLaunchSession } from '../launch/storage'
+import { publishCompletedNftPool } from '../publication'
 import { launchStageLabel } from '../launch/presentation'
 import {
   mapNftLaunchError,
@@ -115,6 +116,9 @@ export default function NftPoolLaunch() {
   const [confirmDeploy, setConfirmDeploy] = useState(false)
   const [chainSnapshot, setChainSnapshot] = useState<NftLaunchPoolSnapshot | null>(null)
   const [snapshotError, setSnapshotError] = useState('')
+  const [publicationStatus, setPublicationStatus] = useState('')
+  const [publicationError, setPublicationError] = useState('')
+  const [publicationRetry, setPublicationRetry] = useState(0)
   const sessionRef = useRef<NftPoolLaunchSession | null>(null)
   const reconciledDeployRef = useRef<string>()
 
@@ -126,6 +130,26 @@ export default function NftPoolLaunch() {
     if (!router.isReady || !sessionId) return
     setSession(loadNftPoolLaunchSession(sessionId) || null)
   }, [router.isReady, sessionId])
+
+  useEffect(() => {
+    if (session?.currentStage !== 'COMPLETE') return undefined
+    let active = true
+    setPublicationStatus('Publishing locally…')
+    setPublicationError('')
+    publishCompletedNftPool(session, simplePolygonRpcProvider)
+      .then(() => {
+        if (active) setPublicationStatus('Published on this browser’s /nftpools page.')
+      })
+      .catch((reason) => {
+        if (active) {
+          setPublicationStatus('')
+          setPublicationError(reason instanceof Error ? reason.message : 'Local publication failed.')
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [session, publicationRetry])
 
   useEffect(() => {
     if (!session || !library) {
@@ -153,7 +177,7 @@ export default function NftPoolLaunch() {
     return () => {
       active = false
     }
-  }, [library, session?.sessionId, session?.updatedAt, account])
+  }, [library, session, account])
 
   useEffect(() => {
     const deployHash = session?.transactionHashes.deploy
@@ -1408,6 +1432,14 @@ export default function NftPoolLaunch() {
         <Panel style={{ marginTop: 16 }}>
           <LaunchPill $tone="good">Launch complete</LaunchPill>
           <h3>Pool is ready for its upcoming start block.</h3>
+          <p role="status">{publicationStatus}</p>
+          {publicationError ? (
+            <div role="alert">
+              <p>Pool setup is complete. Local publication failed: {publicationError}</p>
+              <ActionButton onClick={() => setPublicationRetry((count) => count + 1)}>Publish locally</ActionButton>
+            </div>
+          ) : null}
+          <Link href="/nftpools">View NFT pools</Link>
           <Muted>
             All required deployment, configuration and funding read-backs passed. The workflow never performs an
             automatic swap or a hidden transaction.

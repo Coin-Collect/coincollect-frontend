@@ -2,11 +2,16 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { NftPoolDeploymentPlan } from '../types'
 import { NftPoolLaunchSession, LaunchStage } from './types'
+import type { PublicationMetadata } from '../publication'
 
 export const LAUNCH_STORAGE_KEY = 'coincollect.nft-pool-launch-sessions.v1'
 
 function canUseStorage(): boolean {
-  return typeof window !== 'undefined' && Boolean(window.localStorage)
+  try {
+    return typeof window !== 'undefined' && Boolean(window.localStorage)
+  } catch {
+    return false
+  }
 }
 
 function stableValue(value: any): any {
@@ -150,6 +155,7 @@ export function createNftPoolLaunchSession(
   chainId = plan.chainId,
   factoryAddress = plan.factoryAddress,
   intendedAdmin = plan.factoryParameters.intendedAdmin,
+  publicationMetadata?: PublicationMetadata,
 ): NftPoolLaunchSession {
   const now = Date.now()
   const sessionId = `nft-launch-${now}-${Math.random().toString(36).slice(2, 8)}`
@@ -159,6 +165,7 @@ export function createNftPoolLaunchSession(
     draftId: plan.draftId,
     plan: JSON.parse(JSON.stringify(plan)),
     planHash: hashNftPoolDeploymentPlan(plan),
+    publicationMetadata,
     chainId,
     factoryAddress,
     intendedAdmin,

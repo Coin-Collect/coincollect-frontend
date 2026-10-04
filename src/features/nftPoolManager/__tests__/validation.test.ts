@@ -55,7 +55,7 @@ describe('NFT pool draft validation', () => {
     expect(validateNftPoolDraft(draft).blockers).not.toContain('Collection weights must be positive integers.')
   })
 
-  it('requires minimum effective power to cover the combined selected NFT power', () => {
+  it('keeps the threshold independent of the combined selected NFT power', () => {
     const draft = createEmptyNftPoolDraft()
     draft.collections = [
       {
@@ -75,15 +75,14 @@ describe('NFT pool draft validation', () => {
         primary: false,
       },
     ]
-    draft.constraints.participantThreshold = '30'
-
-    expect(validateNftPoolDraft(draft).blockers).toContain(
-      'Minimum effective staking power must be at least the combined NFT power (31).',
-    )
-    draft.constraints.participantThreshold = '31'
-    expect(validateNftPoolDraft(draft).blockers).not.toContain(
-      'Minimum effective staking power must be at least the combined NFT power (31).',
-    )
+    for (const threshold of ['0', '1', '30', '31', '90']) {
+      draft.constraints.participantThreshold = threshold
+      expect(
+        validateNftPoolDraft(draft).blockers.filter((message) =>
+          /threshold|effective staking power|combined NFT power/i.test(message),
+        ),
+      ).toEqual([])
+    }
   })
 
   it('marks manual amounts for review without pretending they have a budget valuation', () => {

@@ -1,6 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import type { TransactionReceipt } from '@ethersproject/providers'
 import { NftPoolDeploymentPlan } from '../types'
+import type { PublicationMetadata } from '../publication'
 
 export type LaunchStage =
   | 'DRAFT'
@@ -91,6 +92,7 @@ export interface NftPreflightResult {
 export interface VerificationResult {
   passed: boolean
   checkedAt: number
+  checkedAtBlock?: number
   checks: LaunchCheck[]
   fingerprint?: string
   error?: string
@@ -172,6 +174,7 @@ export interface NftPoolLaunchSession {
   retryable: boolean
   frozenAt?: number
   poolFingerprint?: string
+  publicationMetadata?: PublicationMetadata
 }
 
 export interface DeploymentResult {

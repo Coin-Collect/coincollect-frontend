@@ -1,4 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber'
+import { normalizeWrappedReward } from './rewardTokens'
 import { createEmptyNftPoolDraft, createNftPoolCloneDraft } from './registry'
 import { NftPool, NftPoolDraft, NftPoolDraftEconomics, NftPoolDraftQuote, NftPoolSourceEconomics } from './types'
 
@@ -6,7 +7,11 @@ export const NFT_POOL_DRAFT_STORAGE_KEY = 'coincollect.nft-pool-studio.drafts.v2
 export const NFT_POOL_DRAFT_STORAGE_KEY_V1 = 'coincollect.nft-pool-studio.drafts.v1'
 
 function canUseStorage(): boolean {
-  return typeof window !== 'undefined' && Boolean(window.localStorage)
+  try {
+    return typeof window !== 'undefined' && Boolean(window.localStorage)
+  } catch {
+    return false
+  }
 }
 
 function idFor(prefix = 'nft-draft'): string {
@@ -142,8 +147,8 @@ function migrateDraft(input: any): NftPoolDraft | null {
       intendedAdmin: typeof input.intendedAdmin === 'string' ? input.intendedAdmin : undefined,
       collections: Array.isArray(input.collections) ? input.collections : [],
       rewards: {
-        primary: input.rewards?.primary || null,
-        side: Array.isArray(input.rewards?.side) ? input.rewards.side : [],
+        primary: input.rewards?.primary ? normalizeWrappedReward(input.rewards.primary) : null,
+        side: Array.isArray(input.rewards?.side) ? input.rewards.side.map(normalizeWrappedReward) : [],
       },
       sourceEconomics: safeSourceEconomics(input.sourceEconomics),
       economics: { ...base.economics, ...safeEconomics(input.economics) },

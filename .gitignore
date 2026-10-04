@@ -13,6 +13,7 @@ cypress/fixtures/example.json
 
 # next.js
 .next/
+.next-verification/
 out/
 .idea/
 

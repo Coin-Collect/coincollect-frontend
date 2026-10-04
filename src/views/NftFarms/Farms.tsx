@@ -35,6 +35,16 @@ import { NextLinkFromReactRouter } from 'components/NextLink'
 import CommunitySwitch from './components/CommunitySwitch'
 import CompetitionBanner from 'views/Home/components/Banners/CompetitionBanner'
 import { CommunityCollectionsBanner } from 'views/Home/components/Banners/CommunityCollectionsBanner'
+import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPools'
+import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
+import PublicNftPoolCard from 'features/nftPoolManager/components/PublicNftPoolCard'
+
+const PublishedGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+`
 
 const ControlContainer = styled.div`
   display: flex;
@@ -424,6 +434,12 @@ const Farms: React.FC = ({ children }) => {
   const userDataReady = !account || (!!account && userDataLoaded)
 
   const [stakedOnly, setStakedOnly] = useUserFarmStakedOnly(isActive, false)
+  const published = usePublishedNftPools()
+  const publishedPools = selectPublishedNftPools(published.pools, {
+    history: isInactive, archived: isArchived, stakedOnly, query,
+    community: isCommunity ? true : isPartner ? false : undefined,
+    configuredAddresses: nftFarmsConfig.flatMap((farm) => farm.contractAddresses?.[137] ? [farm.contractAddresses[137]] : []),
+  })
 
   const activeFarms = farmsLP.filter(
     (farm) =>
@@ -676,7 +692,7 @@ const Farms: React.FC = ({ children }) => {
       return <Table data={rowData} columns={columns} userDataReady={userDataReady} />
     }
 
-    if (isActive && activeFarms.length === 0 && !query.trim() && !stakedOnly)
+    if (isActive && activeFarms.length === 0 && publishedPools.length === 0 && !published.loading && !query.trim() && !stakedOnly)
       return <LivePoolsEmpty label="Waiting for the next pool" />
 
     return <FlexLayout>{children}</FlexLayout>
@@ -764,6 +780,10 @@ const Farms: React.FC = ({ children }) => {
             </LabelWrapper>
           </FilterContainer>
         </ControlContainer>
+        {publishedPools.length ? <section aria-label="New V2 pools">
+          <Heading as="h2" scale="lg" mb="24px">New V2 pools</Heading>
+          <PublishedGrid>{publishedPools.map((pool) => <PublicNftPoolCard key={pool.id} pool={pool} error={published.errors[pool.id]} refreshing={published.refreshing} />)}</PublishedGrid>
+        </section> : null}
         {renderContent()}
         {account && !userDataLoaded && stakedOnly && (
           <Flex justifyContent="center">

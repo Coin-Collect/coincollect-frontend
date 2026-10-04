@@ -29,9 +29,12 @@ function positiveNumber(value: number, fallback: number): number {
   return Number.isFinite(value) && value > 0 ? value : fallback
 }
 
-export function durationBlocksForPlan(plan: NftPoolDeploymentPlan, secondsPerBlock: number): number {
-  const seconds = positiveNumber(plan.scheduleIntent.durationDays, 1) * 86400
-  return Math.max(1, Math.ceil(seconds / positiveNumber(secondsPerBlock, 2.2)))
+export function durationBlocksForPlan(plan: NftPoolDeploymentPlan, _secondsPerBlock: number): number {
+  // Funding and rewardPerBlock are frozen against this exact block count.
+  // Fresh block timing affects setup buffer and wall-clock estimates only.
+  const blocks = plan.scheduleIntent.estimatedDurationBlocks
+  if (!Number.isSafeInteger(blocks) || blocks <= 0) throw new Error('Frozen duration blocks are invalid.')
+  return blocks
 }
 
 export function prepareNftLaunchSchedule(

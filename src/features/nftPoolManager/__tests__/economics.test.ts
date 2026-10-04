@@ -3,11 +3,8 @@ import {
   applySoliditySideReward,
   calculatePoolEconomics,
   calculateSideReward,
-  enforceMinimumEffectivePower,
   estimateBlocksForDuration,
   parseUnitsExact,
-  reconcileMinimumEffectivePower,
-  totalNftCollectionPower,
 } from '../economics'
 import { createEmptyNftPoolDraft } from '../registry'
 
@@ -24,21 +21,18 @@ describe('NFT pool exact economics', () => {
     expect(estimateBlocksForDuration('1 month', undefined, 2)).toBe(1_296_000)
   })
 
-  it('floors minimum effective power at the exact sum of selected collection weights', () => {
-    const collections = [
+  it('keeps threshold independent when collection weights are edited', () => {
+    const draft = createEmptyNftPoolDraft()
+    draft.constraints.participantThreshold = '1'
+    draft.collections = [
       { chainId: 137, address: primaryAddress, collectionId: 'key', name: 'KEY NFT', weight: '30', primary: true },
       { chainId: 137, address: sideAddress, collectionId: 'starter', name: 'Starter NFT', weight: '1', primary: false },
     ]
 
-    expect(totalNftCollectionPower(collections).toString()).toBe('31')
-    expect(enforceMinimumEffectivePower('20', collections)).toBe('31')
-    expect(enforceMinimumEffectivePower('100', collections)).toBe('100')
-    expect(
-      reconcileMinimumEffectivePower('31', collections, [{ ...collections[0], weight: '35' }, collections[1]]),
-    ).toBe('36')
-    expect(
-      reconcileMinimumEffectivePower('40', collections, [{ ...collections[0], weight: '35' }, collections[1]]),
-    ).toBe('40')
+    calculatePoolEconomics(draft, 2)
+    draft.collections[0].weight = '35'
+    calculatePoolEconomics(draft, 2)
+    expect(draft.constraints.participantThreshold).toBe('1')
   })
 
   it('mirrors Solidity side reward scaling for equal and different decimals', () => {

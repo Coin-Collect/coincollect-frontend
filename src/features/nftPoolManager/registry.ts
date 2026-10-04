@@ -3,7 +3,6 @@ import { BigNumber } from '@ethersproject/bignumber'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mainnetTokens } from 'config/constants/tokens'
 import { getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
-import { enforceMinimumEffectivePower } from './economics'
 import {
   NftCollection,
   NftPool,
@@ -15,6 +14,7 @@ import {
   NftWeightSource,
 } from './types'
 import { resolveNftAssetUrl } from './assets'
+import { normalizeWrappedReward } from './rewardTokens'
 
 export const NFT_POOL_MANAGER_CHAIN_ID = 137
 
@@ -353,7 +353,7 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     projectUrl: pool.metadata.projectUrl,
     getNftUrl: pool.metadata.getNftUrl,
     collections,
-    rewards: { primary: draftReward(primaryReward), side: sideRewards },
+    rewards: { primary: normalizeWrappedReward(draftReward(primaryReward)), side: sideRewards.map(normalizeWrappedReward) },
     sourceEconomics: resolvedSourceEconomics,
     unsafe: {},
     economics: {
@@ -376,7 +376,7 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       budgetDenomination: 'USDT',
     },
     constraints: {
-      participantThreshold: enforceMinimumEffectivePower(originalParticipantThreshold?.toString() || '', collections),
+      participantThreshold: originalParticipantThreshold?.toString() || '',
       poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '',
       poolLimitPerUser: sourceEconomics.originalPoolLimitPerUser?.toString() || '',
       numberBlocksForUserLimit: sourceEconomics.originalNumberBlocksForUserLimit?.toString() || '',
@@ -420,7 +420,7 @@ export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): Nf
       quoteErrors: {},
     },
     constraints: {
-      participantThreshold: '',
+      participantThreshold: '1',
       poolCapacity: '1000',
       poolLimitPerUser: '',
       numberBlocksForUserLimit: '',

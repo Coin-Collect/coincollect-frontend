@@ -51,7 +51,7 @@ use **Resume launch**.
 ## Creation policy and advanced details
 
 New cards use an explicit, reviewable policy: `COLLECT` is the suggested primary reward, `USDT` is the suggested budget
-denomination, duration defaults to one month, minimum effective staking power defaults to `20`, initial capacity to
+denomination, duration defaults to one month, minimum effective staking power defaults to `1`, initial capacity to
 `1000`, wallet limits are off, and performance fees/side rewards are absent. The budget remains empty until the admin
 enters it. Capacity, primary collection designation, exact BPS, manual amounts, estimated blocks, addresses and the
 deployment plan remain under **Advanced details**.
@@ -114,9 +114,45 @@ The deployment and post-deploy state machine is explicit:
 Optional steps are skipped only when absent from the frozen plan. A pending or failed write remains visible in the session
 and can be resumed or retried only after the relevant receipt/read-back decision.
 
-## Roadmap: Phase 4 / Public Integration
+## Verified launch and local public listing
 
-Phase 4 is intentionally separate from the operator launch engine. Its scope is to expose only verified, public-safe
+A completed launch publishes one address-native, read-only V2 card on `/nftpools`. It never creates a legacy `pid`,
+changes static `nftFarmsConfig`, or enters legacy transaction hooks. Upcoming/active cards precede the legacy list;
+finished cards appear in history. Staked-only intentionally hides V2 cards until user-position reads are implemented.
+
+Publication uses the versioned `coincollect.nft-pool-publications.v1` localStorage registry. It is limited to the same
+browser profile and exact origin (host and port). Presentation metadata is captured with the launch session separately
+from its frozen plan hash. Contract status, schedule, powers, threshold and balances are refreshed by exact-address
+chain reads on publication, focus and every 30 seconds while visible. RPC failures retain a labelled historical snapshot.
+Broken artwork uses repository fallbacks. Metadata cannot override contract settings.
+
+Only integrity-valid `COMPLETE` sessions with confirmed factory receipt provenance and successful required read-backs
+can publish. Storage failures leave the chain launch complete and offer **Publish locally**; reopening the completed
+launch retries publication without another wallet transaction, including after the start block.
+
+`participantThreshold` is independent of selected collection weights. It accepts non-negative integers including zero;
+editing powers does not reconcile it. Solo-NFT preview denominators include the NFT's actual weight, so a 30x NFT cannot
+receive more than the entire scheduled emission. ERC-20 rewards use **WPOL**; native **POL** is gas only. Funding simulates
+and estimates with the connected signer and transfers only `max(required - pool balance, 0)`. The funded duration is
+frozen in blocks; fresh timing changes setup buffers, not emission liability.
+
+Safe local checks:
+
+```sh
+npm test -- --runInBand src/features/nftPoolManager
+# Start an isolated Anvil Polygon fork on a loopback-only endpoint, then:
+COINCOLLECT_FORK_RPC=http://127.0.0.1:18545 COINCOLLECT_SOLC_MODULE=/absolute/path/to/solc npm test -- --runInBand src/features/nftPoolManager/launch/__tests__/fork.test.ts
+COINCOLLECT_NEXT_DIST_DIR=.next-verification npm run build
+```
+
+The opt-in fork test requires a loopback HTTP endpoint and the Anvil-only identity method before writes. It uses fork
+impersonation, test-only assets and snapshot rollback; it never needs a production key. The regular suite skips it.
+The fork publication store is in memory and is never mixed with real browser records. Production launch remains a
+separately authorized browser-wallet operation.
+
+## Roadmap: Shared publication and public transactions
+
+The following phase is intentionally separate from the local listing integration. Its scope is to expose verified, public-safe
 state:
 
 - publish active/upcoming pool metadata and schedules through a stable public API/indexer;

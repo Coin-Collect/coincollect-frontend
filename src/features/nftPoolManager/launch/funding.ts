@@ -56,8 +56,8 @@ export async function fundNftPoolTokenIfNeeded(
   if (walletBalance.lt(missing)) {
     throw new Error(`Insufficient ${getAddress(tokenAddress)} balance: missing ${missing.toString()} base units.`)
   }
-  await readToken.callStatic.transfer(poolAddress, missing)
-  const estimatedGas = BigNumber.from(await readToken.estimateGas.transfer(poolAddress, missing))
+  await writeToken.callStatic.transfer(poolAddress, missing)
+  const estimatedGas = BigNumber.from(await writeToken.estimateGas.transfer(poolAddress, missing))
   const gas = await checkNftLaunchWriteGas(provider, signer, estimatedGas)
   assertNftLaunchWriteGas(gas)
   const transaction: TransactionResponse = await writeToken.transfer(poolAddress, missing, { gasLimit: gas.gasLimit })

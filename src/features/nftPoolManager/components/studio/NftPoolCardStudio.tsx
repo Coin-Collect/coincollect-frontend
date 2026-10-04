@@ -2,12 +2,7 @@ import { useMemo, useState } from 'react'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NftCollection, NftPool, NftPoolDraft, NftPoolDraftReward } from '../../types'
 import type { PoolEconomicsCalculation } from '../../economics'
-import {
-  applySoliditySideReward,
-  enforceMinimumEffectivePower,
-  formatBaseUnits,
-  totalNftCollectionPower,
-} from '../../economics'
+import { applySoliditySideReward, formatBaseUnits } from '../../economics'
 import type { NftDraftValidationResult } from '../../validation'
 import type { NftPreflightResult } from '../../launch/types'
 import { findNftCollection } from '../../registry'
@@ -301,20 +296,18 @@ export default function NftPoolCardStudio({
     const percentage = sourceSideRewardPercentage(draft, sourcePool, reward)
     return percentage === undefined ? [] : [{ symbol: reward.symbol, percentage }]
   })
-  const minimumEffectivePower = totalNftCollectionPower(draft.collections)
-  const effectiveThreshold = enforceMinimumEffectivePower(draft.constraints.participantThreshold, draft.collections)
-  const threshold = safeBigNumber(effectiveThreshold)
+  const effectiveThreshold = draft.constraints.participantThreshold
+  const threshold = useMemo(() => safeBigNumber(effectiveThreshold), [effectiveThreshold])
   const rewardDecimals = draft.rewards.primary?.decimals
-  const dailyPrimaryReward =
-    economics?.primary.rewardPerBlock && !threshold.isZero()
-      ? calculateRewardSharePreview({
-          rewardPerBlock: economics.primary.rewardPerBlock,
-          participantWeight: BigNumber.from(1),
-          totalShares: threshold,
-          participantThreshold: threshold,
-          secondsPerBlock,
-        }).dailyReward
-      : undefined
+  const dailyPrimaryReward = economics?.primary.rewardPerBlock
+    ? calculateRewardSharePreview({
+        rewardPerBlock: economics.primary.rewardPerBlock,
+        participantWeight: BigNumber.from(1),
+        totalShares: threshold.isZero() ? safeBigNumber('1') : threshold,
+        participantThreshold: threshold,
+        secondsPerBlock,
+      }).dailyReward
+    : undefined
 
   const dailyRewardFor = (
     reward: NftPoolDraftReward,
@@ -333,8 +326,9 @@ export default function NftPoolCardStudio({
   }
   const shareExamples = useMemo(() => {
     const rewardPerBlock = economics?.primary.rewardPerBlock
-    if (!rewardPerBlock || rewardPerBlock.isZero() || !draft.rewards.primary || threshold.isZero()) return []
-    const examples = [threshold, threshold.mul(2), threshold.mul(5)]
+    if (!rewardPerBlock || rewardPerBlock.isZero() || !draft.rewards.primary) return []
+    const baseline = threshold.isZero() ? safeBigNumber('1') : threshold
+    const examples = [baseline, baseline.mul(2), baseline.mul(5)]
     return examples.map((totalShares) => ({
       totalShares,
       result: calculateRewardSharePreview({
@@ -345,11 +339,11 @@ export default function NftPoolCardStudio({
         secondsPerBlock,
       }),
     }))
-  }, [draft.rewards.primary, economics?.primary.rewardPerBlock?.toString(), secondsPerBlock, threshold.toString()])
+  }, [draft.rewards.primary, economics?.primary.rewardPerBlock, secondsPerBlock, threshold])
 
   const weightedExamples = useMemo(() => {
     const rewardPerBlock = economics?.primary.rewardPerBlock
-    if (!rewardPerBlock || rewardPerBlock.isZero() || threshold.isZero()) return []
+    if (!rewardPerBlock || rewardPerBlock.isZero()) return []
     return draft.collections.slice(0, 3).flatMap((item) => {
       const participantWeight = safeBigNumber(item.weight)
       if (participantWeight.isZero()) return []
@@ -369,13 +363,7 @@ export default function NftPoolCardStudio({
         },
       ]
     })
-  }, [
-    draft.collections,
-    economics?.primary.rewardPerBlock?.toString(),
-    knownCollections,
-    secondsPerBlock,
-    threshold.toString(),
-  ])
+  }, [draft.collections, economics?.primary.rewardPerBlock, knownCollections, secondsPerBlock, threshold])
 
   const selectedArtwork = resolveNftAssetUrl(draft.banner || draft.avatar)
   const primaryCollection = selectedCollections[0]
@@ -727,28 +715,16 @@ export default function NftPoolCardStudio({
         Minimum effective staking power
         <ModalInput
           type="number"
-          min={minimumEffectivePower.toString()}
+          min="0"
           step="1"
           value={draft.constraints.participantThreshold}
           onChange={(event) =>
             onUpdateDraft({ constraints: { ...draft.constraints, participantThreshold: event.target.value } })
           }
-          onBlur={(event) =>
-            onUpdateDraft({
-              constraints: {
-                ...draft.constraints,
-                participantThreshold: enforceMinimumEffectivePower(event.currentTarget.value, draft.collections),
-              },
-            })
-          }
-          placeholder={minimumEffectivePower.isZero() ? 'Select NFTs first' : minimumEffectivePower.toString()}
+          placeholder="1"
         />
       </FieldLabel>
-      <Hint>
-        {minimumEffectivePower.isZero()
-          ? 'Select NFT collections to calculate the minimum effective power.'
-          : `Must be at least the combined power of selected NFTs (${minimumEffectivePower.toString()}). This is weighted staking power, not a wallet count.`}
-      </Hint>
+      <Hint>Independent reward-sharing floor, not a wallet count. Use 0 for actual staked power only.</Hint>
       <ButtonCluster style={{ marginTop: 16 }}>
         <StudioButton type="button" onClick={() => setModal(null)}>
           Done
@@ -1013,8 +989,10 @@ export default function NftPoolCardStudio({
                             {draft.economics.budgetDenomination || 'USDT'} → {amount}
                             {dailyReward !== undefined ? (
                               <span style={{ display: 'block' }}>
-                                ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day · estimated up to{' '}
-                                {threshold.toString()} total power
+                                ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day per 1x ·{' '}
+                                {threshold.isZero()
+                                  ? 'at 1 total power; no minimum floor'
+                                  : `up to ${threshold.toString()} total power`}
                               </span>
                             ) : null}
                           </CardMeta>

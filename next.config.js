@@ -23,6 +23,8 @@ const sentryWebpackPluginOptions = {
 
 /** @type {import('next').NextConfig} */
 const config = {
+  // Permit isolated build verification without overwriting a running dev cache.
+  distDir: process.env.COINCOLLECT_NEXT_DIST_DIR || '.next',
   compiler: {
     styledComponents: true,
   },

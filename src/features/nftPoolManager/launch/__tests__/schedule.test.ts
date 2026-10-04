@@ -12,10 +12,10 @@ const plan = {
 } as NftPoolDeploymentPlan
 
 describe('NFT launch schedule', () => {
-  it('calculates a fresh duration and a 15-minute setup buffer', () => {
+  it('preserves funded duration and calculates a fresh 15-minute setup buffer', () => {
     const schedule = prepareNftLaunchSchedule(plan, 1000, 2)
     expect(schedule.startBlock).toBe(1000 + DEFAULT_SETUP_BUFFER_SECONDS / 2)
-    expect(schedule.endBlock - schedule.startBlock).toBe(43200)
+    expect(schedule.endBlock - schedule.startBlock).toBe(39000)
     expect(schedule.planningEstimateBlocks).toBe(39000)
     expect(schedule.currentBlockAtPreparation).toBe(1000)
   })

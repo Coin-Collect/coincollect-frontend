@@ -1,6 +1,18 @@
 import { readIndexedArrayUntilRevert } from '../chainReads'
 
 describe('bounded indexed chain reads', () => {
+  it('does not treat an RPC failure as the end of a dynamic array in strict reads', async () => {
+    const contract = {
+      callStatic: {
+        communityCollections: jest
+          .fn()
+          .mockRejectedValue(Object.assign(new Error('RPC offline'), { code: 'NETWORK_ERROR' })),
+      },
+    } as any
+    await expect(readIndexedArrayUntilRevert(contract, 'communityCollections', { strict: true })).rejects.toThrow(
+      'RPC offline',
+    )
+  })
   it('stops at the first reverted getter', async () => {
     const contract = {
       callStatic: {

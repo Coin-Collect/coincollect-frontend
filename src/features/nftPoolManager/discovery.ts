@@ -346,6 +346,7 @@ async function readV2Pool(
   collections: NftCollection[],
   currentBlock: number,
   deploymentHint?: FactoryEvent,
+  fullRead = false,
 ): Promise<NftPool> {
   const poolAddress = normalizeOrFallback(address)
   const deploymentHintValue: NftPoolDeploymentProvenance = {
@@ -386,7 +387,7 @@ async function readV2Pool(
         deploymentHintValue,
       )
 
-    const isSummaryPool = source !== 'legacy-masterchef'
+    const isSummaryPool = !fullRead && source !== 'legacy-masterchef'
     const [
       participantThreshold,
       poolCapacity,
@@ -419,10 +420,22 @@ async function readV2Pool(
           readOptional<BigNumber>(pool, 'numberBlocksForUserLimit'),
           readOptional<boolean>(pool, 'userLimit', [], false),
           readOptional<boolean>(pool, 'hasUserLimit', [], false),
-          readOptional<boolean>(pool, 'isSideRewardActive', [], false),
+          readOptional<boolean>(pool, 'isSideRewardActive', [], fullRead ? undefined : false),
           readOptional<BigNumber>(pool, 'performanceFee'),
           readOptional<string>(pool, 'feeTo'),
         ])
+    if (
+      fullRead &&
+      [
+        participantThreshold,
+        poolCapacity,
+        totalShares,
+        poolLimitPerUser,
+        numberBlocksForUserLimit,
+        sideRewardActive,
+      ].some((value) => value === undefined)
+    )
+      throw new Error('Required V2 settings could not be read completely.')
     const normalizedStakingAddress = normalizeOrFallback(stakingAddress)
     const normalizedRewardAddress = normalizeOrFallback(rewardAddress)
     const configuredSideRewards = getConfiguredSideRewards(farm)
@@ -444,10 +457,12 @@ async function readV2Pool(
           readIndexedArrayUntilRevert<string>(pool, 'communityCollections', {
             hardCap: 32,
             timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+            strict: fullRead,
           }),
           readIndexedArrayUntilRevert<string>(pool, 'sideRewardTokens', {
             hardCap: 32,
             timeoutMs: NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+            strict: fullRead,
           }),
           deploymentPromise,
         ])
@@ -541,11 +556,20 @@ async function readV2Pool(
         ? entry.weightSource
         : 'on-chain',
     }))
+    if (fullRead && weightResults.some((weight) => weight === undefined))
+      throw new Error('Collection weights could not be read completely.')
     const sidePercentages = isSummaryPool
       ? []
       : await Promise.all(
           sideAddresses.map((sideAddress) => readOptional<BigNumber>(pool, 'sideRewardPercentage', [sideAddress])),
         )
+    if (
+      fullRead &&
+      (communityAddressesResult.stoppedBy !== 'revert' ||
+        sideAddressesResult.stoppedBy !== 'revert' ||
+        sidePercentages.some((percentage) => percentage === undefined))
+    )
+      throw new Error('Collection or side reward discovery was incomplete.')
     const configuredSideByAddress = new Map(
       configuredSideRewards.filter((item) => item.address).map((item) => [item.address.toLowerCase(), item]),
     )
@@ -938,6 +962,7 @@ async function readV2PoolWithTimeout(
   source: NftPoolSource,
   collections: NftCollection[],
   currentBlock: number,
+  fullRead = false,
 ): Promise<NftPool> {
   let timeout: ReturnType<typeof setTimeout> | undefined
   const fallback = new Promise<NftPool>((resolve) => {
@@ -963,7 +988,7 @@ async function readV2PoolWithTimeout(
   })
   try {
     return await Promise.race([
-      readV2Pool(provider, event.address, farm, source, collections, currentBlock, event),
+      readV2Pool(provider, event.address, farm, source, collections, currentBlock, event, fullRead),
       fallback,
     ])
   } finally {
@@ -1073,6 +1098,52 @@ export async function getNftPoolRegistry(
     return await registryLoadPromise
   } finally {
     registryLoadPromise = null
+  }
+}
+
+/** Exact-address read, independent from indexer discovery and legacy pid lookup. */
+async function readExactV2Pool(provider: Provider, address: string): Promise<NftPool> {
+  const network = await provider.getNetwork()
+  if (network.chainId !== NFT_POOL_MANAGER_CHAIN_ID) throw new Error('Expected Polygon network.')
+  const currentBlock = await provider.getBlockNumber()
+  const pool = await readV2PoolWithTimeout(
+    provider,
+    { address },
+    undefined,
+    'nft-factory',
+    normalizeNftCollectionRegistry(),
+    currentBlock,
+    true,
+  )
+  if (!pool.onChain.abiCompatible) throw new Error('Pool configuration could not be read completely.')
+  // Optional legacy reads may substitute defaults. Public V2 balances must never
+  // silently become zero after an RPC failure.
+  const balances = await Promise.all(
+    [pool.rewards.primary, ...pool.rewards.side].map(
+      (reward) => new Contract(reward!.token.address, erc20Abi, provider).balanceOf(address) as Promise<BigNumber>,
+    ),
+  )
+  pool.onChain.rewardBalance = balances[0]
+  pool.rewards.side.forEach((reward, index) => {
+    reward.poolBalance = balances[index + 1]
+  })
+  return pool
+}
+
+export async function readNftPoolByAddress(provider: Provider, address: string): Promise<NftPool> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      readExactV2Pool(provider, address),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Exact-address pool read timed out.')),
+          NFT_POOL_INTROSPECTION_TIMEOUT_MS,
+        )
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
   }
 }
 

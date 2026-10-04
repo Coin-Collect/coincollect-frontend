@@ -363,6 +363,19 @@ export async function verifyFinalNftLaunch(
     provider.getBlockNumber(),
   ])
   const checks = [...deployment.checks, ...weights.checks, ...fee.checks, ...funding.checks]
+  const scheduledEmission = BigNumber.from(plan.factoryParameters.rewardPerBlock).mul(
+    schedule.endBlock - schedule.startBlock,
+  )
+  checks.push(
+    scheduledEmission.lte(plan.fundingRequirements.primary.maximumScheduledFunding)
+      ? passed('schedule-funding', 'Frozen funding covers the actual emission schedule')
+      : failed(
+          'schedule-funding',
+          'Frozen funding covers the actual emission schedule',
+          scheduledEmission.toString(),
+          plan.fundingRequirements.primary.maximumScheduledFunding,
+        ),
+  )
   checks.push(
     currentBlock < schedule.startBlock
       ? passed(
@@ -378,5 +391,5 @@ export async function verifyFinalNftLaunch(
           String(currentBlock),
         ),
   )
-  return result(checks)
+  return { ...result(checks), checkedAtBlock: currentBlock }
 }

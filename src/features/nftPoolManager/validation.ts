@@ -7,7 +7,6 @@ import { NftPoolDeploymentPlan, NftPoolDraft, NftPoolDraftReward, NftPoolReadine
 import {
   BPS_BASE,
   calculatePoolEconomics,
-  totalNftCollectionPower,
   formatBaseUnitsExact,
   parseUnitsExact,
   PoolEconomicsCalculation,
@@ -230,11 +229,6 @@ export function validateNftPoolDraft(
 
   const threshold = parseUint(draft.constraints.participantThreshold, true)
   if (threshold === undefined) blockers.push('Set the minimum effective staking power.')
-  const minimumCollectionPower = totalNftCollectionPower(draft.collections)
-  if (threshold !== undefined && threshold.lt(minimumCollectionPower))
-    blockers.push(
-      `Minimum effective staking power must be at least the combined NFT power (${minimumCollectionPower.toString()}).`,
-    )
   const capacity = parseUint(draft.constraints.poolCapacity)
   if (!capacity) blockers.push('Set the original configured pool capacity for this new draft.')
   const rewards = [primary, ...side].filter(Boolean) as NftPoolDraftReward[]
@@ -328,7 +322,6 @@ function planInvariant(
   const primaryCollectionCount = draft.collections.filter((collection) => collection.primary).length
   const rewardAddresses = [primary, ...draft.rewards.side].filter(Boolean).map((reward) => reward!.address)
   const collectionWeights = draft.collections.map((collection) => parseUint(collection.weight))
-  const minimumCollectionPower = totalNftCollectionPower(draft.collections)
   const participantThreshold = parseUint(draft.constraints.participantThreshold, true)
   const budgetAmount = parseUnitsExact(draft.economics.totalBudget, draft.economics.budgetDecimals)
   const expectedRewardCount = 1 + draft.rewards.side.length
@@ -379,7 +372,6 @@ function planInvariant(
       economics.estimatedDurationBlocks > 0 &&
       parseUint(draft.constraints.poolCapacity) &&
       participantThreshold &&
-      participantThreshold.gte(minimumCollectionPower) &&
       (!draft.constraints.userLimitEnabled ||
         (parseUint(draft.constraints.poolLimitPerUser) && parseUint(draft.constraints.numberBlocksForUserLimit))) &&
       (draft.constraints.userLimitEnabled ||

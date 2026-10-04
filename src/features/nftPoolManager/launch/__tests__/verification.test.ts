@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
-import { verifyDeployedNftPool, verifyNftCollectionWeights } from '../verification'
+import { verifyDeployedNftPool, verifyFinalNftLaunch, verifyNftCollectionWeights } from '../verification'
 import { NftPoolDeploymentPlan } from '../../types'
 import { NftLaunchSchedule } from '../types'
 
@@ -89,5 +89,29 @@ describe('NFT launch verification', () => {
     MockContract.mockImplementation(() => pool)
     const result = await verifyNftCollectionWeights({} as any, plan, poolAddress)
     expect(result.passed).toBe(true)
+  })
+
+  it('blocks a longer schedule whose emission exceeds frozen funding', async () => {
+    const pool = poolFake({ balanceOf: jest.fn().mockResolvedValue(BigNumber.from(1000)) })
+    MockContract.mockImplementation(() => pool)
+    const fundedPlan = {
+      ...plan,
+      postDeploy: {},
+      fundingRequirements: {
+        primary: { tokenAddress: reward, maximumScheduledFunding: '200' },
+        side: [{ tokenAddress: side, maximumImpliedSideFunding: '20' }],
+      },
+    } as NftPoolDeploymentPlan
+    const provider = {
+      getCode: jest.fn().mockResolvedValue('0x6000'),
+      getBlockNumber: jest.fn().mockResolvedValue(5),
+    } as any
+    expect((await verifyFinalNftLaunch(provider, fundedPlan, schedule, poolAddress)).passed).toBe(true)
+    pool.bonusEndBlock.mockResolvedValue(BigNumber.from(13))
+    const result = await verifyFinalNftLaunch(provider, fundedPlan, { ...schedule, endBlock: 13 }, poolAddress)
+    expect(result.checks).toEqual(
+      expect.arrayContaining([expect.objectContaining({ key: 'schedule-funding', status: 'BLOCK' })]),
+    )
+    expect(result.checkedAtBlock).toBe(5)
   })
 })
