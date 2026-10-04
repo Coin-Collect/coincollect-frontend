@@ -17,6 +17,11 @@ export interface ExpandableSectionProps {
   nftToken?: string
   pid?: number
   disabled?: boolean
+  publishedPool?: {
+    banner?: string
+    status: 'UPCOMING' | 'ACTIVE' | 'FINISHED' | 'UNKNOWN'
+    collections: Array<{ name: string; image?: string; weight: string }>
+  }
 }
 
 const COLLECTION_AVATAR_FALLBACK_BY_PID: Record<number, string> = {
@@ -80,14 +85,20 @@ const StatusContainer = styled.div`
   gap: 6px;
 `
 
-const StatusBadge = styled.div<{ status?: 'active' | 'finished' }>`
+const StatusBadge = styled.div<{ status?: 'active' | 'finished' | 'upcoming' | 'unknown' }>`
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   background: ${({ theme, status }) =>
-    status === 'finished' ? `${theme.colors.failure}E6` : `${theme.colors.success}E6`};
+    status === 'finished'
+      ? `${theme.colors.failure}E6`
+      : status === 'upcoming'
+      ? `${theme.colors.warning}E6`
+      : status === 'unknown'
+      ? `${theme.colors.textSubtle}E6`
+      : `${theme.colors.success}E6`};
   color: white;
   backdrop-filter: blur(4px);
 `
@@ -141,6 +152,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   nftToken,
   pid,
   disabled = false,
+  publishedPool,
 }) => {
   const router = useRouter()
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
@@ -150,7 +162,10 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
     ? mintingConfig.find((collection) => collection.address?.toLowerCase() === farmAddr137)
     : undefined
   const banner =
-    nftFarmData?.banner || collectionDataByPid?.banner?.small || collectionDataByAddress?.banner?.small
+    publishedPool?.banner ||
+    nftFarmData?.banner ||
+    collectionDataByPid?.banner?.small ||
+    collectionDataByAddress?.banner?.small
   const { currentSrc: bannerSrc, handleError: handleBannerError } = useNftFallbackSource(banner)
 
   const firstFarmOfMainNft =
@@ -226,9 +241,11 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
     }
   })
 
-  smallAvatars.reverse()
-  if (smallAvatars.length > 4) {
-    smallAvatars.push({ avatar: 'https://coincollect.org/assets/images/logos/3dots.gif' })
+  const displayAvatars = publishedPool
+    ? publishedPool.collections.slice(0, 4).map(({ image }) => ({ avatar: image || '/images/nfts/no-profile-md.png' }))
+    : [...smallAvatars].reverse()
+  if ((publishedPool?.collections.length || smallAvatars.length) > 4) {
+    displayAvatars.push({ avatar: 'https://coincollect.org/assets/images/logos/3dots.gif' })
   }
 
   const [onPresentAllowedNftsModal] = useModal(<AllowedNftsModal nfts={largeAvatars} />)
@@ -237,6 +254,20 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
       router.push(`/nftpools/${pid}`)
     }
   }
+
+  const publishedStatus = publishedPool?.status
+  const status = publishedStatus
+    ? (publishedStatus.toLowerCase() as 'active' | 'finished' | 'upcoming' | 'unknown')
+    : disabled
+    ? 'finished'
+    : 'active'
+  const statusLabel = publishedStatus
+    ? publishedStatus === 'UNKNOWN'
+      ? 'Status unavailable'
+      : publishedStatus.charAt(0) + publishedStatus.slice(1).toLowerCase()
+    : disabled
+    ? 'Finished'
+    : 'Active'
 
   return (
     <CardBody p="0px">
@@ -251,9 +282,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
           />
           <BannerOverlay />
           <StatusContainer>
-            <StatusBadge status={disabled ? 'finished' : 'active'}>
-              {disabled ? 'Finished' : 'Active'}
-            </StatusBadge>
+            <StatusBadge status={status}>{statusLabel}</StatusBadge>
             {pid !== undefined && (
               <NextLinkFromReactRouter
                 to={`/nftpools/${pid}`}
@@ -268,17 +297,21 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
             )}
           </StatusContainer>
 
-          {(smallAvatars as any[]).map((avatar: any, index: number) => (
+          {displayAvatars.map((avatar, index) => (
             <CollectionAvatar
               key={index}
               src={avatar.avatar}
               width={50}
               height={50}
-              style={{ left: `${8 + index * 15}px`, top: '8px' }}
-              onClick={(event) => {
-                event.stopPropagation()
-                onPresentAllowedNftsModal()
-              }}
+              style={{ left: `${8 + index * 15}px`, top: '8px', cursor: pid !== undefined ? 'pointer' : 'default' }}
+              onClick={
+                pid !== undefined
+                  ? (event) => {
+                      event.stopPropagation()
+                      onPresentAllowedNftsModal()
+                    }
+                  : undefined
+              }
             />
           ))}
 

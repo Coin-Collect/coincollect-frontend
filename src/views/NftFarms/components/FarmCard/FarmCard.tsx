@@ -11,6 +11,7 @@ import {
   HomeIcon,
   NftIcon,
   SmartContractIcon,
+  ProfileAvatar,
   useTooltip,
   useMatchBreakpoints,
 } from '@pancakeswap/uikit'
@@ -28,6 +29,10 @@ import nftFarmsConfig from 'config/constants/nftFarms'
 import tokens from 'config/constants/tokens'
 import formatRewardAmount from 'utils/formatRewardAmount'
 import { Token } from '@coincollect/sdk'
+import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
+import type { PublicV2Pool } from 'features/nftPoolManager/publication'
+import { formatBaseUnits } from 'features/nftPoolManager/economics'
+import { getPolygonRuntimeChainId } from 'config/localFork'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
@@ -45,13 +50,13 @@ const StyledCard = styled(Card)<{ $variant: 'default' | 'expanded' }>`
   transform: translateY(0);
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
   background: ${({ theme }) => theme.colors.backgroundAlt};
-  
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08);
     border-color: ${({ theme }) => theme.colors.primary};
   }
-  
+
   ${({ theme, $variant }) =>
     $variant === 'default'
       ? css`
@@ -509,7 +514,7 @@ const REWARD_SYMBOL_ICON_MAP: Record<string, string> = {
 
 interface RewardChipIconProps {
   token: string
-  tokenMeta?: Token
+  tokenMeta?: Pick<Token, 'address' | 'symbol'>
 }
 
 const RewardChipIcon: React.FC<RewardChipIconProps> = ({ token, tokenMeta }) => {
@@ -600,7 +605,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
     placement: 'top',
     trigger: useMobileRewardDetails ? 'click' : 'hover',
   })
-  
+
   // Helper function to determine APR color based on value
   const getAprMetricType = (aprValue?: BigNumber | null) => {
     if (!aprValue) return undefined
@@ -677,7 +682,6 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
   </Flex>
 )}
 
-
         <CardActionsContainer
           farm={farm}
           lpLabel={lpLabel}
@@ -721,6 +725,172 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
             projectLink={farmConfig.projectLink}
           />
         )}
+      </ExpandingWrapper>
+    </StyledCard>
+  )
+}
+
+function formatPublicPoolAmount(value: string | undefined, decimals: number | undefined, precision = 6): string {
+  if (value === undefined || decimals === undefined) return 'Unavailable'
+  try {
+    return formatBaseUnits(EthersBigNumber.from(value), decimals, precision)
+  } catch {
+    return 'Unavailable'
+  }
+}
+
+function formatPublicPoolBlocks(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value)
+}
+
+export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; error?: string }) {
+  const [showDetails, setShowDetails] = useState(false)
+  const { t } = useTranslation()
+  const { metadata, snapshot } = pool
+  const primaryReward = snapshot.rewards[0]
+  const statusLabel =
+    snapshot.status === 'ACTIVE'
+      ? 'LIVE'
+      : snapshot.status === 'FINISHED'
+      ? 'FINISHED'
+      : snapshot.status === 'UPCOMING'
+      ? 'UPCOMING'
+      : 'UNKNOWN'
+  const mainLink = metadata.projectUrl
+  const mintLink = metadata.getNftUrl
+  const explorerLink = getPolygonRuntimeChainId() === 137 ? getPolygonScanLink(pool.address, 'address') : undefined
+  const rewardRate = formatPublicPoolAmount(snapshot.rewardPerBlock, primaryReward?.decimals, 12)
+  const durationBlocks = Math.max(0, snapshot.endBlock - snapshot.startBlock)
+  const poolAddress = pool.address
+
+  return (
+    <StyledCard
+      $variant="default"
+      ribbon={snapshot.status === 'FINISHED' && <FinishedRibbon text={t('Finished')} />}
+      isActive={false}
+      data-testid="published-nft-pool"
+      data-pool-address={pool.address}
+    >
+      <FarmCardInnerContainer>
+        <CardHeadingWithBanner
+          lpLabel={metadata.name}
+          isCommunity={metadata.isCommunity}
+          disabled={snapshot.status === 'FINISHED'}
+          publishedPool={{
+            banner: metadata.banner,
+            status: snapshot.status,
+            collections: snapshot.collections.map((collection) => ({
+              name: collection.name,
+              image: collection.image,
+              weight: collection.weight,
+            })),
+          }}
+        />
+
+        <Flex flexDirection="column" style={{ gap: 8, marginTop: 14 }}>
+          {snapshot.collections.map((collection) => (
+            <Flex key={collection.address} alignItems="center">
+              <ProfileAvatar
+                src={collection.image || '/images/nfts/no-profile-md.png'}
+                width={32}
+                height={32}
+                mr="8px"
+              />
+              <Text>
+                {collection.name} · {collection.weight}x
+              </Text>
+            </Flex>
+          ))}
+        </Flex>
+
+        <RewardTickerWrapper>
+          <RewardTickerHeader>
+            <RewardTitleChip>{t('Pool rewards')}</RewardTitleChip>
+            <RewardCountBadge>{snapshot.rewards.length}</RewardCountBadge>
+          </RewardTickerHeader>
+          <RewardTickerViewport>
+            <RewardTickerTrack>
+              {[...snapshot.rewards, ...snapshot.rewards].map((reward, index) => (
+                <RewardChip key={`${reward.address}-${index}`} $primary={index % snapshot.rewards.length === 0}>
+                  <RewardChipIcon
+                    token={reward.symbol}
+                    tokenMeta={{ address: reward.address, symbol: reward.symbol }}
+                  />
+                  {reward.symbol}
+                </RewardChip>
+              ))}
+            </RewardTickerTrack>
+          </RewardTickerViewport>
+        </RewardTickerWrapper>
+
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text>{t('Duration')}:</Text>
+          <MetricText bold>{formatPublicPoolBlocks(durationBlocks)} blocks</MetricText>
+        </Flex>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text>Minimum effective power:</Text>
+          <MetricText bold>{snapshot.threshold}</MetricText>
+        </Flex>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text>Rate / block:</Text>
+          <MetricText bold metricType="reward">
+            {rewardRate} {primaryReward?.symbol || ''}
+          </MetricText>
+        </Flex>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text>Blocks:</Text>
+          <MetricText bold>
+            {formatPublicPoolBlocks(snapshot.startBlock)} → {formatPublicPoolBlocks(snapshot.endBlock)}
+          </MetricText>
+        </Flex>
+        {error ? (
+          <Text small role="status">
+            Chain refresh unavailable; showing the last verified snapshot.
+          </Text>
+        ) : null}
+      </FarmCardInnerContainer>
+
+      <ExpandingWrapper>
+        <FooterTopRow>
+          <FooterLinks>
+            {mainLink ? (
+              <FooterIconWithTooltip href={mainLink} label={t('Visit project website')} IconComponent={HomeIcon} />
+            ) : null}
+            {mintLink ? (
+              <FooterIconWithTooltip href={mintLink} label={t('Open mint page')} IconComponent={NftIcon} />
+            ) : null}
+            {explorerLink ? (
+              <FooterIconWithTooltip
+                href={explorerLink}
+                label={t('View contract on explorer')}
+                IconComponent={SmartContractIcon}
+              />
+            ) : null}
+          </FooterLinks>
+          <ExpandableSectionButton onClick={() => setShowDetails((current) => !current)} expanded={showDetails} />
+        </FooterTopRow>
+        {showDetails ? (
+          <Flex flexDirection="column" style={{ gap: 8, marginTop: 16, overflowWrap: 'anywhere' }}>
+            <Text small>Pool address: {poolAddress}</Text>
+            <Text small>Factory address: {pool.factoryAddress}</Text>
+            <Text small>Last verified at block {formatPublicPoolBlocks(snapshot.currentBlock)}</Text>
+            {snapshot.collections.map((collection) => (
+              <Text small key={`detail-${collection.address}`}>
+                {collection.name}: {collection.weight}x · {collection.address}
+              </Text>
+            ))}
+            {snapshot.rewards.map((reward) => (
+              <Text small key={`reward-${reward.address}`}>
+                {reward.symbol} balance: {formatPublicPoolAmount(reward.balance, reward.decimals)}
+                {reward.percentage !== undefined ? ` · ${reward.percentage}% of primary payout` : ''}
+              </Text>
+            ))}
+            {snapshot.capacity ? <Text small>Remaining capacity: {snapshot.capacity}</Text> : null}
+            <Text small>
+              {statusLabel} · read-only V2 pool
+            </Text>
+          </Flex>
+        ) : null}
       </ExpandingWrapper>
     </StyledCard>
   )
