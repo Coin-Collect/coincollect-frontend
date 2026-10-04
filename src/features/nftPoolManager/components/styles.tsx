@@ -679,52 +679,331 @@ export const Readiness = styled.div<{ $tone?: 'good' | 'warn' | 'bad' }>`
 `
 
 export const LaunchHero = styled.div`
+  position: relative;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 18px;
-  padding: 22px;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding: 24px 26px;
   border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  border-radius: 18px;
-  background: ${({ theme }) => theme.colors.background};
+  border-radius: 22px;
+  background: linear-gradient(
+    120deg,
+    ${({ theme }) => theme.colors.background},
+    ${({ theme }) => theme.colors.backgroundAlt}
+  );
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+
+  h2 {
+    font-size: clamp(24px, 3vw, 34px);
+    letter-spacing: -0.05em;
+  }
 
   @media (max-width: 640px) {
     flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
   }
+`
+
+export const LaunchHeroEyebrow = styled.div`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+`
+
+export const LaunchHeroMeta = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 15px;
+
+  span {
+    padding: 6px 9px;
+    border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+    border-radius: 999px;
+    color: ${({ theme }) => theme.colors.textSubtle};
+    background: ${({ theme }) => theme.colors.background};
+    font-size: 11px;
+    font-weight: 700;
+  }
+`
+
+export const LaunchProgressPanel = styled.section`
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 18px;
+  background: ${({ theme }) => theme.colors.background};
+`
+
+export const LaunchProgressTitle = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+`
+
+export const LaunchProgressSummary = styled.span`
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
 `
 
 export const LaunchSteps = styled.div`
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+
+  @media (max-width: 1060px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  @media (max-width: 620px) {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
 `
 
 export const LaunchStep = styled.div<{ $active?: boolean; $done?: boolean; $blocked?: boolean }>`
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
+  grid-template-columns: 23px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  column-gap: 7px;
+  row-gap: 3px;
+  min-width: 0;
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 10px 8px;
   border: 1px solid ${({ theme, $active }) => ($active ? `${theme.colors.primary}66` : theme.colors.cardBorder)};
-  border-radius: 13px;
+  border-radius: 12px;
   background: ${({ theme, $active }) => ($active ? `${theme.colors.primary}0d` : theme.colors.background)};
   color: ${({ theme, $blocked }) => ($blocked ? theme.colors.failure : theme.colors.text)};
+
+  strong {
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+  }
 
   &::before {
     content: ${({ $done }) => ($done ? "'✓'" : "'•'")};
     display: grid;
     place-items: center;
-    width: 24px;
-    height: 24px;
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 21px;
+    height: 21px;
     border-radius: 50%;
     background: ${({ theme, $done }) => ($done ? `${theme.colors.success}20` : theme.colors.backgroundAlt)};
     color: ${({ theme, $done }) => ($done ? theme.colors.success : theme.colors.textSubtle)};
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  @media (max-width: 620px) {
+    flex: 0 0 148px;
+    scroll-snap-align: start;
+  }
+`
+
+export const LaunchStepState = styled.span`
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 10px;
+  font-weight: 700;
+`
+
+export const LaunchWorkspace = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(270px, 0.8fr);
+  gap: 14px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const LaunchMainColumn = styled.div`
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+`
+
+export const LaunchSideColumn = styled.aside`
+  position: sticky;
+  top: 16px;
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+
+  details {
+    padding: 14px 16px;
+    border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+    border-radius: 14px;
+    color: ${({ theme }) => theme.colors.textSubtle};
+    background: ${({ theme }) => theme.colors.background};
+    font-size: 13px;
+  }
+
+  summary {
+    cursor: pointer;
+    color: ${({ theme }) => theme.colors.text};
     font-weight: 800;
   }
+
+  @media (max-width: 900px) {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > :last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 620px) {
+    grid-template-columns: minmax(0, 1fr);
+
+    > :last-child {
+      grid-column: auto;
+    }
+  }
+`
+
+export const LaunchActionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+  }
+`
+
+export const LaunchFacts = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 16px 0;
+
+  @media (max-width: 560px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+export const LaunchFact = styled.div`
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+
+  strong {
+    overflow-wrap: anywhere;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 13px;
+    line-height: 1.4;
+  }
+`
+
+export const LaunchSummaryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+`
+
+export const LaunchSummaryItem = styled.div`
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 11px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+
+  strong {
+    overflow-wrap: anywhere;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 15px;
+  }
+`
+
+export const LaunchSnapshotLine = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+
+  &:last-child {
+    border-bottom: 0;
+  }
+`
+
+export const LaunchSnapshotValue = styled.strong`
+  max-width: 65%;
+  overflow-wrap: anywhere;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 12px;
+  text-align: right;
 `
 
 export const LaunchCheckList = styled.div`
   display: grid;
   gap: 6px;
+`
+
+export const LaunchCheckDisclosure = styled.details`
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+
+  > summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    cursor: pointer;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 13px;
+    font-weight: 800;
+    list-style: none;
+  }
+
+  > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  > summary::after {
+    content: '⌄';
+    order: -1;
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+
+  &[open] > summary::after {
+    content: '⌃';
+  }
+
+  ${LaunchCheckList} {
+    padding-bottom: 8px;
+  }
 `
 
 export const LaunchCheckRow = styled.div<{ $status?: string }>`

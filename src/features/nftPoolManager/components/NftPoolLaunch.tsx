@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BigNumber } from '@ethersproject/bignumber'
+import { formatUnits } from '@ethersproject/units'
+import { mainnetTokens } from 'config/constants/tokens'
 import AdminShell from 'features/poolManager/components/AdminShell'
 import {
   ActionButton,
   ButtonRow,
-  FormGrid,
   LinkText,
   Muted,
   Notice,
@@ -56,7 +56,31 @@ import {
 import type { LaunchEligibility } from '../launch/orchestrator'
 import { advanceLaunchStage, nextPendingLaunchOperation, reconcileTransaction } from '../launch/reconciliation'
 import { NftLaunchPoolSnapshot, NftPoolLaunchSession, LaunchCheck, LaunchStage } from '../launch/types'
-import { LaunchCheckList, LaunchCheckRow, LaunchHero, LaunchPill, LaunchStep, LaunchSteps } from './styles'
+import {
+  LaunchActionHeader,
+  LaunchCheckDisclosure,
+  LaunchCheckList,
+  LaunchCheckRow,
+  LaunchFact,
+  LaunchFacts,
+  LaunchHero,
+  LaunchHeroEyebrow,
+  LaunchHeroMeta,
+  LaunchMainColumn,
+  LaunchPill,
+  LaunchProgressPanel,
+  LaunchProgressSummary,
+  LaunchProgressTitle,
+  LaunchSideColumn,
+  LaunchSnapshotLine,
+  LaunchSnapshotValue,
+  LaunchStep,
+  LaunchStepState,
+  LaunchSteps,
+  LaunchSummaryGrid,
+  LaunchSummaryItem,
+  LaunchWorkspace,
+} from './styles'
 
 const steps: Array<{ key: string; title: string }> = [
   { key: 'preflight', title: 'Check setup' },
@@ -83,9 +107,12 @@ function stageIndex(stage: LaunchStage): number {
 }
 
 function CheckTable({ checks }: { checks: LaunchCheck[] }) {
-  return (
+  const attention = checks.filter((item) => item.status !== 'PASS')
+  const passed = checks.filter((item) => item.status === 'PASS')
+
+  const rows = (items: LaunchCheck[]) => (
     <LaunchCheckList>
-      {checks.map((item) => (
+      {items.map((item) => (
         <LaunchCheckRow key={`${item.key}-${item.label}`} $status={item.status}>
           <LaunchPill $tone={item.status === 'PASS' ? 'good' : item.status === 'BLOCK' ? 'bad' : 'warn'}>
             {item.status}
@@ -102,6 +129,21 @@ function CheckTable({ checks }: { checks: LaunchCheck[] }) {
         </LaunchCheckRow>
       ))}
     </LaunchCheckList>
+  )
+
+  return (
+    <>
+      {attention.length ? rows(attention) : null}
+      {passed.length ? (
+        <LaunchCheckDisclosure>
+          <summary>
+            <span>{passed.length} passed checks</span>
+            <LaunchPill $tone="good">Verified</LaunchPill>
+          </summary>
+          {rows(passed)}
+        </LaunchCheckDisclosure>
+      ) : null}
+    </>
   )
 }
 
@@ -1166,290 +1208,418 @@ export default function NftPoolLaunch() {
       </AdminShell>
     )
 
+  const tokenBalances = session.preflight?.tokenBalances || []
+  const tokenDetails = (address: string) => {
+    const normalizedAddress = address.toLowerCase()
+    const live = tokenBalances.find((token) => token.tokenAddress.toLowerCase() === normalizedAddress)
+    const configured = Object.values(mainnetTokens).find((token) => token.address?.toLowerCase() === normalizedAddress)
+    return { symbol: live?.symbol || configured?.symbol, decimals: live?.decimals ?? configured?.decimals }
+  }
+  const tokenLabel = (address: string) => tokenDetails(address).symbol || short(address)
+  const tokenAmount = (address: string, rawAmount: string) => {
+    const decimals = tokenDetails(address).decimals
+    if (decimals === undefined) return `${rawAmount} base units`
+    try {
+      const [whole, fraction = ''] = formatUnits(rawAmount, decimals).split('.')
+      const cleanFraction = fraction.slice(0, 5).replace(/0+$/, '')
+      return cleanFraction ? `${whole}.${cleanFraction}` : whole
+    } catch {
+      return `${rawAmount} base units`
+    }
+  }
+  const stageDescription =
+    (activeGateReason
+      ? 'This step is waiting on a required safety check. Review the reason below before continuing.'
+      : error || session.error
+      ? 'A launch operation needs attention. Review the alert above before continuing.'
+      : message) ||
+    (session.currentStage === 'COMPLETE'
+      ? 'All required on-chain checks passed. This browser can now list the pool locally.'
+      : session.currentStage === 'PREFLIGHT_READY'
+      ? 'Review the frozen plan, then continue with the separate wallet-confirmed deployment.'
+      : session.currentStage === 'FUNDING_REQUIRED' || session.currentStage === 'FUNDING_IN_PROGRESS'
+      ? 'Only missing reward-token balances are transferred; each pool balance is checked afterward.'
+      : 'Continue one verified setup step at a time. Every write requires its own wallet confirmation.')
+  const canaryRecommendation = getNftCanaryRecommendation(session.plan)
+  const attentionMessages = [
+    error || session.error,
+    invariantErrors.length && session.currentStage !== 'CORRUPTED'
+      ? `Safety invariant: ${invariantErrors[0]}`
+      : undefined,
+    session.currentStage === 'COMPLETE' && chainSnapshot && !finalEligibility.allowed
+      ? 'Completed session no longer matches expected on-chain state.'
+      : undefined,
+  ].filter((item): item is string => Boolean(item))
+
   return (
     <AdminShell
       title="Create NFT pool"
       subtitle="Review the checks, create the contract and finish the pool setup."
       authorityScope="nft"
     >
-      {message ? <Notice>{message}</Notice> : null}
-      {error || session.error ? <Notice $error>{error || session.error}</Notice> : null}
-      {invariantErrors.length && session.currentStage !== 'CORRUPTED' ? (
-        <Notice $error>Launch session safety invariant failed: {invariantErrors[0]}</Notice>
+      {attentionMessages.length ? (
+        <Notice $error role="alert">
+          <strong>Launch needs attention</strong>
+          {attentionMessages.map((item) => (
+            <div key={item}>{item}</div>
+          ))}
+        </Notice>
       ) : null}
       <LaunchHero>
         <div>
-          <Muted>Pool setup</Muted>
+          <LaunchHeroEyebrow>NFT POOL LAUNCH · SESSION {short(session.sessionId)}</LaunchHeroEyebrow>
           <h2 style={{ margin: '8px 0 6px' }}>
-            {session.currentStage === 'COMPLETE' ? 'Pool ready' : 'Creating your pool'}
+            {session.currentStage === 'COMPLETE'
+              ? `${session.publicationMetadata?.name || 'NFT pool'} is ready`
+              : session.publicationMetadata?.name || 'Create your NFT pool'}
           </h2>
-          <Muted>
-            {summary} · {launchStageLabel(session.currentStage).toLowerCase()}
-          </Muted>
+          <Muted>Guided deployment · {summary} · each on-chain step is confirmed separately in your wallet.</Muted>
+          <LaunchHeroMeta>
+            <span>Chain {chainSnapshot?.chainId ?? session.chainId}</span>
+            <span>{session.plan.scheduleIntent.durationDays} day schedule</span>
+            <span>{session.plan.collectionConfiguration.communityCollections.length + 1} NFT collections</span>
+          </LaunchHeroMeta>
         </div>
-        <LaunchPill $tone={session.currentStage === 'COMPLETE' ? 'good' : session.error ? 'bad' : 'warn'}>
+        <LaunchPill $tone={session.currentStage === 'COMPLETE' ? 'good' : error || session.error ? 'bad' : 'warn'}>
           {launchStageLabel(session.currentStage)}
         </LaunchPill>
       </LaunchHero>
-      <Panel style={{ marginTop: 16 }}>
-        <PanelTitle>Pool setup progress</PanelTitle>
-        <LaunchSteps>
-          {steps.map((item, index) => (
-            <LaunchStep
-              key={item.key}
-              $active={activeIndex === index}
-              $done={activeIndex > index || session.currentStage === 'COMPLETE'}
-              $blocked={Boolean(session.error && activeIndex === index)}
-            >
-              <strong>{item.title}</strong>
-              <Muted>
-                {index === 0
-                  ? 'Wallet, balance and setup checks'
-                  : index === 1
-                  ? 'Wallet confirmation required'
-                  : index === 5
-                  ? 'Only the missing reward balance'
-                  : 'Confirmed read-back and verification'}
-              </Muted>
-              <Muted>
-                {activeIndex > index || session.currentStage === 'COMPLETE'
-                  ? 'Done'
-                  : activeIndex === index
-                  ? 'Current'
-                  : 'Next'}
-              </Muted>
-            </LaunchStep>
-          ))}
+
+      <LaunchProgressPanel>
+        <LaunchProgressTitle>
+          <PanelTitle style={{ margin: 0 }}>Launch path</PanelTitle>
+          <LaunchProgressSummary>
+            {session.currentStage === 'COMPLETE' ? steps.length : activeIndex + 1} / {steps.length} steps
+          </LaunchProgressSummary>
+        </LaunchProgressTitle>
+        <LaunchSteps aria-label="NFT pool launch progress" role="list">
+          {steps.map((item, index) => {
+            const done = activeIndex > index || session.currentStage === 'COMPLETE'
+            const current = activeIndex === index && session.currentStage !== 'COMPLETE'
+            return (
+              <LaunchStep
+                key={item.key}
+                $active={current}
+                $done={done}
+                $blocked={Boolean((error || session.error) && current)}
+                aria-current={current ? 'step' : undefined}
+                role="listitem"
+              >
+                <strong>{item.title}</strong>
+                <LaunchStepState>{done ? 'Done' : current ? 'In progress' : 'Next'}</LaunchStepState>
+              </LaunchStep>
+            )
+          })}
         </LaunchSteps>
-        <ButtonRow>
-          <ActionButton
-            onClick={runPreflight}
-            disabled={Boolean(
-              busy ||
-                !account ||
-                session.poolAddress ||
-                (session.currentStage !== 'DRAFT' &&
-                  session.currentStage !== 'PREFLIGHT_FAILED' &&
-                  session.currentStage !== 'PREFLIGHT_READY'),
-            )}
-          >
-            {busy && session.currentStage === 'PREFLIGHT_RUNNING' ? 'Checking…' : 'Check setup'}
-          </ActionButton>
-          {session.currentStage === 'PREFLIGHT_READY' ? (
-            <ActionButton onClick={() => setConfirmDeploy(true)} disabled={busy || !canLaunch}>
-              Create Pool
-            </ActionButton>
-          ) : null}
-          {session.poolAddress && needsWeights && session.currentStage === 'WEIGHTS_REQUIRED' ? (
-            <ActionButton onClick={configureWeights} disabled={busy || !weightsEligibility.allowed}>
-              Confirm NFT setup
-            </ActionButton>
-          ) : null}
-          {session.poolAddress && needsFee && session.currentStage === 'FEE_CONFIG_REQUIRED' ? (
-            <ActionButton onClick={configureFee} disabled={busy || !feeEligibility.allowed}>
-              Confirm fee setup
-            </ActionButton>
-          ) : null}
-          {session.poolAddress && ['FUNDING_REQUIRED', 'FUNDING_IN_PROGRESS'].includes(session.currentStage) ? (
-            <ActionButton onClick={fund} disabled={busy || !fundingEligibility.allowed}>
-              Fund rewards
-            </ActionButton>
-          ) : null}
-          {session.poolAddress && session.currentStage !== 'COMPLETE' ? (
-            <ActionButton $secondary onClick={finalVerify} disabled={busy || !finalEligibility.allowed}>
-              Run final check
-            </ActionButton>
-          ) : null}
-          {session.poolAddress && session.currentStage !== 'COMPLETE' ? (
-            <ActionButton $secondary onClick={moveStartLater} disabled={busy || !moveScheduleEligibility.allowed}>
-              Move start later
-            </ActionButton>
-          ) : null}
-          {canRetryLaunch(session) && session.currentStage !== 'PREFLIGHT_READY' && session.currentStage !== 'DRAFT' ? (
-            <ActionButton $secondary onClick={resume} disabled={busy}>
-              Continue setup
-            </ActionButton>
-          ) : null}
-        </ButtonRow>
-        {activeGateReason ? (
-          <Muted style={{ display: 'block', marginTop: 10 }}>Safety gate: {activeGateReason}</Muted>
-        ) : null}
-      </Panel>
-      {session.currentStage === 'COMPLETE' && chainSnapshot && !finalEligibility.allowed ? (
-        <Notice $error style={{ marginTop: 16 }}>
-          Completed session no longer matches expected on-chain state.
-        </Notice>
-      ) : null}
-      <Panel style={{ marginTop: 16 }}>
-        <PanelTitle>Canary readiness</PanelTitle>
-        <Muted>{getNftCanaryRecommendation(session.plan).message}</Muted>
-        <Muted style={{ display: 'block', marginTop: 8 }}>
-          First canary: one collection, primary reward only, no fee, a deliberately tiny reward and a short test
-          duration.
-        </Muted>
-      </Panel>
-      {confirmDeploy ? (
-        <Panel style={{ marginTop: 16, borderColor: '#D97706' }}>
-          <PanelTitle>Confirm pool creation</PanelTitle>
-          <Muted>Review the final details one more time before opening your wallet.</Muted>
-          <TableWrap style={{ marginTop: 12 }}>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>Staked NFT</td>
-                  <td>{short(session.plan.factoryParameters.stakedTokenAddress)}</td>
-                </tr>
-                <tr>
-                  <td>Primary funding cap</td>
-                  <td>{session.plan.fundingRequirements.primary.maximumScheduledFunding} base units</td>
-                </tr>
-                {session.plan.fundingRequirements.side.map((side) => (
-                  <tr key={side.tokenAddress}>
-                    <td>Side funding cap · {short(side.tokenAddress)}</td>
-                    <td>{side.maximumImpliedSideFunding} base units</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td>Start → end</td>
-                  <td>
-                    {session.schedule
-                      ? `${session.schedule.startBlock.toLocaleString()} → ${session.schedule.endBlock.toLocaleString()}`
-                      : '—'}
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
-          </TableWrap>
-          <Notice style={{ marginTop: 14 }}>
-            This cannot be undone. The factory deployment will create a new on-chain pool and requires a separate wallet
-            confirmation.
-          </Notice>
-          <ButtonRow>
-            <ActionButton
-              onClick={() => {
-                setConfirmDeploy(false)
-                void deploy()
-              }}
-              disabled={busy}
-            >
-              Confirm in wallet
-            </ActionButton>
-            <ActionButton $secondary onClick={() => setConfirmDeploy(false)} disabled={busy}>
-              Cancel
-            </ActionButton>
-          </ButtonRow>
-        </Panel>
-      ) : null}
-      {session.preflight ? (
-        <Panel style={{ marginTop: 16 }}>
-          <PanelTitle>Preflight result</PanelTitle>
-          <FormGrid>
-            <div>
-              <Muted>Current block</Muted>
-              <div>{session.preflight.currentBlock.toLocaleString()}</div>
-            </div>
-            <div>
-              <Muted>Final schedule</Muted>
+      </LaunchProgressPanel>
+
+      <LaunchWorkspace>
+        <LaunchMainColumn>
+          <Panel>
+            <LaunchActionHeader>
               <div>
-                {session.preflight.schedule.startBlock.toLocaleString()} →{' '}
-                {session.preflight.schedule.endBlock.toLocaleString()}
+                <PanelTitle style={{ marginBottom: 6 }}>Next action</PanelTitle>
+                <Muted role="status" aria-live="polite">
+                  {stageDescription}
+                </Muted>
               </div>
-            </div>
-            <div>
-              <Muted>Setup buffer</Muted>
-              <div>
-                {session.preflight.schedule.setupBufferBlocks.toLocaleString()} blocks ·{' '}
-                {Math.round(session.preflight.schedule.bufferSeconds / 60)} min
-              </div>
-            </div>
-            <div>
-              <Muted>Deployment gas estimate</Muted>
-              <div>{session.preflight.deploymentGas ? `${session.preflight.deploymentGas.safetyCost} wei` : '—'}</div>
-            </div>
-            <div>
-              <Muted>Preflight validity</Muted>
-              <div>
-                block {session.preflight.currentBlockAtPreflight.toLocaleString()} · expires at{' '}
-                {session.preflight.expiresAtBlock.toLocaleString()}
-              </div>
-            </div>
-          </FormGrid>
-          <div style={{ marginTop: 16 }}>
-            <CheckTable checks={session.preflight.checks} />
-          </div>
-          <Muted style={{ display: 'block', marginTop: 14 }}>
-            Deployment gas estimated. Setup and funding gas will be freshly simulated and checked immediately before
-            each wallet confirmation.
-          </Muted>
-        </Panel>
-      ) : null}
-      {session.poolAddress ? (
-        <Panel style={{ marginTop: 16 }}>
-          <PanelTitle>Confirmed deployment</PanelTitle>
-          <Muted>Pool address is sourced from the confirmed NewSmartChefContract event.</Muted>
-          <TableWrap>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>Pool</td>
-                  <td>
-                    <a href={poolScan} target="_blank" rel="noreferrer">
-                      {session.poolAddress}
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Deploy tx</td>
-                  <td>
-                    <a href={deployScan} target="_blank" rel="noreferrer">
-                      {short(session.transactionHashes.deploy)}
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Admin</td>
-                  <td>{short(session.intendedAdmin)}</td>
-                </tr>
-                <tr>
-                  <td>Start → end</td>
-                  <td>
-                    {session.schedule
-                      ? `${session.schedule.startBlock.toLocaleString()} → ${session.schedule.endBlock.toLocaleString()}`
-                      : '—'}
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
-          </TableWrap>
-          {session.verification.deployment ? (
-            <div style={{ marginTop: 16 }}>
-              <CheckTable checks={session.verification.deployment.checks} />
-            </div>
+            </LaunchActionHeader>
+            <ButtonRow>
+              {!session.poolAddress &&
+              ['DRAFT', 'PREFLIGHT_FAILED', 'PREFLIGHT_READY'].includes(session.currentStage) ? (
+                <ActionButton onClick={runPreflight} disabled={busy || !account}>
+                  {busy && session.currentStage === 'PREFLIGHT_RUNNING' ? 'Checking…' : 'Check setup'}
+                </ActionButton>
+              ) : null}
+              {session.currentStage === 'PREFLIGHT_READY' ? (
+                <ActionButton onClick={() => setConfirmDeploy(true)} disabled={busy || !canLaunch}>
+                  Create Pool
+                </ActionButton>
+              ) : null}
+              {session.poolAddress && needsWeights && session.currentStage === 'WEIGHTS_REQUIRED' ? (
+                <ActionButton onClick={configureWeights} disabled={busy || !weightsEligibility.allowed}>
+                  Confirm NFT setup
+                </ActionButton>
+              ) : null}
+              {session.poolAddress && needsFee && session.currentStage === 'FEE_CONFIG_REQUIRED' ? (
+                <ActionButton onClick={configureFee} disabled={busy || !feeEligibility.allowed}>
+                  Confirm fee setup
+                </ActionButton>
+              ) : null}
+              {session.poolAddress && ['FUNDING_REQUIRED', 'FUNDING_IN_PROGRESS'].includes(session.currentStage) ? (
+                <ActionButton onClick={fund} disabled={busy || !fundingEligibility.allowed}>
+                  Fund rewards
+                </ActionButton>
+              ) : null}
+              {session.poolAddress && session.currentStage !== 'COMPLETE' ? (
+                <ActionButton $secondary onClick={finalVerify} disabled={busy || !finalEligibility.allowed}>
+                  Run final check
+                </ActionButton>
+              ) : null}
+              {session.poolAddress && session.currentStage !== 'COMPLETE' ? (
+                <ActionButton $secondary onClick={moveStartLater} disabled={busy || !moveScheduleEligibility.allowed}>
+                  Move start later
+                </ActionButton>
+              ) : null}
+              {canRetryLaunch(session) &&
+              session.currentStage !== 'PREFLIGHT_READY' &&
+              session.currentStage !== 'DRAFT' ? (
+                <ActionButton $secondary onClick={resume} disabled={busy}>
+                  Continue setup
+                </ActionButton>
+              ) : null}
+            </ButtonRow>
+            {activeGateReason ? (
+              <Muted style={{ display: 'block', marginTop: 12 }}>Safety gate: {activeGateReason}</Muted>
+            ) : null}
+          </Panel>
+
+          {confirmDeploy ? (
+            <Panel style={{ borderColor: '#D97706' }}>
+              <PanelTitle>Confirm pool creation</PanelTitle>
+              <Muted>Review the final details one more time before opening your wallet.</Muted>
+              <TableWrap style={{ marginTop: 12 }}>
+                <Table>
+                  <tbody>
+                    <tr>
+                      <td>Staked NFT</td>
+                      <td>{short(session.plan.factoryParameters.stakedTokenAddress)}</td>
+                    </tr>
+                    <tr>
+                      <td>Primary funding cap</td>
+                      <td>{session.plan.fundingRequirements.primary.maximumScheduledFunding} base units</td>
+                    </tr>
+                    {session.plan.fundingRequirements.side.map((side) => (
+                      <tr key={side.tokenAddress}>
+                        <td>Side funding cap · {short(side.tokenAddress)}</td>
+                        <td>{side.maximumImpliedSideFunding} base units</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td>Start → end</td>
+                      <td>
+                        {session.schedule
+                          ? `${session.schedule.startBlock.toLocaleString()} → ${session.schedule.endBlock.toLocaleString()}`
+                          : '—'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </Table>
+              </TableWrap>
+              <Notice style={{ marginTop: 14 }}>
+                This cannot be undone. The factory deployment will create a new on-chain pool and requires a separate
+                wallet confirmation.
+              </Notice>
+              <ButtonRow>
+                <ActionButton
+                  onClick={() => {
+                    setConfirmDeploy(false)
+                    void deploy()
+                  }}
+                  disabled={busy}
+                >
+                  Confirm in wallet
+                </ActionButton>
+                <ActionButton $secondary onClick={() => setConfirmDeploy(false)} disabled={busy}>
+                  Cancel
+                </ActionButton>
+              </ButtonRow>
+            </Panel>
           ) : null}
-        </Panel>
-      ) : null}
-      {session.currentStage === 'COMPLETE' ? (
-        <Panel style={{ marginTop: 16 }}>
-          <LaunchPill $tone="good">Launch complete</LaunchPill>
-          <h3>Pool is ready for its upcoming start block.</h3>
-          <p role="status">{publicationStatus}</p>
-          {publicationError ? (
-            <div role="alert">
-              <p>Pool setup is complete. Local publication failed: {publicationError}</p>
-              <ActionButton onClick={() => setPublicationRetry((count) => count + 1)}>Publish locally</ActionButton>
-            </div>
+
+          {session.preflight ? (
+            <Panel>
+              <LaunchActionHeader>
+                <PanelTitle style={{ marginBottom: 0 }}>Readiness check</PanelTitle>
+                <LaunchPill $tone={session.preflight.ok ? 'good' : 'bad'}>
+                  {session.preflight.ok ? 'Ready' : 'Needs attention'}
+                </LaunchPill>
+              </LaunchActionHeader>
+              <LaunchFacts>
+                <LaunchFact>
+                  <Muted>Current block</Muted>
+                  <strong>{session.preflight.currentBlock.toLocaleString()}</strong>
+                </LaunchFact>
+                <LaunchFact>
+                  <Muted>Prepared schedule</Muted>
+                  <strong>
+                    {session.preflight.schedule.startBlock.toLocaleString()} →{' '}
+                    {session.preflight.schedule.endBlock.toLocaleString()}
+                  </strong>
+                </LaunchFact>
+                <LaunchFact>
+                  <Muted>Setup buffer</Muted>
+                  <strong>
+                    {session.preflight.schedule.setupBufferBlocks.toLocaleString()} blocks ·{' '}
+                    {Math.round(session.preflight.schedule.bufferSeconds / 60)} min
+                  </strong>
+                </LaunchFact>
+                <LaunchFact>
+                  <Muted>Deployment gas estimate</Muted>
+                  <strong>
+                    {session.preflight.deploymentGas
+                      ? `${session.preflight.deploymentGas.safetyCost} wei`
+                      : 'Not available'}
+                  </strong>
+                </LaunchFact>
+                <LaunchFact>
+                  <Muted>Preflight expires</Muted>
+                  <strong>
+                    Block {session.preflight.expiresAtBlock.toLocaleString()} · checked at{' '}
+                    {session.preflight.currentBlockAtPreflight.toLocaleString()}
+                  </strong>
+                </LaunchFact>
+              </LaunchFacts>
+              <CheckTable checks={session.preflight.checks} />
+              <Muted style={{ display: 'block', marginTop: 12 }}>
+                Setup and funding gas are simulated again immediately before each wallet confirmation.
+              </Muted>
+            </Panel>
           ) : null}
-          <Link href="/nftpools">View NFT pools</Link>
-          <Muted>
-            All required deployment, configuration and funding read-backs passed. The workflow never performs an
-            automatic swap or a hidden transaction.
-          </Muted>
-        </Panel>
-      ) : null}
-      <details style={{ marginTop: 16 }}>
-        <summary>Advanced exact parameters</summary>
-        <pre style={{ overflowX: 'auto', fontSize: 11, lineHeight: 1.5 }}>{JSON.stringify(session.plan, null, 2)}</pre>
-      </details>
+
+          {session.poolAddress ? (
+            <Panel>
+              <PanelTitle>Confirmed deployment</PanelTitle>
+              <Muted>Pool address comes from the confirmed factory deployment event.</Muted>
+              <TableWrap style={{ marginTop: 12 }}>
+                <Table>
+                  <tbody>
+                    <tr>
+                      <td>Pool</td>
+                      <td>
+                        <a href={poolScan} target="_blank" rel="noreferrer">
+                          {session.poolAddress}
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Deploy tx</td>
+                      <td>
+                        <a href={deployScan} target="_blank" rel="noreferrer">
+                          {short(session.transactionHashes.deploy)}
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Admin</td>
+                      <td>{short(session.intendedAdmin)}</td>
+                    </tr>
+                    <tr>
+                      <td>Start → end</td>
+                      <td>
+                        {session.schedule
+                          ? `${session.schedule.startBlock.toLocaleString()} → ${session.schedule.endBlock.toLocaleString()}`
+                          : '—'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </Table>
+              </TableWrap>
+              {session.verification.deployment ? (
+                <div style={{ marginTop: 14 }}>
+                  <CheckTable checks={session.verification.deployment.checks} />
+                </div>
+              ) : null}
+            </Panel>
+          ) : null}
+
+          {session.currentStage === 'COMPLETE' ? (
+            <Panel>
+              <LaunchPill $tone="good">Launch complete</LaunchPill>
+              <h3>Pool is ready for its upcoming start block.</h3>
+              <p role="status">{publicationStatus}</p>
+              {publicationError ? (
+                <div role="alert">
+                  <p>Pool setup is complete. Local publication failed: {publicationError}</p>
+                  <ActionButton onClick={() => setPublicationRetry((count) => count + 1)}>Publish locally</ActionButton>
+                </div>
+              ) : null}
+              <Link href="/nftpools">View NFT pools</Link>
+              <Muted>
+                Required deployment, configuration and funding read-backs passed. No automatic swap or hidden
+                transaction was performed.
+              </Muted>
+            </Panel>
+          ) : null}
+        </LaunchMainColumn>
+
+        <LaunchSideColumn>
+          <Panel>
+            <PanelTitle>Pool snapshot</PanelTitle>
+            <LaunchSummaryGrid>
+              <LaunchSummaryItem>
+                <Muted>Collections</Muted>
+                <strong>{session.plan.collectionConfiguration.communityCollections.length + 1}</strong>
+              </LaunchSummaryItem>
+              <LaunchSummaryItem>
+                <Muted>Reward tokens</Muted>
+                <strong>{session.plan.fundingRequirements.side.length + 1}</strong>
+              </LaunchSummaryItem>
+              <LaunchSummaryItem>
+                <Muted>Duration</Muted>
+                <strong>{session.plan.scheduleIntent.durationDays} days</strong>
+              </LaunchSummaryItem>
+              <LaunchSummaryItem>
+                <Muted>Min. effective power</Muted>
+                <strong>{session.plan.factoryParameters.participantThreshold}</strong>
+              </LaunchSummaryItem>
+            </LaunchSummaryGrid>
+            <LaunchSnapshotLine>
+              <Muted>Primary reward</Muted>
+              <LaunchSnapshotValue>
+                {tokenLabel(session.plan.fundingRequirements.primary.tokenAddress)}
+              </LaunchSnapshotValue>
+            </LaunchSnapshotLine>
+            {session.plan.fundingRequirements.side.map((side) => (
+              <LaunchSnapshotLine key={side.tokenAddress}>
+                <Muted>Side reward</Muted>
+                <LaunchSnapshotValue>{tokenLabel(side.tokenAddress)}</LaunchSnapshotValue>
+              </LaunchSnapshotLine>
+            ))}
+            <LaunchSnapshotLine>
+              <Muted>Primary funding cap</Muted>
+              <LaunchSnapshotValue>
+                {tokenAmount(
+                  session.plan.fundingRequirements.primary.tokenAddress,
+                  session.plan.fundingRequirements.primary.maximumScheduledFunding,
+                )}{' '}
+                {tokenLabel(session.plan.fundingRequirements.primary.tokenAddress)}
+              </LaunchSnapshotValue>
+            </LaunchSnapshotLine>
+            <LaunchSnapshotLine>
+              <Muted>Admin wallet</Muted>
+              <LaunchSnapshotValue title={session.intendedAdmin}>{short(session.intendedAdmin)}</LaunchSnapshotValue>
+            </LaunchSnapshotLine>
+            {session.poolAddress ? (
+              <LaunchSnapshotLine>
+                <Muted>Pool contract</Muted>
+                <LaunchSnapshotValue title={session.poolAddress}>{short(session.poolAddress)}</LaunchSnapshotValue>
+              </LaunchSnapshotLine>
+            ) : null}
+          </Panel>
+
+          <Panel>
+            <LaunchActionHeader>
+              <PanelTitle style={{ marginBottom: 0 }}>Canary recommendation</PanelTitle>
+              <LaunchPill $tone={canaryRecommendation.status === 'PASS' ? 'good' : 'warn'}>
+                {canaryRecommendation.status === 'PASS' ? 'Simple' : 'Review'}
+              </LaunchPill>
+            </LaunchActionHeader>
+            <Muted>{canaryRecommendation.message}</Muted>
+            <Muted style={{ display: 'block', marginTop: 10 }}>
+              For a first live canary, use one collection, primary reward only, no fee and a deliberately small budget.
+            </Muted>
+          </Panel>
+
+          <details>
+            <summary>Advanced exact parameters</summary>
+            <pre style={{ overflowX: 'auto', fontSize: 11, lineHeight: 1.5 }}>
+              {JSON.stringify(session.plan, null, 2)}
+            </pre>
+          </details>
+        </LaunchSideColumn>
+      </LaunchWorkspace>
+
       <p style={{ marginTop: 18 }}>
         <Link href="/admin/nft-pools">Back to NFT pools</Link>
         {' · '}
