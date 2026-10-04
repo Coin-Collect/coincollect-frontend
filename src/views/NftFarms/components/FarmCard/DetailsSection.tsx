@@ -11,6 +11,7 @@ import { Token } from '@coincollect/sdk'
 import { ProjectLink } from 'config/constants/types'
 import { TimeCountdownDisplay } from '../Cells/EndsInCell'
 import type { PublicV2Pool } from 'features/nftPoolManager/publication'
+import { ScheduleCountdown } from './ScheduleCountdown'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
@@ -70,6 +71,12 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
 
   const { shouldShowBlockCountdown, timeUntilStart, timeRemaining, hasPoolStarted, timeToDisplay } =
     getNftFarmBlockInfo(startTimestamp || 0, endTimestamp || 0, Boolean(isFinished), currentBlock)
+  const publishedScheduleLabel =
+    publishedPool?.snapshot.status === 'UPCOMING'
+      ? 'Starts in'
+      : publishedPool?.snapshot.status === 'ACTIVE' || publishedPool?.snapshot.status === 'FINISHED'
+      ? 'Ends in'
+      : 'Schedule'
 
   return (
     <Wrapper>
@@ -94,14 +101,15 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           {[
             ['Total staking power', publishedPool.snapshot.totalShares ?? 'Unavailable'],
             ['Minimum effective power', publishedPool.snapshot.threshold],
-            [publishedPool.snapshot.status === 'UPCOMING' ? 'Starts in' : 'Ends in',
-              publishedPool.snapshot.status === 'FINISHED' ? 'Finished' :
-              `${Math.max(0, (publishedPool.snapshot.status === 'UPCOMING' ? publishedPool.snapshot.startBlock : publishedPool.snapshot.endBlock) - publishedPool.snapshot.currentBlock).toLocaleString('en-US')} blocks`],
           ].map(([label, value]) => (
             <Flex key={label} mb="2px" justifyContent="space-between" alignItems="center">
               <Text small>{t(label)}:</Text><Text small>{value}</Text>
             </Flex>
           ))}
+          <Flex mb="2px" justifyContent="space-between" alignItems="center" style={{ gap: 12 }}>
+            <Text small>{t(publishedScheduleLabel)}:</Text>
+            <ScheduleCountdown pool={publishedPool} />
+          </Flex>
         </>
       )}
       {stakingLimit && stakingLimit.gt(0) && (
