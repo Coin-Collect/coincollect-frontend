@@ -182,6 +182,7 @@ export default function V2PoolActionModal({
   const [selected, setSelected] = useState<Record<string, SelectedNft>>({})
   const [inventoryErrors, setInventoryErrors] = useState<Record<string, string>>({})
   const [working, setWorking] = useState(false)
+  const [approvingCollection, setApprovingCollection] = useState<string>()
   const [error, setError] = useState<ActionFeedback>()
   const [notice, setNotice] = useState<string>()
   const [pendingVerification, setPendingVerification] = useState<ConfirmedV2WriteVerificationError>()
@@ -484,14 +485,21 @@ export default function V2PoolActionModal({
     }
   }
 
-  const onApprove = (collection: V2UserCollection) =>
-    completeAction(() => {
-      if (!signer || !account) throw new Error('Reconnect the wallet before approving this collection.')
-      return approveV2PoolCollection(
-        { signer, poolAddress: pool.address, poolRecord: pool, account },
-        collection.address,
-      )
-    }, `${collection.name} approved`)
+  const onApprove = async (collection: V2UserCollection) => {
+    const collectionKey = collection.address.toLowerCase()
+    setApprovingCollection(collectionKey)
+    try {
+      await completeAction(() => {
+        if (!signer || !account) throw new Error('Reconnect the wallet before approving this collection.')
+        return approveV2PoolCollection(
+          { signer, poolAddress: pool.address, poolRecord: pool, account },
+          collection.address,
+        )
+      }, `${collection.name} approved`)
+    } finally {
+      setApprovingCollection((current) => (current === collectionKey ? undefined : current))
+    }
+  }
 
   const onStake = async () => {
     setError(undefined)
@@ -647,7 +655,7 @@ export default function V2PoolActionModal({
             <>
               <Text color="textSubtle" small mb="14px">
                 {t(
-                  'Approve grants this pool permission to transfer NFTs from the selected collection. You choose the specific NFTs on the next step.',
+                  'Each collection needs its own wallet approval. Approve grants this pool permission to transfer NFTs from that collection; you choose the NFTs next.',
                 )}
               </Text>
               <Title style={{ marginBottom: 2 }}>
@@ -668,6 +676,7 @@ export default function V2PoolActionModal({
                   const address = collection.address.toLowerCase()
                   const inventoryState = inventoryIsForCurrentWallet ? inventoryStatus[address] || 'loading' : 'loading'
                   const ids = inventoryIsForCurrentWallet ? inventory[address] || [] : []
+                  const isApproving = approvingCollection === address
                   let actionLabel = t('Choose')
                   if (inventoryState === 'ready' && ids.length === 0) actionLabel = t('No NFTs')
                   else if (!collection.approved) actionLabel = t('Approve')
@@ -741,12 +750,13 @@ export default function V2PoolActionModal({
                             (inventoryState === 'ready' && ids.length === 0)
                           }
                           aria-label={`${actionLabel} ${collection.name}`}
+                          aria-busy={isApproving}
                           onClick={() =>
                             collection.approved ? setActiveCollection(address) : void onApprove(collection)
                           }
                         >
-                          {working && !collection.approved ? <AutoRenewIcon spin mr="4px" /> : null}
-                          {actionLabel}
+                          {isApproving ? <AutoRenewIcon spin mr="4px" /> : null}
+                          {isApproving ? t('Approving') : actionLabel}
                         </Button>
                       </Flex>
                     </MenuItem>
@@ -893,13 +903,18 @@ export default function V2PoolActionModal({
                 missingApprovals.map((collection) => (
                   <Button
                     key={collection.address}
+                    aria-busy={approvingCollection === collection.address.toLowerCase()}
                     width="100%"
                     mt="12px"
                     disabled={working || actionsBlocked}
                     onClick={() => onApprove(collection)}
                   >
-                    {working ? <AutoRenewIcon spin mr="6px" /> : null}
-                    {t('Enable %collection%', { collection: collection.name })}
+                    {approvingCollection === collection.address.toLowerCase() ? (
+                      <AutoRenewIcon spin mr="6px" />
+                    ) : null}
+                    {approvingCollection === collection.address.toLowerCase()
+                      ? t('Approving %collection%', { collection: collection.name })
+                      : t('Enable %collection%', { collection: collection.name })}
                   </Button>
                 ))}
             </>
