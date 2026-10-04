@@ -9,6 +9,7 @@ import {
   LightningIcon,
   WarningIcon,
   CheckmarkCircleFillIcon,
+  InfoIcon,
   Link,
 } from '@pancakeswap/uikit'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -78,6 +79,67 @@ const TokenIdInput = styled.input`
   border-radius: 10px;
 `
 
+const ActionFeedbackCard = styled.div<{ $kind: 'cancelled' | 'error' }>`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid ${({ theme, $kind }) => ($kind === 'cancelled' ? theme.colors.primary : theme.colors.failure)};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+`
+
+type ActionFeedback = { kind: 'cancelled' | 'error'; title: string; message: string }
+
+function getActionFeedback(cause: unknown): ActionFeedback {
+  const value = cause as {
+    code?: string | number
+    message?: string
+    reason?: string
+    cancelled?: boolean
+    error?: { code?: string | number; message?: string }
+  }
+  const code = value?.code ?? value?.error?.code
+  const rawMessage = value?.reason || value?.error?.message || value?.message || String(cause)
+  const walletDeclined =
+    code === 4001 ||
+    code === 'ACTION_REJECTED' ||
+    /user rejected (transaction|request)|user denied (transaction|request)/i.test(rawMessage)
+
+  if (walletDeclined) {
+    return {
+      kind: 'cancelled',
+      title: 'Wallet request declined',
+      message: 'No transaction was sent. You can try again whenever you’re ready.',
+    }
+  }
+
+  if (
+    (code === 'TRANSACTION_REPLACED' && value?.cancelled) ||
+    /transaction was cancelled in the wallet/i.test(rawMessage)
+  ) {
+    return {
+      kind: 'cancelled',
+      title: 'Transaction cancelled',
+      message: 'The wallet cancelled or replaced this transaction. Check wallet activity before trying again.',
+    }
+  }
+
+  const conciseMessage = rawMessage
+    .split(/\s+\((?:action|transaction)=/i)[0]
+    .split(/\s+,?\s+code=/i)[0]
+    .split('\n')[0]
+    .trim()
+    .slice(0, 240)
+
+  return {
+    kind: 'error',
+    title: 'Action could not be completed',
+    message: conciseMessage || 'Check your wallet and network, then try again.',
+  }
+}
+
 type SelectedNft = { collectionAddress: string; tokenId: string; weight: string; name: string; image?: string }
 
 function nftKey(nft: Pick<SelectedNft, 'collectionAddress' | 'tokenId'>) {
@@ -113,13 +175,14 @@ export default function V2PoolActionModal({
     refresh,
   } = usePublishedV2UserPosition(pool, account, chainId, provider)
   const [inventory, setInventory] = useState<Record<string, string[]>>({})
+  const [inventoryStatus, setInventoryStatus] = useState<Record<string, 'loading' | 'ready' | 'error'>>({})
   const [tokenMetadata, setTokenMetadata] = useState<Record<string, { name?: string; image?: string }>>({})
   const [inventoryLoading, setInventoryLoading] = useState(false)
   const [manualIds, setManualIds] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<Record<string, SelectedNft>>({})
   const [inventoryErrors, setInventoryErrors] = useState<Record<string, string>>({})
   const [working, setWorking] = useState(false)
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<ActionFeedback>()
   const [notice, setNotice] = useState<string>()
   const [pendingVerification, setPendingVerification] = useState<ConfirmedV2WriteVerificationError>()
   const [refreshPending, setRefreshPending] = useState(false)
@@ -142,11 +205,15 @@ export default function V2PoolActionModal({
   ].join(':')
   const currentInventoryKey = useRef(inventoryRequestKey)
   currentInventoryKey.current = inventoryRequestKey
+  const inventoryIsForCurrentWallet =
+    inventoryLoadedFor.current?.key === inventoryRequestKey && inventoryLoadedFor.current.provider === provider
   const metadataItems = configuredCollections
     .flatMap((collection) =>
       (mode === 'unstake'
         ? collection.staked.map((nft) => nft.tokenId)
-        : inventory[collection.address.toLowerCase()] || []
+        : inventoryIsForCurrentWallet
+        ? inventory[collection.address.toLowerCase()] || []
+        : []
       )
         .slice(0, 24)
         .map((tokenId) => ({
@@ -166,73 +233,100 @@ export default function V2PoolActionModal({
 
   useEffect(() => {
     if (mode !== 'stake' || !account || !provider || !position) {
-      if (!account || !provider) {
-        inventoryLoadedFor.current = undefined
-        setInventory({})
-        setTokenMetadata({})
-        setSelected({})
-        setInventoryErrors({})
-        setInventoryLoading(false)
-      }
+      inventoryLoadedFor.current = undefined
+      setInventoryLoading(false)
+      setInventory({})
+      setInventoryStatus({})
+      setTokenMetadata({})
+      setSelected({})
+      setInventoryErrors({})
       return undefined
     }
     const previouslyLoaded = inventoryLoadedFor.current
     if (previouslyLoaded?.key === inventoryRequestKey && previouslyLoaded.provider === provider) return undefined
     inventoryLoadedFor.current = { key: inventoryRequestKey, provider }
     let active = true
+    const collectionsToRead = configuredCollectionsRef.current.map(
+      (item) =>
+        ({
+          address: item.address,
+          name: item.name,
+          image: item.image,
+          weight: item.weight,
+        } as V2UserCollection),
+    )
     setInventoryLoading(true)
     setInventory({})
+    setInventoryStatus(
+      Object.fromEntries(collectionsToRead.map((item) => [item.address.toLowerCase(), 'loading'])) as Record<
+        string,
+        'loading' | 'ready' | 'error'
+      >,
+    )
     setTokenMetadata({})
     setSelected({})
     setInventoryErrors({})
     Promise.all(
-      configuredCollectionsRef.current
-        .map(
-          (item) =>
-            ({
-              address: item.address,
-              name: item.name,
-              image: item.image,
-              weight: item.weight,
-            } as V2UserCollection),
-        )
-        .map(async (collection) => {
-          try {
-            let timeout: ReturnType<typeof setTimeout> | undefined
-            const result = await Promise.race([
-              readV2OwnedNfts(provider, collection.address, account),
-              new Promise<never>((_, reject) => {
-                timeout = setTimeout(() => reject(new Error('NFT read timed out. Retry or enter token IDs.')), 15_000)
-              }),
-            ]).finally(() => {
-              if (timeout !== undefined) clearTimeout(timeout)
-            })
-            if (active) setInventory((current) => ({ ...current, [collection.address.toLowerCase()]: result.tokenIds }))
-            return [collection.address.toLowerCase(), result] as const
-          } catch (cause) {
-            return [
-              collection.address.toLowerCase(),
-              cause instanceof Error ? cause : new Error(String(cause)),
-            ] as const
+      collectionsToRead.map(async (collection) => {
+        try {
+          let timeout: ReturnType<typeof setTimeout> | undefined
+          const result = await Promise.race([
+            readV2OwnedNfts(provider, collection.address, account),
+            new Promise<never>((_, reject) => {
+              timeout = setTimeout(() => reject(new Error('NFT read timed out. Retry or enter token IDs.')), 15_000)
+            }),
+          ]).finally(() => {
+            if (timeout !== undefined) clearTimeout(timeout)
+          })
+          if (active) {
+            const address = collection.address.toLowerCase()
+            setInventory((current) => ({ ...current, [address]: result.tokenIds }))
+            setInventoryStatus((current) => ({ ...current, [address]: result.complete ? 'ready' : 'error' }))
+            const message = result.message
+            if (!result.complete && message) {
+              setInventoryErrors((current) => ({ ...current, [address]: message }))
+            }
           }
-        }),
+          return [collection.address.toLowerCase(), result] as const
+        } catch (cause) {
+          const address = collection.address.toLowerCase()
+          const readError = cause instanceof Error ? cause : new Error(String(cause))
+          if (active) {
+            setInventoryStatus((current) => ({ ...current, [address]: 'error' }))
+            setInventoryErrors((current) => ({ ...current, [address]: readError.message }))
+          }
+          return [address, readError] as const
+        }
+      }),
     ).then((results) => {
       if (!active) return
       const nextInventory: Record<string, string[]> = {}
       const nextErrors: Record<string, string> = {}
+      const nextInventoryStatus: Record<string, 'ready' | 'error'> = {}
       results.forEach(([address, result]) => {
-        if (result instanceof Error) nextErrors[address] = result.message
-        else {
+        if (result instanceof Error) {
+          nextErrors[address] = result.message
+          nextInventoryStatus[address] = 'error'
+        } else {
           nextInventory[address] = result.tokenIds
-          if (!result.complete && result.message) nextErrors[address] = result.message
+          if (!result.complete) {
+            nextInventoryStatus[address] = 'error'
+            if (result.message) nextErrors[address] = result.message
+          } else {
+            nextInventoryStatus[address] = 'ready'
+          }
         }
       })
       setInventory(nextInventory)
       setInventoryErrors(nextErrors)
+      setInventoryStatus(nextInventoryStatus)
       setInventoryLoading(false)
     })
     return () => {
       active = false
+      // A closed/reopened wallet modal gets a fresh read instead of inheriting
+      // the old request's "already loaded" marker and waiting forever.
+      if (inventoryLoadedFor.current?.key === inventoryRequestKey) inventoryLoadedFor.current = undefined
     }
   }, [mode, pool.id, inventoryRequestKey, account, chainId, provider, Boolean(position)])
 
@@ -362,7 +456,7 @@ export default function V2PoolActionModal({
         void onSuccess().catch(() => undefined)
         return
       }
-      setError(cause instanceof Error ? cause.message : String(cause))
+      setError(getActionFeedback(cause))
     } finally {
       actionLock.current = false
       setWorking(false)
@@ -383,7 +477,7 @@ export default function V2PoolActionModal({
       setNotice(t('Confirmed transaction and on-chain position are now verified.'))
       onDismiss?.()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause))
+      setError(getActionFeedback(cause))
     } finally {
       actionLock.current = false
       setWorking(false)
@@ -417,7 +511,7 @@ export default function V2PoolActionModal({
         'NFTs staked',
       )
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause))
+      setError(getActionFeedback(cause))
     }
   }
 
@@ -451,7 +545,7 @@ export default function V2PoolActionModal({
     mode === 'emergency'
       ? t('Emergency withdrawal')
       : pickingCollection
-      ? t('Select from %count% collection', { count: configuredCollections.length })
+      ? t('Choose an NFT collection')
       : mode === 'stake'
       ? t('Select NFTs to Stake')
       : t('Select NFTs to UnStake')
@@ -463,9 +557,15 @@ export default function V2PoolActionModal({
     mode === 'stake'
       ? configuredCollections.filter((collection) => collection.address.toLowerCase() === activeCollection)
       : configuredCollections
+  const activeCollectionInventoryLoading =
+    mode === 'stake' && activeCollection
+      ? inventoryIsForCurrentWallet && inventoryStatus[activeCollection] === 'loading'
+      : inventoryLoading
   const nftItems = visibleCollections.flatMap((collection) =>
     (mode === 'stake'
-      ? inventory[collection.address.toLowerCase()] || []
+      ? inventoryIsForCurrentWallet
+        ? inventory[collection.address.toLowerCase()] || []
+        : []
       : collection.staked.map((item) => item.tokenId)
     ).map((tokenId) => {
       const staked = collection.staked.find((item) => item.tokenId === tokenId)
@@ -507,7 +607,7 @@ export default function V2PoolActionModal({
       }}
     >
       <ModalBody maxWidth="620px">
-        <ModalContent style={{ width: pickingCollection ? 372 : 572 }}>
+        <ModalContent style={{ width: pickingCollection ? 480 : 572 }}>
           {!account || !provider ? (
             <Text role="alert" color="failure">
               {t('Wallet disconnected. Reconnect it, then reopen this action.')}
@@ -545,6 +645,11 @@ export default function V2PoolActionModal({
             </Flex>
           ) : pickingCollection ? (
             <>
+              <Text color="textSubtle" small mb="14px">
+                {t(
+                  'Approve grants this pool permission to transfer NFTs from the selected collection. You choose the specific NFTs on the next step.',
+                )}
+              </Text>
               <Title style={{ marginBottom: 2 }}>
                 {t('Stake NFTs here to earn by ')}
                 <LightningIcon width={15} />
@@ -561,17 +666,30 @@ export default function V2PoolActionModal({
               <CollectionWrapper flexDirection="column" style={{ maxHeight: 300, overflowY: 'auto' }}>
                 {configuredCollections.map((collection) => {
                   const address = collection.address.toLowerCase()
-                  const ids = inventory[address] || []
+                  const inventoryState = inventoryIsForCurrentWallet ? inventoryStatus[address] || 'loading' : 'loading'
+                  const ids = inventoryIsForCurrentWallet ? inventory[address] || [] : []
+                  let actionLabel = t('Choose')
+                  if (inventoryState === 'ready' && ids.length === 0) actionLabel = t('No NFTs')
+                  else if (!collection.approved) actionLabel = t('Approve')
+                  else if (inventoryState === 'error') actionLabel = t('Enter IDs')
                   return (
                     <MenuItem
-                      as="button"
-                      type="button"
+                      as="div"
                       key={address}
-                      disabled={working || actionsBlocked}
+                      disabled={false}
                       selected={false}
                       width="100%"
-                      style={{ border: 0, textAlign: 'left', background: 'transparent' }}
-                      onClick={() => (collection.approved ? setActiveCollection(address) : void onApprove(collection))}
+                      style={{
+                        border: 0,
+                        textAlign: 'left',
+                        background: 'transparent',
+                        gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+                        height: 'auto',
+                        minHeight: 72,
+                        paddingTop: 8,
+                        paddingBottom: 8,
+                        cursor: 'default',
+                      }}
                     >
                       <CollectionAvatar
                         src={collection.image || '/images/nfts/no-profile-md.png'}
@@ -591,20 +709,51 @@ export default function V2PoolActionModal({
                             {collection.weight}
                           </PowerText>
                         </CollectionTitleRow>
-                        <Text color="textSubtle" small>
-                          {collection.approved ? t('Click to Start Staking') : t('Click to Enable')}
+                        <Text color="textSubtle" small mt="2px">
+                          {collection.approved
+                            ? t('Select NFTs you own')
+                            : t('Approval needed for this collection')}
                         </Text>
                       </ContentColumn>
-                      {inventoryLoading && inventory[address] === undefined ? (
-                        <CircleLoader size="18px" />
-                      ) : (
-                        <Text>{ids.length}</Text>
-                      )}
+                      <Flex flexDirection="column" alignItems="flex-end" style={{ gap: 5 }}>
+                        {inventoryState === 'loading' ? (
+                          <Flex alignItems="center" style={{ gap: 5 }} role="status" aria-live="polite">
+                            <CircleLoader size="14px" />
+                            <Text small color="textSubtle">{t('Checking wallet NFTs')}</Text>
+                          </Flex>
+                        ) : inventoryState === 'error' ? (
+                          <Text small color="warning" role="status" aria-live="polite">
+                            {t('NFT list unavailable')}
+                          </Text>
+                        ) : (
+                          <Text small color="textSubtle" role="status" aria-live="polite">
+                            {t('%count% owned', { count: ids.length })}
+                          </Text>
+                        )}
+                        <Button
+                          scale="sm"
+                          variant={collection.approved ? 'secondary' : 'primary'}
+                          disabled={
+                            working ||
+                            actionsBlocked ||
+                            (collection.approved && inventoryState === 'loading') ||
+                            (collection.approved && inventoryState === 'error' && inventoryLoading) ||
+                            (inventoryState === 'ready' && ids.length === 0)
+                          }
+                          aria-label={`${actionLabel} ${collection.name}`}
+                          onClick={() =>
+                            collection.approved ? setActiveCollection(address) : void onApprove(collection)
+                          }
+                        >
+                          {working && !collection.approved ? <AutoRenewIcon spin mr="4px" /> : null}
+                          {actionLabel}
+                        </Button>
+                      </Flex>
                     </MenuItem>
                   )
                 })}
               </CollectionWrapper>
-              <Text small color="textSubtle">
+              <Text small color="textSubtle" mt="8px">
                 {t('Daily rewards use the highest-power NFT in this pool.')}
               </Text>
             </>
@@ -681,7 +830,7 @@ export default function V2PoolActionModal({
                       )
                     })}
                   </Flex>
-                ) : inventoryLoading && mode === 'stake' ? (
+                ) : activeCollectionInventoryLoading && mode === 'stake' ? (
                   <Flex p="24px" margin="0 auto" flexDirection="column" alignItems="center">
                     <CircleLoader size="30px" />
                     <Text mt="8px">{t('NFTs will be listed shortly...')}</Text>
@@ -690,7 +839,9 @@ export default function V2PoolActionModal({
                   <Flex p="24px" flexDirection="column" alignItems="center" width="100%">
                     <NoNftsImage />
                     <Text pt="8px" bold>
-                      {t('No NFTs found')}
+                      {mode === 'stake' && activeCollection && inventoryErrors[activeCollection]
+                        ? t('Could not list NFTs automatically')
+                        : t('No NFTs found')}
                     </Text>
                     {mode === 'stake' && (
                       <Button variant="light" mt="12px" width="100%" onClick={retryInventory}>
@@ -707,6 +858,9 @@ export default function V2PoolActionModal({
                     <div key={key}>
                       <Text small color="warning" mt="8px">
                         {inventoryErrors[key]}
+                      </Text>
+                      <Text small color="textSubtle" mt="6px">
+                        {t('Enter the token IDs you own. Each ID is checked against the connected wallet before it can be staked.')}
                       </Text>
                       <Flex mt="10px" style={{ gap: 8 }}>
                         <TokenIdInput
@@ -751,9 +905,25 @@ export default function V2PoolActionModal({
             </>
           )}
           {error && (
-            <Text role="alert" color="failure" mt="12px">
-              {error}
-            </Text>
+            <ActionFeedbackCard
+              $kind={error.kind}
+              role={error.kind === 'cancelled' ? 'status' : 'alert'}
+              aria-live={error.kind === 'cancelled' ? 'polite' : 'assertive'}
+            >
+              {error.kind === 'cancelled' ? (
+                <InfoIcon width="20px" color="primary" mt="1px" />
+              ) : (
+                <WarningIcon width="20px" color="failure" mt="1px" />
+              )}
+              <div style={{ minWidth: 0 }}>
+                <Text bold color={error.kind === 'cancelled' ? 'primary' : 'failure'}>
+                  {t(error.title)}
+                </Text>
+                <Text small color="textSubtle" mt="3px" style={{ overflowWrap: 'anywhere' }}>
+                  {t(error.message)}
+                </Text>
+              </div>
+            </ActionFeedbackCard>
           )}
           {notice && (
             <Text role="status" color="success" mt="12px">
