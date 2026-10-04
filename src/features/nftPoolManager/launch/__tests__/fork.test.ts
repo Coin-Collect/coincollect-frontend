@@ -1,9 +1,10 @@
 /** @jest-environment node */
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { BigNumber } from '@ethersproject/bignumber'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
-import { parseEther } from '@ethersproject/units'
+import { parseEther, parseUnits } from '@ethersproject/units'
 import { calculatePoolEconomics } from '../../economics'
 import { createEmptyNftPoolDraft } from '../../registry'
 import { buildNftPoolDeploymentPlan } from '../../validation'
@@ -16,15 +17,25 @@ import {
 } from '../../publication'
 import { createNftPoolLaunchSession } from '../storage'
 import { prepareNftLaunchSchedule } from '../schedule'
-import { configureNftCollectionWeights, deployNftPool } from '../transactions'
+import { configureNftCollectionWeights, configureNftPerformanceFee, deployNftPool } from '../transactions'
 import { fundNftPoolTokenIfNeeded, primaryFundingAmount, sideFundingAmount } from '../funding'
 import {
   verifyDeployedNftPool,
   verifyFinalNftLaunch,
   verifyNftCollectionWeights,
   verifyNftFunding,
+  verifyNftPerformanceFee,
 } from '../verification'
 import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
+import {
+  approveV2PoolCollection,
+  emergencyWithdrawV2Position,
+  harvestV2Pool,
+  stakeV2Nfts,
+  unstakeV2Nfts,
+} from '../../user/transactions'
+import { readV2UserPosition } from '../../user/readers'
+import { readV2OwnedNfts } from '../../user/nftDiscovery'
 
 const forkUrl = process.env.COINCOLLECT_FORK_RPC
 const forkTest = forkUrl ? it : it.skip
@@ -50,10 +61,15 @@ forkTest(
     let owner: string | undefined
     let preservedPublishedPool = false
     try {
-      owner = await new Contract(factoryAddress, ['function owner() view returns (address)'], provider).owner()
-      await provider.send('anvil_impersonateAccount', [owner])
-      await provider.send('anvil_setBalance', [owner, '0x3635c9adc5dea00000'])
-      const signer = provider.getSigner(owner)
+      const factoryOwner: string = await new Contract(
+        factoryAddress,
+        ['function owner() view returns (address)'],
+        provider,
+      ).owner()
+      owner = factoryOwner
+      await provider.send('anvil_impersonateAccount', [factoryOwner])
+      await provider.send('anvil_setBalance', [factoryOwner, '0x3635c9adc5dea00000'])
+      const signer = provider.getSigner(factoryOwner)
       const compilerModule =
         process.env.COINCOLLECT_SOLC_MODULE ||
         require.resolve('solc', { paths: [process.cwd(), join(process.cwd(), 'scripts/local-fork-tool')] })
@@ -87,6 +103,8 @@ forkTest(
       const draft = createEmptyNftPoolDraft()
       draft.name = 'Fork verified NFT pool'
       draft.banner = '/images/poolBanners/nfts/key.webp'
+      draft.constraints.performanceFee = '1000000000000000'
+      draft.constraints.performanceFeeRecipient = factoryOwner
       draft.collections = [
         { chainId: 137, address: primaryNft.address, collectionId: 'key', name: 'KEY', primary: true, weight: '30' },
         {
@@ -98,11 +116,11 @@ forkTest(
           weight: '1',
         },
       ]
-      draft.constraints.participantThreshold = '1'
+      draft.constraints.participantThreshold = '40'
       draft.constraints.poolCapacity = '100'
       draft.constraints.userLimitEnabled = false
       draft.economics.durationPreset = 'custom'
-      draft.economics.customDurationDays = '1'
+      draft.economics.customDurationDays = '3'
       draft.economics.totalBudget = '10'
       draft.economics.budgetTokenAddress = sideToken.address
       draft.economics.budgetDecimals = 6
@@ -116,7 +134,7 @@ forkTest(
       // Production uses measured Polygon timing; the engine and contract are unchanged.
       const forkSecondsPerBlock = 1440
       const economics = calculatePoolEconomics(draft, forkSecondsPerBlock)
-      const plan = buildNftPoolDeploymentPlan(draft, economics, factoryAddress, owner)!
+      const plan = buildNftPoolDeploymentPlan(draft, economics, factoryAddress, factoryOwner)!
       expect(plan).not.toBeNull()
       const schedule = prepareNftLaunchSchedule(plan, await provider.getBlockNumber(), forkSecondsPerBlock)
       const deployment = await deployNftPool(signer, factoryAddress, plan, schedule)
@@ -124,6 +142,14 @@ forkTest(
       const deployed = await verifyDeployedNftPool(provider, plan, schedule, deployment.poolAddress)
       expect(deployed.checks.filter((check) => check.status === 'BLOCK')).toEqual([])
       await configureNftCollectionWeights(signer, deployment.poolAddress, plan)
+      const feeReceipt = await configureNftPerformanceFee(
+        signer,
+        deployment.poolAddress,
+        plan.postDeploy.feeTo!,
+        plan.postDeploy.performanceFee!,
+      )
+      const fee = await verifyNftPerformanceFee(provider, plan, deployment.poolAddress)
+      expect(fee.passed).toBe(true)
       const weights = await verifyNftCollectionWeights(provider, plan, deployment.poolAddress)
       expect(weights.passed).toBe(true)
       // Prefund part of the primary requirement; the engine transfers only the remainder.
@@ -146,12 +172,12 @@ forkTest(
       console.info('Fork: configuration and deficit funding verified')
       expect(final.checks.filter((check) => check.status === 'BLOCK')).toEqual([])
       const session = {
-        ...createNftPoolLaunchSession(plan, 137, factoryAddress, owner, capturePublicationMetadata(draft)),
+        ...createNftPoolLaunchSession(plan, 137, factoryAddress, factoryOwner, capturePublicationMetadata(draft)),
         currentStage: 'COMPLETE' as const,
         schedule,
         poolAddress: deployment.poolAddress,
-        transactionHashes: { deploy: deployment.transactionHash, sideFunding: {} },
-        verification: { deployment: deployed, weights, funding, final },
+        transactionHashes: { deploy: deployment.transactionHash, fee: feeReceipt.transactionHash, sideFunding: {} },
+        verification: { deployment: deployed, weights, fee, funding, final },
       }
       let records: PublicV2Pool[] = []
       const store = {
@@ -164,7 +190,7 @@ forkTest(
       console.info('Fork: exact-address publication hydrated')
       await publishCompletedNftPool(session, provider, store)
       expect(records).toHaveLength(1)
-      expect(published.snapshot.threshold).toBe('1')
+      expect(published.snapshot.threshold).toBe('40')
       expect(published.snapshot.rewards).toHaveLength(2)
       expect(published.snapshot.rewards[0].symbol).toBe('WPOL')
       expect(published.snapshot.rewards[0].balance).toBe(required.toString())
@@ -176,7 +202,135 @@ forkTest(
       await provider.send('anvil_mine', [`0x${(schedule.startBlock - (await provider.getBlockNumber())).toString(16)}`])
       console.info('Fork: mined to start block')
       expect((await hydratePublishedPool(published, provider)).snapshot.status).toBe('ACTIVE')
-      await provider.send('anvil_mine', [`0x${(schedule.endBlock - (await provider.getBlockNumber())).toString(16)}`])
+
+      // Exercise the address-native user path against the deployed Polygon factory pool.
+      const userAddress = await provider.getSigner(2).getAddress()
+      const manualNft = await deployAsset('ManualLaunchNFT')
+      const manualTokenId = '900719925474099312345'
+      await (await manualNft.mint(userAddress, BigNumber.from(manualTokenId))).wait()
+      const manualDiscovery = await readV2OwnedNfts(provider, manualNft.address, userAddress)
+      expect(manualDiscovery.method).toBe('manual')
+      expect(manualDiscovery.complete).toBe(false)
+      const verifiedManualId = await readV2OwnedNfts(provider, manualNft.address, userAddress, {
+        manualTokenIds: manualTokenId,
+      })
+      expect(verifiedManualId.tokenIds).toEqual([manualTokenId])
+      await expect(
+        readV2OwnedNfts(provider, manualNft.address, userAddress, { manualTokenIds: '777777' }),
+      ).rejects.toThrow()
+      console.info('Fork: non-enumerable NFT manual-ID fallback verifies uint256 ownership')
+      await (await primaryNft.mint(userAddress, 501)).wait()
+      await (await primaryNft.mint(userAddress, 502)).wait()
+      await (await communityNft.mint(userAddress, 501)).wait()
+      await (await communityNft.mint(userAddress, 502)).wait()
+      const userSigner = provider.getSigner(userAddress)
+      const userContext = {
+        signer: userSigner,
+        poolAddress: deployment.poolAddress,
+        poolRecord: published,
+        account: userAddress,
+        expectedChainId: 31337,
+      }
+      const discoveredPrimary = await readV2OwnedNfts(provider, primaryNft.address, userAddress)
+      expect(discoveredPrimary.method).toBe('tokensOfOwnerBySize')
+      expect(discoveredPrimary.tokenIds).toContain('501')
+      await expect(approveV2PoolCollection(userContext, sideToken.address)).rejects.toThrow(
+        'This collection is not configured in the verified pool',
+      )
+      let userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.status).toBe('ACTIVE')
+      expect(userPosition.threshold).toBe('40')
+      expect(userPosition.nftCount).toBe('0')
+      expect(userPosition.performanceFee).toBe('1000000000000000')
+      expect(userPosition.feeTo.toLowerCase()).toBe(factoryOwner.toLowerCase())
+      await approveV2PoolCollection(userContext, primaryNft.address)
+      console.info('Fork: primary NFT collection approval confirmed')
+      await approveV2PoolCollection(userContext, communityNft.address)
+      console.info('Fork: community NFT collection approval confirmed')
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      const firstBatch = [
+        { collectionAddress: primaryNft.address, tokenId: '501' },
+        { collectionAddress: communityNft.address, tokenId: '501' },
+      ]
+      await stakeV2Nfts(
+        userContext,
+        userPosition,
+        firstBatch,
+        await Promise.all([primaryNft.ownerOf(501), communityNft.ownerOf(501)]),
+      )
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.nftCount).toBe('2')
+      expect(userPosition.power).toBe('31')
+      expect(
+        userPosition.collections.find((item) => item.address.toLowerCase() === primaryNft.address.toLowerCase())
+          ?.staked[0].weight,
+      ).toBe('30')
+      console.info('Fork: two-collection stake verified at 30x + 1x power')
+
+      await provider.send('anvil_mine', ['0xa'])
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(BigNumber.from(userPosition.pendingPrimary).gt(0)).toBe(true)
+      const beforeHarvest = userPosition.rewards.map((reward) => BigNumber.from(reward.walletBalance))
+      await harvestV2Pool(userContext)
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(BigNumber.from(userPosition.rewards[0].walletBalance).gt(beforeHarvest[0])).toBe(true)
+      expect(BigNumber.from(userPosition.rewards[1].walletBalance).gt(beforeHarvest[1])).toBe(true)
+      console.info('Fork: primary and 6-decimal side rewards harvested to wallet')
+
+      const stakeMore = [{ collectionAddress: primaryNft.address, tokenId: '502' }]
+      await stakeV2Nfts(userContext, userPosition, stakeMore, [await primaryNft.ownerOf(502)])
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.nftCount).toBe('3')
+      expect(userPosition.power).toBe('61')
+      await unstakeV2Nfts(userContext, userPosition, [{ collectionAddress: communityNft.address, tokenId: '501' }])
+      expect((await communityNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.nftCount).toBe('2')
+      expect(userPosition.power).toBe('60')
+      console.info('Fork: stake-more and partial unstake preserve snapshotted NFT power')
+
+      await provider.send('anvil_mine', ['0x2'])
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(BigNumber.from(userPosition.pendingPrimary).gt(0)).toBe(true)
+      const brokenSideBalance = await sideToken.balanceOf(deployment.poolAddress)
+      await (await sideToken.burn(deployment.poolAddress, brokenSideBalance)).wait()
+      await expect(
+        unstakeV2Nfts(userContext, userPosition, [{ collectionAddress: primaryNft.address, tokenId: '501' }]),
+      ).rejects.toThrow()
+      expect((await primaryNft.ownerOf(501)).toLowerCase()).toBe(deployment.poolAddress.toLowerCase())
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.nftCount).toBe('2')
+      console.info('Fork: normal reward-paying withdrawal failed safely when side reward balance was deficient')
+      await emergencyWithdrawV2Position(userContext, userPosition, true)
+      expect((await primaryNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
+      expect((await primaryNft.ownerOf(502)).toLowerCase()).toBe(userAddress.toLowerCase())
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.nftCount).toBe('0')
+      console.info('Fork: explicit emergency withdrawal returns the full position without rewards')
+
+      await (await sideToken.mint(deployment.poolAddress, parseUnits('1000000', 6))).wait()
+
+      await stakeV2Nfts(
+        userContext,
+        userPosition,
+        firstBatch,
+        await Promise.all([primaryNft.ownerOf(501), communityNft.ownerOf(501)]),
+      )
+      const untilEnd = schedule.endBlock - (await provider.getBlockNumber())
+      if (untilEnd > 0) await provider.send('anvil_mine', [`0x${untilEnd.toString(16)}`])
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.status).toBe('FINISHED')
+      await unstakeV2Nfts(userContext, userPosition, [
+        { collectionAddress: primaryNft.address, tokenId: '501' },
+        { collectionAddress: communityNft.address, tokenId: '501' },
+      ])
+      expect((await primaryNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
+      expect((await communityNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
+      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
+      expect(userPosition.nftCount).toBe('0')
+      expect(userPosition.power).toBe('0')
+      console.info('Fork: finished-pool withdrawal confirmed; user returned to zero position')
+
       expect((await hydratePublishedPool(published, provider)).snapshot.status).toBe('FINISHED')
       if (preservePublishedTestPool) {
         const restored = await provider.send('evm_revert', [publicationCheckpoint])

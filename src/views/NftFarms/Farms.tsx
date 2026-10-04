@@ -36,6 +36,7 @@ import CommunitySwitch from './components/CommunitySwitch'
 import CompetitionBanner from 'views/Home/components/Banners/CompetitionBanner'
 import { CommunityCollectionsBanner } from 'views/Home/components/Banners/CommunityCollectionsBanner'
 import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPools'
+import { usePublishedV2UserPositions } from 'features/nftPoolManager/user/hooks'
 import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
 import PublicNftPoolCard from 'features/nftPoolManager/components/PublicNftPoolCard'
 
@@ -411,7 +412,7 @@ const Farms: React.FC = ({ children }) => {
   const cakePrice = usePriceCakeBusd()
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useUserFarmsViewMode()
-  const { account } = useWeb3React()
+  const { account, chainId, library } = useWeb3React()
   const [sortOption, setSortOption] = useState('latest')
   const { observerRef, isIntersecting } = useIntersectionObserver()
   const chosenFarmsLength = useRef(0)
@@ -435,11 +436,42 @@ const Farms: React.FC = ({ children }) => {
 
   const [stakedOnly, setStakedOnly] = useUserFarmStakedOnly(isActive, false)
   const published = usePublishedNftPools()
-  const publishedPools = selectPublishedNftPools(published.pools, {
-    history: isInactive, archived: isArchived, stakedOnly, query,
+  const poolFilters = {
+    archived: isArchived,
+    query,
     community: isCommunity ? true : isPartner ? false : undefined,
-    configuredAddresses: nftFarmsConfig.flatMap((farm) => farm.contractAddresses?.[137] ? [farm.contractAddresses[137]] : []),
+    configuredAddresses: nftFarmsConfig.flatMap((farm) =>
+      farm.contractAddresses?.[137] ? [farm.contractAddresses[137]] : [],
+    ),
+  }
+  const publishedCandidates = [
+    ...selectPublishedNftPools(published.pools, { ...poolFilters, history: isInactive, stakedOnly: false }),
+    ...(Boolean(account) && isActive
+      ? selectPublishedNftPools(published.pools, { ...poolFilters, history: true, stakedOnly: false })
+      : []),
+  ].filter((pool, index, pools) => pools.findIndex((candidate) => candidate.id === pool.id) === index)
+  const publishedUserPositions = usePublishedV2UserPositions(
+    publishedCandidates,
+    account,
+    chainId,
+    library,
+    Boolean(account),
+  )
+  const stakedPublishedAddresses = Object.values(publishedUserPositions.positions)
+    .filter((position) => new BigNumber(position.nftCount).gt(0))
+    .map((position) => position.poolAddress)
+  const publishedPools = selectPublishedNftPools(publishedCandidates, {
+    ...poolFilters,
+    history: isInactive,
+    stakedOnly,
+    stakedPoolAddresses: stakedPublishedAddresses,
   })
+  const publishedFinishedStakeCount = selectPublishedNftPools(published.pools, {
+    ...poolFilters,
+    history: true,
+    stakedOnly: true,
+    stakedPoolAddresses: stakedPublishedAddresses,
+  }).length
 
   const activeFarms = farmsLP.filter(
     (farm) =>
@@ -485,13 +517,24 @@ const Farms: React.FC = ({ children }) => {
         const totalStaked = farm.totalStaked
         // We use sum of weights for smart pools
         const totalShares = farm.totalShares
-        const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]["mainCollectionWeight"]
+        const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == farm.pid)[0]['mainCollectionWeight']
 
         const isSmartNftStakePool = Boolean(farm.contractAddresses)
-        const totalLiquidityWithThreshold = new BigNumber(Math.max(farm.participantThreshold ?? 0, isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber()))
-        const { cakeRewardsApr, lpRewardsApr } = isActive && !farm.isFinished
-          ? getNftFarmApr(new BigNumber(farm.poolWeight), farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null, totalLiquidityWithThreshold, mainCollectionWeight)
-          : { cakeRewardsApr: 0, lpRewardsApr: 0 }
+        const totalLiquidityWithThreshold = new BigNumber(
+          Math.max(
+            farm.participantThreshold ?? 0,
+            isSmartNftStakePool ? totalShares.toNumber() : totalStaked.toNumber(),
+          ),
+        )
+        const { cakeRewardsApr, lpRewardsApr } =
+          isActive && !farm.isFinished
+            ? getNftFarmApr(
+                new BigNumber(farm.poolWeight),
+                farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null,
+                totalLiquidityWithThreshold,
+                mainCollectionWeight,
+              )
+            : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
       })
 
@@ -644,7 +687,7 @@ const Farms: React.FC = ({ children }) => {
       farm: {
         label: lpLabel,
         pid: farm.pid,
-        nftAddress: getAddress(farm.nftAddresses)
+        nftAddress: getAddress(farm.nftAddresses),
       },
       earned: {
         earnings: getBalanceNumber(new BigNumber(farm.userData.earnings)),
@@ -692,7 +735,14 @@ const Farms: React.FC = ({ children }) => {
       return <Table data={rowData} columns={columns} userDataReady={userDataReady} />
     }
 
-    if (isActive && activeFarms.length === 0 && publishedPools.length === 0 && !published.loading && !query.trim() && !stakedOnly)
+    if (
+      isActive &&
+      activeFarms.length === 0 &&
+      publishedPools.length === 0 &&
+      !published.loading &&
+      !query.trim() &&
+      !stakedOnly
+    )
       return <LivePoolsEmpty label="Waiting for the next pool" />
 
     return <FlexLayout>{children}</FlexLayout>
@@ -739,7 +789,9 @@ const Farms: React.FC = ({ children }) => {
               />
               <Text> {t('Staked only')}</Text>
             </ToggleWrapper>
-            <FarmTabButtons hasStakeInFinishedFarms={stakedInactiveFarms.length > 0} />
+            <FarmTabButtons
+              hasStakeInFinishedFarms={stakedInactiveFarms.length > 0 || publishedFinishedStakeCount > 0}
+            />
           </ViewControls>
           <FilterContainer>
             <LabelWrapper>
@@ -780,10 +832,27 @@ const Farms: React.FC = ({ children }) => {
             </LabelWrapper>
           </FilterContainer>
         </ControlContainer>
-        {publishedPools.length ? <section aria-label="New V2 pools">
-          <Heading as="h2" scale="lg" mb="24px">New V2 pools</Heading>
-          <PublishedGrid>{publishedPools.map((pool) => <PublicNftPoolCard key={pool.id} pool={pool} error={published.errors[pool.id]} refreshing={published.refreshing} />)}</PublishedGrid>
-        </section> : null}
+        {publishedPools.length ? (
+          <section aria-label="New V2 pools">
+            <Heading as="h2" scale="lg" mb="24px">
+              New V2 pools
+            </Heading>
+            {stakedOnly && Object.keys(publishedUserPositions.errors).length > 0 ? (
+              <Text small color="warning" mb="12px" role="status">
+                {t('Some V2 positions could not be verified on the connected network; they are not treated as empty.')}
+              </Text>
+            ) : null}
+            <PublishedGrid>
+              {publishedPools.map((pool) => (
+                <PublicNftPoolCard key={pool.id} pool={pool} error={published.errors[pool.id]} />
+              ))}
+            </PublishedGrid>
+          </section>
+        ) : stakedOnly && Object.keys(publishedUserPositions.errors).length > 0 ? (
+          <Text small color="warning" role="status">
+            {t('V2 wallet positions could not be verified. Check the connected network and try again.')}
+          </Text>
+        ) : null}
         {renderContent()}
         {account && !userDataLoaded && stakedOnly && (
           <Flex justifyContent="center">

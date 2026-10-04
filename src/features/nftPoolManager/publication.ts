@@ -203,19 +203,26 @@ export function selectPublishedNftPools(
     history: boolean
     archived: boolean
     stakedOnly: boolean
+    stakedPoolAddresses?: string[]
     query: string
     community?: boolean
     configuredAddresses: string[]
   },
 ): PublicV2Pool[] {
-  if (options.archived || options.stakedOnly) return []
+  if (options.archived) return []
   const configured = new Set(options.configuredAddresses.map((address) => address.toLowerCase()))
+  const staked = new Set((options.stakedPoolAddresses || []).map((address) => address.toLowerCase()))
   const query = options.query.trim().toLocaleLowerCase()
   return pools
     .filter(
       (pool) =>
         !configured.has(pool.address.toLowerCase()) &&
-        (options.history
+        (options.stakedOnly
+          ? staked.has(pool.address.toLowerCase()) &&
+            (options.history
+              ? pool.snapshot.status === 'FINISHED'
+              : ['UPCOMING', 'ACTIVE', 'FINISHED'].includes(pool.snapshot.status))
+          : options.history
           ? pool.snapshot.status === 'FINISHED'
           : ['UPCOMING', 'ACTIVE'].includes(pool.snapshot.status)) &&
         (options.community === undefined || Boolean(pool.metadata.isCommunity) === options.community) &&
@@ -257,7 +264,8 @@ export async function hydratePublishedPool(record: PublicV2Pool, provider: Provi
   const pool = await readNftPoolByAddress(provider, record.address)
   if (pool.onChain.factoryAddress?.toLowerCase() !== record.factoryAddress.toLowerCase())
     throw new Error('Pool factory does not match publication.')
-  const secondsPerBlock = record.snapshot.secondsPerBlock || loadNftPoolLaunchSession(record.sessionId)?.schedule?.measuredSecondsPerBlock
+  const secondsPerBlock =
+    record.snapshot.secondsPerBlock || loadNftPoolLaunchSession(record.sessionId)?.schedule?.measuredSecondsPerBlock
   return { ...record, snapshot: { ...projectPublicPool(pool, record.metadata), secondsPerBlock } }
 }
 

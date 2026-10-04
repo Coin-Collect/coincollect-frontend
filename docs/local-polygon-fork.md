@@ -55,6 +55,12 @@ Import the deterministic Anvil account **#0** only into a local-development Meta
 - Public deterministic development key: `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
 - The key is intentionally public and is also Anvil’s documented default account #0 key. It is not a secret, has no legitimate mainnet funds, and must never be reused or imported as a real account. Do not enter your real seed phrase or private key.
 
+For user staking tests, also import the separate deterministic Anvil account **#2**:
+
+- Address: `0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC`
+- Public local-development key: `0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a`
+- This is another public Anvil development key only. Never use it as a real account or on Polygon mainnet.
+
 After connecting, confirm MetaMask still shows **CoinCollect Polygon Fork (LOCAL)** and chain `31337`. Native **POL** is gas. **WPOL** is a separate ERC-20 reward token.
 
 ## Prepared assets and ownership
@@ -65,6 +71,7 @@ After connecting, confirm MetaMask still shows **CoinCollect Polygon Fork (LOCAL
 - 1,000 WPOL, wrapped from local native POL at the real Polygon WPOL contract address.
 - 1,000,000 COLLECT and 10,000 USDT on fork-only faucet contracts. The status output gives their addresses. The seed also tries local-only impersonated transfers from known Polygon holders; any canonical token balance is reported separately.
 - A local ERC-721 test collection with at least two wallet-owned token IDs. Status prints the contract and IDs. It supports the ERC-721 approval and transfer methods.
+- A second local user account with 10,000 native POL and three IDs in each test NFT collection. `fork:status` prints this wallet address and IDs; use it to test staking from a non-admin wallet.
 - The configured Polygon NFT SmartChef factory, forked at its real address, with its owner transferred to the test account **on the local fork only**.
 
 Fork-only mock token balances are not real Polygon assets. When selecting these in Card Studio, add them by the addresses printed by `fork:status`; known-token entries still point to their canonical Polygon addresses.
@@ -79,11 +86,40 @@ Fork-only mock token balances are not real Polygon assets. When selecting these 
 6. Click **Create Pool** and approve the guided deployment, NFT power configuration and funding transactions in MetaMask. These confirmations target only chain `31337` through the local RPC.
 7. Wait for **COMPLETE** and local publication confirmation. Open **NFT Pools** or `http://localhost:3001/nftpools`; the upcoming V2 pool card should be visible.
 
+### Stake, harvest and withdraw as a user
+
+Keep the same browser profile and local-fork origin so the locally published card remains visible. Use the pool address shown on the completed launch screen or its PolygonScan-style local card link.
+
+1. In MetaMask, switch from account **#0** (pool administrator) to account **#2** (NFT user). Confirm chain `31337` and native POL in the wallet.
+2. In Terminal 2, activate the pool on the local chain:
+
+   ```sh
+   npm run fork:advance -- --pool <pool-address> --to start --blocks 1
+   ```
+
+3. Reload `/nftpools`, find the pool, and press **Stake NFT**. Choose an ID printed for account #2 by `fork:status`.
+4. Approve each selected NFT collection in its own MetaMask confirmation. After approvals confirm, press **Stake NFTs** separately.
+5. Mine local blocks to accrue rewards, then harvest:
+
+   ```sh
+   npm run fork:advance -- --pool <pool-address> --to start --blocks 20
+   ```
+
+   Press **Harvest rewards** on the pool card. You can then test **Stake more** and **Unstake** with another/selected ID.
+
+6. To test the finished-pool exit, mine beyond its end block and use **Finished** (or **Staked only**) to find the card:
+
+   ```sh
+   npm run fork:advance -- --pool <pool-address> --to end --blocks 1
+   ```
+
+   Press **Withdraw staked NFTs**. The separate **Emergency withdraw all** path explicitly forfeits pending rewards and should only be used when testing that behavior.
+
 The frontend test uses a distinct origin (`localhost:3001`) and namespaced local storage, separate from the ordinary app at `localhost:3000`.
 
 ## Automated fork verification
 
-With the fork running and seeded, the existing launch-engine fork integration test uses the real factory and deploys/configures/funds/verifies a pool on the local fork, then tests address-native publication and upcoming/active/finished hydration. It reverts its Anvil snapshot afterward:
+With the fork running and seeded, the launch-engine fork integration test uses the real factory and deploys/configures/funds/verifies a pool on the local fork, then tests address-native publication and the complete user lifecycle: NFT discovery, collection approvals, multi-collection stake, harvest of primary and side tokens, stake-more, partial normal withdraw, explicit emergency recovery, and a finished-pool withdraw. It reverts its Anvil snapshot afterward:
 
 ```sh
 npm run test:fork

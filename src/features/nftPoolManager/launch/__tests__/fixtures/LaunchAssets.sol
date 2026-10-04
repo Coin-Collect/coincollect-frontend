@@ -122,8 +122,27 @@ contract LaunchNFT {
         return "https://example.invalid/coincollect-local-test-nft.json";
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external pure virtual returns (bool) {
         return interfaceId == 0x01ffc9a7 || interfaceId == 0x80ac58cd || interfaceId == 0x780e9d63;
+    }
+}
+
+contract ManualLaunchNFT {
+    mapping(uint256 => address) private _owners;
+
+    function mint(address recipient, uint256 tokenId) external {
+        require(recipient != address(0) && _owners[tokenId] == address(0), "Invalid mint");
+        _owners[tokenId] = recipient;
+    }
+
+    function ownerOf(uint256 tokenId) external view returns (address) {
+        address tokenOwner = _owners[tokenId];
+        require(tokenOwner != address(0), "Nonexistent token");
+        return tokenOwner;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return interfaceId == 0x01ffc9a7 || interfaceId == 0x80ac58cd;
     }
 }
 
@@ -147,6 +166,14 @@ contract TestReward {
 
     function mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);
+    }
+
+    // Test-only deficit injection for proving normal reward-paying withdrawal fails safely.
+    function burn(address account, uint256 amount) external {
+        require(account != address(0) && balanceOf[account] >= amount, "Invalid burn");
+        balanceOf[account] -= amount;
+        totalSupply -= amount;
+        emit Transfer(account, address(0), amount);
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {

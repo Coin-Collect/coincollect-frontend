@@ -12,6 +12,7 @@
     "fork:start": "node scripts/local-fork-tool/main.cjs start",
     "fork:seed": "node scripts/local-fork-tool/main.cjs seed",
     "fork:status": "node scripts/local-fork-tool/main.cjs status",
+    "fork:advance": "node scripts/local-fork-tool/main.cjs advance",
     "fork:reset": "node scripts/local-fork-tool/main.cjs reset",
     "dev:fork": "node scripts/local-fork-tool/main.cjs dev",
     "test:fork": "node scripts/local-fork-tool/main.cjs test",

@@ -17,6 +17,7 @@ const RPC_URL = process.env.COINCOLLECT_FORK_RPC || DEFAULT_RPC
 const CHAIN_ID = 31337
 const TEST_WALLET = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 const DEPLOYER_WALLET = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
+const NFT_USER_WALLET = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC'
 const FACTORY = '0xa7983F8B45860626398b391E9Bb71416A26349D4'
 const COLLECT = '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148'
 const USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
@@ -25,6 +26,11 @@ const KNOWN_COLLECT_HOLDER = '0x46A928F2386b8c38cdde028a32c5b7aa19F40445'
 const KNOWN_USDT_HOLDERS = ['0xf977814e90da44bfa03b6295a0616a897441acec']
 const FORK_SOURCES = ['https://polygon.drpc.org', 'https://polygon-bor-rpc.publicnode.com']
 const FACTORY_ABI = ['function owner() view returns (address)', 'function transferOwnership(address newOwner)']
+const POOL_SCHEDULE_ABI = [
+  'function SMART_CHEF_FACTORY() view returns (address)',
+  'function startBlock() view returns (uint256)',
+  'function bonusEndBlock() view returns (uint256)',
+]
 const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function decimals() view returns (uint8)',
@@ -311,8 +317,8 @@ async function waitTx(transaction, label) {
   return receipt
 }
 
-async function deployedFixtureContract(state, artifacts, name, args, signer) {
-  const key = name === 'ForkCollect' ? 'forkCollect' : name === 'ForkUSDT' ? 'forkUsdt' : 'nft'
+async function deployedFixtureContract(state, artifacts, name, args, signer, stateKey) {
+  const key = stateKey || (name === 'ForkCollect' ? 'forkCollect' : name === 'ForkUSDT' ? 'forkUsdt' : 'nft')
   const knownAddress = state.assets[key]
   if (knownAddress && (await signer.provider.getCode(knownAddress)) !== '0x') {
     return new Contract(knownAddress, artifacts[name].abi, signer)
@@ -381,21 +387,22 @@ async function ensureFactoryOwner(provider, state) {
   return nextOwner
 }
 
-async function ensureTestWalletIsEoa(provider) {
-  const walletCode = await provider.getCode(TEST_WALLET)
+async function ensureTestWalletIsEoa(provider, wallet = TEST_WALLET) {
+  const walletCode = await provider.getCode(wallet)
   if (!walletCode || walletCode === '0x') return
 
   // This well-known Anvil key happens to have an EIP-7702 delegation record
   // in the forked Polygon snapshot. The app deliberately rejects contract
   // owners, so clear only that inherited delegation on this loopback fork.
   if (!walletCode.toLowerCase().startsWith('0xef0100')) {
-    fail(`Test wallet has unexpected code (${walletCode}); refusing to replace it on the fork.`)
+    fail(`Test wallet ${wallet} has unexpected code (${walletCode}); refusing to replace it on the fork.`)
   }
 
-  await localRpc('anvil_setCode', [TEST_WALLET, '0x'])
-  const updatedCode = await provider.getCode(TEST_WALLET)
-  if (updatedCode && updatedCode !== '0x') fail('Could not clear the test wallet delegation on the local fork.')
-  console.log('  removed inherited EIP-7702 delegation from the test wallet on this local fork only.')
+  await localRpc('anvil_setCode', [wallet, '0x'])
+  const updatedCode = await provider.getCode(wallet)
+  if (updatedCode && updatedCode !== '0x')
+    fail(`Could not clear the test wallet delegation for ${wallet} on the local fork.`)
+  console.log(`  removed inherited EIP-7702 delegation from ${wallet} on this local fork only.`)
 }
 
 async function ensureWrappedPol(provider, walletSigner) {
@@ -405,28 +412,36 @@ async function ensureWrappedPol(provider, walletSigner) {
   if (current.lt(target)) await waitTx(await wrapped.deposit({ value: target.sub(current) }), 'Local WPOL wrapping')
 }
 
-async function ensureTestNfts(nft) {
-  let owned = []
-  for (let tokenId = 1; tokenId <= 500; tokenId += 1) {
+async function ensureTestNfts(nft, recipient = TEST_WALLET, minimumCount = 2, firstTokenId = 1) {
+  const owned = []
+  for (let tokenId = firstTokenId; tokenId < firstTokenId + 1000 && owned.length < minimumCount; tokenId += 1) {
     try {
-      if ((await nft.ownerOf(tokenId)).toLowerCase() === TEST_WALLET.toLowerCase()) owned.push(tokenId)
+      if ((await nft.ownerOf(tokenId)).toLowerCase() === recipient.toLowerCase()) owned.push(tokenId)
     } catch {}
   }
-  for (let tokenId = 1; owned.length < 2 && tokenId <= 500; tokenId += 1) {
+  for (let tokenId = firstTokenId; owned.length < minimumCount && tokenId < firstTokenId + 1000; tokenId += 1) {
     try {
       await nft.ownerOf(tokenId)
     } catch {
-      await waitTx(await nft.mint(TEST_WALLET, tokenId), `Local test NFT #${tokenId} mint`)
+      await waitTx(await nft.mint(recipient, tokenId), `Local test NFT #${tokenId} mint`)
       owned.push(tokenId)
     }
   }
   if (!owned.length) fail('Could not mint any local test NFT to the test wallet.')
+  if (owned.length < minimumCount) fail(`Could not prepare ${minimumCount} test NFTs for ${recipient}.`)
   return owned
 }
 
 async function seedFork() {
   await assertAnvil()
   let state = readState() || emptyState()
+  if (
+    state.assets.communityNft &&
+    state.assets.nft &&
+    state.assets.communityNft.toLowerCase() === state.assets.nft.toLowerCase()
+  ) {
+    delete state.assets.communityNft
+  }
   const block = await localRpc('eth_blockNumber')
   if (!state.forkBlock) state.forkBlock = Number.parseInt(block, 16)
   const provider = new providers.JsonRpcProvider(validateLoopbackRpc(RPC_URL), {
@@ -439,11 +454,14 @@ async function seedFork() {
   // All balance overrides and writes in this function target the validated loopback Anvil only.
   await localRpc('anvil_setBalance', [TEST_WALLET, utils.parseEther('10000').toHexString()])
   await localRpc('anvil_setBalance', [DEPLOYER_WALLET, utils.parseEther('100').toHexString()])
+  await localRpc('anvil_setBalance', [NFT_USER_WALLET, utils.parseEther('10000').toHexString()])
   await ensureTestWalletIsEoa(provider)
+  await ensureTestWalletIsEoa(provider, NFT_USER_WALLET)
   await ensureFactoryOwner(provider, state)
 
   const artifacts = compileAssets()
-  const nft = await deployedFixtureContract(state, artifacts, 'LaunchNFT', [], deployer)
+  const nft = await deployedFixtureContract(state, artifacts, 'LaunchNFT', [], deployer, 'nft')
+  const communityNft = await deployedFixtureContract(state, artifacts, 'LaunchNFT', [], deployer, 'communityNft')
   const forkCollect = await deployedFixtureContract(state, artifacts, 'ForkCollect', [TEST_WALLET], deployer)
   const forkUsdt = await deployedFixtureContract(state, artifacts, 'ForkUSDT', [TEST_WALLET], deployer)
   const forkCollectBalance = await forkCollect.balanceOf(TEST_WALLET)
@@ -460,7 +478,11 @@ async function seedFork() {
 
   await ensureWrappedPol(provider, walletSigner)
   const nftSigner = nft.connect(deployer)
-  const nftIds = await ensureTestNfts(nftSigner)
+  const communityNftSigner = communityNft.connect(deployer)
+  const nftIds = await ensureTestNfts(nftSigner, TEST_WALLET, 2, 1)
+  const communityNftIds = await ensureTestNfts(communityNftSigner, TEST_WALLET, 2, 1)
+  const userNftIds = await ensureTestNfts(nftSigner, NFT_USER_WALLET, 3, 501)
+  const userCommunityNftIds = await ensureTestNfts(communityNftSigner, NFT_USER_WALLET, 3, 501)
 
   const realCollectBefore = await new Contract(COLLECT, ERC20_ABI, provider).balanceOf(TEST_WALLET)
   let actualCollectCopied = false
@@ -497,13 +519,18 @@ async function seedFork() {
     assets: {
       ...state.assets,
       nft: nft.address,
+      communityNft: communityNft.address,
       forkCollect: forkCollect.address,
       forkUsdt: forkUsdt.address,
     },
     factoryAddress: FACTORY,
     factoryOwner: await new Contract(FACTORY, FACTORY_ABI, provider).owner(),
     testWallet: TEST_WALLET,
+    nftUserWallet: NFT_USER_WALLET,
     nftIds,
+    communityNftIds,
+    userNftIds,
+    userCommunityNftIds,
     actualCollectCopied: state.actualCollectCopied || actualCollectCopied || canonicalCollectReady,
     actualUsdtCopied: state.actualUsdtCopied || actualUsdtCopied || canonicalUsdtReady,
     seededAt: new Date().toISOString(),
@@ -518,6 +545,12 @@ async function seedFork() {
   )
   console.log(`  fork USDT: ${utils.formatUnits(await forkUsdt.balanceOf(TEST_WALLET), 6)} at ${forkUsdt.address}`)
   console.log(`  test NFT: ${nft.address}, wallet-owned token IDs ${nftIds.join(', ')}`)
+  console.log(`  test community NFT: ${communityNft.address}, wallet-owned token IDs ${communityNftIds.join(', ')}`)
+  console.log(
+    `  NFT user wallet: ${NFT_USER_WALLET}, native POL: ${formatToken(await provider.getBalance(NFT_USER_WALLET), 18)}`,
+  )
+  console.log(`  NFT user test collection ${nft.address}, IDs ${userNftIds.join(', ')}`)
+  console.log(`  NFT user community ${communityNft.address}, IDs ${userCommunityNftIds.join(', ')}`)
   console.log(`  factory owner: ${state.factoryOwner}`)
   if (!canonicalCollectReady)
     console.log('  canonical COLLECT unavailable: fork-only COLLECT test token is ready instead.')
@@ -544,6 +577,10 @@ async function getStatus() {
     provider.getCode(FACTORY),
     new Contract(FACTORY, FACTORY_ABI, provider).owner(),
     provider.getCode(TEST_WALLET),
+  ])
+  const [nftUserNative, nftUserCode] = await Promise.all([
+    provider.getBalance(NFT_USER_WALLET),
+    provider.getCode(NFT_USER_WALLET),
   ])
   const tokenBalance = async (address) => {
     try {
@@ -573,6 +610,20 @@ async function getStatus() {
       nftIds = items.map((id) => id.toString())
     } catch {}
   }
+  const readOwnedIds = async (address) => {
+    if (!address) return []
+    try {
+      const nft = new Contract(address, NFT_ABI, provider)
+      const [items] = await nft.tokensOfOwnerBySize(NFT_USER_WALLET, 0, 100)
+      return items.map((id) => id.toString())
+    } catch {
+      return []
+    }
+  }
+  const [nftUserIds, nftUserCommunityIds] = await Promise.all([
+    readOwnedIds(state.assets.nft),
+    readOwnedIds(state.assets.communityNft),
+  ])
   const factoryOk = factoryCode !== '0x' && factoryOwner.toLowerCase() === TEST_WALLET.toLowerCase()
   const ready = Boolean(
     native.gte(utils.parseEther('100')) &&
@@ -582,7 +633,14 @@ async function getStatus() {
       (usdt.raw.gt(0) || Boolean(forkUsdt?.raw.gt(0))) &&
       wpol.raw.gte(utils.parseEther('100')) &&
       state.assets.nft &&
-      nftIds.length > 0,
+      state.assets.communityNft &&
+      state.assets.communityNft.toLowerCase() !== state.assets.nft.toLowerCase() &&
+      nftIds.length > 0 &&
+      native.gte(utils.parseEther('100')) &&
+      nftUserNative.gte(utils.parseEther('100')) &&
+      (!nftUserCode || nftUserCode === '0x') &&
+      nftUserIds.length > 0 &&
+      nftUserCommunityIds.length > 0,
   )
   return {
     state,
@@ -591,6 +649,10 @@ async function getStatus() {
     factoryCode,
     factoryOwner,
     testWalletCode,
+    nftUserNative,
+    nftUserCode,
+    nftUserIds,
+    nftUserCommunityIds,
     collect,
     usdt,
     wpol,
@@ -619,6 +681,12 @@ async function printStatus() {
     )
     console.log(`  test NFT contract: ${status.state.assets.nft || 'not seeded'}`)
     console.log(`  wallet-owned test NFT IDs: ${status.nftIds.join(', ') || 'none'}`)
+    console.log(`  community NFT contract: ${status.state.assets.communityNft || 'not seeded'}`)
+    console.log(`  NFT test wallet: ${NFT_USER_WALLET}`)
+    console.log(`  NFT test wallet native POL (gas): ${formatToken(status.nftUserNative, 18)} POL`)
+    console.log(`  NFT test wallet main collection IDs: ${status.nftUserIds.join(', ') || 'none'}`)
+    console.log(`  NFT test wallet community IDs: ${status.nftUserCommunityIds.join(', ') || 'none'}`)
+    console.log(`  NFT test wallet code: ${status.nftUserCode === '0x' ? 'clear (EOA)' : 'present (not ready)'}`)
     console.log(`  NFT SmartChef Factory: ${FACTORY}`)
     console.log(`  factory owner: ${status.factoryOwner}`)
     console.log(`  test wallet code: ${status.testWalletCode === '0x' ? 'clear (EOA)' : 'present (not ready)'}`)
@@ -631,6 +699,56 @@ async function printStatus() {
     process.exitCode = 1
     return null
   }
+}
+
+function parseAdvanceArgs(args) {
+  const values = {}
+  for (let index = 0; index < args.length; index += 2) {
+    const flag = args[index]
+    const value = args[index + 1]
+    if (!flag || !value || !['--pool', '--to', '--blocks'].includes(flag))
+      fail('Usage: npm run fork:advance -- --pool <address> --to start|end --blocks <count>')
+    values[flag.slice(2)] = value
+  }
+  const blocks = Number(values.blocks)
+  if (!utils.isAddress(values.pool)) fail('fork:advance requires a valid deployed pool address.')
+  if (!['start', 'end'].includes(values.to)) fail('fork:advance --to must be start or end.')
+  if (!Number.isSafeInteger(blocks) || blocks < 0 || blocks > 100000)
+    fail('fork:advance --blocks must be an integer from 0 to 100000.')
+  return { pool: utils.getAddress(values.pool), to: values.to, blocks }
+}
+
+async function advanceFork(args) {
+  await assertAnvil()
+  const parsed = parseAdvanceArgs(args)
+  const provider = new providers.JsonRpcProvider(validateLoopbackRpc(RPC_URL), {
+    chainId: CHAIN_ID,
+    name: 'local-fork',
+  })
+  const [code, factory] = await Promise.all([
+    provider.getCode(parsed.pool),
+    new Contract(parsed.pool, POOL_SCHEDULE_ABI, provider).SMART_CHEF_FACTORY(),
+  ])
+  if (!code || code === '0x') fail('fork:advance target has no pool contract code on this local fork.')
+  if (factory.toLowerCase() !== FACTORY.toLowerCase())
+    fail('fork:advance target is not from the configured Polygon NFT factory.')
+  const pool = new Contract(parsed.pool, POOL_SCHEDULE_ABI, provider)
+  const [start, end, current] = await Promise.all([pool.startBlock(), pool.bonusEndBlock(), provider.getBlockNumber()])
+  const boundary = BigNumberFrom(parsed.to === 'start' ? start : end)
+  const target = Math.max(current, boundary) + parsed.blocks
+  const count = target - current
+  if (count > 0) await localRpc('anvil_mine', [`0x${count.toString(16)}`])
+  const latest = await provider.getBlockNumber()
+  console.log(
+    `Mined the local fork to block ${latest}; pool ${parsed.pool} target=${parsed.to}, boundary=${boundary}, additional=${parsed.blocks}.`,
+  )
+  console.log('Only the loopback Anvil fork was changed; no Polygon mainnet transaction was sent.')
+}
+
+function BigNumberFrom(value) {
+  const parsed = Number(value.toString())
+  if (!Number.isSafeInteger(parsed)) fail('Pool schedule block is outside the safe local-fork range.')
+  return parsed
 }
 
 async function resetFork() {
@@ -714,10 +832,11 @@ async function main() {
   if (command === 'start') return startFork()
   if (command === 'seed') return seedFork()
   if (command === 'status') return printStatus()
+  if (command === 'advance') return advanceFork(process.argv.slice(3))
   if (command === 'reset') return resetFork()
   if (command === 'dev') return runDevFork()
   if (command === 'test') return runForkTest()
-  fail('Usage: node scripts/local-fork-tool/main.cjs <start|seed|status|reset|dev|test>')
+  fail('Usage: node scripts/local-fork-tool/main.cjs <start|seed|status|advance|reset|dev|test>')
 }
 
 main().catch((error) => {

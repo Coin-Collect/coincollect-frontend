@@ -73,15 +73,13 @@ const logs = new Interface(factoryAbi).encodeEventLog(new Interface(factoryAbi).
 ])
 const provider = {
   getNetwork: jest.fn().mockResolvedValue({ chainId: 137 }),
-  getTransactionReceipt: jest
-    .fn()
-    .mockResolvedValue({
-      to: factory,
-      status: 1,
-      transactionHash: hash,
-      blockNumber: 100,
-      logs: [{ address: factory, ...logs }],
-    }),
+  getTransactionReceipt: jest.fn().mockResolvedValue({
+    to: factory,
+    status: 1,
+    transactionHash: hash,
+    blockNumber: 100,
+    logs: [{ address: factory, ...logs }],
+  }),
 } as any
 
 beforeEach(() => {
@@ -159,12 +157,26 @@ it('filters history, search, duplicates and staked-only without legacy pids', as
   const options = { history: false, archived: false, stakedOnly: false, query: 'KEY', configuredAddresses: [] }
   expect(selectPublishedNftPools([record], options)).toHaveLength(1)
   expect(selectPublishedNftPools([record], { ...options, stakedOnly: true })).toEqual([])
+  expect(
+    selectPublishedNftPools([record], {
+      ...options,
+      stakedOnly: true,
+      stakedPoolAddresses: [address.toUpperCase()],
+    }),
+  ).toHaveLength(1)
   expect(selectPublishedNftPools([record], { ...options, configuredAddresses: [address] })).toEqual([])
   expect(selectPublishedNftPools([record], { ...options, history: true })).toEqual([])
   expect(
     selectPublishedNftPools([{ ...record, snapshot: { ...record.snapshot, status: 'FINISHED' } }], {
       ...options,
       history: true,
+    }),
+  ).toHaveLength(1)
+  expect(
+    selectPublishedNftPools([{ ...record, snapshot: { ...record.snapshot, status: 'FINISHED' } }], {
+      ...options,
+      stakedOnly: true,
+      stakedPoolAddresses: [address],
     }),
   ).toHaveLength(1)
 })
@@ -178,7 +190,10 @@ it('hydrates card power from chain and recovers block timing for older publicati
   const updated = pool()
   updated.onChain.totalShares = BigNumber.from(36)
   ;(readNftPoolByAddress as jest.Mock).mockResolvedValue(updated)
-  const hydrated = await hydratePublishedPool({ ...record, snapshot: { ...record.snapshot, secondsPerBlock: undefined } }, provider)
+  const hydrated = await hydratePublishedPool(
+    { ...record, snapshot: { ...record.snapshot, secondsPerBlock: undefined } },
+    provider,
+  )
   expect(hydrated.snapshot.secondsPerBlock).toBe(3)
   expect(hydrated.snapshot.totalShares).toBe('36')
   expect(hydrated.snapshot.stakedBalance).toBeUndefined()

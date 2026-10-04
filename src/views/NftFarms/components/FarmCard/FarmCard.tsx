@@ -23,7 +23,7 @@ import { getAddress } from 'utils/addressHelpers'
 import DetailsSection from './DetailsSection'
 import type { ExpandableSectionProps } from './DetailsSection'
 import CardHeadingWithBanner from './CardHeadingWithBanner'
-import CardActionsContainer, { Action, StyledActionButton } from './CardActionsContainer'
+import CardActionsContainer, { Action } from './CardActionsContainer'
 import ApyButton from './ApyButton'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import tokens from 'config/constants/tokens'
@@ -34,6 +34,9 @@ import type { PublicV2Pool } from 'features/nftPoolManager/publication'
 import { formatBaseUnits } from 'features/nftPoolManager/economics'
 import { getPolygonRuntimeChainId } from 'config/localFork'
 import { calculateRewardSharePreview } from 'features/nftPoolManager/studio/economicsPreview'
+import useWeb3React from 'hooks/useWeb3React'
+import { usePublishedV2UserPosition } from 'features/nftPoolManager/user/hooks'
+import V2PoolControls from 'features/nftPoolManager/user/components/V2PoolControls'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
@@ -254,18 +257,18 @@ const MetricText = styled(Text)<{ metricType?: 'high' | 'medium' | 'low' | 'rewa
   color: ${({ theme, metricType }) => {
     switch (metricType) {
       case 'high':
-        return theme.colors.success;
+        return theme.colors.success
       case 'medium':
-        return theme.colors.warning;
+        return theme.colors.warning
       case 'low':
-        return theme.colors.failure;
+        return theme.colors.failure
       case 'reward':
-        return theme.colors.primary;
+        return theme.colors.primary
       default:
-        return theme.colors.text;
+        return theme.colors.text
     }
   }};
-  font-weight: ${({ metricType }) => metricType ? '600' : 'inherit'};
+  font-weight: ${({ metricType }) => (metricType ? '600' : 'inherit')};
 `
 
 const slideRewards = keyframes`
@@ -530,20 +533,10 @@ const RewardChipIcon: React.FC<RewardChipIconProps> = ({ token, tokenMeta }) => 
   const iconSrc = iconCandidates[iconIndex]
 
   if (iconSrc) {
-    return (
-      <RewardTokenImage
-        src={iconSrc}
-        alt={`${token} icon`}
-        onError={() => setIconIndex((prev) => prev + 1)}
-      />
-    )
+    return <RewardTokenImage src={iconSrc} alt={`${token} icon`} onError={() => setIconIndex((prev) => prev + 1)} />
   }
 
-  return (
-    <RewardTokenFallbackIcon>
-      {String(token).slice(0, 1)}
-    </RewardTokenFallbackIcon>
-  )
+  return <RewardTokenFallbackIcon>{String(token).slice(0, 1)}</RewardTokenFallbackIcon>
 }
 
 interface FarmCardProps {
@@ -556,7 +549,11 @@ interface FarmCardProps {
 }
 
 // One reward presentation for both legacy and address-native pools.
-function DailyRewards({ chips, loading = false, note }: {
+function DailyRewards({
+  chips,
+  loading = false,
+  note,
+}: {
   chips: Array<{ token: string; amount: string; primary: boolean; tokenMeta?: Pick<Token, 'address' | 'symbol'> }>
   loading?: boolean
   note?: string
@@ -565,7 +562,11 @@ function DailyRewards({ chips, loading = false, note }: {
   const { isXs, isSm, isMd } = useMatchBreakpoints()
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <Flex flexDirection="column">
-      {chips.map((chip) => <Text key={chip.token} fontSize="12px">{chip.token}: {chip.amount}</Text>)}
+      {chips.map((chip) => (
+        <Text key={chip.token} fontSize="12px">
+          {chip.token}: {chip.amount}
+        </Text>
+      ))}
       {note && <Text fontSize="12px">{note}</Text>}
     </Flex>,
     { placement: 'top', trigger: isXs || isSm || isMd ? 'click' : 'hover' },
@@ -573,34 +574,56 @@ function DailyRewards({ chips, loading = false, note }: {
   if (chips.length === 1) {
     const amount = new BigNumber(chips[0].amount)
     const metricType = amount.gte(100) ? 'high' : amount.gte(50) ? 'medium' : amount.gt(0) ? 'low' : undefined
-    return <Flex justifyContent="space-between" alignItems="center">
-      <Text>{t('Daily Reward')}:</Text>
-      <MetricText bold metricType={metricType} ref={targetRef} style={{ display: 'flex', alignItems: 'center' }}>
-        {loading ? <Skeleton height={24} width={80} /> : chips[0].amount}
-      </MetricText>
-      {tooltipVisible && tooltip}
-    </Flex>
+    return (
+      <Flex justifyContent="space-between" alignItems="center">
+        <Text>{t('Daily Reward')}:</Text>
+        <MetricText bold metricType={metricType} ref={targetRef} style={{ display: 'flex', alignItems: 'center' }}>
+          {loading ? <Skeleton height={24} width={80} /> : chips[0].amount}
+        </MetricText>
+        {tooltipVisible && tooltip}
+      </Flex>
+    )
   }
-  return <RewardTickerWrapper>
-    <RewardTickerHeader>
-      {tooltipVisible && tooltip}
-      <RewardTitleWrap ref={targetRef}>
-        <RewardTitleChip>{t('Daily Rewards')}</RewardTitleChip>
-        <RewardCountBadge>{chips.length}</RewardCountBadge>
-      </RewardTitleWrap>
-    </RewardTickerHeader>
-    {loading ? <Skeleton height={18} width={180} /> : <RewardTickerViewport>
-      <RewardTickerTrack>
-        {[...chips, ...chips].map((chip, index) => <RewardChip key={`${chip.token}-${index}`} $primary={chip.primary}>
-          <RewardChipIcon token={chip.token} tokenMeta={chip.tokenMeta} />
-          {chip.token}<RewardChipAmount>{chip.amount}</RewardChipAmount>
-        </RewardChip>)}
-      </RewardTickerTrack>
-    </RewardTickerViewport>}
-  </RewardTickerWrapper>
+  return (
+    <RewardTickerWrapper>
+      <RewardTickerHeader>
+        {tooltipVisible && tooltip}
+        <RewardTitleWrap ref={targetRef}>
+          <RewardTitleChip>{t('Daily Rewards')}</RewardTitleChip>
+          <RewardCountBadge>{chips.length}</RewardCountBadge>
+        </RewardTitleWrap>
+      </RewardTickerHeader>
+      {loading ? (
+        <Skeleton height={18} width={180} />
+      ) : (
+        <RewardTickerViewport>
+          <RewardTickerTrack>
+            {[...chips, ...chips].map((chip, index) => (
+              <RewardChip key={`${chip.token}-${index}`} $primary={chip.primary}>
+                <RewardChipIcon token={chip.token} tokenMeta={chip.tokenMeta} />
+                {chip.token}
+                <RewardChipAmount>{chip.amount}</RewardChipAmount>
+              </RewardChip>
+            ))}
+          </RewardTickerTrack>
+        </RewardTickerViewport>
+      )}
+    </RewardTickerWrapper>
+  )
 }
 
-function NftFarmCardLayout({ children, heading, variant = 'default', finished, isActive = false, mainLink, mintLink, contractLink, details, poolAddress }: {
+function NftFarmCardLayout({
+  children,
+  heading,
+  variant = 'default',
+  finished,
+  isActive = false,
+  mainLink,
+  mintLink,
+  contractLink,
+  details,
+  poolAddress,
+}: {
   children: ReactNode
   heading: ReactNode | ((openDetails: () => void) => ReactNode)
   variant?: 'default' | 'expanded'
@@ -614,32 +637,49 @@ function NftFarmCardLayout({ children, heading, variant = 'default', finished, i
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
-  return <StyledCard $variant={variant} ribbon={finished && <FinishedRibbon text={t('Finished')} />} isActive={isActive}
-    data-testid={poolAddress ? 'published-nft-pool' : undefined} data-pool-address={poolAddress}>
-    <FarmCardInnerContainer>{typeof heading === 'function' ? heading(() => setExpanded(true)) : heading}{children}</FarmCardInnerContainer>
-    <ExpandingWrapper>
-      <FooterTopRow>
-        <FooterLinks>
-          {mainLink && <FooterIconWithTooltip href={mainLink} label={t('Visit project website')} IconComponent={HomeIcon} />}
-          {mintLink && <FooterIconWithTooltip href={mintLink} label={t('Open mint page')} IconComponent={NftIcon} />}
-          {contractLink && <FooterIconWithTooltip href={contractLink} label={t('View contract on explorer')} IconComponent={SmartContractIcon} />}
-        </FooterLinks>
-        <ExpandableSectionButton onClick={() => setExpanded((value) => !value)} expanded={expanded} />
-      </FooterTopRow>
-      {expanded && <DetailsSection {...details} />}
-    </ExpandingWrapper>
-  </StyledCard>
+  return (
+    <StyledCard
+      $variant={variant}
+      ribbon={finished && <FinishedRibbon text={t('Finished')} />}
+      isActive={isActive}
+      data-testid={poolAddress ? 'published-nft-pool' : undefined}
+      data-pool-address={poolAddress}
+    >
+      <FarmCardInnerContainer>
+        {typeof heading === 'function' ? heading(() => setExpanded(true)) : heading}
+        {children}
+      </FarmCardInnerContainer>
+      <ExpandingWrapper>
+        <FooterTopRow>
+          <FooterLinks>
+            {mainLink && (
+              <FooterIconWithTooltip href={mainLink} label={t('Visit project website')} IconComponent={HomeIcon} />
+            )}
+            {mintLink && <FooterIconWithTooltip href={mintLink} label={t('Open mint page')} IconComponent={NftIcon} />}
+            {contractLink && (
+              <FooterIconWithTooltip
+                href={contractLink}
+                label={t('View contract on explorer')}
+                IconComponent={SmartContractIcon}
+              />
+            )}
+          </FooterLinks>
+          <ExpandableSectionButton onClick={() => setExpanded((value) => !value)} expanded={expanded} />
+        </FooterTopRow>
+        {expanded && <DetailsSection {...details} />}
+      </ExpandingWrapper>
+    </StyledCard>
+  )
 }
 
 const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePrice, account, variant = 'default' }) => {
   const { t } = useTranslation()
 
-
   const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
-  const earnLabel = farm.earningToken ? farm.earningToken.symbol: t('COLLECT')
+  const earnLabel = farm.earningToken ? farm.earningToken.symbol : t('COLLECT')
 
   const nftAddress = getAddress(farm.nftAddresses)
-  const apyModalLink = "/nfts/collections/mint/" + nftAddress
+  const apyModalLink = '/nfts/collections/mint/' + nftAddress
   const isPromotedFarm = false //farm.token.symbol === 'COLLECT' Caution: Fix
   const sideRewards = farm.sideRewards ? farm.sideRewards : []
   const farmConfig = nftFarmsConfig.filter((farmConfig) => farmConfig.pid == farm.pid)[0]
@@ -662,18 +702,34 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
     })),
   ]
 
-  const contractLink = getPolygonScanLink(farm.contractAddresses ? getAddress(farm.contractAddresses) : nftAddress, 'address')
+  const contractLink = getPolygonScanLink(
+    farm.contractAddresses ? getAddress(farm.contractAddresses) : nftAddress,
+    'address',
+  )
   const mainLink = farmConfig?.projectLink?.mainLink
   const mintLink = farmConfig?.projectLink?.getNftLink ?? apyModalLink
 
   return (
-    <NftFarmCardLayout variant={variant} finished={farm.isFinished} isActive={isPromotedFarm}
-      mainLink={mainLink} mintLink={mintLink} contractLink={contractLink}
+    <NftFarmCardLayout
+      variant={variant}
+      finished={farm.isFinished}
+      isActive={isPromotedFarm}
+      mainLink={mainLink}
+      mintLink={mintLink}
+      contractLink={contractLink}
       details={{
-        removed, bscScanAddress: contractLink, earningToken: farm.earningToken,
-        totalStaked: farm.liquidity, startTimestamp: farm.startTimestamp, endTimestamp: farm.endTimestamp,
-        stakingLimit: farm.stakingLimit, stakingLimitEndTimestamp: farm.stakingLimitEndTimestamp,
-        lpLabel, addLiquidityUrl: apyModalLink, isFinished: farm.isFinished, projectLink: farmConfig?.projectLink,
+        removed,
+        bscScanAddress: contractLink,
+        earningToken: farm.earningToken,
+        totalStaked: farm.liquidity,
+        startTimestamp: farm.startTimestamp,
+        endTimestamp: farm.endTimestamp,
+        stakingLimit: farm.stakingLimit,
+        stakingLimitEndTimestamp: farm.stakingLimitEndTimestamp,
+        lpLabel,
+        addLiquidityUrl: apyModalLink,
+        isFinished: farm.isFinished,
+        projectLink: farmConfig?.projectLink,
       }}
       heading={
         <CardHeadingWithBanner
@@ -686,23 +742,22 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         />
       }
     >
+      {!removed && stakedBalance?.eq(0) && <DailyRewards chips={rewardChips} loading={displayApr === null} />}
 
-{(!removed && stakedBalance?.eq(0)) && <DailyRewards chips={rewardChips} loading={displayApr === null} />}
+      {sideRewards.length === 0 && (
+        <Flex justifyContent="space-between">
+          <Text>{t('Earn')}:</Text>
+          <Text bold>{earnLabel}</Text>
+        </Flex>
+      )}
 
-{sideRewards.length === 0 && (
-  <Flex justifyContent="space-between">
-    <Text>{t('Earn')}:</Text>
-    <Text bold>{earnLabel}</Text>
-  </Flex>
-)}
-
-        <CardActionsContainer
-          farm={farm}
-          lpLabel={lpLabel}
-          account={account}
-          cakePrice={cakePrice}
-          addLiquidityUrl={apyModalLink}
-        />
+      <CardActionsContainer
+        farm={farm}
+        lpLabel={lpLabel}
+        account={account}
+        cakePrice={cakePrice}
+        addLiquidityUrl={apyModalLink}
+      />
     </NftFarmCardLayout>
   )
 }
@@ -718,10 +773,15 @@ function formatPublicPoolAmount(value: string | undefined, decimals: number | un
 
 export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; error?: string }) {
   const { t } = useTranslation()
+  const { account, chainId, library } = useWeb3React()
+  const userPosition = usePublishedV2UserPosition(pool, account, chainId, library)
   const { metadata, snapshot } = pool
+  const displayStatus = userPosition.position?.status || snapshot.status
   const primaryReward = snapshot.rewards[0]
   const mainLink = metadata.projectUrl
-  const mintLink = metadata.getNftUrl || (snapshot.collections[0]?.address ? `/nfts/collections/${snapshot.collections[0].address}` : undefined)
+  const mintLink =
+    metadata.getNftUrl ||
+    (snapshot.collections[0]?.address ? `/nfts/collections/${snapshot.collections[0].address}` : undefined)
   const explorerLink = getPolygonRuntimeChainId() === 137 ? getPolygonScanLink(pool.address, 'address') : undefined
   const highestWeight = snapshot.collections.reduce((max, collection) => {
     const weight = EthersBigNumber.from(collection.weight)
@@ -737,33 +797,61 @@ export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; 
   })
   const rewardChips = snapshot.rewards.map((reward, index) => ({
     token: reward.symbol,
-    amount: !snapshot.secondsPerBlock || reward.decimals === undefined || (index > 0 && reward.percentage === undefined) ? 'Unavailable' : formatRewardAmount(new BigNumber(formatPublicPoolAmount(
-      index === 0 ? preview.dailyReward.toString() : preview.dailyReward.mul(reward.percentage || '0').div(100).toString(),
-      reward.decimals,
-      18,
-    ))),
+    amount:
+      !snapshot.secondsPerBlock || reward.decimals === undefined || (index > 0 && reward.percentage === undefined)
+        ? 'Unavailable'
+        : formatRewardAmount(
+            new BigNumber(
+              formatPublicPoolAmount(
+                index === 0
+                  ? preview.dailyReward.toString()
+                  : preview.dailyReward
+                      .mul(reward.percentage || '0')
+                      .div(100)
+                      .toString(),
+                reward.decimals,
+                18,
+              ),
+            ),
+          ),
     primary: index === 0,
     tokenMeta: reward,
   }))
+  const positionRewardChips = userPosition.position?.rewards.map((reward, index) => ({
+    token: reward.symbol,
+    amount: formatRewardAmount(new BigNumber(formatPublicPoolAmount(reward.amount, reward.decimals, 18))),
+    primary: index === 0,
+    tokenMeta: reward,
+  }))
+  const hasUserPosition = Boolean(userPosition.position && new BigNumber(userPosition.position.nftCount).gt(0))
 
   return (
-    <NftFarmCardLayout finished={snapshot.status === 'FINISHED'} poolAddress={pool.address}
-      mainLink={mainLink} mintLink={mintLink} contractLink={explorerLink}
+    <NftFarmCardLayout
+      finished={displayStatus === 'FINISHED'}
+      poolAddress={pool.address}
+      mainLink={mainLink}
+      mintLink={mintLink}
+      contractLink={explorerLink}
       details={{
-        publishedPool: pool, removed: snapshot.status === 'FINISHED', isFinished: snapshot.status === 'FINISHED',
-        bscScanAddress: explorerLink, earningToken: primaryReward,
+        publishedPool: pool,
+        removed: displayStatus === 'FINISHED',
+        isFinished: displayStatus === 'FINISHED',
+        bscScanAddress: explorerLink,
+        earningToken: primaryReward,
         totalStaked: snapshot.stakedBalance !== undefined ? new BigNumber(snapshot.stakedBalance) : undefined,
-        lpLabel: metadata.name, addLiquidityUrl: mintLink, projectLink: { mainLink, getNftLink: mintLink },
+        lpLabel: metadata.name,
+        addLiquidityUrl: mintLink,
+        projectLink: { mainLink, getNftLink: mintLink },
       }}
       heading={(openDetails) => (
         <CardHeadingWithBanner
           lpLabel={metadata.name}
           onOpenDetails={openDetails}
           isCommunity={metadata.isCommunity}
-          disabled={snapshot.status === 'FINISHED'}
+          disabled={displayStatus === 'FINISHED'}
           publishedPool={{
             banner: metadata.banner,
-            status: snapshot.status,
+            status: displayStatus,
             collections: snapshot.collections.map((collection) => ({
               address: collection.address,
               name: collection.name,
@@ -774,24 +862,38 @@ export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; 
         />
       )}
     >
-
-        {snapshot.status !== 'FINISHED' && <DailyRewards
+      {hasUserPosition && positionRewardChips ? (
+        <DailyRewards
+          chips={positionRewardChips}
+          note="Primary pending is read from this pool. Side reward amounts are estimates using the contract payout rounding."
+        />
+      ) : displayStatus !== 'FINISHED' ? (
+        <DailyRewards
           chips={rewardChips}
           note={`Estimated daily rewards for one ${highestWeight.toString()}x NFT; shared by pool power. Block timing is an estimate.`}
-        />}
-        {snapshot.rewards.length === 1 && <Flex justifyContent="space-between">
-          <Text>{t('Earn')}:</Text><Text bold>{primaryReward?.symbol}</Text>
-        </Flex>}
-        <Action>
-          <StyledActionButton mt="-4px" width="100%" variant="primary" disabled>
-            {t(snapshot.status === 'FINISHED' ? 'Finished' : snapshot.status === 'UPCOMING' ? 'Upcoming' : 'Staking coming soon')}
-          </StyledActionButton>
-        </Action>
-        {error ? (
-          <Text small role="status">
-            Chain refresh unavailable; showing the last verified snapshot.
-          </Text>
-        ) : null}
+        />
+      ) : null}
+      {snapshot.rewards.length === 1 && (
+        <Flex justifyContent="space-between">
+          <Text>{t('Earn')}:</Text>
+          <Text bold>{primaryReward?.symbol}</Text>
+        </Flex>
+      )}
+      <Action>
+        <V2PoolControls
+          pool={pool}
+          position={userPosition.position}
+          loading={userPosition.loading}
+          refreshing={userPosition.refreshing}
+          error={userPosition.error}
+          refresh={userPosition.refresh}
+        />
+      </Action>
+      {error ? (
+        <Text small role="status">
+          Chain refresh unavailable; showing the last verified snapshot.
+        </Text>
+      ) : null}
     </NftFarmCardLayout>
   )
 }

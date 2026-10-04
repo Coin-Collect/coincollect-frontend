@@ -96,6 +96,7 @@ export function usePublishedNftPools() {
       if (document.visibilityState === 'visible') void refresh()
     }
     window.addEventListener(PUBLICATION_EVENT, changed)
+    window.addEventListener('coincollect:nft-v2-position-changed', changed)
     window.addEventListener('storage', storage)
     window.addEventListener('focus', visible)
     document.addEventListener('visibilitychange', visible)
@@ -105,6 +106,7 @@ export function usePublishedNftPools() {
       active = false
       window.clearInterval(timer)
       window.removeEventListener(PUBLICATION_EVENT, changed)
+      window.removeEventListener('coincollect:nft-v2-position-changed', changed)
       window.removeEventListener('storage', storage)
       window.removeEventListener('focus', visible)
       document.removeEventListener('visibilitychange', visible)
