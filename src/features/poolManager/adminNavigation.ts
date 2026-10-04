@@ -19,6 +19,27 @@ export interface AdminAuthorityPresentationInput {
   loading: boolean
 }
 
+export function hasAdminWalletAccess(input: {
+  account?: string | null
+  checkedAccount?: string | null
+  authorityState: PoolManagerAuthorityState
+  authorized: boolean
+  ownerIsContract: boolean
+}): boolean {
+  const sameCheckedAccount = Boolean(
+    input.account &&
+      input.checkedAccount &&
+      input.account.toLowerCase() === input.checkedAccount.toLowerCase(),
+  )
+
+  return Boolean(
+    sameCheckedAccount &&
+      input.authorityState === 'AUTHORIZED' &&
+      input.authorized &&
+      !input.ownerIsContract,
+  )
+}
+
 export interface AdminAuthorityNotice {
   title: string
   message: string

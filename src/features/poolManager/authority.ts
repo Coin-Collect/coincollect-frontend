@@ -32,7 +32,10 @@ export async function getFactoryAuthority(
   chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 137,
   factoryAddressOverride?: string | null,
 ): Promise<PoolManagerAuthority> {
-  const factoryAddress = factoryAddressOverride || getSmartChefFactoryAddress(chainId)
+  // An explicit null means this factory is not configured. Only callers that
+  // omit the override should fall back to the legacy ERC20 factory.
+  const factoryAddress =
+    factoryAddressOverride !== undefined ? factoryAddressOverride : getSmartChefFactoryAddress(chainId)
 
   if (!factoryAddress) {
     return {

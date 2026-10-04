@@ -9,6 +9,10 @@ import useTheme from 'hooks/useTheme'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import { usePhishingBannerManager } from 'state/user/hooks'
 import useWeb3React from 'hooks/useWeb3React'
+import { usePoolManagerAuthority } from 'features/poolManager/hooks'
+import { hasAdminWalletAccess } from 'features/poolManager/adminNavigation'
+import { POOL_MANAGER_CHAIN_ID } from 'features/poolManager/constants'
+import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
 import UserMenu from './UserMenu'
 import GlobalSettings from './GlobalSettings'
 import FooterControls from './FooterControls'
@@ -24,7 +28,17 @@ const Menu = (props) => {
   const { asPath } = useRouter()
   const [showPhishingWarningBanner] = usePhishingBannerManager()
   const { account } = useWeb3React()
-  const adminHref = '/admin'
+  const nftFactoryAddress = getNftSmartChefFactoryAddress(POOL_MANAGER_CHAIN_ID)
+  const authority = usePoolManagerAuthority(nftFactoryAddress)
+  const adminHref = hasAdminWalletAccess({
+    account,
+    checkedAccount: authority.account,
+    authorityState: authority.state,
+    authorized: authority.authorized,
+    ownerIsContract: authority.ownerIsContract,
+  })
+    ? '/admin'
+    : undefined
 
   const navItems = useMemo(() => getNavConfig(t, account, adminHref), [account, adminHref, t])
   const drawerLinks = useMemo(() => getDrawerLinks(navItems), [navItems])

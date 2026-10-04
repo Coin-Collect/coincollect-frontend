@@ -5,9 +5,19 @@ import useWeb3React from 'hooks/useWeb3React'
 import { useSwitchChain } from 'wagmi'
 import { getNftSmartChefFactoryAddress, getSmartChefFactoryAddress } from 'utils/addressHelpers'
 import { POOL_MANAGER_CHAIN_ID } from '../constants'
-import { ADMIN_NAVIGATION_LINKS, getAdminAuthorityPresentation, PRIMARY_CREATE_POOL_HREF } from '../adminNavigation'
+import {
+  ADMIN_NAVIGATION_LINKS,
+  getAdminAuthorityPresentation,
+  hasAdminWalletAccess,
+  PRIMARY_CREATE_POOL_HREF,
+} from '../adminNavigation'
 import { usePoolManagerAuthority } from '../hooks'
 import {
+  AccessCard,
+  AccessMark,
+  AccessPage,
+  AccessText,
+  AccessTitle,
   ActionButton,
   AdminCreateLink,
   AdminHeader,
@@ -52,6 +62,17 @@ export default function AdminShell({
     authorized: authority.authorized,
     loading: authority.loading,
   })
+  const authorityMatchesWallet = Boolean(
+    (!account && !authority.account) ||
+      (account && authority.account && account.toLowerCase() === authority.account.toLowerCase()),
+  )
+  const hasAccess = hasAdminWalletAccess({
+    account,
+    checkedAccount: authority.account,
+    authorityState: authority.state,
+    authorized: authority.authorized,
+    ownerIsContract: authority.ownerIsContract,
+  })
   const createActionHidden =
     activePath === PRIMARY_CREATE_POOL_HREF || activePath.startsWith('/admin/nft-pools/launch/')
   const resolvedHeaderAction =
@@ -61,6 +82,47 @@ export default function AdminShell({
         <AdminCreateLink>+ Create Pool</AdminCreateLink>
       </Link>
     ) : null)
+
+  if (authority.loading || !authorityMatchesWallet) {
+    return (
+      <AccessPage>
+        <AccessCard aria-live="polite">
+          <AccessMark aria-hidden="true">CC</AccessMark>
+          <AccessTitle>Checking access</AccessTitle>
+          <AccessText>Verifying the connected wallet.</AccessText>
+        </AccessCard>
+      </AccessPage>
+    )
+  }
+
+  if (!hasAccess) {
+    const walletRequired = !account || authority.state === 'WALLET_REQUIRED'
+    const accessUnavailable = authority.state === 'UNAVAILABLE'
+
+    return (
+      <AccessPage>
+        <AccessCard>
+          <AccessMark aria-hidden="true">CC</AccessMark>
+          <AccessTitle>
+            {walletRequired ? 'Connect your wallet' : accessUnavailable ? 'Access unavailable' : 'Access denied'}
+          </AccessTitle>
+          {walletRequired ? (
+            <>
+              <AccessText>Connect the authorized wallet to continue.</AccessText>
+              <ConnectWalletButton />
+            </>
+          ) : accessUnavailable ? (
+            <>
+              <AccessText>Admin access could not be verified.</AccessText>
+              <ActionButton onClick={() => void authority.refresh()}>Retry</ActionButton>
+            </>
+          ) : (
+            <AccessText>You don’t have permission.</AccessText>
+          )}
+        </AccessCard>
+      </AccessPage>
+    )
+  }
 
   return (
     <AdminPage>
