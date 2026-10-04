@@ -38,6 +38,23 @@ import {
   CollectionStackImage,
   EditIcon,
   Hint,
+  InspectorActions,
+  InspectorDisclosure,
+  InspectorDisclosureContent,
+  InspectorDisclosureSummary,
+  InspectorEyebrow,
+  InspectorFact,
+  InspectorFundingStatus,
+  InspectorHeader,
+  InspectorIssueList,
+  InspectorMetric,
+  InspectorMetricGrid,
+  InspectorNotice,
+  InspectorRewardList,
+  InspectorSection,
+  InspectorSectionHeading,
+  InspectorStatus,
+  LaunchInspector,
   MetricHint,
   MetricLabel,
   MetricValue,
@@ -68,6 +85,9 @@ import {
   SidePanel,
   SidePanelTitle,
   SharingCallout,
+  SharingContent,
+  SharingSummary,
+  SharingSummaryCopy,
   StackLabel,
   StudioButton,
   StudioEyebrow,
@@ -1085,8 +1105,8 @@ export default function NftPoolCardStudio({
                 </CardSectionHeading>
                 {rewards.length > 1 ? (
                   <CardMeta>
-                    New funding split · this is not the historical allocation. The old budget split is not stored
-                    on-chain; choose a new split for this renewal. Original side payout ratios are separate.
+                    New budget split for this renewal. Historical budget allocation is not stored on-chain; original
+                    side payout ratios remain separate.
                   </CardMeta>
                 ) : null}
                 <RewardAreaButton type="button" onClick={() => setModal('rewards')} aria-label="Edit reward tokens">
@@ -1114,7 +1134,7 @@ export default function NftPoolCardStudio({
                 ) : null}
                 {economics && draft.economics.totalBudget ? (
                   <div style={{ display: 'grid', gap: 4, marginTop: 9 }}>
-                    <CardMeta>Allocated budget, quoted token target and estimated protocol payout</CardMeta>
+                    <CardMeta>Budget split &amp; estimated payout</CardMeta>
                     {economics.allocations.map((allocation) => {
                       const reward = rewards.find(
                         (item) => item.address.toLowerCase() === allocation.tokenAddress.toLowerCase(),
@@ -1184,154 +1204,239 @@ export default function NftPoolCardStudio({
                 </CardMetricButton>
               </CardMetricGrid>
               <SharingCallout>
-                <strong>Reward sharing</strong>
-                <br />
-                The primary reward is shared by staking power. Side rewards follow a contract-encoded ratio of each
-                primary payout; they do not have an independent emission schedule.
-                {shareExamples.length ? (
-                  <div style={{ marginTop: 9, display: 'grid', gap: 4 }}>
-                    {shareExamples.map(({ totalShares, result }) => (
-                      <div key={totalShares.toString()}>
-                        <strong>At {totalShares.toString()} total power, a 1x stake earns:</strong>
-                        {rewards.map((reward) => {
-                          const dailyReward = dailyRewardFor(reward, result.dailyReward)
-                          return dailyReward === undefined ? null : (
-                            <div key={reward.address}>
-                              {reward.symbol} ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day
+                <SharingSummary>
+                  <SharingSummaryCopy>
+                    <strong>Reward sharing</strong>
+                    <small>
+                      {shareExamples.length
+                        ? `${shareExamples.length + weightedExamples.length} daily reward examples · expand for details`
+                        : 'See how staking power affects rewards'}
+                    </small>
+                  </SharingSummaryCopy>
+                </SharingSummary>
+                <SharingContent>
+                  The primary reward is shared by staking power. Side rewards follow a contract-encoded ratio of each
+                  primary payout; they do not have an independent emission schedule.
+                  {shareExamples.length ? (
+                    <div style={{ marginTop: 9, display: 'grid', gap: 4 }}>
+                      {shareExamples.map(({ totalShares, result }) => (
+                        <div key={totalShares.toString()}>
+                          <strong>At {totalShares.toString()} total power, a 1x stake earns:</strong>
+                          {rewards.map((reward) => {
+                            const dailyReward = dailyRewardFor(reward, result.dailyReward)
+                            return dailyReward === undefined ? null : (
+                              <div key={reward.address}>
+                                {reward.symbol} ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
+                      {weightedExamples.length ? (
+                        <div style={{ marginTop: 5, display: 'grid', gap: 3 }}>
+                          <strong>Each example assumes one NFT staked alone:</strong>
+                          {weightedExamples.map(({ key, label, participantWeight, result }) => (
+                            <div key={key}>
+                              <strong>
+                                {label} {participantWeight.toString()}x at {result.totalShares.toString()} total power:
+                              </strong>
+                              {rewards.map((reward) => {
+                                const dailyReward = dailyRewardFor(reward, result.dailyReward)
+                                return dailyReward === undefined ? null : (
+                                  <div key={reward.address}>
+                                    {reward.symbol} ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}
+                                    /day
+                                  </div>
+                                )
+                              })}
                             </div>
-                          )
-                        })}
-                      </div>
-                    ))}
-                    {weightedExamples.length ? (
-                      <div style={{ marginTop: 5, display: 'grid', gap: 3 }}>
-                        <strong>Each example assumes one NFT staked alone:</strong>
-                        {weightedExamples.map(({ key, label, participantWeight, result }) => (
-                          <div key={key}>
-                            <strong>
-                              {label} {participantWeight.toString()}x at {result.totalShares.toString()} total power:
-                            </strong>
-                            {rewards.map((reward) => {
-                              const dailyReward = dailyRewardFor(reward, result.dailyReward)
-                              return dailyReward === undefined ? null : (
-                                <div key={reward.address}>
-                                  {reward.symbol} ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day
-                                </div>
-                              )
-                            })}
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div style={{ marginTop: 5 }}>Add a budget and review the pool to see live share estimates.</div>
-                )}
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 5 }}>Add a budget and review the pool to see live share estimates.</div>
+                  )}
+                </SharingContent>
               </SharingCallout>
             </PoolCardBody>
           </EditablePoolCard>
         </StudioPreviewColumn>
         <StudioSidePanel>
-          <SidePanel>
-            <SidePanelTitle>Pool summary</SidePanelTitle>
-            <SummaryLine label="NFT collections" value={String(draft.collections.length)} />
-            <SummaryLine label="Reward tokens" value={rewards.map((reward) => reward.symbol).join(' · ') || '—'} />
-            <SummaryLine
-              label="Budget"
-              value={`${draft.economics.totalBudget || '—'} ${draft.economics.budgetDenomination || 'USDT'}`}
-            />
-            <SummaryLine label="Duration" value={durationLabel(draft)} />
-            <SummaryLine
-              label="Funding status"
-              value={economics?.primary.maximumScheduledFunding.gt(0) ? 'Plan calculated' : 'Budget needed'}
-            />
-          </SidePanel>
-          <SidePanel>
-            <SidePanelTitle>Live economics</SidePanelTitle>
-            <SummaryLine
-              label="Primary / block"
-              value={
-                hasRewardRate
-                  ? `${formatBaseUnits(rewardPerBlock, rewardDecimals)} ${draft.rewards.primary?.symbol || ''}`
-                  : '—'
-              }
-            />
-            <SummaryLine
-              label="Daily primary"
-              value={
-                hasRewardRate
-                  ? `${formatBaseUnits(
-                      calculateRewardSharePreview({
-                        rewardPerBlock,
-                        participantWeight: BigNumber.from(1),
-                        totalShares: BigNumber.from(1),
-                        participantThreshold: BigNumber.from(1),
-                        secondsPerBlock,
-                      }).dailyPrimaryEmission,
-                      rewardDecimals,
-                    )} ${draft.rewards.primary?.symbol || ''}`
-                  : '—'
-              }
-            />
-            <SummaryLine
-              label="Wallet balance"
-              value={
-                walletBalanceBusy
-                  ? 'Reading…'
-                  : draft.rewards.primary
-                  ? `${walletBalances[draft.rewards.primary.address.toLowerCase()] || 'Not read'} ${
-                      draft.rewards.primary.symbol
-                    }`
-                  : '—'
-              }
-            />
-            <ButtonCluster style={{ marginTop: 14 }}>
-              <StudioButton
-                type="button"
-                $secondary
-                onClick={onReadWalletBalances}
-                disabled={walletBalanceBusy || !account || !rewards.length}
-              >
-                {walletBalanceBusy ? 'Reading…' : 'Read balances'}
-              </StudioButton>
-              <StudioButton
-                type="button"
-                $secondary
-                onClick={onRefreshQuotes}
-                disabled={quoteBusy || !draft.economics.totalBudget}
-              >
-                {quoteBusy ? 'Refreshing…' : 'Refresh quote'}
-              </StudioButton>
-            </ButtonCluster>
-            <Hint>Quotes are read-only. No swap is performed.</Hint>
-          </SidePanel>
-          <SidePanel>
-            <SidePanelTitle>
-              {sourcePool?.status === 'FINISHED'
-                ? 'Renew this pool'
-                : sourcePool
-                ? 'Duplicate this pool'
-                : 'Ready when you are'}
-            </SidePanelTitle>
-            <Hint style={{ marginTop: 0 }}>
-              {validation.blockers.length
-                ? validation.blockers[0]
-                : 'Review the card, then run the read-only checks before opening your wallet.'}
-            </Hint>
-            <ButtonCluster style={{ marginTop: 16 }}>
+          <LaunchInspector aria-labelledby="launch-overview-title">
+            <InspectorHeader>
+              <div>
+                <InspectorEyebrow>Launch overview</InspectorEyebrow>
+                <h2 id="launch-overview-title">
+                  {sourcePool?.status === 'FINISHED'
+                    ? 'Renew this pool'
+                    : sourcePool
+                    ? 'Duplicate this pool'
+                    : 'Pool setup'}
+                </h2>
+                <p>Live draft summary. Review checks are read-only until you choose Create Pool.</p>
+              </div>
+              <InspectorStatus $ready={!validation.blockers.length}>
+                {validation.blockers.length ? 'Needs setup' : 'Ready to review'}
+              </InspectorStatus>
+            </InspectorHeader>
+
+            <InspectorMetricGrid>
+              <InspectorMetric>
+                <span>NFT collections</span>
+                <strong>{draft.collections.length || 'Add NFTs'}</strong>
+              </InspectorMetric>
+              <InspectorMetric>
+                <span>Reward budget</span>
+                <strong>
+                  {draft.economics.totalBudget
+                    ? `${draft.economics.totalBudget} ${draft.economics.budgetDenomination || 'USDT'}`
+                    : 'Not set'}
+                </strong>
+              </InspectorMetric>
+              <InspectorMetric>
+                <span>Duration</span>
+                <strong>{durationLabel(draft)}</strong>
+              </InspectorMetric>
+              <InspectorMetric>
+                <span>Minimum power</span>
+                <strong>{effectiveThreshold || '0'}</strong>
+              </InspectorMetric>
+            </InspectorMetricGrid>
+
+            <InspectorSection>
+              <InspectorSectionHeading>
+                <strong>Reward tokens</strong>
+                <span>{rewards.length ? `${rewards.length} selected` : 'None selected'}</span>
+              </InspectorSectionHeading>
+              <InspectorRewardList>
+                {rewards.length ? (
+                  rewards.map((reward, index) => (
+                    <RewardChip key={reward.address} $primary={index === 0}>
+                      <RewardTokenIcon reward={reward} />
+                      {reward.symbol}
+                    </RewardChip>
+                  ))
+                ) : (
+                  <CardMeta>Add a primary reward token to continue.</CardMeta>
+                )}
+              </InspectorRewardList>
+              <InspectorFundingStatus $funded={Boolean(economics?.primary.maximumScheduledFunding.gt(0))}>
+                {economics?.primary.maximumScheduledFunding.gt(0)
+                  ? 'Funding estimate calculated'
+                  : draft.economics.totalBudget
+                  ? 'Complete the quote to calculate funding'
+                  : 'Add a budget to calculate funding'}
+              </InspectorFundingStatus>
+            </InspectorSection>
+
+            <InspectorDisclosure>
+              <InspectorDisclosureSummary>
+                <span>Live economics</span>
+                <span>Read-only</span>
+              </InspectorDisclosureSummary>
+              <InspectorDisclosureContent>
+                <InspectorFact>
+                  <span>Primary / block</span>
+                  <span>
+                    {hasRewardRate
+                      ? `${formatBaseUnits(rewardPerBlock, rewardDecimals)} ${draft.rewards.primary?.symbol || ''}`
+                      : '—'}
+                  </span>
+                </InspectorFact>
+                <InspectorFact>
+                  <span>Daily primary · 1x at floor</span>
+                  <span>
+                    {dailyPrimaryReward !== undefined
+                      ? `${formatBaseUnits(dailyPrimaryReward, rewardDecimals)} ${draft.rewards.primary?.symbol || ''}`
+                      : '—'}
+                  </span>
+                </InspectorFact>
+                <InspectorFact>
+                  <span>Wallet balance</span>
+                  <span>
+                    {walletBalanceBusy
+                      ? 'Reading…'
+                      : draft.rewards.primary
+                      ? `${walletBalances[draft.rewards.primary.address.toLowerCase()] || 'Not read'} ${
+                          draft.rewards.primary.symbol
+                        }`
+                      : '—'}
+                  </span>
+                </InspectorFact>
+                <ButtonCluster style={{ marginTop: 10 }}>
+                  <StudioButton
+                    type="button"
+                    $secondary
+                    onClick={onReadWalletBalances}
+                    disabled={walletBalanceBusy || !account || !rewards.length}
+                  >
+                    {walletBalanceBusy ? 'Reading…' : 'Read balances'}
+                  </StudioButton>
+                  <StudioButton
+                    type="button"
+                    $secondary
+                    onClick={onRefreshQuotes}
+                    disabled={quoteBusy || !draft.economics.totalBudget}
+                  >
+                    {quoteBusy ? 'Refreshing…' : 'Refresh quote'}
+                  </StudioButton>
+                </ButtonCluster>
+                <Hint>Quotes are read-only; no swap is performed.</Hint>
+              </InspectorDisclosureContent>
+            </InspectorDisclosure>
+
+            {validation.blockers.length ? (
+              <InspectorNotice $warning>
+                <strong>Needs attention · {validation.blockers.length} item(s)</strong>
+                <p>{validation.blockers[0]}</p>
+                {validation.blockers.length > 1 ? (
+                  <InspectorDisclosure>
+                    <InspectorDisclosureSummary>
+                      <span>Show all setup items</span>
+                      <span>{validation.blockers.length}</span>
+                    </InspectorDisclosureSummary>
+                    <InspectorIssueList>
+                      {validation.blockers.map((blocker) => (
+                        <div key={blocker}>{blocker}</div>
+                      ))}
+                    </InspectorIssueList>
+                  </InspectorDisclosure>
+                ) : null}
+              </InspectorNotice>
+            ) : (
+              <InspectorNotice>
+                <strong>Ready for review</strong>
+                <p>Next, run the read-only checks for network, authority, balances and deployment.</p>
+              </InspectorNotice>
+            )}
+
+            {validation.warnings.length ? (
+              <InspectorDisclosure>
+                <InspectorDisclosureSummary>
+                  <span>Estimate notes</span>
+                  <span>{validation.warnings.length}</span>
+                </InspectorDisclosureSummary>
+                <InspectorIssueList>
+                  {validation.warnings.map((warning) => (
+                    <div key={warning}>{warning}</div>
+                  ))}
+                </InspectorIssueList>
+              </InspectorDisclosure>
+            ) : null}
+
+            <InspectorActions>
               <StudioButton type="button" onClick={() => setModal('review')} disabled={validation.blockers.length > 0}>
                 Review Pool
               </StudioButton>
               <StudioButton type="button" $secondary onClick={onSave}>
                 Save draft
               </StudioButton>
-            </ButtonCluster>
-            <ButtonCluster style={{ marginTop: 10 }}>
               <StudioButton type="button" $quiet onClick={onOpenAdvanced}>
                 Advanced details
               </StudioButton>
-            </ButtonCluster>
-          </SidePanel>
+            </InspectorActions>
+          </LaunchInspector>
         </StudioSidePanel>
       </StudioLayout>
       {modal === 'artwork' ? renderArtworkModal() : null}

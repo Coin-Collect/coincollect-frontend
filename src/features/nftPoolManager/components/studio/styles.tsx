@@ -7,13 +7,94 @@ const floatIn = keyframes`
 
 export const StudioLayout = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(310px, 0.6fr);
   gap: 22px;
   align-items: start;
   animation: ${floatIn} 320ms ease-out;
 
   @media (max-width: 920px) {
     grid-template-columns: 1fr;
+  }
+`
+
+export const StudioModeBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 6px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 18px;
+  background: ${({ theme }) => `${theme.colors.backgroundAlt}cc`};
+
+  @media (max-width: 560px) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+`
+
+export const StudioModeOptions = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const StudioModeButton = styled.button<{ $active: boolean }>`
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  border: 1px solid ${({ theme, $active }) => ($active ? `${theme.colors.primary}44` : 'transparent')};
+  border-radius: 13px;
+  padding: 9px 13px;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme, $active }) => ($active ? theme.colors.background : 'transparent')};
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+
+  strong {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  small {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: ${({ theme }) => `${theme.colors.primary}77`};
+  }
+
+  @media (max-width: 420px) {
+    min-width: 0;
+  }
+`
+
+export const StudioAutosave = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &::before {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.success};
+    box-shadow: 0 0 0 4px ${({ theme }) => `${theme.colors.success}18`};
+    content: '';
   }
 `
 
@@ -353,25 +434,319 @@ export const MetricHint = styled.span`
   font-size: 10px;
 `
 
-export const SharingCallout = styled.div`
-  margin-top: 16px;
-  border-radius: 15px;
-  padding: 13px;
+export const SharingCallout = styled.details`
+  margin-top: 14px;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 16px;
   color: ${({ theme }) => theme.colors.textSubtle};
   background: ${({ theme }) => `${theme.colors.secondary}0e`};
   font-size: 12px;
   line-height: 1.5;
 `
 
+export const SharingSummary = styled.summary`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 10px 14px;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: -3px;
+  }
+
+  &::after {
+    color: ${({ theme }) => theme.colors.primary};
+    content: '+';
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  details[open] &::after {
+    content: '−';
+  }
+`
+
+export const SharingSummaryCopy = styled.span`
+  display: grid;
+  gap: 2px;
+
+  strong {
+    font-size: 13px;
+  }
+
+  small {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 11px;
+  }
+`
+
+export const SharingContent = styled.div`
+  padding: 0 14px 14px;
+`
+
 export const StudioSidePanel = styled.aside`
   position: sticky;
   top: 18px;
-  display: grid;
-  gap: 14px;
   min-width: 0;
 
   @media (max-width: 920px) {
     position: static;
+  }
+`
+
+export const LaunchInspector = styled.section`
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => `${theme.colors.primary}30`};
+  border-radius: 22px;
+  padding: 18px;
+  color: ${({ theme }) => theme.colors.text};
+  background: linear-gradient(
+    155deg,
+    ${({ theme }) => `${theme.colors.backgroundAlt}f5`},
+    ${({ theme }) => theme.colors.background}
+  );
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
+`
+
+export const InspectorHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 17px;
+
+  h2 {
+    margin: 3px 0 0;
+    font-size: 19px;
+    letter-spacing: -0.04em;
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 11px;
+    line-height: 1.45;
+  }
+`
+
+export const InspectorEyebrow = styled.span`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+`
+
+export const InspectorStatus = styled.span<{ $ready: boolean }>`
+  flex: 0 0 auto;
+  border: 1px solid ${({ theme, $ready }) => `${$ready ? theme.colors.success : theme.colors.warning}55`};
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: ${({ theme, $ready }) => ($ready ? theme.colors.success : theme.colors.warning)};
+  background: ${({ theme, $ready }) => `${$ready ? theme.colors.success : theme.colors.warning}12`};
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+`
+
+export const InspectorMetricGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+`
+
+export const InspectorMetric = styled.div`
+  min-width: 0;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 14px;
+  padding: 10px 11px;
+  background: ${({ theme }) => `${theme.colors.background}bb`};
+
+  span {
+    display: block;
+    overflow: hidden;
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    display: block;
+    overflow: hidden;
+    margin-top: 5px;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`
+
+export const InspectorSection = styled.div`
+  padding: 14px 0;
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
+`
+
+export const InspectorSectionHeading = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+
+  strong {
+    font-size: 12px;
+  }
+
+  span {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 10px;
+  }
+`
+
+export const InspectorRewardList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`
+
+export const InspectorFundingStatus = styled.div<{ $funded: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 11px;
+
+  &::before {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: ${({ theme, $funded }) => ($funded ? theme.colors.success : theme.colors.warning)};
+    content: '';
+  }
+`
+
+export const InspectorDisclosure = styled.details`
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
+`
+
+export const InspectorDisclosureSummary = styled.summary`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 0;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+  }
+
+  &::after {
+    color: ${({ theme }) => theme.colors.primary};
+    content: '＋';
+    font-size: 14px;
+  }
+
+  details[open] &::after {
+    content: '−';
+  }
+
+  span:first-child {
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  span:last-child {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 10px;
+  }
+`
+
+export const InspectorDisclosureContent = styled.div`
+  padding: 0 0 14px;
+`
+
+export const InspectorFact = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 11px;
+
+  span:first-child {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+
+  span:last-child {
+    color: ${({ theme }) => theme.colors.text};
+    font-weight: 800;
+    text-align: right;
+  }
+`
+
+export const InspectorNotice = styled.div<{ $warning?: boolean }>`
+  margin-top: 14px;
+  border: 1px solid ${({ theme, $warning }) => `${$warning ? theme.colors.warning : theme.colors.success}38`};
+  border-radius: 14px;
+  padding: 11px 12px;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme, $warning }) => `${$warning ? theme.colors.warning : theme.colors.success}0c`};
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: ${({ theme, $warning }) => ($warning ? theme.colors.warning : theme.colors.success)};
+    font-size: 11px;
+  }
+
+  p {
+    margin: 0;
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 11px;
+    line-height: 1.45;
+  }
+`
+
+export const InspectorIssueList = styled.div`
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 11px;
+  line-height: 1.45;
+`
+
+export const InspectorActions = styled.div`
+  display: grid;
+  gap: 8px;
+  margin-top: 15px;
+
+  & > button {
+    width: 100%;
   }
 `
 

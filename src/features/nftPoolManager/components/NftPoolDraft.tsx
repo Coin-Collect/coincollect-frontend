@@ -55,6 +55,7 @@ import {
   TokenChip,
   TokenDot,
 } from './styles'
+import { StudioAutosave, StudioModeBar, StudioModeButton, StudioModeOptions } from './studio/styles'
 import NftPoolCardStudio from './studio/NftPoolCardStudio'
 
 const steps = ['NFTs', 'Rewards', 'Budget', 'Duration', 'Appearance', 'Review']
@@ -1206,7 +1207,7 @@ export default function PoolBuilder() {
   return (
     <AdminShell
       title={sourcePool ? (sourcePool.status === 'FINISHED' ? 'Renew NFT pool' : 'Duplicate NFT pool') : 'New NFT pool'}
-      subtitle="Edit the NFT staking card your community will eventually see."
+      subtitle="Design the public pool card, set its economics, then review before approving wallet transactions."
       authorityScope="nft"
     >
       {error ? <Notice $error>{error}</Notice> : null}
@@ -1227,17 +1228,29 @@ export default function PoolBuilder() {
       ) : null}
       {validationMessage ? <Notice>{validationMessage}</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
-      <ButtonRow style={{ marginTop: 0, marginBottom: 14 }}>
-        <ActionButton $secondary={mode !== 'card'} onClick={() => setMode('card')}>
-          Card Studio
-        </ActionButton>
-        <ActionButton $secondary={mode !== 'advanced'} onClick={() => setMode('advanced')}>
-          Advanced details
-        </ActionButton>
-        <Muted>
-          {mode === 'card' ? 'Edit the pool users will see' : 'Protocol controls for experienced operators'}
-        </Muted>
-      </ButtonRow>
+      <StudioModeBar>
+        <StudioModeOptions role="group" aria-label="Pool editor mode">
+          <StudioModeButton
+            type="button"
+            $active={mode === 'card'}
+            aria-pressed={mode === 'card'}
+            onClick={() => setMode('card')}
+          >
+            <strong>Card Studio</strong>
+            <small>Public card &amp; rewards</small>
+          </StudioModeButton>
+          <StudioModeButton
+            type="button"
+            $active={mode === 'advanced'}
+            aria-pressed={mode === 'advanced'}
+            onClick={() => setMode('advanced')}
+          >
+            <strong>Advanced details</strong>
+            <small>Protocol settings</small>
+          </StudioModeButton>
+        </StudioModeOptions>
+        <StudioAutosave>Draft saves automatically</StudioAutosave>
+      </StudioModeBar>
       {mode === 'card' ? (
         <NftPoolCardStudio
           draft={draft}
