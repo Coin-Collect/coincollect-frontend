@@ -2,6 +2,7 @@
 import {
   createNftPoolLaunchSession,
   findActiveNftPoolLaunchSession,
+  stablePlanString,
   loadNftPoolLaunchSession,
   saveNftPoolLaunchSession,
   clearNftPoolLaunchStorage,
@@ -26,6 +27,12 @@ describe('NFT launch session persistence', () => {
     expect(restored?.planHash).toMatch(/^0x[0-9a-f]{64}$/)
     expect(JSON.stringify(restored)).not.toContain('signer')
     expect(JSON.stringify(restored)).not.toContain('privateKey')
+  })
+
+  it('serializes nested frozen-plan objects deterministically', () => {
+    const left = { z: 1, nested: { y: 2, x: 3 } } as unknown as NftPoolDeploymentPlan
+    const right = { nested: { x: 3, y: 2 }, z: 1 } as unknown as NftPoolDeploymentPlan
+    expect(stablePlanString(left)).toBe(stablePlanString(right))
   })
 
   it('finds an incomplete session by draft and removes it from the active set after completion', () => {

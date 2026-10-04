@@ -17,10 +17,15 @@ function canUseStorage(): boolean {
 
 function stableValue(value: any): any {
   if (Array.isArray(value)) return value.map(stableValue)
-  if (value && typeof value === 'object')
-    return Object.keys(value)
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {}
+    Object.keys(value)
       .sort()
-      .reduce((result, key) => ({ ...result, [key]: stableValue(value[key]) }), {})
+      .forEach((key) => {
+        result[key] = stableValue(value[key])
+      })
+    return result
+  }
   return value
 }
 

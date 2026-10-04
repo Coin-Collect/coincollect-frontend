@@ -34,7 +34,7 @@ import {
   stakeV2Nfts,
   unstakeV2Nfts,
 } from '../../user/transactions'
-import { readV2UserPosition } from '../../user/readers'
+import { assertV2StakeLimits, readV2UserPosition } from '../../user/readers'
 import { readV2OwnedNfts } from '../../user/nftDiscovery'
 
 const forkUrl = process.env.COINCOLLECT_FORK_RPC
@@ -117,7 +117,7 @@ forkTest(
         },
       ]
       draft.constraints.participantThreshold = '40'
-      draft.constraints.poolCapacity = '100'
+      draft.constraints.poolCapacity = '1'
       draft.constraints.userLimitEnabled = false
       draft.economics.durationPreset = 'custom'
       draft.economics.customDurationDays = '3'
@@ -252,15 +252,27 @@ forkTest(
         { collectionAddress: primaryNft.address, tokenId: '501' },
         { collectionAddress: communityNft.address, tokenId: '501' },
       ]
+      const feeRecipientBeforeStake = await provider.getBalance(factoryOwner)
       await stakeV2Nfts(
         userContext,
         userPosition,
         firstBatch,
         await Promise.all([primaryNft.ownerOf(501), communityNft.ownerOf(501)]),
       )
+      expect(
+        (await provider.getBalance(factoryOwner)).sub(feeRecipientBeforeStake).eq(plan.postDeploy.performanceFee!),
+      ).toBe(true)
       userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
       expect(userPosition.nftCount).toBe('2')
       expect(userPosition.power).toBe('31')
+      expect(userPosition.remainingCapacity).toBe('0')
+      const otherUser = await provider.getSigner(3).getAddress()
+      await (await primaryNft.mint(otherUser, 701)).wait()
+      const fullPoolPosition = await readV2UserPosition(published, provider, otherUser, { expectedChainId: 31337 })
+      expect(fullPoolPosition.capacityAvailable).toBe(false)
+      expect(() => assertV2StakeLimits(fullPoolPosition, 1)).toThrow(/capacity/)
+      expect(() => assertV2StakeLimits(userPosition, 1)).not.toThrow()
+      console.info('Fork: capacity counts wallet entrants; an existing wallet can still stake more')
       expect(
         userPosition.collections.find((item) => item.address.toLowerCase() === primaryNft.address.toLowerCase())
           ?.staked[0].weight,
