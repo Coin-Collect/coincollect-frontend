@@ -17,10 +17,11 @@ export interface ExpandableSectionProps {
   nftToken?: string
   pid?: number
   disabled?: boolean
+  onOpenDetails?: () => void
   publishedPool?: {
     banner?: string
     status: 'UPCOMING' | 'ACTIVE' | 'FINISHED' | 'UNKNOWN'
-    collections: Array<{ name: string; image?: string; weight: string }>
+    collections: Array<{ address?: string; name: string; image?: string; weight: string }>
   }
 }
 
@@ -152,6 +153,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   nftToken,
   pid,
   disabled = false,
+  onOpenDetails,
   publishedPool,
 }) => {
   const router = useRouter()
@@ -248,10 +250,22 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
     displayAvatars.push({ avatar: 'https://coincollect.org/assets/images/logos/3dots.gif' })
   }
 
-  const [onPresentAllowedNftsModal] = useModal(<AllowedNftsModal nfts={largeAvatars} />)
+  const modalCollections = publishedPool
+    ? publishedPool.collections.map((collection) => ({
+        title: collection.name,
+        power: Number(collection.weight),
+        avatar: collection.image || '/images/nfts/no-profile-md.png',
+        link: collection.address ? `/nfts/collections/${collection.address}` : '/nfts/collections',
+      }))
+    : largeAvatars
+  const [onPresentAllowedNftsModal] = useModal(
+    <AllowedNftsModal nfts={modalCollections} weightedShares={Boolean(publishedPool)} />,
+  )
   const handleOpenPoolPage = () => {
     if (pid !== undefined) {
       router.push(`/nftpools/${pid}`)
+    } else {
+      onOpenDetails?.()
     }
   }
 
@@ -272,7 +286,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   return (
     <CardBody p="0px">
       <Flex justifyContent="center">
-        <BannerContainer $clickable={pid !== undefined} onClick={handleOpenPoolPage}>
+        <BannerContainer $clickable={pid !== undefined || Boolean(onOpenDetails)} onClick={handleOpenPoolPage}>
           <StyledImage
             src={bannerSrc}
             alt={`${lpLabel} banner`}
@@ -295,6 +309,13 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
                 </PoolPageIcon>
               </NextLinkFromReactRouter>
             )}
+            {pid === undefined && onOpenDetails && (
+              <PoolPageIcon as="button" type="button" aria-label="Open pool details"
+                style={{ border: 0, padding: 0 }}
+                onClick={(event) => { event.stopPropagation(); onOpenDetails() }}>
+                <OpenNewIcon color="currentColor" />
+              </PoolPageIcon>
+            )}
           </StatusContainer>
 
           {displayAvatars.map((avatar, index) => (
@@ -303,9 +324,19 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
               src={avatar.avatar}
               width={50}
               height={50}
-              style={{ left: `${8 + index * 15}px`, top: '8px', cursor: pid !== undefined ? 'pointer' : 'default' }}
+              style={{ left: `${8 + index * 15}px`, top: '8px', cursor: 'pointer' }}
+              role="button"
+              tabIndex={0}
+              aria-label="View allowed NFTs"
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onPresentAllowedNftsModal()
+                }
+              }}
               onClick={
-                pid !== undefined
+                modalCollections.length > 0
                   ? (event) => {
                       event.stopPropagation()
                       onPresentAllowedNftsModal()

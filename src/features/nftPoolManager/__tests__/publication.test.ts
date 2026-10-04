@@ -169,6 +169,22 @@ it('filters history, search, duplicates and staked-only without legacy pids', as
   ).toHaveLength(1)
 })
 
+it('hydrates card power from chain and recovers block timing for older publications', async () => {
+  const completed = session()
+  completed.schedule!.measuredSecondsPerBlock = 3
+  saveNftPoolLaunchSession(completed)
+  const record = await publishCompletedNftPool(completed, provider)
+  expect(record.snapshot.secondsPerBlock).toBe(3)
+  const updated = pool()
+  updated.onChain.totalShares = BigNumber.from(36)
+  ;(readNftPoolByAddress as jest.Mock).mockResolvedValue(updated)
+  const hydrated = await hydratePublishedPool({ ...record, snapshot: { ...record.snapshot, secondsPerBlock: undefined } }, provider)
+  expect(hydrated.snapshot.secondsPerBlock).toBe(3)
+  expect(hydrated.snapshot.totalShares).toBe('36')
+  expect(hydrated.snapshot.stakedBalance).toBeUndefined()
+  expect(hydrated.snapshot.collections[0].weight).toBe('30')
+})
+
 it('ignores malformed storage and retains original snapshot when hydration fails', async () => {
   window.localStorage.setItem(PUBLICATION_STORAGE_KEY, '[{},null]')
   expect(localPublicationStore.read()).toEqual([])

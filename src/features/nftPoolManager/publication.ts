@@ -5,6 +5,7 @@ import type { NftPoolLaunchSession } from './launch/types'
 import { validateLaunchSessionInvariant } from './launch/orchestrator'
 import { parseNftPoolAddress } from './launch/transactions'
 import { loadNftPoolDraft } from './storage'
+import { loadNftPoolLaunchSession } from './launch/storage'
 import { readNftPoolByAddress } from './discovery'
 import { normalizeWrappedReward } from './rewardTokens'
 import { resolveNftAssetUrl } from './assets'
@@ -40,6 +41,9 @@ export interface PublicV2Pool {
     threshold: string
     rewardPerBlock: string
     capacity?: string
+    totalShares?: string
+    stakedBalance?: string
+    secondsPerBlock?: number
     collections: Array<{ address: string; name: string; image?: string; weight: string }>
     rewards: Array<{
       address: string
@@ -117,6 +121,8 @@ export function projectPublicPool(pool: NftPool, metadata: PublicationMetadata):
     threshold: pool.onChain.participantThreshold.toString(),
     rewardPerBlock: pool.onChain.rewardPerBlock.toString(),
     capacity: pool.onChain.currentRemainingPoolCapacity?.toString(),
+    totalShares: pool.onChain.totalShares?.toString(),
+    stakedBalance: pool.onChain.stakedBalance?.toString(),
     collections: pool.collections.map(({ collection, weight }) => {
       const display = metadata.collections.find(
         (item) => item.address.toLowerCase() === collection.address.toLowerCase(),
@@ -251,7 +257,8 @@ export async function hydratePublishedPool(record: PublicV2Pool, provider: Provi
   const pool = await readNftPoolByAddress(provider, record.address)
   if (pool.onChain.factoryAddress?.toLowerCase() !== record.factoryAddress.toLowerCase())
     throw new Error('Pool factory does not match publication.')
-  return { ...record, snapshot: projectPublicPool(pool, record.metadata) }
+  const secondsPerBlock = record.snapshot.secondsPerBlock || loadNftPoolLaunchSession(record.sessionId)?.schedule?.measuredSecondsPerBlock
+  return { ...record, snapshot: { ...projectPublicPool(pool, record.metadata), secondsPerBlock } }
 }
 
 export async function publishCompletedNftPool(
@@ -300,7 +307,7 @@ export async function publishCompletedNftPool(
     verifiedAt: session.verification.final!.checkedAt,
     verifiedAtBlock: session.verification.final!.checkedAtBlock,
     metadata,
-    snapshot: projectPublicPool(pool, metadata),
+    snapshot: { ...projectPublicPool(pool, metadata), secondsPerBlock: session.schedule?.measuredSecondsPerBlock },
   }
   store.upsert(record)
   return record

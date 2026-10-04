@@ -24,7 +24,7 @@ import formatRewardAmount from 'utils/formatRewardAmount'
 import tokens from 'config/constants/tokens'
 import { Token } from '@coincollect/sdk'
 
-const Action = styled.div`
+export const Action = styled.div`
   padding-top: 16px;
 `
 
@@ -69,7 +69,7 @@ const TooltipTokenFallback = styled.span`
   text-transform: uppercase;
 `
 
-const StyledActionButton = styled(Button)`
+export const StyledActionButton = styled(Button)`
   border-radius: 12px;
   font-weight: 600;
   font-size: 14px;

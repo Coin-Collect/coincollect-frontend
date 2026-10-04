@@ -155,11 +155,13 @@ const CoinPower = styled.span`
 
 interface AllowedNftsModalProps extends InjectedModalProps {
   nfts: any
+  weightedShares?: boolean
 }
 
 export default function AllowedNftsModal({
   onDismiss = () => null,
   nfts,
+  weightedShares = false,
 }: AllowedNftsModalProps) {
 
   const { t } = useTranslation()
@@ -195,7 +197,7 @@ export default function AllowedNftsModal({
             {t('%count% Collections', { count: sortedNfts.length })}
           </Text>
           <Text fontSize="12px" color="textSubtle">
-            {t('Highest power applies:')} <b><LightningIcon width={12} /> {highestPower}</b>
+            {t(weightedShares ? 'Highest NFT power:' : 'Highest power applies:')} <b><LightningIcon width={12} /> {highestPower}</b>
           </Text>
         </SummaryBar>
 
@@ -207,15 +209,19 @@ export default function AllowedNftsModal({
                   src={avatar["avatar"]}
                   width={44}
                   height={44}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null
+                    event.currentTarget.src = '/images/nfts/no-profile-md.png'
+                  }}
                 />
                 <CollectionTitle title={avatar["title"]}>{avatar["title"]}</CollectionTitle>
-                <CoinPower><LightningIcon width={11} />{sortedNfts.length > 1 ? avatar["power"] : 1}</CoinPower >
+                <CoinPower><LightningIcon width={11} />{weightedShares || sortedNfts.length > 1 ? avatar["power"] : 1}</CoinPower >
               </CollectionCard>
             </CollectionCardLink>
           ))}
         </CollectionGrid>
         <Message variant="warning">
-          <MessageText>{t('Daily rewards use the highest-power NFT in this pool.')}</MessageText>
+          <MessageText>{t(weightedShares ? 'Rewards are shared by NFT power, using the pool’s minimum effective power as a floor.' : 'Daily rewards use the highest-power NFT in this pool.')}</MessageText>
         </Message>
       </StyledModalBody>
     </StyledModalContainer>

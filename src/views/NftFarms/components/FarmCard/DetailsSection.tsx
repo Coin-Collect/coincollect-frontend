@@ -10,10 +10,11 @@ import MaxStakeRow from 'views/NftFarms/components/MaxStakeRow'
 import { Token } from '@coincollect/sdk'
 import { ProjectLink } from 'config/constants/types'
 import { TimeCountdownDisplay } from '../Cells/EndsInCell'
+import type { PublicV2Pool } from 'features/nftPoolManager/publication'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
-  earningToken?: Token
+  earningToken?: Pick<Token, 'address'>
   removed?: boolean
   totalValueFormatted?: string
   lpLabel?: string
@@ -25,6 +26,7 @@ export interface ExpandableSectionProps {
   stakingLimitEndTimestamp?: number
   isFinished?: boolean
   projectLink?: ProjectLink
+  publishedPool?: PublicV2Pool
 }
 
 const Wrapper = styled.div`
@@ -53,6 +55,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   stakingLimitEndTimestamp,
   isFinished,
   projectLink,
+  publishedPool,
 }) => {
 
   const { t } = useTranslation()
@@ -66,11 +69,11 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   })
 
   const { shouldShowBlockCountdown, timeUntilStart, timeRemaining, hasPoolStarted, timeToDisplay } =
-    getNftFarmBlockInfo(startTimestamp, endTimestamp, isFinished, currentBlock)
+    getNftFarmBlockInfo(startTimestamp || 0, endTimestamp || 0, Boolean(isFinished), currentBlock)
 
   return (
     <Wrapper>
-      <Flex mb="2px" justifyContent="space-between" alignItems="center">
+      {(!publishedPool || publishedPool.snapshot.stakedBalance !== undefined) && <Flex mb="2px" justifyContent="space-between" alignItems="center">
         <Text small>{t('Total staked')}:</Text>
         <Flex alignItems="flex-start">
           {totalStaked && totalStaked.gte(0) ? (
@@ -85,7 +88,22 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           )}
           {totalStakedTooltipVisible && totalStakedTooltip}
         </Flex>
-      </Flex>
+      </Flex>}
+      {publishedPool && (
+        <>
+          {[
+            ['Total staking power', publishedPool.snapshot.totalShares ?? 'Unavailable'],
+            ['Minimum effective power', publishedPool.snapshot.threshold],
+            [publishedPool.snapshot.status === 'UPCOMING' ? 'Starts in' : 'Ends in',
+              publishedPool.snapshot.status === 'FINISHED' ? 'Finished' :
+              `${Math.max(0, (publishedPool.snapshot.status === 'UPCOMING' ? publishedPool.snapshot.startBlock : publishedPool.snapshot.endBlock) - publishedPool.snapshot.currentBlock).toLocaleString('en-US')} blocks`],
+          ].map(([label, value]) => (
+            <Flex key={label} mb="2px" justifyContent="space-between" alignItems="center">
+              <Text small>{t(label)}:</Text><Text small>{value}</Text>
+            </Flex>
+          ))}
+        </>
+      )}
       {stakingLimit && stakingLimit.gt(0) && (
         <MaxStakeRow
           small
@@ -93,7 +111,7 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           hasPoolStarted={hasPoolStarted}
           stakingLimit={stakingLimit}
           stakingLimitEndTimestamp={stakingLimitEndTimestamp || 0}
-          stakingTokenSymbol={lpLabel}
+          stakingTokenSymbol={lpLabel || ''}
           endTimestamp={endTimestamp || 0}
         />
       )}
@@ -108,9 +126,12 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
         </Flex>
       )}
       {(!removed && (projectLink?.getNftLink || addLiquidityUrl)) && (
-        <StyledLinkExternal href={projectLink?.getNftLink ?? addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel })}</StyledLinkExternal>
+        <StyledLinkExternal href={projectLink?.getNftLink ?? addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel || 'NFT' })}</StyledLinkExternal>
       )}
-      <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>
+      {bscScanAddress && <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>}
+      {publishedPool && !bscScanAddress && (
+        <Text small style={{ overflowWrap: 'anywhere', marginTop: 8 }}>Local contract: {publishedPool.address}</Text>
+      )}
 
 
       {earningToken?.address && (<StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
