@@ -58,7 +58,6 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   projectLink,
   publishedPool,
 }) => {
-
   const { t } = useTranslation()
   const currentBlock = useCurrentBlock()
   const {
@@ -80,32 +79,26 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
 
   return (
     <Wrapper>
-      {(!publishedPool || publishedPool.snapshot.stakedBalance !== undefined) && <Flex mb="2px" justifyContent="space-between" alignItems="center">
-        <Text small>{t('Total staked')}:</Text>
-        <Flex alignItems="flex-start">
-          {totalStaked && totalStaked.gte(0) ? (
-            <>
-              <Balance small value={totalStaked.toNumber()} decimals={0} />
-              <span ref={totalStakedTargetRef}>
-                <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
-              </span>
-            </>
-          ) : (
-            <Skeleton width="90px" height="21px" />
-          )}
-          {totalStakedTooltipVisible && totalStakedTooltip}
+      {
+        <Flex mb="2px" justifyContent="space-between" alignItems="center">
+          <Text small>{t('Total staked')}:</Text>
+          <Flex alignItems="flex-start">
+            {totalStaked && totalStaked.gte(0) ? (
+              <>
+                <Balance small value={totalStaked.toNumber()} decimals={0} />
+                <span ref={totalStakedTargetRef}>
+                  <HelpIcon color="textSubtle" width="20px" ml="6px" mt="4px" />
+                </span>
+              </>
+            ) : (
+              <Skeleton width="90px" height="21px" />
+            )}
+            {totalStakedTooltipVisible && totalStakedTooltip}
+          </Flex>
         </Flex>
-      </Flex>}
+      }
       {publishedPool && (
         <>
-          {[
-            ['Total staking power', publishedPool.snapshot.totalShares ?? 'Unavailable'],
-            ['Minimum effective power', publishedPool.snapshot.threshold],
-          ].map(([label, value]) => (
-            <Flex key={label} mb="2px" justifyContent="space-between" alignItems="center">
-              <Text small>{t(label)}:</Text><Text small>{value}</Text>
-            </Flex>
-          ))}
           <Flex mb="2px" justifyContent="space-between" alignItems="center" style={{ gap: 12 }}>
             <Text small>{t(publishedScheduleLabel)}:</Text>
             <ScheduleCountdown pool={publishedPool} />
@@ -133,19 +126,21 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           )}
         </Flex>
       )}
-      {(!removed && (projectLink?.getNftLink || addLiquidityUrl)) && (
-        <StyledLinkExternal href={projectLink?.getNftLink ?? addLiquidityUrl}>{t('Get %symbol%', { symbol: lpLabel || 'NFT' })}</StyledLinkExternal>
+      {!removed && (projectLink?.getNftLink || addLiquidityUrl) && (
+        <StyledLinkExternal href={projectLink?.getNftLink ?? addLiquidityUrl}>
+          {t('Get %symbol%', { symbol: lpLabel || 'NFT' })}
+        </StyledLinkExternal>
       )}
       {bscScanAddress && <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>}
-      {publishedPool && !bscScanAddress && (
-        <Text small style={{ overflowWrap: 'anywhere', marginTop: 8 }}>Local contract: {publishedPool.address}</Text>
+
+      {earningToken?.address && (
+        <StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`}>
+          {t('See Token Info')}
+        </StyledLinkExternal>
       )}
-
-
-      {earningToken?.address && (<StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
-      {projectLink?.mainLink && (<StyledLinkExternal href={projectLink.mainLink}>{t('View Project Site')}</StyledLinkExternal>)}
-
-
+      {projectLink?.mainLink && (
+        <StyledLinkExternal href={projectLink.mainLink}>{t('View Project Site')}</StyledLinkExternal>
+      )}
     </Wrapper>
   )
 }

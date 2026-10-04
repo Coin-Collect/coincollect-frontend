@@ -41,13 +41,13 @@ export function notifyV2UserPositionChanged() {
 }
 
 export function usePublishedV2UserPosition(
-  pool: PublicV2Pool,
+  pool: PublicV2Pool | undefined,
   account: string | null | undefined,
   chainId: number | undefined,
   provider: Provider | undefined,
   enabled = true,
 ) {
-  const key = enabled && account && chainId && provider ? v2UserPositionKey(pool, account, chainId) : null
+  const key = enabled && pool && account && chainId && provider ? v2UserPositionKey(pool, account, chainId) : null
   const {
     data,
     error,
@@ -55,7 +55,7 @@ export function usePublishedV2UserPosition(
     mutate: revalidate,
   } = useSWR<V2UserPosition>(
     key,
-    () => readV2UserPosition(pool, provider!, account!, { expectedChainId: getPolygonRuntimeChainId() }),
+    () => readV2UserPosition(pool!, provider!, account!, { expectedChainId: getPolygonRuntimeChainId() }),
     { refreshInterval: 15_000, revalidateOnFocus: true, shouldRetryOnError: false, dedupingInterval: 5_000 },
   )
   useEffect(() => {

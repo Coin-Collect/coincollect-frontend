@@ -22,7 +22,7 @@ import PageHeader from 'components/PageHeader'
 import SearchInput from 'components/SearchInput'
 import Select, { OptionProps } from 'components/Select/Select'
 import Loading from 'components/Loading'
-import { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
+import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
 import formatRewardAmount from 'utils/formatRewardAmount'
 import Table from './components/FarmTable/FarmTable'
 import FarmTabButtons from './components/FarmTabButtons'
@@ -38,14 +38,6 @@ import { CommunityCollectionsBanner } from 'views/Home/components/Banners/Commun
 import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPools'
 import { usePublishedV2UserPositions } from 'features/nftPoolManager/user/hooks'
 import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
-import PublicNftPoolCard from 'features/nftPoolManager/components/PublicNftPoolCard'
-
-const PublishedGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-`
 
 const ControlContainer = styled.div`
   display: flex;
@@ -842,11 +834,11 @@ const Farms: React.FC = ({ children }) => {
                 {t('Some V2 positions could not be verified on the connected network; they are not treated as empty.')}
               </Text>
             ) : null}
-            <PublishedGrid>
+            <FlexLayout>
               {publishedPools.map((pool) => (
-                <PublicNftPoolCard key={pool.id} pool={pool} error={published.errors[pool.id]} />
+                <FarmCard key={pool.id} publishedPool={pool} error={published.errors[pool.id]} />
               ))}
-            </PublishedGrid>
+            </FlexLayout>
           </section>
         ) : stakedOnly && Object.keys(publishedUserPositions.errors).length > 0 ? (
           <Text small color="warning" role="status">

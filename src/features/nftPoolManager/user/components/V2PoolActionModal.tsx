@@ -1,10 +1,42 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AutoRenewIcon, Button, Flex, Modal, Text } from '@pancakeswap/uikit'
+import {
+  AutoRenewIcon,
+  Button,
+  Flex,
+  Modal,
+  ModalBody,
+  Text,
+  LightningIcon,
+  WarningIcon,
+  CheckmarkCircleFillIcon,
+  Link,
+} from '@pancakeswap/uikit'
 import { BigNumber } from '@ethersproject/bignumber'
 import { formatUnits } from '@ethersproject/units'
 import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
 import styled from 'styled-components'
+import useTheme from 'hooks/useTheme'
+import { ModalActions } from 'components/Modal'
+import CircleLoader from 'components/Loader/CircleLoader'
+import NoNftsImage from 'views/Nft/market/components/Activity/NoNftsImage'
+import {
+  NftBox,
+  SelectedNftBox,
+  NftOption,
+  Wrapper,
+  SelectionInfo,
+  SelectionCountChip,
+} from 'views/NftFarms/components/DepositModal'
+import { Title, Wrapper as CollectionWrapper } from 'components/CollectionSelectModal/CollectionSelectModal'
+import {
+  MenuItem,
+  CollectionAvatar,
+  ContentColumn,
+  CollectionTitleRow,
+  CollectionTitleText,
+  PowerText,
+} from 'components/CollectionSelectModal/CollectionList'
 import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import type { PublicV2Pool } from '../../publication'
@@ -29,27 +61,10 @@ interface V2PoolActionModalProps {
 }
 
 const ModalContent = styled.div`
-  width: min(100%, 560px);
-  max-height: min(78vh, 760px);
+  width: 572px;
+  max-width: calc(100vw - 72px);
+  max-height: 70vh;
   overflow-y: auto;
-`
-
-const CollectionBlock = styled.div`
-  padding: 14px;
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  border-radius: 14px;
-  margin-top: 12px;
-  background: ${({ theme }) => theme.colors.background};
-`
-
-const NftRow = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 6px 0;
-  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  cursor: pointer;
 `
 
 const TokenIdInput = styled.input`
@@ -86,6 +101,7 @@ export default function V2PoolActionModal({
   onDismiss,
 }: V2PoolActionModalProps & { onDismiss?: () => void }) {
   const { t } = useTranslation()
+  const { theme } = useTheme()
   const { account: connectedAccount, chainId, library } = useWeb3React()
   const account = connectedAccount || ''
   const provider = library as Provider | undefined
@@ -108,8 +124,9 @@ export default function V2PoolActionModal({
   const [pendingVerification, setPendingVerification] = useState<ConfirmedV2WriteVerificationError>()
   const [refreshPending, setRefreshPending] = useState(false)
   const [forfeitConfirmed, setForfeitConfirmed] = useState(false)
+  const [activeCollection, setActiveCollection] = useState<string>()
+  const [inventoryRevision, setInventoryRevision] = useState(0)
   const actionLock = useRef(false)
-  const unstakeSelectionInitialized = useRef<string>()
   const inventoryLoadedFor = useRef<{ key: string; provider?: Provider }>()
   const configuredCollections = position?.collections || []
   const configuredCollectionsRef = useRef(configuredCollections)
@@ -118,17 +135,25 @@ export default function V2PoolActionModal({
     pool.id,
     account.toLowerCase(),
     chainId || '',
+    inventoryRevision,
     configuredCollections
       .map((item) => `${item.address.toLowerCase()}:${item.weight}:${item.name}:${item.image || ''}`)
       .join('|'),
   ].join(':')
+  const currentInventoryKey = useRef(inventoryRequestKey)
+  currentInventoryKey.current = inventoryRequestKey
   const metadataItems = configuredCollections
     .flatMap((collection) =>
-      (inventory[collection.address.toLowerCase()] || []).slice(0, 24).map((tokenId) => ({
-        address: collection.address,
-        tokenId,
-        key: `${collection.address.toLowerCase()}:${tokenId}`,
-      })),
+      (mode === 'unstake'
+        ? collection.staked.map((nft) => nft.tokenId)
+        : inventory[collection.address.toLowerCase()] || []
+      )
+        .slice(0, 24)
+        .map((tokenId) => ({
+          address: collection.address,
+          tokenId,
+          key: `${collection.address.toLowerCase()}:${tokenId}`,
+        })),
     )
     .slice(0, 24)
   const metadataRequestKey = [
@@ -173,7 +198,16 @@ export default function V2PoolActionModal({
         )
         .map(async (collection) => {
           try {
-            const result = await readV2OwnedNfts(provider, collection.address, account)
+            let timeout: ReturnType<typeof setTimeout> | undefined
+            const result = await Promise.race([
+              readV2OwnedNfts(provider, collection.address, account),
+              new Promise<never>((_, reject) => {
+                timeout = setTimeout(() => reject(new Error('NFT read timed out. Retry or enter token IDs.')), 15_000)
+              }),
+            ]).finally(() => {
+              if (timeout !== undefined) clearTimeout(timeout)
+            })
+            if (active) setInventory((current) => ({ ...current, [collection.address.toLowerCase()]: result.tokenIds }))
             return [collection.address.toLowerCase(), result] as const
           } catch (cause) {
             return [
@@ -203,7 +237,7 @@ export default function V2PoolActionModal({
   }, [mode, pool.id, inventoryRequestKey, account, chainId, provider, Boolean(position)])
 
   useEffect(() => {
-    if (mode !== 'stake' || !account || !provider) {
+    if (mode === 'emergency' || !account || !provider) {
       if (!account || !provider) {
         metadataLoadedFor.current = undefined
         setTokenMetadata({})
@@ -229,21 +263,12 @@ export default function V2PoolActionModal({
   }, [mode, account, provider, metadataRequestKey])
 
   useEffect(() => {
-    if (mode !== 'unstake' || !position) return
-    const key = `${pool.id}:${account.toLowerCase()}`
-    if (unstakeSelectionInitialized.current === key) return
-    unstakeSelectionInitialized.current = key
-    setSelected(
-      Object.fromEntries(
-        position.collections.flatMap((collection) =>
-          collection.staked.map((nft) => {
-            const selectedNft = fromStakedNft(nft)
-            return [nftKey(selectedNft), selectedNft]
-          }),
-        ),
-      ),
-    )
-  }, [mode, pool.id, account, position])
+    setSelected({})
+    setActiveCollection(undefined)
+    setError(undefined)
+    setManualIds({})
+    setForfeitConfirmed(false)
+  }, [pool.id, account, chainId, mode])
 
   const selectedNfts = useMemo(() => {
     const currentWeights = new Map(
@@ -251,9 +276,9 @@ export default function V2PoolActionModal({
     )
     return Object.values(selected).map((nft) => ({
       ...nft,
-      weight: currentWeights.get(nft.collectionAddress.toLowerCase()) || nft.weight,
+      weight: mode === 'stake' ? currentWeights.get(nft.collectionAddress.toLowerCase()) || nft.weight : nft.weight,
     }))
-  }, [selected, configuredCollections])
+  }, [selected, configuredCollections, mode])
   const toggle = (nft: SelectedNft) => {
     const key = nftKey(nft)
     setSelected((current) => {
@@ -277,6 +302,7 @@ export default function V2PoolActionModal({
   }
 
   const addManualIds = async (collection: V2UserCollection) => {
+    const requestedKey = inventoryRequestKey
     setError(undefined)
     setInventoryErrors((current) => ({ ...current, [collection.address.toLowerCase()]: '' }))
     try {
@@ -284,6 +310,7 @@ export default function V2PoolActionModal({
       const result = await readV2OwnedNfts(provider, collection.address, account, {
         manualTokenIds: manualIds[collection.address.toLowerCase()] || '',
       })
+      if (currentInventoryKey.current !== requestedKey) return
       const newItems = result.tokenIds.map((tokenId) => ({
         collectionAddress: collection.address,
         tokenId,
@@ -300,6 +327,7 @@ export default function V2PoolActionModal({
       setSelected((current) => ({ ...current, ...Object.fromEntries(newItems.map((item) => [nftKey(item), item])) }))
       setManualIds((current) => ({ ...current, [collection.address.toLowerCase()]: '' }))
     } catch (cause) {
+      if (currentInventoryKey.current !== requestedKey) return
       setInventoryErrors((current) => ({
         ...current,
         [collection.address.toLowerCase()]: cause instanceof Error ? cause.message : String(cause),
@@ -417,252 +445,354 @@ export default function V2PoolActionModal({
       )
     }, 'Emergency withdrawal confirmed')
 
-  const title = mode === 'stake' ? t('Stake NFTs') : mode === 'unstake' ? t('Withdraw NFTs') : t('Emergency withdrawal')
   const actionsBlocked = Boolean(pendingVerification || refreshPending)
+  const pickingCollection = mode === 'stake' && !activeCollection
+  const title =
+    mode === 'emergency'
+      ? t('Emergency withdrawal')
+      : pickingCollection
+      ? t('Select from %count% collection', { count: configuredCollections.length })
+      : mode === 'stake'
+      ? t('Select NFTs to Stake')
+      : t('Select NFTs to UnStake')
+  const selectedPower = selectedNfts.reduce((sum, item) => sum.add(item.weight), BigNumber.from(0))
+  const totalCount = BigNumber.from(position?.nftCount || '0').add(selectedNfts.length)
+  const limitReached =
+    mode === 'stake' && Boolean(position?.userLimit) && totalCount.gt(position?.poolLimitPerUser || '0')
+  const visibleCollections =
+    mode === 'stake'
+      ? configuredCollections.filter((collection) => collection.address.toLowerCase() === activeCollection)
+      : configuredCollections
+  const nftItems = visibleCollections.flatMap((collection) =>
+    (mode === 'stake'
+      ? inventory[collection.address.toLowerCase()] || []
+      : collection.staked.map((item) => item.tokenId)
+    ).map((tokenId) => {
+      const staked = collection.staked.find((item) => item.tokenId === tokenId)
+      return staked
+        ? fromStakedNft(staked)
+        : {
+            collectionAddress: collection.address,
+            tokenId,
+            weight: collection.weight,
+            name: collection.name,
+            image: collection.image,
+          }
+    }),
+  )
+  const missingApprovals = configuredCollections.filter(
+    (collection) =>
+      !collection.approved &&
+      selectedNfts.some((nft) => nft.collectionAddress.toLowerCase() === collection.address.toLowerCase()),
+  )
+  const retryInventory = () => setInventoryRevision((value) => value + 1)
 
   return (
     <Modal
+      minWidth="346px"
+      maxWidth="calc(100vw - 24px)"
+      bodyPadding="24px 24px 10px 24px"
       title={title}
+      headerBackground={theme.colors.gradients.bubblegum}
+      onBack={
+        mode === 'stake' && activeCollection && !working && !actionsBlocked
+          ? () => {
+              setActiveCollection(undefined)
+              setSelected({})
+            }
+          : undefined
+      }
       onDismiss={() => {
-        if (!actionsBlocked) onDismiss?.()
+        if (!working && !actionsBlocked) onDismiss?.()
       }}
     >
-      <ModalContent>
-        {!account || !provider ? (
-          <Text role="alert" color="failure">
-            {t('Wallet disconnected. Reconnect it, then reopen this action.')}
-          </Text>
-        ) : mode === 'emergency' ? (
-          <>
-            <Text mb="12px">
-              {t('This returns every NFT in your position. Any pending primary and side rewards are forfeited.')}
+      <ModalBody maxWidth="620px">
+        <ModalContent style={{ width: pickingCollection ? 372 : 572 }}>
+          {!account || !provider ? (
+            <Text role="alert" color="failure">
+              {t('Wallet disconnected. Reconnect it, then reopen this action.')}
             </Text>
-            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 16 }}>
-              <input
-                type="checkbox"
-                checked={forfeitConfirmed}
-                disabled={working || actionsBlocked}
-                onChange={(event) => setForfeitConfirmed(event.target.checked)}
-              />
-              <Text small>
-                {t('I understand that this emergency withdrawal permanently gives up pending rewards.')}
+          ) : mode === 'emergency' ? (
+            <>
+              <Text mb="12px">
+                {t('This returns every NFT in your position. Any pending primary and side rewards are forfeited.')}
               </Text>
-            </label>
-          </>
-        ) : loading ? (
-          <Flex alignItems="center" justifyContent="center" p="24px">
-            <AutoRenewIcon spin />
-            <Text ml="8px">{t('Reading position…')}</Text>
-          </Flex>
-        ) : positionError || !position ? (
-          <Text role="alert" color="failure">
-            {positionError || t('Could not verify this wallet position.')}
-          </Text>
-        ) : (
-          <>
-            <Text small color="textSubtle" mb="12px">
-              {mode === 'stake'
-                ? t('Choose NFTs you own in this pool. Approvals and staking are separate wallet transactions.')
-                : t(
-                    'Unstaking claims available rewards as part of the normal withdrawal. Select a subset to withdraw only those NFTs.',
-                  )}
-            </Text>
-            {position.collections.map((collection) => {
-              const collectionId = collection.address.toLowerCase()
-              const ids =
-                mode === 'stake' ? inventory[collectionId] || [] : collection.staked.map((item) => item.tokenId)
-              const selectedInCollection = selectedNfts.filter(
-                (item) => item.collectionAddress.toLowerCase() === collectionId,
-              )
-              return (
-                <CollectionBlock key={collectionId}>
-                  <Flex alignItems="center" justifyContent="space-between" mb="8px">
-                    <Flex alignItems="center" minWidth={0}>
-                      {collection.image ? (
-                        <img
-                          src={collection.image}
-                          alt=""
-                          width="34"
-                          height="34"
-                          style={{ borderRadius: '50%', objectFit: 'cover', marginRight: 9 }}
-                        />
-                      ) : null}
-                      <div>
-                        <Text bold>{collection.name}</Text>
-                        <Text small color="textSubtle">
-                          {collection.weight}x · {ids.length} {t('NFTs')}
-                        </Text>
-                      </div>
-                    </Flex>
-                    {mode === 'stake' && !collection.approved && selectedInCollection.length > 0 ? (
-                      <Button scale="sm" disabled={working || actionsBlocked} onClick={() => onApprove(collection)}>
-                        {working ? <AutoRenewIcon spin /> : t('Approve collection')}
-                      </Button>
-                    ) : null}
-                  </Flex>
-                  {mode === 'stake' && inventoryErrors[collectionId] ? (
-                    <Text small color="warning" mb="8px">
-                      {inventoryErrors[collectionId]}
-                    </Text>
-                  ) : null}
-                  {ids.map((tokenId) => {
-                    const staked = collection.staked.find((item) => item.tokenId === tokenId)
-                    const nft: SelectedNft = staked
-                      ? fromStakedNft(staked)
-                      : {
-                          collectionAddress: collection.address,
-                          tokenId,
-                          weight: collection.weight,
-                          name: collection.name,
-                          image: collection.image,
-                        }
-                    const key = nftKey(nft)
-                    return (
-                      <NftRow key={key}>
-                        <input
-                          type="checkbox"
-                          checked={Boolean(selected[key])}
-                          disabled={working || actionsBlocked}
-                          onChange={() => toggle(nft)}
-                        />
-                        {tokenMetadata[key]?.image ? (
-                          <img
-                            src={tokenMetadata[key].image}
-                            alt=""
-                            width="28"
-                            height="28"
-                            style={{ borderRadius: 7, objectFit: 'cover' }}
-                          />
-                        ) : null}
-                        <Text bold>{tokenMetadata[key]?.name || `NFT #${tokenId}`}</Text>
-                        <Text small color="textSubtle">
-                          {staked?.weight || collection.weight}x
-                        </Text>
-                      </NftRow>
-                    )
-                  })}
-                  {mode === 'stake' && inventoryLoading ? (
-                    <Text small color="textSubtle">
-                      {t('Loading wallet NFTs…')}
-                    </Text>
-                  ) : null}
-                  {mode === 'stake' && !inventoryLoading && !ids.length && !inventoryErrors[collectionId] ? (
-                    <Text small color="textSubtle">
-                      {t('No wallet-owned NFTs found.')}
-                    </Text>
-                  ) : null}
-                  {mode === 'stake' && inventoryErrors[collectionId] ? (
-                    <Flex mt="10px" style={{ gap: 8 }}>
-                      <TokenIdInput
-                        aria-label={`${collection.name} token IDs`}
-                        placeholder={t('Enter token IDs, e.g. 1, 2, 300')}
-                        value={manualIds[collectionId] || ''}
-                        onChange={(event) =>
-                          setManualIds((current) => ({ ...current, [collectionId]: event.target.value }))
-                        }
-                      />
-                      <Button
-                        scale="sm"
-                        variant="secondary"
-                        disabled={working || actionsBlocked}
-                        onClick={() => addManualIds(collection)}
-                      >
-                        {t('Verify IDs')}
-                      </Button>
-                    </Flex>
-                  ) : null}
-                </CollectionBlock>
-              )
-            })}
-            <Text small color="textSubtle" mt="12px">
-              {t('Selected')}: {selectedNfts.length} NFT ·{' '}
-              {selectedNfts.reduce((sum, item) => sum.add(item.weight), BigNumber.from(0)).toString()} power
-            </Text>
-            {mode === 'stake' && selectedNfts.length > 0 ? (
-              <Text small color="textSubtle" mt="4px">
-                {t('Native POL fee for this stake batch')}: {formatUnits(position.performanceFee, 18)} POL ·{' '}
-                {t('POL pays fees and gas; WPOL is a separate ERC-20 reward token.')}
-              </Text>
-            ) : null}
-            {mode === 'stake' ? (
-              position.collections.filter(
-                (collection) =>
-                  selectedNfts.some(
-                    (item) => item.collectionAddress.toLowerCase() === collection.address.toLowerCase(),
-                  ) && !collection.approved,
-              ).length > 0 ? (
-                <Text small color="warning" mt="8px">
-                  {t('Approve each selected collection separately. After all approvals confirm, press Stake NFTs.')}
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 16 }}>
+                <input
+                  type="checkbox"
+                  checked={forfeitConfirmed}
+                  disabled={working || actionsBlocked}
+                  onChange={(event) => setForfeitConfirmed(event.target.checked)}
+                />
+                <Text small>
+                  {t('I understand that this emergency withdrawal permanently gives up pending rewards.')}
                 </Text>
-              ) : null
-            ) : null}
-          </>
-        )}
-        {error ? (
-          <Text role="alert" color="failure" mt="12px">
-            {error}
-          </Text>
-        ) : null}
-        {notice ? (
-          <Text role="status" color="success" mt="12px">
-            {notice}
-          </Text>
-        ) : null}
-        {actionsBlocked ? (
-          <Button width="100%" variant="secondary" mt="10px" disabled={working} onClick={retryConfirmedVerification}>
-            {working ? <AutoRenewIcon spin mr="6px" /> : null}
-            {t('Retry on-chain verification — do not resend transaction')}
-          </Button>
-        ) : null}
-        <Flex mt="18px" style={{ gap: 10 }}>
-          {mode === 'stake' ? (
-            <Button
-              width="100%"
-              disabled={Boolean(
-                working ||
-                  actionsBlocked ||
-                  loading ||
-                  !position ||
-                  positionError ||
-                  selectedNfts.length === 0 ||
-                  position?.collections.some(
-                    (collection) =>
-                      selectedNfts.some(
-                        (item) => item.collectionAddress.toLowerCase() === collection.address.toLowerCase(),
-                      ) && !collection.approved,
-                  ),
-              )}
-              onClick={onStake}
-            >
-              {working ? <AutoRenewIcon spin /> : t('Stake NFTs')}
-            </Button>
-          ) : mode === 'unstake' ? (
-            <Button
-              width="100%"
-              disabled={Boolean(
-                working || actionsBlocked || loading || !position || positionError || selectedNfts.length === 0,
-              )}
-              onClick={onUnstake}
-            >
-              {working ? <AutoRenewIcon spin /> : t('Withdraw selected NFTs')}
-            </Button>
+              </label>
+            </>
+          ) : loading ? (
+            <Flex p="24px" flexDirection="column" alignItems="center">
+              <CircleLoader size="30px" />
+              <Text mt="8px">{t('NFTs will be listed shortly...')}</Text>
+            </Flex>
+          ) : positionError || !position ? (
+            <Flex flexDirection="column">
+              <Text role="alert" color="failure">
+                {positionError || t('Could not verify this wallet position.')}
+              </Text>
+              <Button variant="light" mt="12px" onClick={() => refresh()}>
+                {t('Retry')}
+              </Button>
+            </Flex>
+          ) : pickingCollection ? (
+            <>
+              <Title style={{ marginBottom: 2 }}>
+                {t('Stake NFTs here to earn by ')}
+                <LightningIcon width={15} />
+                {t('power. ')}
+                <Link
+                  display="inline"
+                  href="https://docs.coincollect.org/coincollect-nft/nft-powers"
+                  target="_blank"
+                  color="failure"
+                >
+                  {t('Learn Power')} »
+                </Link>
+              </Title>
+              <CollectionWrapper flexDirection="column" style={{ maxHeight: 300, overflowY: 'auto' }}>
+                {configuredCollections.map((collection) => {
+                  const address = collection.address.toLowerCase()
+                  const ids = inventory[address] || []
+                  return (
+                    <MenuItem
+                      as="button"
+                      type="button"
+                      key={address}
+                      disabled={working || actionsBlocked}
+                      selected={false}
+                      width="100%"
+                      style={{ border: 0, textAlign: 'left', background: 'transparent' }}
+                      onClick={() => (collection.approved ? setActiveCollection(address) : void onApprove(collection))}
+                    >
+                      <CollectionAvatar
+                        src={collection.image || '/images/nfts/no-profile-md.png'}
+                        alt=""
+                        onError={(event) => {
+                          event.currentTarget.onerror = null
+                          event.currentTarget.src = '/images/nfts/no-profile-md.png'
+                        }}
+                      />
+                      <ContentColumn>
+                        <CollectionTitleRow>
+                          <CollectionTitleText bold fontSize="14px">
+                            {collection.name}
+                          </CollectionTitleText>
+                          <PowerText bold fontSize="14px">
+                            <LightningIcon />
+                            {collection.weight}
+                          </PowerText>
+                        </CollectionTitleRow>
+                        <Text color="textSubtle" small>
+                          {collection.approved ? t('Click to Start Staking') : t('Click to Enable')}
+                        </Text>
+                      </ContentColumn>
+                      {inventoryLoading && inventory[address] === undefined ? (
+                        <CircleLoader size="18px" />
+                      ) : (
+                        <Text>{ids.length}</Text>
+                      )}
+                    </MenuItem>
+                  )
+                })}
+              </CollectionWrapper>
+              <Text small color="textSubtle">
+                {t('Daily rewards use the highest-power NFT in this pool.')}
+              </Text>
+            </>
           ) : (
-            <Button
-              width="100%"
-              variant="danger"
-              disabled={Boolean(
-                working || actionsBlocked || loading || !position || positionError || !forfeitConfirmed,
+            <>
+              {mode === 'stake' && position.userLimit && (
+                <SelectionInfo $error={limitReached}>
+                  <Flex alignItems="center" justifyContent="space-between" flexWrap="wrap" style={{ gap: 12 }}>
+                    <Flex alignItems="center" style={{ gap: 8 }}>
+                      {limitReached ? (
+                        <WarningIcon width="22px" color="failure" />
+                      ) : (
+                        <CheckmarkCircleFillIcon width="22px" color="success" />
+                      )}
+                      <Text fontSize="14px" fontWeight={600} color="textSubtle">
+                        {t('Selected NFTs')}
+                      </Text>
+                    </Flex>
+                    <SelectionCountChip $error={limitReached}>
+                      {totalCount.toString()}/{position.poolLimitPerUser}
+                    </SelectionCountChip>
+                  </Flex>
+                  <Text fontSize="14px" color={limitReached ? 'failure' : 'textSubtle'}>
+                    {limitReached
+                      ? t('Stake limit reached! Please remove extra NFTs to proceed.')
+                      : t('Slots remaining: %remaining%', {
+                          remaining: BigNumber.from(position.poolLimitPerUser).sub(totalCount).toString(),
+                        })}
+                  </Text>
+                </SelectionInfo>
               )}
-              onClick={onEmergency}
-            >
-              {working ? <AutoRenewIcon spin /> : t('Emergency withdraw all NFTs')}
+              <Wrapper>
+                {nftItems.length ? (
+                  <Flex flexWrap="wrap" justifyContent="center" width="100%">
+                    {nftItems.map((nft) => {
+                      const key = nftKey(nft)
+                      const ImageBox = selected[key] ? SelectedNftBox : NftBox
+                      const metadata = tokenMetadata[key]
+                      return (
+                        <NftOption
+                          as="button"
+                          type="button"
+                          key={key}
+                          aria-pressed={Boolean(selected[key])}
+                          aria-label={nft.name + ' NFT #' + nft.tokenId}
+                          disabled={working || actionsBlocked}
+                          style={{ border: 0, background: 'transparent', padding: 0 }}
+                          onClick={() => toggle(nft)}
+                        >
+                          <ImageBox
+                            src={metadata?.image || nft.image || '/images/nfts/no-profile-md.png'}
+                            height={90}
+                            width={90}
+                            onError={(event) => {
+                              event.currentTarget.onerror = null
+                              event.currentTarget.src = nft.image || '/images/nfts/no-profile-md.png'
+                            }}
+                          />
+                          <Text
+                            fontSize="11px"
+                            color="textSubtle"
+                            mt="6px"
+                            textAlign="center"
+                            width="100%"
+                            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            title={nft.name}
+                          >
+                            {nft.name}
+                          </Text>
+                          <Text fontSize="11px" color="textSubtle">
+                            #{nft.tokenId} · {nft.weight}x
+                          </Text>
+                        </NftOption>
+                      )
+                    })}
+                  </Flex>
+                ) : inventoryLoading && mode === 'stake' ? (
+                  <Flex p="24px" margin="0 auto" flexDirection="column" alignItems="center">
+                    <CircleLoader size="30px" />
+                    <Text mt="8px">{t('NFTs will be listed shortly...')}</Text>
+                  </Flex>
+                ) : (
+                  <Flex p="24px" flexDirection="column" alignItems="center" width="100%">
+                    <NoNftsImage />
+                    <Text pt="8px" bold>
+                      {t('No NFTs found')}
+                    </Text>
+                    {mode === 'stake' && (
+                      <Button variant="light" mt="12px" width="100%" onClick={retryInventory}>
+                        {t('Retry')}
+                      </Button>
+                    )}
+                  </Flex>
+                )}
+              </Wrapper>
+              {mode === 'stake' &&
+                visibleCollections.map((collection) => {
+                  const key = collection.address.toLowerCase()
+                  return inventoryErrors[key] ? (
+                    <div key={key}>
+                      <Text small color="warning" mt="8px">
+                        {inventoryErrors[key]}
+                      </Text>
+                      <Flex mt="10px" style={{ gap: 8 }}>
+                        <TokenIdInput
+                          aria-label={collection.name + ' token IDs'}
+                          placeholder={t('Enter token IDs, e.g. 1, 2, 300')}
+                          value={manualIds[key] || ''}
+                          onChange={(event) => setManualIds((current) => ({ ...current, [key]: event.target.value }))}
+                        />
+                        <Button
+                          scale="sm"
+                          variant="secondary"
+                          disabled={working || actionsBlocked}
+                          onClick={() => addManualIds(collection)}
+                        >
+                          {t('Verify IDs')}
+                        </Button>
+                      </Flex>
+                    </div>
+                  ) : null
+                })}
+              <Text small color="textSubtle" mt="12px">
+                {t('Selected')}: {selectedNfts.length} NFT · {selectedPower.toString()} power
+              </Text>
+              {mode === 'stake' && selectedNfts.length > 0 && BigNumber.from(position.performanceFee).gt(0) && (
+                <Text small color="textSubtle" mt="4px">
+                  {t('Stake fee')}: {formatUnits(position.performanceFee, 18)} POL
+                </Text>
+              )}
+              {mode === 'stake' &&
+                missingApprovals.map((collection) => (
+                  <Button
+                    key={collection.address}
+                    width="100%"
+                    mt="12px"
+                    disabled={working || actionsBlocked}
+                    onClick={() => onApprove(collection)}
+                  >
+                    {working ? <AutoRenewIcon spin mr="6px" /> : null}
+                    {t('Enable %collection%', { collection: collection.name })}
+                  </Button>
+                ))}
+            </>
+          )}
+          {error && (
+            <Text role="alert" color="failure" mt="12px">
+              {error}
+            </Text>
+          )}
+          {notice && (
+            <Text role="status" color="success" mt="12px">
+              {notice}
+            </Text>
+          )}
+          {actionsBlocked && (
+            <Button width="100%" variant="secondary" mt="10px" disabled={working} onClick={retryConfirmedVerification}>
+              {working && <AutoRenewIcon spin mr="6px" />}
+              {t('Retry on-chain verification — do not resend transaction')}
             </Button>
           )}
-          <Button variant="secondary" onClick={onDismiss} disabled={working || actionsBlocked}>
-            {t('Close')}
-          </Button>
-        </Flex>
-      </ModalContent>
+          {!pickingCollection && (
+            <ModalActions>
+              <Button variant="secondary" onClick={onDismiss} width="100%" disabled={working || actionsBlocked}>
+                {t('Cancel')}
+              </Button>
+              <Button
+                width="100%"
+                variant={mode === 'emergency' ? 'danger' : 'primary'}
+                isLoading={working}
+                endIcon={working ? <AutoRenewIcon spin color="currentColor" /> : null}
+                disabled={Boolean(
+                  working ||
+                    actionsBlocked ||
+                    loading ||
+                    !position ||
+                    positionError ||
+                    (mode === 'emergency' ? !forfeitConfirmed : selectedNfts.length === 0) ||
+                    (mode === 'stake' && (limitReached || missingApprovals.length)),
+                )}
+                onClick={mode === 'stake' ? onStake : mode === 'unstake' ? onUnstake : onEmergency}
+              >
+                {working ? t('Confirming') : t('Confirm')}
+              </Button>
+            </ModalActions>
+          )}
+        </ModalContent>
+      </ModalBody>
     </Modal>
   )
 }

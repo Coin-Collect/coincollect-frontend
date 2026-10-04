@@ -1,35 +1,36 @@
 import { useMemo, useRef, useState } from 'react'
-import { AddIcon, AutoRenewIcon, Button, Flex, MinusIcon, Text, useModal } from '@pancakeswap/uikit'
+import { AddIcon, AutoRenewIcon, Button, Flex, Heading, MinusIcon, Text, useModal } from '@pancakeswap/uikit'
 import { BigNumber } from '@ethersproject/bignumber'
-import styled from 'styled-components'
+import { formatUnits } from '@ethersproject/units'
+import Decimal from 'bignumber.js'
+import AnimatedValue from 'components/AnimatedValue'
+import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
+import { StyledActionButton } from 'views/NftFarms/components/FarmCard/CardActionsContainer'
+import { ActionChipButton, IconButtonWrapper } from 'views/NftFarms/components/FarmCard/StakeAction'
+import {
+  RewardsPanel,
+  RewardsHeader,
+  RewardsGrid,
+  RewardRow,
+  TokenLabel,
+  RewardValue,
+  RewardTokenIcon,
+  HarvestButton,
+} from 'views/NftFarms/components/FarmCard/HarvestAction'
+import useToast from 'hooks/useToast'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import { PublicV2Pool } from '../../publication'
 import { ConfirmedV2WriteVerificationError, harvestV2Pool } from '../transactions'
-import { notifyV2UserPositionChanged } from '../hooks'
+import { notifyV2UserPositionChanged, usePublishedV2UserPosition } from '../hooks'
 import type { V2UserPosition } from '../types'
-import V2PoolActionModal, { V2PoolActionMode } from './V2PoolActionModal'
+import V2PoolActionModal from './V2PoolActionModal'
 
-const ActionRow = styled(Flex)`
-  width: 100%;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-
-  & > button {
-    flex: 1 1 110px;
-  }
-`
-
-const PositionSummary = styled.div`
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  border-radius: 12px;
-  margin-bottom: 10px;
-  background: ${({ theme }) => theme.colors.background};
-`
+function PendingRewardValue({ amount, decimals }: { amount: string; decimals: number }) {
+  const { displayValue, isAnimating } = useAnimatedRewardValue(new Decimal(formatUnits(amount, decimals)))
+  return <AnimatedValue $animate={isAnimating}>{displayValue}</AnimatedValue>
+}
 
 interface V2PoolControlsProps {
   pool: PublicV2Pool
@@ -40,9 +41,10 @@ interface V2PoolControlsProps {
   refresh: () => Promise<V2UserPosition | undefined>
 }
 
-export default function V2PoolControls({ pool, position, loading, refreshing, error, refresh }: V2PoolControlsProps) {
+export default function V2PoolControls({ pool, position, loading, error, refresh }: V2PoolControlsProps) {
   const { t } = useTranslation()
-  const { account, chainId, library } = useWeb3React()
+  const { toastSuccess } = useToast()
+  const { account, library } = useWeb3React()
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState<string>()
   const [notice, setNotice] = useState<string>()
@@ -79,12 +81,6 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
     false,
     `v2-unstake-${pool.address.toLowerCase()}`,
   )
-  const [openEmergencyModal] = useModal(
-    <V2PoolActionModal {...modalProps} mode="emergency" />,
-    false,
-    false,
-    `v2-emergency-${pool.address.toLowerCase()}`,
-  )
 
   const runHarvest = async () => {
     if (!account || !signer || lock.current) return
@@ -94,6 +90,7 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
     setNotice(undefined)
     try {
       const transaction = await harvestV2Pool({ signer, poolAddress: pool.address, poolRecord: pool, account })
+      toastSuccess(t('Harvested!'), t('Your earnings have been sent to your wallet!'))
       setNotice(`${t('Harvest confirmed')} · ${transaction.transactionHash.slice(0, 10)}…`)
       await afterConfirmed()
     } catch (cause) {
@@ -137,9 +134,9 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
 
   if (!account)
     return (
-      <ActionRow>
+      <Flex>
         <ConnectWalletButton mt="8px" width="100%" />
-      </ActionRow>
+      </Flex>
     )
   if (!library || !signer)
     return (
@@ -149,16 +146,16 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
     )
   if (loading && !position)
     return (
-      <ActionRow>
+      <Flex>
         <Button width="100%" disabled>
           <AutoRenewIcon spin mr="8px" />
           {t('Reading wallet position…')}
         </Button>
-      </ActionRow>
+      </Flex>
     )
 
   return (
-    <ActionRow flexDirection="column" alignItems="stretch">
+    <Flex flexDirection="column" alignItems="stretch">
       {error ? (
         <>
           <Text small role="alert" color="failure">
@@ -179,79 +176,95 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
       ) : position ? (
         <>
           {hasPosition ? (
-            <PositionSummary>
-              <Flex justifyContent="space-between" alignItems="center">
-                <Text bold>
-                  {position.nftCount} {t('NFTs staked')}
-                </Text>
-                <Text bold>
-                  {position.power} {t('power')}
-                </Text>
-              </Flex>
-              <Text small color="textSubtle" mt="4px">
-                {t('Primary pending')}: {position.rewards[0]?.symbol || '—'}
-              </Text>
-            </PositionSummary>
-          ) : null}
-          <Flex flexDirection="column" style={{ gap: 8 }}>
-            {canHarvest ? (
-              <Button
-                variant="secondary"
-                disabled={working || Boolean(pendingVerification) || refreshPending}
-                onClick={runHarvest}
-              >
-                {working ? <AutoRenewIcon spin mr="6px" /> : null}
-                {t('Harvest rewards')}
-              </Button>
-            ) : null}
-            {displayStatus === 'ACTIVE' ? (
-              hasPosition ? (
-                <ActionRow>
-                  <Button
-                    variant="secondary"
-                    disabled={working || Boolean(pendingVerification) || refreshPending}
-                    onClick={openUnstakeModal}
-                  >
-                    <MinusIcon width="13px" mr="4px" />
-                    {t('Unstake')}
-                  </Button>
-                  <Button disabled={working || Boolean(pendingVerification) || refreshPending} onClick={openStakeModal}>
-                    <AddIcon width="13px" mr="4px" />
-                    {t('Stake more')}
-                  </Button>
-                </ActionRow>
-              ) : (
-                <Button
-                  disabled={working || Boolean(pendingVerification) || refreshPending || !position.capacityAvailable}
-                  onClick={openStakeModal}
+            <Flex mb="10px" flexDirection="column" style={{ gap: 10 }}>
+              <RewardsPanel flexDirection="column" alignItems="flex-start">
+                <RewardsHeader>
+                  <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
+                    {position.rewards.length === 1 ? position.rewards[0]?.symbol : t('REWARDS')}
+                  </Text>
+                  <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
+                    {t('Earned')}
+                  </Text>
+                </RewardsHeader>
+                <RewardsGrid>
+                  {position.rewards.map((reward) => (
+                    <RewardRow
+                      key={reward.address}
+                      title={reward.estimated ? t('Estimated side payout') : t('Pending reward')}
+                    >
+                      <TokenLabel>
+                        <RewardTokenIcon token={reward.symbol} tokenMeta={reward} />
+                        <Text
+                          bold
+                          color="textSubtle"
+                          textTransform="uppercase"
+                          fontSize="11px"
+                          style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        >
+                          {reward.symbol}
+                        </Text>
+                      </TokenLabel>
+                      <RewardValue>
+                        <PendingRewardValue amount={reward.amount} decimals={reward.decimals} />
+                      </RewardValue>
+                    </RewardRow>
+                  ))}
+                </RewardsGrid>
+                <HarvestButton
+                  disabled={!canHarvest || working || Boolean(pendingVerification) || refreshPending}
+                  onClick={runHarvest}
                 >
-                  {t('Stake NFT')}
-                </Button>
-              )
-            ) : hasPosition ? (
-              <Button
-                variant="secondary"
-                disabled={working || Boolean(pendingVerification) || refreshPending}
-                onClick={openUnstakeModal}
-              >
-                {t('Withdraw staked NFTs')}
-              </Button>
-            ) : (
-              <Button disabled>
-                {t(displayStatus === 'UPCOMING' ? 'Upcoming · staking opens when active' : 'Finished')}
-              </Button>
-            )}
+                  {working ? t('Harvesting') : t('Harvest')}
+                </HarvestButton>
+              </RewardsPanel>
+            </Flex>
+          ) : null}
+          <Flex flexDirection="column">
             {hasPosition ? (
-              <Button
-                variant="text"
-                disabled={working || Boolean(pendingVerification) || refreshPending}
-                onClick={openEmergencyModal}
-              >
-                <Text color="failure" small>
-                  {t('Emergency withdraw all · forfeits rewards')}
+              <>
+                <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
+                  {t('Staked NFT Count')}
                 </Text>
-              </Button>
-            ) : null}
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Heading title={`${position.power} power`}>{position.nftCount}</Heading>
+                  <IconButtonWrapper>
+                    <ActionChipButton
+                      variant="tertiary"
+                      disabled={working || Boolean(pendingVerification) || refreshPending}
+                      onClick={openUnstakeModal}
+                    >
+                      <MinusIcon width="13px" mr="4px" color="currentColor" />
+                      {t('Unstake')}
+                    </ActionChipButton>
+                    <ActionChipButton
+                      $stake
+                      variant="tertiary"
+                      disabled={displayStatus !== 'ACTIVE' || working || Boolean(pendingVerification) || refreshPending}
+                      onClick={openStakeModal}
+                    >
+                      <AddIcon width="13px" mr="4px" color="currentColor" />
+                      {t('Stake More')}
+                    </ActionChipButton>
+                  </IconButtonWrapper>
+                </Flex>
+              </>
+            ) : (
+              <StyledActionButton
+                mt="-4px"
+                width="100%"
+                variant="primary"
+                disabled={
+                  displayStatus !== 'ACTIVE' ||
+                  working ||
+                  Boolean(pendingVerification) ||
+                  refreshPending ||
+                  !position.capacityAvailable
+                }
+                onClick={openStakeModal}
+              >
+                {displayStatus === 'UPCOMING' ? t('Upcoming · staking opens when active') : t('Click to Stake Now')}
+              </StyledActionButton>
+            )}
           </Flex>
         </>
       ) : (
@@ -275,11 +288,34 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
           {t('Retry on-chain verification — do not resend transaction')}
         </Button>
       ) : null}
-      {refreshing && !working ? (
-        <Text small color="textSubtle">
-          {t('Refreshing on-chain position…')}
-        </Text>
-      ) : null}
-    </ActionRow>
+    </Flex>
   )
+}
+
+/** Recovery lives in the details drawer, keeping the regular V1 actions unchanged. */
+export function V2PoolEmergencyAction({ pool }: { pool: PublicV2Pool }) {
+  const { account, chainId, library } = useWeb3React()
+  const { t } = useTranslation()
+  const user = usePublishedV2UserPosition(pool, account, chainId, library)
+  const [open] = useModal(
+    <V2PoolActionModal
+      pool={pool}
+      mode="emergency"
+      onSuccess={async () => {
+        notifyV2UserPositionChanged()
+        const updated = await user.refresh()
+        if (!updated) throw new Error('Confirmed; position refresh is pending.')
+      }}
+    />,
+    false,
+    false,
+    `v2-emergency-${pool.address.toLowerCase()}`,
+  )
+  return user.position && BigNumber.from(user.position.nftCount).gt(0) ? (
+    <Button variant="text" onClick={open}>
+      <Text color="failure" small>
+        {t('Emergency withdraw all · forfeits rewards')}
+      </Text>
+    </Button>
+  ) : null
 }

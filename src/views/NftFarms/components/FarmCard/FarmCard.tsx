@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType, ComponentProps, ReactNode } from 'react'
 import BigNumber from 'bignumber.js'
 import styled, { css, keyframes } from 'styled-components'
 import {
@@ -31,7 +31,7 @@ import formatRewardAmount from 'utils/formatRewardAmount'
 import { Token } from '@coincollect/sdk'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
 import type { PublicV2Pool } from 'features/nftPoolManager/publication'
-import { formatBaseUnits } from 'features/nftPoolManager/economics'
+import { applySoliditySideReward, formatBaseUnits } from 'features/nftPoolManager/economics'
 import { getPolygonRuntimeChainId } from 'config/localFork'
 import { calculateRewardSharePreview } from 'features/nftPoolManager/studio/economicsPreview'
 import useWeb3React from 'hooks/useWeb3React'
@@ -252,24 +252,6 @@ const FooterIconWithTooltip: React.FC<FooterIconWithTooltipProps> = ({ href, lab
     </>
   )
 }
-
-const MetricText = styled(Text)<{ metricType?: 'high' | 'medium' | 'low' | 'reward' }>`
-  color: ${({ theme, metricType }) => {
-    switch (metricType) {
-      case 'high':
-        return theme.colors.success
-      case 'medium':
-        return theme.colors.warning
-      case 'low':
-        return theme.colors.failure
-      case 'reward':
-        return theme.colors.primary
-      default:
-        return theme.colors.text
-    }
-  }};
-  font-weight: ${({ metricType }) => (metricType ? '600' : 'inherit')};
-`
 
 const slideRewards = keyframes`
   from {
@@ -571,19 +553,6 @@ function DailyRewards({
     </Flex>,
     { placement: 'top', trigger: isXs || isSm || isMd ? 'click' : 'hover' },
   )
-  if (chips.length === 1) {
-    const amount = new BigNumber(chips[0].amount)
-    const metricType = amount.gte(100) ? 'high' : amount.gte(50) ? 'medium' : amount.gt(0) ? 'low' : undefined
-    return (
-      <Flex justifyContent="space-between" alignItems="center">
-        <Text>{t('Daily Reward')}:</Text>
-        <MetricText bold metricType={metricType} ref={targetRef} style={{ display: 'flex', alignItems: 'center' }}>
-          {loading ? <Skeleton height={24} width={80} /> : chips[0].amount}
-        </MetricText>
-        {tooltipVisible && tooltip}
-      </Flex>
-    )
-  }
   return (
     <RewardTickerWrapper>
       <RewardTickerHeader>
@@ -623,6 +592,7 @@ function NftFarmCardLayout({
   contractLink,
   details,
   poolAddress,
+  rewards,
 }: {
   children: ReactNode
   heading: ReactNode | ((openDetails: () => void) => ReactNode)
@@ -634,6 +604,7 @@ function NftFarmCardLayout({
   contractLink?: string
   details: ExpandableSectionProps
   poolAddress?: string
+  rewards?: ComponentProps<typeof DailyRewards>
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
@@ -647,6 +618,7 @@ function NftFarmCardLayout({
     >
       <FarmCardInnerContainer>
         {typeof heading === 'function' ? heading(() => setExpanded(true)) : heading}
+        {rewards && <DailyRewards {...rewards} />}
         {children}
       </FarmCardInnerContainer>
       <ExpandingWrapper>
@@ -672,7 +644,14 @@ function NftFarmCardLayout({
   )
 }
 
-const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePrice, account, variant = 'default' }) => {
+const LegacyFarmCard: React.FC<FarmCardProps> = ({
+  farm,
+  displayApr,
+  removed,
+  cakePrice,
+  account,
+  variant = 'default',
+}) => {
   const { t } = useTranslation()
 
   const lpLabel = farm.lpSymbol && farm.lpSymbol.replace('CoinCollect', '')
@@ -717,6 +696,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
       mainLink={mainLink}
       mintLink={mintLink}
       contractLink={contractLink}
+      rewards={!removed && stakedBalance?.eq(0) ? { chips: rewardChips, loading: displayApr === null } : undefined}
       details={{
         removed,
         bscScanAddress: contractLink,
@@ -742,15 +722,6 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
         />
       }
     >
-      {!removed && stakedBalance?.eq(0) && <DailyRewards chips={rewardChips} loading={displayApr === null} />}
-
-      {sideRewards.length === 0 && (
-        <Flex justifyContent="space-between">
-          <Text>{t('Earn')}:</Text>
-          <Text bold>{earnLabel}</Text>
-        </Flex>
-      )}
-
       <CardActionsContainer
         farm={farm}
         lpLabel={lpLabel}
@@ -771,17 +742,27 @@ function formatPublicPoolAmount(value: string | undefined, decimals: number | un
   }
 }
 
-export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; error?: string }) {
+function AddressNativeFarmCardAdapter({
+  pool,
+  error,
+  variant = 'default',
+}: {
+  pool: PublicV2Pool
+  error?: string
+  variant?: 'default' | 'expanded'
+}) {
   const { t } = useTranslation()
   const { account, chainId, library } = useWeb3React()
   const userPosition = usePublishedV2UserPosition(pool, account, chainId, library)
   const { metadata, snapshot } = pool
+  const lpLabel = metadata.name.replace('CoinCollect', '')
   const displayStatus = userPosition.position?.status || snapshot.status
   const primaryReward = snapshot.rewards[0]
-  const mainLink = metadata.projectUrl
+  const mainLink = metadata.projectUrl || (!metadata.isCommunity ? 'https://coincollect.org' : undefined)
   const mintLink =
     metadata.getNftUrl ||
-    (snapshot.collections[0]?.address ? `/nfts/collections/${snapshot.collections[0].address}` : undefined)
+    (snapshot.collections[0]?.address ? `/nfts/collections/mint/${snapshot.collections[0].address}` : undefined)
+  const poolPageUrl = `/nftpools/pool/${pool.address}`
   const explorerLink = getPolygonRuntimeChainId() === 137 ? getPolygonScanLink(pool.address, 'address') : undefined
   const highestWeight = snapshot.collections.reduce((max, collection) => {
     const weight = EthersBigNumber.from(collection.weight)
@@ -798,17 +779,21 @@ export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; 
   const rewardChips = snapshot.rewards.map((reward, index) => ({
     token: reward.symbol,
     amount:
-      !snapshot.secondsPerBlock || reward.decimals === undefined || (index > 0 && reward.percentage === undefined)
+      !snapshot.secondsPerBlock ||
+      reward.decimals === undefined ||
+      (index > 0 && (reward.percentage === undefined || primaryReward?.decimals === undefined))
         ? 'Unavailable'
         : formatRewardAmount(
             new BigNumber(
               formatPublicPoolAmount(
                 index === 0
                   ? preview.dailyReward.toString()
-                  : preview.dailyReward
-                      .mul(reward.percentage || '0')
-                      .div(100)
-                      .toString(),
+                  : applySoliditySideReward(
+                      preview.dailyReward,
+                      EthersBigNumber.from(reward.percentage || '0'),
+                      primaryReward.decimals ?? 18,
+                      reward.decimals,
+                    ).toString(),
                 reward.decimals,
                 18,
               ),
@@ -817,36 +802,44 @@ export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; 
     primary: index === 0,
     tokenMeta: reward,
   }))
-  const positionRewardChips = userPosition.position?.rewards.map((reward, index) => ({
-    token: reward.symbol,
-    amount: formatRewardAmount(new BigNumber(formatPublicPoolAmount(reward.amount, reward.decimals, 18))),
-    primary: index === 0,
-    tokenMeta: reward,
-  }))
   const hasUserPosition = Boolean(userPosition.position && new BigNumber(userPosition.position.nftCount).gt(0))
 
   return (
     <NftFarmCardLayout
+      variant={variant}
       finished={displayStatus === 'FINISHED'}
       poolAddress={pool.address}
       mainLink={mainLink}
       mintLink={mintLink}
-      contractLink={explorerLink}
+      contractLink={explorerLink || `${poolPageUrl}#contract`}
+      rewards={
+        !hasUserPosition
+          ? {
+              chips: rewardChips,
+              note: `Estimated daily rewards for one ${highestWeight.toString()}x NFT; shared by pool power. Block timing is an estimate.`,
+            }
+          : undefined
+      }
       details={{
         publishedPool: pool,
         removed: displayStatus === 'FINISHED',
         isFinished: displayStatus === 'FINISHED',
-        bscScanAddress: explorerLink,
+        bscScanAddress: explorerLink || `${poolPageUrl}#contract`,
         earningToken: primaryReward,
-        totalStaked: snapshot.stakedBalance !== undefined ? new BigNumber(snapshot.stakedBalance) : undefined,
-        lpLabel: metadata.name,
+        totalStaked:
+          snapshot.stakedBalance !== undefined
+            ? new BigNumber(snapshot.stakedBalance)
+            : snapshot.totalShares !== undefined && currentShares.isZero()
+            ? new BigNumber(0)
+            : undefined,
+        lpLabel,
         addLiquidityUrl: mintLink,
         projectLink: { mainLink, getNftLink: mintLink },
       }}
-      heading={(openDetails) => (
+      heading={
         <CardHeadingWithBanner
-          lpLabel={metadata.name}
-          onOpenDetails={openDetails}
+          lpLabel={lpLabel}
+          poolPageUrl={poolPageUrl}
           isCommunity={metadata.isCommunity}
           disabled={displayStatus === 'FINISHED'}
           publishedPool={{
@@ -860,25 +853,8 @@ export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; 
             })),
           }}
         />
-      )}
+      }
     >
-      {hasUserPosition && positionRewardChips ? (
-        <DailyRewards
-          chips={positionRewardChips}
-          note="Primary pending is read from this pool. Side reward amounts are estimates using the contract payout rounding."
-        />
-      ) : displayStatus !== 'FINISHED' ? (
-        <DailyRewards
-          chips={rewardChips}
-          note={`Estimated daily rewards for one ${highestWeight.toString()}x NFT; shared by pool power. Block timing is an estimate.`}
-        />
-      ) : null}
-      {snapshot.rewards.length === 1 && (
-        <Flex justifyContent="space-between">
-          <Text>{t('Earn')}:</Text>
-          <Text bold>{primaryReward?.symbol}</Text>
-        </Flex>
-      )}
       <Action>
         <V2PoolControls
           pool={pool}
@@ -897,5 +873,15 @@ export function PublishedNftPoolFarmCard({ pool, error }: { pool: PublicV2Pool; 
     </NftFarmCardLayout>
   )
 }
+
+type AddressNativeFarmCardProps = { publishedPool: PublicV2Pool; error?: string; variant?: 'default' | 'expanded' }
+
+/** One card entry point for both sources. Never feeds address-native pools into pid-based hooks. */
+const FarmCard: React.FC<FarmCardProps | AddressNativeFarmCardProps> = (props) =>
+  'publishedPool' in props ? (
+    <AddressNativeFarmCardAdapter pool={props.publishedPool} error={props.error} variant={props.variant} />
+  ) : (
+    <LegacyFarmCard {...props} />
+  )
 
 export default FarmCard

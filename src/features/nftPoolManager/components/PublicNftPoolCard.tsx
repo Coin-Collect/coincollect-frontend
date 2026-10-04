@@ -1,7 +1,7 @@
 import type { PublicV2Pool } from '../publication'
-import { PublishedNftPoolFarmCard } from 'views/NftFarms/components/FarmCard/FarmCard'
+import FarmCard from 'views/NftFarms/components/FarmCard/FarmCard'
 
-/** Address-native V2 pools use the existing public NFT farm card presentation without legacy staking actions. */
+/** Same FarmCard entry point; only the address-native data/transaction adapter differs. */
 export default function PublicNftPoolCard({ pool, error }: { pool: PublicV2Pool; error?: string }) {
-  return <PublishedNftPoolFarmCard pool={pool} error={error} />
+  return <FarmCard publishedPool={pool} error={error} />
 }

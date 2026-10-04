@@ -26,7 +26,7 @@ import { DeserializedNftFarm } from 'state/types'
 import useTheme from 'hooks/useTheme'
 
 
-const StyledModalContainer = styled(ModalContainer)`
+export const StyledModalContainer = styled(ModalContainer)`
   max-width: 420px;
   width: calc(100vw - 24px);
   margin: 0 12px;
@@ -38,7 +38,7 @@ const StyledModalContainer = styled(ModalContainer)`
   }
 `;
 
-const StyledModalBody = styled(ModalBody)`
+export const StyledModalBody = styled(ModalBody)`
   padding: 24px;
   overflow-y: auto;
   -ms-overflow-style: none;
@@ -56,7 +56,7 @@ export const Title = styled.div`
   color: ${({ theme }) => theme.colors.textSubtle};
 `
 
-const Wrapper = styled(Flex)`
+export const Wrapper = styled(Flex)`
   margin-top: 24px;
   margin-bottom: 24px;
   padding: 5px 0px;

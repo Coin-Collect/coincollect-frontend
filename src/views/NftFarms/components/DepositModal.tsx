@@ -22,7 +22,7 @@ import NoNftsImage from 'views/Nft/market/components/Activity/NoNftsImage'
 import useTheme from 'hooks/useTheme'
 
 
-const NftBox = styled(RoundedImage)`
+export const NftBox = styled(RoundedImage)`
     width: 90px;
     height: 90px;
     border-radius: 6px;
@@ -31,7 +31,7 @@ const NftBox = styled(RoundedImage)`
         border: 2px solid #cac7c8;
     }
 `
-const SelectedNftBox = styled(RoundedImage)`
+export const SelectedNftBox = styled(RoundedImage)`
     width: 90px;
     height: 90px;
     position: relative;
@@ -53,7 +53,7 @@ const SelectedNftBox = styled(RoundedImage)`
     }
 `;
 
-const NftOption = styled(Flex)`
+export const NftOption = styled(Flex)`
   width: 96px;
   flex-direction: column;
   align-items: center;
@@ -61,7 +61,7 @@ const NftOption = styled(Flex)`
   cursor: pointer;
 `;
 
-const Wrapper = styled(Flex)`
+export const Wrapper = styled(Flex)`
   background: ${props => props.theme.colors.background};
   border-radius: 16px;
   max-height: 400px;
@@ -69,7 +69,7 @@ const Wrapper = styled(Flex)`
   padding: 15px;
 `;
 
-const SelectionInfo = styled(Flex)<{ $error: boolean }>`
+export const SelectionInfo = styled(Flex)<{ $error: boolean }>`
   flex-direction: column;
   gap: 8px;
   padding: 12px 16px;
@@ -82,7 +82,7 @@ const SelectionInfo = styled(Flex)<{ $error: boolean }>`
   margin-bottom: 16px;
 `;
 
-const SelectionCountChip = styled(Flex)<{ $error: boolean }>`
+export const SelectionCountChip = styled(Flex)<{ $error: boolean }>`
   align-items: center;
   justify-content: center;
   min-width: 90px;

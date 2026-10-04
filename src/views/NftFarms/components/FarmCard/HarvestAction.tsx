@@ -30,7 +30,7 @@ interface FarmCardActionsProps {
   header?: JSX.Element
 }
 
-const RewardsPanel = styled(Flex)`
+export const RewardsPanel = styled(Flex)`
   gap: 8px;
   width: 100%;
   padding: 10px;
@@ -42,14 +42,14 @@ const RewardsPanel = styled(Flex)`
   border: 1px solid ${({ theme }) => (theme.isDark ? 'rgba(255, 215, 84, 0.18)' : theme.colors.cardBorder)};
 `
 
-const RewardsGrid = styled.div`
+export const RewardsGrid = styled.div`
   display: grid;
   width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 `
 
-const RewardRow = styled(Flex)`
+export const RewardRow = styled(Flex)`
   width: 100%;
   align-items: center;
   justify-content: space-between;
@@ -60,7 +60,7 @@ const RewardRow = styled(Flex)`
   background: ${({ theme }) => (theme.isDark ? 'rgba(255, 255, 255, 0.05)' : theme.colors.background)};
 `
 
-const RewardValue = styled(Text)`
+export const RewardValue = styled(Text)`
   min-width: 0;
   max-width: 56%;
   margin-left: auto;
@@ -73,7 +73,7 @@ const RewardValue = styled(Text)`
   letter-spacing: 0.2px;
 `
 
-const TokenLabel = styled(Flex)`
+export const TokenLabel = styled(Flex)`
   flex: 1;
   min-width: 0;
   align-items: center;
@@ -103,13 +103,13 @@ const RewardTokenFallbackIcon = styled.span`
   text-transform: uppercase;
 `
 
-const RewardsHeader = styled(Flex)`
+export const RewardsHeader = styled(Flex)`
   width: 100%;
   justify-content: center;
   align-items: center;
 `
 
-const HarvestButton = styled(Button)`
+export const HarvestButton = styled(Button)`
   width: 100%;
   height: 38px;
   border-radius: 10px;
@@ -125,10 +125,10 @@ const REWARD_SYMBOL_ICON_MAP: Record<string, string> = {
 
 interface RewardTokenIconProps {
   token: string
-  tokenMeta?: Token
+  tokenMeta?: Pick<Token, 'address' | 'symbol'>
 }
 
-const RewardTokenIcon: React.FC<RewardTokenIconProps> = ({ token, tokenMeta }) => {
+export const RewardTokenIcon: React.FC<RewardTokenIconProps> = ({ token, tokenMeta }) => {
   const tokenSymbol = String(token).toUpperCase()
   const tokenAddress = tokenMeta?.address
   const iconCandidates = [

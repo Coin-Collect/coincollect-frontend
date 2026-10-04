@@ -30,7 +30,7 @@ const StyledBalanceText = styled(Text)`
   }
 `
 
-const CollectionAvatar = styled.img`
+export const CollectionAvatar = styled.img`
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -38,25 +38,25 @@ const CollectionAvatar = styled.img`
   flex-shrink: 0;
 `
 
-const ContentColumn = styled(Column)`
+export const ContentColumn = styled(Column)`
   min-width: 0;
 `
 
-const CollectionTitleRow = styled.div`
+export const CollectionTitleRow = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
   min-width: 0;
 `
 
-const CollectionTitleText = styled(Text)`
+export const CollectionTitleText = styled(Text)`
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `
 
-const PowerText = styled(Text)`
+export const PowerText = styled(Text)`
   flex-shrink: 0;
   white-space: nowrap;
 `
@@ -65,7 +65,7 @@ function Balance({ balance }: { balance: number }) {
   return <StyledBalanceText title={"balance"}>{balance}</StyledBalanceText>
 }
 
-const MenuItem = styled(RowBetween)<{ disabled: boolean; selected: boolean }>`
+export const MenuItem = styled(RowBetween)<{ disabled: boolean; selected: boolean }>`
   padding: 4px 12px;
   height: 56px;
   display: grid;

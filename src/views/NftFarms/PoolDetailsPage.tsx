@@ -23,11 +23,14 @@ import { useFarms, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftF
 import { DeserializedNftFarm } from 'state/types'
 import { getDisplayApr } from './Farms'
 import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
+import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPools'
+import { usePublishedV2UserPosition } from 'features/nftPoolManager/user/hooks'
+import { V2PoolEmergencyAction } from 'features/nftPoolManager/user/components/V2PoolControls'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
 
-type NftFarmConfigEntry = typeof nftFarmsConfig[number]
+type NftFarmConfigEntry = (typeof nftFarmsConfig)[number]
 
 const Hero = styled.div<{ $banner?: string }>`
   position: relative;
@@ -148,7 +151,8 @@ const ScrollHint = styled(Flex)`
   }
 
   @keyframes nudge {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateX(0);
       opacity: 0.3;
     }
@@ -215,8 +219,7 @@ const AnimatedFrame = styled.div`
     position: absolute;
     inset: -38px;
     border-radius: 64px;
-    background-image:
-      radial-gradient(rgba(255, 255, 255, 0.14) 0%, transparent 60%),
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 0%, transparent 60%),
       radial-gradient(rgba(57, 255, 242, 0.18) 0%, transparent 55%),
       radial-gradient(rgba(199, 65, 255, 0.16) 0%, transparent 62%);
     background-size: 140px 140px, 180px 180px, 220px 220px;
@@ -231,8 +234,7 @@ const AnimatedFrame = styled.div`
     position: absolute;
     inset: -14px;
     border-radius: 42px;
-    background:
-      radial-gradient(120% 130% at 50% 0%, rgba(199, 65, 255, 0.45), transparent 70%),
+    background: radial-gradient(120% 130% at 50% 0%, rgba(199, 65, 255, 0.45), transparent 70%),
       radial-gradient(120% 130% at 50% 100%, rgba(57, 255, 242, 0.45), transparent 70%),
       radial-gradient(170% 170% at 50% 50%, rgba(255, 99, 211, 0.35), transparent 72%);
     filter: blur(26px);
@@ -245,9 +247,7 @@ const AnimatedFrame = styled.div`
     position: relative;
     z-index: 2;
     border-radius: inherit;
-    box-shadow:
-      0 0 36px rgba(57, 255, 242, 0.25),
-      0 0 48px rgba(199, 65, 255, 0.18);
+    box-shadow: 0 0 36px rgba(57, 255, 242, 0.25), 0 0 48px rgba(199, 65, 255, 0.18);
   }
 
   .corner {
@@ -462,7 +462,7 @@ const HeroBadge = styled.span<{ variant: BadgeVariant }>`
         background: #ffffff;
         box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
         transform: translateY(-50%);
-        animation: ${liveDot} 1.0s ease-in-out infinite;
+        animation: ${liveDot} 1s ease-in-out infinite;
       }
     `}
 `
@@ -560,7 +560,6 @@ const StatIcon = styled.span`
   height: 20px;
 `
 
-
 const Section = styled.section`
   width: 100%;
   margin-bottom: 48px;
@@ -585,14 +584,18 @@ const EmptyState = styled.div`
 const AllowedCollectionDisplay: React.FC<{
   avatar?: string
   title: string
-  power?: number
+  power?: number | string
   link: string
 }> = ({ avatar, title, power, link }) => {
   const isExternal = link?.startsWith('http')
   const href = link || '#'
 
   return (
-    <AllowedCollectionLink href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noopener noreferrer' : undefined}>
+    <AllowedCollectionLink
+      href={href}
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
+    >
       <AllowedCollectionImage src={avatar || '/logo.png'} alt={title} />
       <PowerBadge>{power ? `x${power}` : 'x1'}</PowerBadge>
     </AllowedCollectionLink>
@@ -646,10 +649,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     [farms],
   )
 
-  const selectedFarm = useMemo(
-    () => decoratedFarms.find((farm) => farm.pid === pid),
-    [decoratedFarms, pid],
-  )
+  const selectedFarm = useMemo(() => decoratedFarms.find((farm) => farm.pid === pid), [decoratedFarms, pid])
 
   const otherFarms = useMemo(() => {
     return decoratedFarms
@@ -666,11 +666,10 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
     }
 
     const farmAddr137 = selectedConfig.nftAddresses?.[137]?.toLowerCase()
-    const firstFarmOfMainNft = (
-      farmAddr137
+    const firstFarmOfMainNft =
+      (farmAddr137
         ? nftFarmsConfig.find((nftFarm) => nftFarm.nftAddresses?.[137]?.toLowerCase() === farmAddr137)
-        : undefined
-    ) ?? selectedConfig
+        : undefined) ?? selectedConfig
 
     const supportedCollectionPids = selectedConfig.supportedCollectionPids
       ? [firstFarmOfMainNft?.pid, ...selectedConfig.supportedCollectionPids].filter(Boolean)
@@ -678,7 +677,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
     const supportedNftStakeFarms = supportedCollectionPids
       .map((collectionPid) => nftFarmsConfig.find((farm) => farm.pid === collectionPid))
-      .filter((farm): farm is typeof nftFarmsConfig[number] => Boolean(farm))
+      .filter((farm): farm is (typeof nftFarmsConfig)[number] => Boolean(farm))
 
     const collectionPowers =
       selectedConfig.collectionPowers ??
@@ -759,15 +758,15 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 
   return (
     <Page withMeta={false}>
-        <Hero $banner={bannerImage}>
-          <HeroTopBar>
-            <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
-            <NextLinkFromReactRouter to="/nftpools">
-              <Button variant="secondary" scale="sm">
-                {t('Back to Pools')}
-              </Button>
-            </NextLinkFromReactRouter>
-          </HeroTopBar>
+      <Hero $banner={bannerImage}>
+        <HeroTopBar>
+          <Heading scale="xl">{selectedFarm?.lpSymbol ?? t('Loading')}</Heading>
+          <NextLinkFromReactRouter to="/nftpools">
+            <Button variant="secondary" scale="sm">
+              {t('Back to Pools')}
+            </Button>
+          </NextLinkFromReactRouter>
+        </HeroTopBar>
         <HeroBadges mt="12px">
           {selectedFarm && (
             <HeroBadge variant={selectedFarm.isCommunity ? 'community' : 'partner'}>
@@ -785,11 +784,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
             <HeroBadge variant="live">{t('Live')}</HeroBadge>
           )}
         </HeroBadges>
-        {heroDescription && (
-          <HeroDescription mt="12px">
-            {heroDescription}
-          </HeroDescription>
-        )}
+        {heroDescription && <HeroDescription mt="12px">{heroDescription}</HeroDescription>}
         <HeroStats>
           <StatTilesWrapper>
             <StatTile $withOverlay={Boolean(bannerImage)}>
@@ -801,11 +796,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
                   {t('APR')}
                 </Text>
               </StatTileHeader>
-              {aprDisplay ? (
-                <Heading scale="md">{aprDisplay}</Heading>
-              ) : (
-                <Skeleton width="80px" height="24px" />
-              )}
+              {aprDisplay ? <Heading scale="md">{aprDisplay}</Heading> : <Skeleton width="80px" height="24px" />}
             </StatTile>
             <StatTile $withOverlay={Boolean(bannerImage)}>
               <StatTileHeader>
@@ -853,9 +844,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
                       power={collection.power}
                       link={collection.link}
                     />
-                    <AllowedCollectionLabel mt="4px">
-                      {collection.title}
-                    </AllowedCollectionLabel>
+                    <AllowedCollectionLabel mt="4px">{collection.title}</AllowedCollectionLabel>
                   </Flex>
                 ))}
               </AllowedCollectionsRow>
@@ -873,7 +862,13 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
         <SectionHeader>
           <Heading scale="lg">{t('Stake in %symbol%', { symbol: selectedFarm?.lpSymbol ?? '' })}</Heading>
           {selectedConfig?.projectLink?.mainLink && (
-            <Button as="a" href={selectedConfig.projectLink.mainLink} target="_blank" rel="noopener noreferrer" variant="secondary">
+            <Button
+              as="a"
+              href={selectedConfig.projectLink.mainLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="secondary"
+            >
               {t('Visit Project Site')}
             </Button>
           )}
@@ -923,7 +918,143 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
           </EmptyState>
         )}
       </Section>
+    </Page>
+  )
+}
+
+/** Address-native pools share the legacy detail-page presentation, not its pid controller. */
+export function PublishedPoolDetailsPage({ address }: { address?: string }) {
+  const { t } = useTranslation()
+  const { account, chainId, library } = useWeb3React()
+  const { pools, errors, loading } = usePublishedNftPools()
+  const pool = pools.find((entry) => entry.address.toLowerCase() === address?.toLowerCase())
+  const user = usePublishedV2UserPosition(pool, account, chainId, library)
+  if (!pool)
+    return (
+      <Page withMeta={false}>
+        <EmptyState>
+          <Heading>{loading ? t('Loading') : t('Pool not available in this browser')}</Heading>
+          {!loading && (
+            <Text mt="16px">{t('Open the same browser and local origin where this pool was published.')}</Text>
+          )}
+          <NextLinkFromReactRouter to="/nftpools">
+            <Button mt="24px">{t('Back to Pools')}</Button>
+          </NextLinkFromReactRouter>
+        </EmptyState>
       </Page>
+    )
+  const { metadata, snapshot } = pool
+  const status = user.position?.status || snapshot.status
+  return (
+    <Page withMeta={false}>
+      <Hero $banner={metadata.banner}>
+        <HeroTopBar>
+          <Heading scale="xl">{metadata.name}</Heading>
+          <NextLinkFromReactRouter to="/nftpools">
+            <Button variant="secondary" scale="sm">
+              {t('Back to Pools')}
+            </Button>
+          </NextLinkFromReactRouter>
+        </HeroTopBar>
+        <HeroBadges mt="12px">
+          <HeroBadge variant={metadata.isCommunity ? 'community' : 'partner'}>
+            {metadata.isCommunity ? (
+              <CommunityIcon width="16px" color="white" />
+            ) : (
+              <VerifiedIcon width="16px" color="white" />
+            )}
+            {metadata.isCommunity ? t('Community') : t('Partner')}
+          </HeroBadge>
+          <HeroBadge variant={status === 'ACTIVE' ? 'live' : 'finished'}>
+            {t(
+              status === 'ACTIVE'
+                ? 'Live'
+                : status === 'UPCOMING'
+                ? 'Upcoming'
+                : status === 'FINISHED'
+                ? 'Finished'
+                : 'Status unavailable',
+            )}
+          </HeroBadge>
+        </HeroBadges>
+        <HeroDescription mt="12px">
+          {t('Stake %poolName% NFTs to earn %rewardToken%.', {
+            poolName: metadata.name,
+            rewardToken: snapshot.rewards.map((reward) => reward.symbol).join(' · '),
+          })}
+        </HeroDescription>
+        <HeroStats>
+          <StatTilesWrapper>
+            {[
+              [t('Total staking power'), snapshot.totalShares ?? '—'],
+              [t('Minimum effective power'), snapshot.threshold],
+              [t('Your Stake'), account ? user.position?.nftCount ?? '—' : '—'],
+            ].map(([label, value]) => (
+              <StatTile key={label} $withOverlay={Boolean(metadata.banner)}>
+                <StatTileHeader>
+                  <Text fontSize="11px" textTransform="uppercase" color="textSubtle">
+                    {label}
+                  </Text>
+                </StatTileHeader>
+                <Heading scale="md">{value}</Heading>
+              </StatTile>
+            ))}
+          </StatTilesWrapper>
+          <AllowedCollectionsWrapper>
+            <AllowedCollectionsRow>
+              {snapshot.collections.map((collection) => (
+                <Flex key={collection.address} flexDirection="column" alignItems="center" width="72px">
+                  <AllowedCollectionDisplay
+                    avatar={collection.image}
+                    title={collection.name}
+                    power={collection.weight}
+                    link={`/nfts/collections/mint/${collection.address}`}
+                  />
+                  <AllowedCollectionLabel mt="4px">{collection.name}</AllowedCollectionLabel>
+                </Flex>
+              ))}
+            </AllowedCollectionsRow>
+          </AllowedCollectionsWrapper>
+        </HeroStats>
+      </Hero>
+      <Section>
+        <SectionHeader>
+          <Heading scale="lg">{t('Stake in %symbol%', { symbol: metadata.name })}</Heading>
+          {metadata.projectUrl && (
+            <Button as="a" href={metadata.projectUrl} target="_blank" rel="noopener noreferrer" variant="secondary">
+              {t('Visit Project Site')}
+            </Button>
+          )}
+        </SectionHeader>
+        <AnimatedFrame>
+          <span className="corner corner--tl" />
+          <span className="corner corner--tr" />
+          <span className="corner corner--bl" />
+          <span className="corner corner--br" />
+          <div className="frame-content">
+            <FarmCard publishedPool={pool} error={errors[pool.id]} variant="expanded" />
+          </div>
+        </AnimatedFrame>
+        <Text id="contract" mt="16px" style={{ overflowWrap: 'anywhere' }}>
+          {t('Pool contract')}: {pool.address}
+        </Text>
+        <V2PoolEmergencyAction pool={pool} />
+      </Section>
+      {pools.length > 1 && (
+        <Section>
+          <SectionHeader>
+            <Heading scale="lg">{t('Explore other pools')}</Heading>
+          </SectionHeader>
+          <FlexLayout>
+            {pools
+              .filter((entry) => entry.id !== pool.id)
+              .map((entry) => (
+                <FarmCard key={entry.id} publishedPool={entry} error={errors[entry.id]} />
+              ))}
+          </FlexLayout>
+        </Section>
+      )}
+    </Page>
   )
 }
 

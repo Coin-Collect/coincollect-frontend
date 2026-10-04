@@ -1,5 +1,15 @@
 import styled from 'styled-components'
-import { Tag, Flex, Heading, Skeleton, TokenImage, ProfileAvatar, CardBody, useModal, OpenNewIcon } from '@pancakeswap/uikit'
+import {
+  Tag,
+  Flex,
+  Heading,
+  Skeleton,
+  TokenImage,
+  ProfileAvatar,
+  CardBody,
+  useModal,
+  OpenNewIcon,
+} from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CommunityTag, PartnerTag } from 'components/Tags'
 import Image from 'next/image'
@@ -18,6 +28,7 @@ export interface ExpandableSectionProps {
   pid?: number
   disabled?: boolean
   onOpenDetails?: () => void
+  poolPageUrl?: string
   publishedPool?: {
     banner?: string
     status: 'UPCOMING' | 'ACTIVE' | 'FINISHED' | 'UNKNOWN'
@@ -68,12 +79,7 @@ const BannerOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.1) 0%,
-    rgba(0, 0, 0, 0.05) 50%,
-    rgba(0, 0, 0, 0.3) 100%
-  );
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.3) 100%);
   pointer-events: none;
 `
 
@@ -154,6 +160,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   pid,
   disabled = false,
   onOpenDetails,
+  poolPageUrl,
   publishedPool,
 }) => {
   const router = useRouter()
@@ -180,7 +187,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
 
   const supportedNftStakeFarms = supportedCollectionPids
     .map((collectionPid) => nftFarmsConfig.find((farm) => farm.pid === collectionPid))
-    .filter((farm): farm is typeof nftFarmsConfig[number] => Boolean(farm))
+    .filter((farm): farm is (typeof nftFarmsConfig)[number] => Boolean(farm))
 
   const collectionPowers =
     nftFarmData?.collectionPowers ??
@@ -262,7 +269,9 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
     <AllowedNftsModal nfts={modalCollections} weightedShares={Boolean(publishedPool)} />,
   )
   const handleOpenPoolPage = () => {
-    if (pid !== undefined) {
+    if (poolPageUrl) {
+      router.push(poolPageUrl)
+    } else if (pid !== undefined) {
       router.push(`/nftpools/${pid}`)
     } else {
       onOpenDetails?.()
@@ -286,20 +295,17 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   return (
     <CardBody p="0px">
       <Flex justifyContent="center">
-        <BannerContainer $clickable={pid !== undefined || Boolean(onOpenDetails)} onClick={handleOpenPoolPage}>
-          <StyledImage
-            src={bannerSrc}
-            alt={`${lpLabel} banner`}
-            height={220}
-            width={550}
-            onError={handleBannerError}
-          />
+        <BannerContainer
+          $clickable={pid !== undefined || Boolean(poolPageUrl || onOpenDetails)}
+          onClick={handleOpenPoolPage}
+        >
+          <StyledImage src={bannerSrc} alt={`${lpLabel} banner`} height={220} width={550} onError={handleBannerError} />
           <BannerOverlay />
           <StatusContainer>
             <StatusBadge status={status}>{statusLabel}</StatusBadge>
-            {pid !== undefined && (
+            {(pid !== undefined || poolPageUrl) && (
               <NextLinkFromReactRouter
-                to={`/nftpools/${pid}`}
+                to={poolPageUrl || `/nftpools/${pid}`}
                 aria-label="Open pool page"
                 style={{ display: 'inline-flex' }}
                 onClick={(event) => event.stopPropagation()}
@@ -309,10 +315,17 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
                 </PoolPageIcon>
               </NextLinkFromReactRouter>
             )}
-            {pid === undefined && onOpenDetails && (
-              <PoolPageIcon as="button" type="button" aria-label="Open pool details"
+            {pid === undefined && !poolPageUrl && onOpenDetails && (
+              <PoolPageIcon
+                as="button"
+                type="button"
+                aria-label="Open pool details"
                 style={{ border: 0, padding: 0 }}
-                onClick={(event) => { event.stopPropagation(); onOpenDetails() }}>
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onOpenDetails()
+                }}
+              >
                 <OpenNewIcon color="currentColor" />
               </PoolPageIcon>
             )}
@@ -347,13 +360,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
           ))}
 
           <BannerFooter>
-            <Heading
-              color="white"
-              as="h3"
-              scale="lg"
-              mb="0"
-              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}
-            >
+            <Heading color="white" as="h3" scale="lg" mb="0" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
               {lpLabel}
             </Heading>
             {isCommunity ? (

@@ -36,12 +36,12 @@ interface FarmCardActionsProps {
   isFinished?: boolean
 }
 
-const IconButtonWrapper = styled.div`
+export const IconButtonWrapper = styled.div`
   display: flex;
   gap: 6px;
 `
 
-const ActionChipButton = styled(Button)<{ $stake?: boolean }>`
+export const ActionChipButton = styled(Button)<{ $stake?: boolean }>`
   height: 34px;
   padding: 0 12px;
   border-radius: 10px;
