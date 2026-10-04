@@ -837,11 +837,11 @@ export default function NftPoolCardStudio({
       {reviewResult ? (
         <ReviewChecks>
           {reviewResult.checks.map((check) => (
-            <ReviewCheck key={`${check.key}-${check.label}`} $pass={check.status === 'PASS'}>
-              <strong>{check.status === 'PASS' ? '✓' : '!'}</strong>
+            <ReviewCheck key={`${check.key}-${check.label}`} $status={check.status}>
+              <strong>{check.status === 'PASS' ? '✓' : check.status === 'WARN' ? '!' : '×'}</strong>
               <span>
                 {check.label}
-                {check.detail ? ` · ${check.detail}` : ''}
+                {check.detail ? ` — ${check.detail}` : ''}
               </span>
             </ReviewCheck>
           ))}

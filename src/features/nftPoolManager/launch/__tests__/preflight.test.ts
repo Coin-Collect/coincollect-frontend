@@ -117,6 +117,98 @@ describe('NFT launch preflight', () => {
     expect((factory as any).deployPool).toBeUndefined()
   })
 
+  it('blocks plan warnings and shows the reason that needs review', async () => {
+    setupContracts()
+    const planWithWarning = {
+      ...plan,
+      readiness: {
+        status: 'NEEDS_REVIEW',
+        blockers: [],
+        warnings: ['Primary reward amount was entered manually and is not validated against the budget.'],
+        information: [],
+      },
+    } as NftPoolDeploymentPlan
+    const result = await runNftPoolPreflight({
+      provider: provider(),
+      signer: { getAddress: jest.fn().mockResolvedValue(owner) } as any,
+      plan: planWithWarning,
+      account: owner,
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'plan-readiness',
+          status: 'BLOCK',
+          label: 'Review plan warnings before launch preflight',
+          detail: expect.stringContaining('entered manually'),
+        }),
+      ]),
+    )
+  })
+
+  it('allows the contract-approved side-reward representability tolerance with a visible warning', async () => {
+    setupContracts()
+    const planWithAcceptedRounding = {
+      ...plan,
+      readiness: {
+        status: 'NEEDS_REVIEW',
+        blockers: [],
+        warnings: ['COLLECT side reward has a representability deviation within the accepted tolerance.'],
+        information: [],
+      },
+    } as NftPoolDeploymentPlan
+    const result = await runNftPoolPreflight({
+      provider: provider(),
+      signer: { getAddress: jest.fn().mockResolvedValue(owner) } as any,
+      plan: planWithAcceptedRounding,
+      account: owner,
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'plan-readiness',
+          status: 'WARN',
+          label: 'Side-reward rounding is within the accepted tolerance',
+          detail: expect.stringContaining('10 bps tolerance'),
+        }),
+      ]),
+    )
+  })
+
+  it('keeps actual plan blockers blocking and explains what to fix', async () => {
+    setupContracts()
+    const incompletePlan = {
+      ...plan,
+      readiness: {
+        status: 'INCOMPLETE',
+        blockers: ['Add a pool name.'],
+        warnings: [],
+        information: [],
+      },
+    } as NftPoolDeploymentPlan
+    const result = await runNftPoolPreflight({
+      provider: provider(),
+      signer: { getAddress: jest.fn().mockResolvedValue(owner) } as any,
+      plan: incompletePlan,
+      account: owner,
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'plan-readiness',
+          status: 'BLOCK',
+          detail: expect.stringContaining('Add a pool name.'),
+        }),
+      ]),
+    )
+  })
+
   it('blocks wrong network, unauthorized owner and insufficient token balance', async () => {
     setupContracts(BigNumber.from(0))
     const wrongNetwork = await runNftPoolPreflight({

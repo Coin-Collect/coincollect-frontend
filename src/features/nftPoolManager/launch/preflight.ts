@@ -94,12 +94,51 @@ export async function runNftPoolPreflight(args: {
         String(chainId),
       ),
     )
+    const planBlockers = plan.readiness.blockers || []
+    const planWarnings = plan.readiness.warnings || []
+    const isAcceptedSideRewardRoundingWarning = (warning: string) =>
+      / side reward has a representability deviation within the accepted tolerance\.$/.test(warning)
+    const acceptedSideRewardWarnings = planWarnings.filter(isAcceptedSideRewardRoundingWarning)
+    const unresolvedPlanWarnings = planWarnings.filter((warning) => !isAcceptedSideRewardRoundingWarning(warning))
+    const planNeedsReview = plan.readiness.status === 'NEEDS_REVIEW'
+    const planReadinessStatus: LaunchCheck['status'] =
+      planBlockers.length ||
+      plan.readiness.status === 'INCOMPLETE' ||
+      (planNeedsReview && (unresolvedPlanWarnings.length > 0 || acceptedSideRewardWarnings.length === 0))
+        ? 'BLOCK'
+        : planNeedsReview && acceptedSideRewardWarnings.length > 0
+        ? 'WARN'
+        : plan.readiness.status === 'READY_FOR_DRY_RUN'
+        ? 'PASS'
+        : 'BLOCK'
+    const planReadinessDetail =
+      planReadinessStatus === 'BLOCK'
+        ? planBlockers.length
+          ? `Fix these Card Studio items: ${planBlockers.join(' ')}`
+          : planNeedsReview && unresolvedPlanWarnings.length
+          ? `Resolve these Card Studio warnings: ${unresolvedPlanWarnings.join(' ')}${
+              acceptedSideRewardWarnings.length
+                ? ` Accepted rounding note: ${acceptedSideRewardWarnings.join(' ')}`
+                : ''
+            }`
+          : planNeedsReview
+          ? 'Review the Card Studio warnings, then run Review Pool again.'
+          : 'Return to Card Studio and complete the required validation.'
+        : planReadinessStatus === 'WARN'
+        ? `${acceptedSideRewardWarnings.join(' ')} The contract rounds this side-reward ratio; its deviation is within the accepted 10 bps tolerance, so you can continue. Adjust or remove the side reward if you require an exact ratio.`
+        : undefined
     checks.push(
       check(
         'plan-readiness',
-        'Plan is ready for a launch preflight',
-        plan.readiness.status === 'READY_FOR_DRY_RUN' ? 'PASS' : 'BLOCK',
-        plan.readiness.blockers.join(' '),
+        planReadinessStatus === 'PASS'
+          ? 'Plan is ready for a launch preflight'
+          : planReadinessStatus === 'WARN'
+          ? 'Side-reward rounding is within the accepted tolerance'
+          : planNeedsReview
+          ? 'Review plan warnings before launch preflight'
+          : 'Plan needs fixes before launch preflight',
+        planReadinessStatus,
+        planReadinessDetail,
       ),
     )
     checks.push(

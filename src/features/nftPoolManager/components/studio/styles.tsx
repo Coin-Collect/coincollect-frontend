@@ -635,12 +635,13 @@ export const ReviewChecks = styled.div`
   margin-top: 14px;
 `
 
-export const ReviewCheck = styled.div<{ $pass?: boolean }>`
+export const ReviewCheck = styled.div<{ $status: 'PASS' | 'WARN' | 'BLOCK' }>`
   display: flex;
   align-items: flex-start;
   gap: 8px;
   padding: 8px 0;
-  color: ${({ theme, $pass }) => ($pass ? theme.colors.success : theme.colors.failure)};
+  color: ${({ theme, $status }) =>
+    $status === 'PASS' ? theme.colors.success : $status === 'WARN' ? theme.colors.warning : theme.colors.failure};
   font-size: 12px;
   line-height: 1.4;
 `
