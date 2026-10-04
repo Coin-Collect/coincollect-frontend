@@ -580,6 +580,10 @@ export const PickerAction = styled.button<{ $active?: boolean }>`
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
 `
 
 export const ModalInput = styled.input`

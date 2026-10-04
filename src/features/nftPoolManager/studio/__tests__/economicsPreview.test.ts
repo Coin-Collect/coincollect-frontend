@@ -1,5 +1,10 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { calculateDailyPrimaryEmission, calculateRewardSharePreview, percentToBps } from '../economicsPreview'
+import {
+  calculateDailyPrimaryEmission,
+  calculateRewardSharePreview,
+  calculateSoloStakeRewardSharePreview,
+  percentToBps,
+} from '../economicsPreview'
 
 describe('NFT Pool Studio economics preview', () => {
   const rewardPerBlock = BigNumber.from(100)
@@ -49,6 +54,33 @@ describe('NFT Pool Studio economics preview', () => {
       secondsPerBlock: 2,
     })
     expect(gold.dailyReward.toString()).toBe(String(Number(starter.dailyReward.toString()) * 10))
+  })
+
+  it("includes a solo NFT's own weight in the pool total when it exceeds the minimum power floor", () => {
+    const emission = calculateDailyPrimaryEmission(rewardPerBlock, 2)
+    const keyNft = calculateSoloStakeRewardSharePreview({
+      rewardPerBlock,
+      participantWeight: BigNumber.from(30),
+      participantThreshold: BigNumber.from(1),
+      secondsPerBlock: 2,
+    })
+
+    expect(keyNft.totalShares.toString()).toBe('30')
+    expect(keyNft.effectiveDenominator.toString()).toBe('30')
+    expect(keyNft.dailyReward.toString()).toBe(emission.toString())
+  })
+
+  it('keeps the minimum power floor for a solo NFT lighter than the floor', () => {
+    const starter = calculateSoloStakeRewardSharePreview({
+      rewardPerBlock,
+      participantWeight: BigNumber.from(1),
+      participantThreshold: BigNumber.from(30),
+      secondsPerBlock: 2,
+    })
+
+    expect(starter.totalShares.toString()).toBe('30')
+    expect(starter.effectiveDenominator.toString()).toBe('30')
+    expect(starter.dailyReward.toString()).toBe('144000')
   })
 
   it('uses the measured Polygon block time for daily planning', () => {

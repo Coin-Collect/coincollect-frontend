@@ -43,6 +43,23 @@ export function calculateRewardSharePreview(args: {
   }
 }
 
+/**
+ * Preview one NFT as the only stake in the pool. Its own weight contributes
+ * to totalShares, so the denominator cannot be lower than the NFT's weight.
+ */
+export function calculateSoloStakeRewardSharePreview(args: {
+  rewardPerBlock?: BigNumber
+  participantWeight: BigNumber
+  participantThreshold: BigNumber
+  secondsPerBlock: number
+}): RewardSharePreview {
+  const totalShares = args.participantWeight.gt(args.participantThreshold)
+    ? args.participantWeight
+    : args.participantThreshold
+
+  return calculateRewardSharePreview({ ...args, totalShares })
+}
+
 export function calculateDailyPrimaryEmission(rewardPerBlock?: BigNumber, secondsPerBlock = 2.2): BigNumber {
   return calculateRewardSharePreview({
     rewardPerBlock,

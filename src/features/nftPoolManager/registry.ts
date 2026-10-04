@@ -3,6 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mainnetTokens } from 'config/constants/tokens'
 import { getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
+import { enforceMinimumEffectivePower } from './economics'
 import {
   NftCollection,
   NftPool,
@@ -17,7 +18,7 @@ import { resolveNftAssetUrl } from './assets'
 
 export const NFT_POOL_MANAGER_CHAIN_ID = 137
 
-type FarmConfigLike = typeof nftFarmsConfig[number] & {
+type FarmConfigLike = (typeof nftFarmsConfig)[number] & {
   sideRewards?: Array<{ token?: string; percentage?: number | string }>
   collectionPowers?: Array<number | string>
   mainCollectionWeight?: number | string
@@ -254,6 +255,9 @@ function draftReward(reward: NftRewardConfig | undefined, fallback = 'UNKNOWN'):
 }
 
 export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): NftPoolDraft {
+  const farm = getNftFarmConfig(pool.pid)
+  const configuredThreshold = asWeight(farm?.participantThreshold, 0)
+  const configuredThresholdKnown = farm?.participantThreshold !== undefined
   const collections: NftPoolDraftCollection[] = pool.collections.map(({ collection, primary, weight }) => ({
     chainId: collection.chainId,
     address: collection.address,
@@ -271,10 +275,18 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       pool.onChain.startBlock !== undefined && pool.onChain.endBlock !== undefined
         ? pool.onChain.endBlock - pool.onChain.startBlock
         : undefined,
-    originalSideRewardPercentages: pool.rewards.side
-      .filter((reward) => reward.onChainPercentage !== undefined)
-      .map((reward) => ({ tokenAddress: reward.token.address, percentage: reward.onChainPercentage as BigNumber })),
-    originalParticipantThreshold: pool.onChain.participantThreshold,
+    originalSideRewardPercentages: pool.rewards.side.flatMap((reward) => {
+      const configuredPercentage = reward.configuredPercentage ? asWeight(reward.configuredPercentage, 0) : undefined
+      const percentage = reward.onChainPercentage || configuredPercentage
+      return percentage && !percentage.isZero() ? [{ tokenAddress: reward.token.address, percentage }] : []
+    }),
+    originalParticipantThreshold:
+      pool.onChain.participantThreshold || (configuredThresholdKnown ? configuredThreshold : undefined),
+    originalParticipantThresholdSource: pool.onChain.participantThreshold
+      ? 'on-chain-configuration'
+      : configuredThresholdKnown
+      ? 'frontend-config'
+      : undefined,
     originalInitialPoolCapacity: pool.onChain.configuredInitialPoolCapacity,
     currentRemainingCapacity: pool.onChain.currentRemainingPoolCapacity || pool.onChain.poolCapacity,
     originalPoolLimitPerUser: pool.onChain.poolLimitPerUser,
@@ -286,9 +298,39 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     originalPerformanceFee: pool.onChain.performanceFee,
     originalFeeTo: pool.onChain.feeTo,
   }
+  const originalParticipantThreshold =
+    sourceEconomics.originalParticipantThreshold ||
+    pool.onChain.participantThreshold ||
+    (configuredThresholdKnown ? configuredThreshold : undefined)
+  const originalParticipantThresholdSource =
+    sourceEconomics.originalParticipantThresholdSource ||
+    (pool.onChain.participantThreshold
+      ? 'on-chain-configuration'
+      : configuredThresholdKnown
+      ? 'frontend-config'
+      : undefined)
+  const originalDurationBlocks =
+    sourceEconomics.originalDurationBlocks ??
+    (pool.onChain.startBlock !== undefined && pool.onChain.endBlock !== undefined
+      ? pool.onChain.endBlock - pool.onChain.startBlock
+      : undefined)
+  const originalSideRewardPercentages = sourceEconomics.originalSideRewardPercentages.length
+    ? sourceEconomics.originalSideRewardPercentages
+    : pool.rewards.side.flatMap((reward) => {
+        const configuredPercentage = reward.configuredPercentage ? asWeight(reward.configuredPercentage, 0) : undefined
+        const percentage = reward.onChainPercentage || configuredPercentage
+        return percentage && !percentage.isZero() ? [{ tokenAddress: reward.token.address, percentage }] : []
+      })
+  const resolvedSourceEconomics = {
+    ...sourceEconomics,
+    originalDurationBlocks,
+    originalSideRewardPercentages,
+    originalParticipantThreshold,
+    originalParticipantThresholdSource,
+  }
   const durationDays =
-    sourceEconomics.originalDurationBlocks && sourceEconomics.originalDurationBlocks > 0
-      ? (sourceEconomics.originalDurationBlocks * secondsPerBlock) / 86400
+    originalDurationBlocks && originalDurationBlocks > 0
+      ? (originalDurationBlocks * secondsPerBlock) / 86400
       : undefined
   const durationPreset = durationPresetFromDays(durationDays)
   const sideRewards = pool.rewards.side.map((reward) =>
@@ -312,11 +354,12 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     getNftUrl: pool.metadata.getNftUrl,
     collections,
     rewards: { primary: draftReward(primaryReward), side: sideRewards },
-    sourceEconomics,
+    sourceEconomics: resolvedSourceEconomics,
     unsafe: {},
     economics: {
       durationPreset,
-      customDurationDays: durationPreset === 'custom' ? String(Math.max(1, Math.round(durationDays || 30))) : '',
+      customDurationDays:
+        durationPreset === 'custom' && durationDays ? String(Math.max(1, Math.round(durationDays))) : '',
       totalBudget: '',
       budgetTokenAddress: mainnetTokens.usdt.address,
       budgetDecimals: mainnetTokens.usdt.decimals,
@@ -333,8 +376,8 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
       budgetDenomination: 'USDT',
     },
     constraints: {
-      participantThreshold: sourceEconomics.originalParticipantThreshold?.toString() || '20',
-      poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '1000',
+      participantThreshold: enforceMinimumEffectivePower(originalParticipantThreshold?.toString() || '', collections),
+      poolCapacity: sourceEconomics.originalInitialPoolCapacity?.toString() || '',
       poolLimitPerUser: sourceEconomics.originalPoolLimitPerUser?.toString() || '',
       numberBlocksForUserLimit: sourceEconomics.originalNumberBlocksForUserLimit?.toString() || '',
       userLimitEnabled:
@@ -377,7 +420,7 @@ export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): Nf
       quoteErrors: {},
     },
     constraints: {
-      participantThreshold: '20',
+      participantThreshold: '',
       poolCapacity: '1000',
       poolLimitPerUser: '',
       numberBlocksForUserLimit: '',

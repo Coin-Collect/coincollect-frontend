@@ -94,6 +94,7 @@ export interface NftPoolSourceEconomics {
   originalDurationBlocks?: number
   originalSideRewardPercentages: Array<{ tokenAddress: string; percentage: BigNumber }>
   originalParticipantThreshold?: BigNumber
+  originalParticipantThresholdSource?: 'deployment-provenance' | 'on-chain-configuration' | 'frontend-config'
   originalInitialPoolCapacity?: BigNumber
   currentRemainingCapacity?: BigNumber
   originalPoolLimitPerUser?: BigNumber

@@ -181,4 +181,77 @@ describe('NFT pool status and clone safety', () => {
     expect(draft.constraints.poolLimitPerUser).toBe('2')
     expect(draft.constraints.numberBlocksForUserLimit).toBe('100')
   })
+
+  it('uses the configured threshold when a pool does not expose it on-chain', () => {
+    const pool = {
+      id: 'lot',
+      pid: 5,
+      chainId: 137,
+      collections: [],
+      metadata: { name: 'Lot NFT' },
+      onChain: { participantThreshold: undefined, startBlock: 45_594_969, endBlock: 60_094_969 },
+      sourceEconomics: { originalSideRewardPercentages: [] },
+      rewards: {
+        primary: {
+          token: {
+            address: '0x4444444444444444444444444444444444444444',
+            symbol: 'LOT',
+            name: 'Lot',
+            decimals: 18,
+          },
+        },
+        side: [
+          {
+            token: {
+              address: '0x5555555555555555555555555555555555555555',
+              symbol: 'COLLECT',
+              name: 'CoinCollect',
+              decimals: 18,
+              isReadable: true,
+              chainId: 137,
+            },
+            configuredPercentage: '6670',
+          },
+        ],
+      },
+    } as unknown as NftPool
+
+    const draft = createNftPoolCloneDraft(pool, 1.67)
+
+    expect(draft.constraints.participantThreshold).toBe('300')
+    expect(draft.sourceEconomics?.originalParticipantThresholdSource).toBe('frontend-config')
+    expect(draft.economics.customDurationDays).toBe('280')
+    expect(draft.sourceEconomics?.originalDurationBlocks).toBe(14_500_000)
+    expect(draft.sourceEconomics?.originalSideRewardPercentages[0].percentage.toString()).toBe('6670')
+  })
+
+  it('does not invent missing clone duration, threshold, or capacity values', () => {
+    const pool = {
+      id: 'unknown',
+      pid: 99999,
+      chainId: 137,
+      collections: [],
+      rewards: {
+        primary: {
+          token: {
+            address: '0x4444444444444444444444444444444444444444',
+            symbol: 'LOT',
+            name: 'Lot',
+            decimals: 18,
+          },
+        },
+        side: [],
+      },
+      metadata: { name: 'Unknown pool' },
+      onChain: {},
+      sourceEconomics: { originalSideRewardPercentages: [] },
+    } as unknown as NftPool
+
+    const draft = createNftPoolCloneDraft(pool)
+
+    expect(draft.economics.durationPreset).toBe('custom')
+    expect(draft.economics.customDurationDays).toBe('')
+    expect(draft.constraints.participantThreshold).toBe('')
+    expect(draft.constraints.poolCapacity).toBe('')
+  })
 })

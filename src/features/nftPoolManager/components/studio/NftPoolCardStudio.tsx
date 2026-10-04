@@ -2,12 +2,22 @@ import { useMemo, useState } from 'react'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NftCollection, NftPool, NftPoolDraft, NftPoolDraftReward } from '../../types'
 import type { PoolEconomicsCalculation } from '../../economics'
-import { applySoliditySideReward, formatBaseUnits } from '../../economics'
+import {
+  applySoliditySideReward,
+  enforceMinimumEffectivePower,
+  formatBaseUnits,
+  totalNftCollectionPower,
+} from '../../economics'
 import type { NftDraftValidationResult } from '../../validation'
 import type { NftPreflightResult } from '../../launch/types'
 import { findNftCollection } from '../../registry'
 import { collectionImageCandidates, resolveNftAssetUrl } from '../../assets'
-import { calculateRewardSharePreview, formatAllocationPercent, percentToBps } from '../../studio/economicsPreview'
+import {
+  calculateRewardSharePreview,
+  calculateSoloStakeRewardSharePreview,
+  formatAllocationPercent,
+  percentToBps,
+} from '../../studio/economicsPreview'
 import { poolArtworkRegistry } from '../../studio/artworkRegistry'
 import {
   AddCollectionCircle,
@@ -291,7 +301,9 @@ export default function NftPoolCardStudio({
     const percentage = sourceSideRewardPercentage(draft, sourcePool, reward)
     return percentage === undefined ? [] : [{ symbol: reward.symbol, percentage }]
   })
-  const threshold = safeBigNumber(draft.constraints.participantThreshold)
+  const minimumEffectivePower = totalNftCollectionPower(draft.collections)
+  const effectiveThreshold = enforceMinimumEffectivePower(draft.constraints.participantThreshold, draft.collections)
+  const threshold = safeBigNumber(effectiveThreshold)
   const rewardDecimals = draft.rewards.primary?.decimals
   const dailyPrimaryReward =
     economics?.primary.rewardPerBlock && !threshold.isZero()
@@ -304,13 +316,16 @@ export default function NftPoolCardStudio({
         }).dailyReward
       : undefined
 
-  const dailyRewardFor = (reward: NftPoolDraftReward): BigNumber | undefined => {
-    if (dailyPrimaryReward === undefined || !draft.rewards.primary) return undefined
-    if (reward.address.toLowerCase() === draft.rewards.primary.address.toLowerCase()) return dailyPrimaryReward
+  const dailyRewardFor = (
+    reward: NftPoolDraftReward,
+    primaryDailyAmount = dailyPrimaryReward,
+  ): BigNumber | undefined => {
+    if (primaryDailyAmount === undefined || !draft.rewards.primary) return undefined
+    if (reward.address.toLowerCase() === draft.rewards.primary.address.toLowerCase()) return primaryDailyAmount
     const side = economics?.side.find((item) => item.tokenAddress.toLowerCase() === reward.address.toLowerCase())
     if (!side || draft.rewards.primary.decimals === undefined || reward.decimals === undefined) return undefined
     return applySoliditySideReward(
-      dailyPrimaryReward,
+      primaryDailyAmount,
       side.encodedPercentage,
       draft.rewards.primary.decimals,
       reward.decimals,
@@ -339,18 +354,18 @@ export default function NftPoolCardStudio({
       const participantWeight = safeBigNumber(item.weight)
       if (participantWeight.isZero()) return []
       const collection = findNftCollection(knownCollections, 137, item.address)
+      const result = calculateSoloStakeRewardSharePreview({
+        rewardPerBlock,
+        participantWeight,
+        participantThreshold: threshold,
+        secondsPerBlock,
+      })
       return [
         {
           key: item.address,
           label: collection?.displayName || item.name,
           participantWeight,
-          result: calculateRewardSharePreview({
-            rewardPerBlock,
-            participantWeight,
-            totalShares: threshold,
-            participantThreshold: threshold,
-            secondsPerBlock,
-          }),
+          result,
         },
       ]
     })
@@ -400,7 +415,7 @@ export default function NftPoolCardStudio({
     const isPrimary = primary?.address.toLowerCase() === reward.address.toLowerCase()
     const isSide = draft.rewards.side.some((item) => item.address.toLowerCase() === reward.address.toLowerCase())
     if (isPrimary) return
-    if (isSide) onRemoveSideReward(reward.address)
+    if (isSide) onSetPrimaryReward(reward)
     else if (!primary) onSetPrimaryReward(reward)
     else onAddSideReward(reward)
   }
@@ -547,7 +562,7 @@ export default function NftPoolCardStudio({
   const renderRewardsModal = () => (
     <StudioModalShell
       title="Reward tokens"
-      description="Select rewards and split the budget with human percentages. Side rewards follow the contract's primary-pending semantics."
+      description="Select rewards and split the budget. Side rewards use integer percentages of primary payouts, so a target below 1% rounds to zero."
       onClose={() => setModal(null)}
     >
       <Hint style={{ marginTop: 0 }}>Known Polygon rewards</Hint>
@@ -562,8 +577,8 @@ export default function NftPoolCardStudio({
                 <strong>{reward.symbol}</strong>
                 <Hint style={{ margin: 3 }}>{reward.name}</Hint>
               </div>
-              <PickerAction type="button" $active={isPrimary || isSide} onClick={() => toggleReward(reward)}>
-                {isPrimary ? 'Primary' : isSide ? 'Remove' : draft.rewards.primary ? 'Add' : 'Choose'}
+              <PickerAction type="button" $active={isPrimary} disabled={isPrimary} onClick={() => toggleReward(reward)}>
+                {isPrimary ? 'Primary' : isSide ? 'Make primary' : draft.rewards.primary ? 'Add' : 'Choose'}
               </PickerAction>
             </PickerRow>
           )
@@ -596,19 +611,28 @@ export default function NftPoolCardStudio({
               <strong>{reward.symbol}</strong>
               <Hint style={{ margin: 3 }}>{isPrimary ? 'Primary reward' : 'Side reward'}</Hint>
             </div>
-            <ModalInput
-              aria-label={`${reward.symbol} allocation percentage`}
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={formatAllocationPercent(draft.economics.allocationBps[key])}
-              style={{ width: 82, padding: '8px' }}
-              onChange={(event) => {
-                const bps = percentToBps(event.target.value)
-                if (bps) onUpdateAllocation(reward.address, bps)
-              }}
-            />
+            <div
+              style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}
+            >
+              <ModalInput
+                aria-label={`${reward.symbol} allocation percentage`}
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={formatAllocationPercent(draft.economics.allocationBps[key])}
+                style={{ width: 82, padding: '8px' }}
+                onChange={(event) => {
+                  const bps = percentToBps(event.target.value)
+                  if (bps) onUpdateAllocation(reward.address, bps)
+                }}
+              />
+              {!isPrimary ? (
+                <PickerAction type="button" $active onClick={() => onRemoveSideReward(reward.address)}>
+                  Remove
+                </PickerAction>
+              ) : null}
+            </div>
           </PickerRow>
         )
       })}
@@ -703,17 +727,27 @@ export default function NftPoolCardStudio({
         Minimum effective staking power
         <ModalInput
           type="number"
-          min="0"
+          min={minimumEffectivePower.toString()}
           step="1"
           value={draft.constraints.participantThreshold}
           onChange={(event) =>
             onUpdateDraft({ constraints: { ...draft.constraints, participantThreshold: event.target.value } })
           }
-          placeholder="20"
+          onBlur={(event) =>
+            onUpdateDraft({
+              constraints: {
+                ...draft.constraints,
+                participantThreshold: enforceMinimumEffectivePower(event.currentTarget.value, draft.collections),
+              },
+            })
+          }
+          placeholder={minimumEffectivePower.isZero() ? 'Select NFTs first' : minimumEffectivePower.toString()}
         />
       </FieldLabel>
       <Hint>
-        Rewards are calculated as if at least this much total weighted staking power exists; it is not a wallet count.
+        {minimumEffectivePower.isZero()
+          ? 'Select NFT collections to calculate the minimum effective power.'
+          : `Must be at least the combined power of selected NFTs (${minimumEffectivePower.toString()}). This is weighted staking power, not a wallet count.`}
       </Hint>
       <ButtonCluster style={{ marginTop: 16 }}>
         <StudioButton type="button" onClick={() => setModal(null)}>
@@ -923,7 +957,12 @@ export default function NftPoolCardStudio({
                     Edit
                   </StudioButton>
                 </CardSectionHeading>
-                {rewards.length > 1 ? <CardMeta>New funding split</CardMeta> : null}
+                {rewards.length > 1 ? (
+                  <CardMeta>
+                    New funding split · this is not the historical allocation. The old budget split is not stored
+                    on-chain; choose a new split for this renewal. Original side payout ratios are separate.
+                  </CardMeta>
+                ) : null}
                 <RewardAreaButton type="button" onClick={() => setModal('rewards')} aria-label="Edit reward tokens">
                   {rewards.length ? (
                     rewards.map((reward, index) => (
@@ -941,7 +980,7 @@ export default function NftPoolCardStudio({
                 </RewardAreaButton>
                 {sourceSideRatios.length ? (
                   <CardMeta style={{ display: 'block', marginTop: 8 }}>
-                    Original side ratios:{' '}
+                    Original on-chain side payout ratios (of primary reward):{' '}
                     {sourceSideRatios
                       .map(({ symbol, percentage }) => `${symbol} ${formatEncodedPercentage(percentage)}%`)
                       .join(' · ')}
@@ -949,7 +988,7 @@ export default function NftPoolCardStudio({
                 ) : null}
                 {economics && draft.economics.totalBudget ? (
                   <div style={{ display: 'grid', gap: 4, marginTop: 9 }}>
-                    <CardMeta>Allocated budget, token estimate and daily reward</CardMeta>
+                    <CardMeta>Allocated budget, quoted token target and estimated protocol payout</CardMeta>
                     {economics.allocations.map((allocation) => {
                       const reward = rewards.find(
                         (item) => item.address.toLowerCase() === allocation.tokenAddress.toLowerCase(),
@@ -963,18 +1002,37 @@ export default function NftPoolCardStudio({
                           ? 'Awaiting quote'
                           : `${formatBaseUnits(allocation.desiredAmount, reward.decimals)} ${reward.symbol}`
                       const dailyReward = allocation.source === 'missing' ? undefined : dailyRewardFor(reward)
+                      const sideReward = economics.side.find(
+                        (item) => item.tokenAddress.toLowerCase() === allocation.tokenAddress.toLowerCase(),
+                      )
                       return (
-                        <CardMeta key={allocation.tokenAddress}>
-                          {reward.symbol} {formatAllocationPercent(allocation.allocationBps.toString())}% ·{' '}
-                          {formatBaseUnits(budgetAllocation.allocatedBudget, draft.economics.budgetDecimals)}{' '}
-                          {draft.economics.budgetDenomination || 'USDT'} → {amount}
-                          {dailyReward !== undefined ? (
-                            <span style={{ display: 'block' }}>
-                              ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day · fixed up to{' '}
-                              {threshold.toString()} total power
-                            </span>
+                        <div key={allocation.tokenAddress}>
+                          <CardMeta>
+                            {reward.symbol} {formatAllocationPercent(allocation.allocationBps.toString())}% ·{' '}
+                            {formatBaseUnits(budgetAllocation.allocatedBudget, draft.economics.budgetDecimals)}{' '}
+                            {draft.economics.budgetDenomination || 'USDT'} → {amount}
+                            {dailyReward !== undefined ? (
+                              <span style={{ display: 'block' }}>
+                                ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day · estimated up to{' '}
+                                {threshold.toString()} total power
+                              </span>
+                            ) : null}
+                          </CardMeta>
+                          {sideReward?.blocking ? (
+                            <CardMeta role="alert" style={{ display: 'block', marginTop: 3 }}>
+                              {sideReward.encodedPercentage.isZero()
+                                ? `${reward.symbol} pays 0% at this split: the contract rounds this side-reward ratio down to zero.`
+                                : `The contract would pay ${formatBaseUnits(
+                                    sideReward.maximumImpliedSideFunding,
+                                    reward.decimals,
+                                  )} ${reward.symbol}, not the quoted ${formatBaseUnits(
+                                    sideReward.desiredSideAmount,
+                                    reward.decimals,
+                                  )} ${reward.symbol}.`}{' '}
+                              Adjust the funding split or remove this side reward before review.
+                            </CardMeta>
                           ) : null}
-                        </CardMeta>
+                        </div>
                       )
                     })}
                   </div>
@@ -989,34 +1047,50 @@ export default function NftPoolCardStudio({
                 <CardMetricButton type="button" onClick={() => setModal('economics')}>
                   <MetricLabel>Duration</MetricLabel>
                   <MetricValue>{durationLabel(draft)}</MetricValue>
-                  <MetricHint>Editable schedule</MetricHint>
+                  <MetricHint>{sourcePool ? 'Estimated from original block schedule' : 'Editable schedule'}</MetricHint>
                 </CardMetricButton>
                 <CardMetricButton type="button" onClick={() => setModal('economics')}>
                   <MetricLabel>Min. effective power</MetricLabel>
-                  <MetricValue>{draft.constraints.participantThreshold || 'Set power'}</MetricValue>
+                  <MetricValue>{effectiveThreshold || 'Set power'}</MetricValue>
                   <MetricHint>Weighted shares</MetricHint>
                 </CardMetricButton>
               </CardMetricGrid>
               <SharingCallout>
                 <strong>Reward sharing</strong>
                 <br />
-                Rewards are shared by staking power. As more staking power enters the pool, each stake receives a
-                smaller share of the fixed daily reward.
+                The primary reward is shared by staking power. Side rewards follow a contract-encoded ratio of each
+                primary payout; they do not have an independent emission schedule.
                 {shareExamples.length ? (
                   <div style={{ marginTop: 9, display: 'grid', gap: 4 }}>
                     {shareExamples.map(({ totalShares, result }) => (
                       <div key={totalShares.toString()}>
-                        <strong>At {totalShares.toString()} total power:</strong> 1x ≈{' '}
-                        {formatBaseUnits(result.dailyReward, rewardDecimals)} {draft.rewards.primary?.symbol}
+                        <strong>At {totalShares.toString()} total power, a 1x stake earns:</strong>
+                        {rewards.map((reward) => {
+                          const dailyReward = dailyRewardFor(reward, result.dailyReward)
+                          return dailyReward === undefined ? null : (
+                            <div key={reward.address}>
+                              {reward.symbol} ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day
+                            </div>
+                          )
+                        })}
                       </div>
                     ))}
                     {weightedExamples.length ? (
                       <div style={{ marginTop: 5, display: 'grid', gap: 3 }}>
-                        <strong>At {threshold.toString()} total power:</strong>
+                        <strong>Each example assumes one NFT staked alone:</strong>
                         {weightedExamples.map(({ key, label, participantWeight, result }) => (
                           <div key={key}>
-                            {label} {participantWeight.toString()}x ≈{' '}
-                            {formatBaseUnits(result.dailyReward, rewardDecimals)} {draft.rewards.primary?.symbol}/day
+                            <strong>
+                              {label} {participantWeight.toString()}x at {result.totalShares.toString()} total power:
+                            </strong>
+                            {rewards.map((reward) => {
+                              const dailyReward = dailyRewardFor(reward, result.dailyReward)
+                              return dailyReward === undefined ? null : (
+                                <div key={reward.address}>
+                                  {reward.symbol} ≈ {formatBaseUnits(dailyReward, reward.decimals)} {reward.symbol}/day
+                                </div>
+                              )
+                            })}
                           </div>
                         ))}
                       </div>

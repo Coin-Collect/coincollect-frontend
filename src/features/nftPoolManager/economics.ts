@@ -1,10 +1,60 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { formatUnits } from '@ethersproject/units'
-import { NftPoolDraft, NftPoolDraftQuote, NftPoolDraftReward, NftQuoteState, NftRewardAmountSource } from './types'
+import {
+  NftPoolDraft,
+  NftPoolDraftCollection,
+  NftPoolDraftQuote,
+  NftPoolDraftReward,
+  NftQuoteState,
+  NftRewardAmountSource,
+} from './types'
 import { getNftQuoteState, quoteMatchesInputs } from './quotes'
 
 export const BPS_BASE = BigNumber.from(10_000)
 export const PERCENT_BASE = BigNumber.from(100)
+
+/** Sum of the configured staking power for all selected NFT collections. */
+export function totalNftCollectionPower(collections: readonly NftPoolDraftCollection[]): BigNumber {
+  return collections.reduce((total, collection) => {
+    const weight = collection.weight.trim()
+    if (!/^\d+$/.test(weight)) return total
+    try {
+      const parsed = BigNumber.from(weight)
+      return parsed.isZero() ? total : total.add(parsed)
+    } catch {
+      return total
+    }
+  }, BigNumber.from(0))
+}
+
+/** Keep the configured threshold at or above the combined power of selected NFTs. */
+export function enforceMinimumEffectivePower(
+  threshold: string,
+  collections: readonly NftPoolDraftCollection[],
+): string {
+  const minimum = totalNftCollectionPower(collections)
+  if (minimum.isZero()) return threshold
+  const normalized = threshold.trim()
+  if (!/^\d+$/.test(normalized)) return minimum.toString()
+  try {
+    return BigNumber.from(normalized).lt(minimum) ? minimum.toString() : normalized
+  } catch {
+    return minimum.toString()
+  }
+}
+
+/** Keep an automatically-set threshold in sync with collection-weight edits. */
+export function reconcileMinimumEffectivePower(
+  threshold: string,
+  previousCollections: readonly NftPoolDraftCollection[],
+  nextCollections: readonly NftPoolDraftCollection[],
+): string {
+  const previousMinimum = totalNftCollectionPower(previousCollections)
+  const nextMinimum = totalNftCollectionPower(nextCollections)
+  if (nextMinimum.isZero()) return threshold
+  if (!previousMinimum.isZero() && threshold.trim() === previousMinimum.toString()) return nextMinimum.toString()
+  return enforceMinimumEffectivePower(threshold, nextCollections)
+}
 
 export interface BudgetAllocationCalculation {
   tokenAddress: string

@@ -26,6 +26,7 @@ describe('Quick Create policy', () => {
     expect(draft.economics.allocationBps).toEqual({ [mainnetTokens.collect.address.toLowerCase()]: '10000' })
     expect(draft.collections).toHaveLength(1)
     expect(draft.collections[0]).toMatchObject({ primary: true, weight: '1' })
+    expect(draft.constraints.participantThreshold).toBe('1')
     expect(draft.rewards.side).toEqual([])
     expect(draft.constraints.performanceFee).toBe('')
     expect(draft.economics.durationPreset).toBe('3 months')

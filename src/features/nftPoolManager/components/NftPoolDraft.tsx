@@ -2,9 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Contract } from '@ethersproject/contracts'
-import { formatBaseUnits, formatBaseUnitsExact, calculatePoolEconomics, parseUnitsExact } from '../economics'
+import {
+  enforceMinimumEffectivePower,
+  formatBaseUnits,
+  formatBaseUnitsExact,
+  calculatePoolEconomics,
+  parseUnitsExact,
+  reconcileMinimumEffectivePower,
+  totalNftCollectionPower,
+} from '../economics'
 import { getNftQuoteState } from '../quotes'
 import { createNftRewardQuoteProvider } from '../quotes'
+import { selectPrimaryReward } from '../rewardSelection'
 import {
   validateNftCollectionAddress,
   validateRewardTokenAddress,
@@ -81,6 +90,13 @@ function withAllocation(draft: NftPoolDraftModel, rewards: NftPoolDraftReward[])
   return { ...draft.economics, allocationBps }
 }
 
+function withNftPowerFloor(draft: NftPoolDraftModel): NftPoolDraftModel {
+  const participantThreshold = enforceMinimumEffectivePower(draft.constraints.participantThreshold, draft.collections)
+  return participantThreshold === draft.constraints.participantThreshold
+    ? draft
+    : { ...draft, constraints: { ...draft.constraints, participantThreshold } }
+}
+
 export default function PoolBuilder() {
   const router = useRouter()
   const cloneId = typeof router.query.clone === 'string' ? router.query.clone : ''
@@ -133,6 +149,7 @@ export default function PoolBuilder() {
     ? buildNftPoolDeploymentPlan(draft, economics, data?.factoryAddress, account || draft.intendedAdmin, validation)
     : null
   const knownCollections = data?.collections ?? EMPTY_COLLECTIONS
+  const minimumEffectivePower = totalNftCollectionPower(draft.collections)
   const rewards = [draft.rewards.primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
   const rewardAddresses = rewards.map((reward) => reward.address.toLowerCase()).join('|')
   const allocationKey = JSON.stringify(draft.economics.allocationBps)
@@ -148,7 +165,7 @@ export default function PoolBuilder() {
       setMode('card')
       const saved = loadNftPoolDraft(savedDraftId)
       if (saved && saved.id !== draft.id) {
-        setDraft(saved)
+        setDraft(withNftPowerFloor(saved))
         setDraftTouched(false)
       }
       setHydrated(true)
@@ -158,11 +175,11 @@ export default function PoolBuilder() {
       setMode('card')
       const savedClone = loadNftPoolDraftForSourcePool(sourcePool?.id || cloneId)
       if (savedClone && savedClone.id !== draft.id) {
-        setDraft(savedClone)
+        setDraft(withNftPowerFloor(savedClone))
         setDraftTouched(false)
         setHydrated(true)
       } else if (sourcePool && draft.sourcePoolId !== sourcePool.id) {
-        setDraft(createNftPoolCloneDraft(sourcePool, data?.secondsPerBlock || 2.2))
+        setDraft(withNftPowerFloor(createNftPoolCloneDraft(sourcePool, data?.secondsPerBlock || 2.2)))
         setDraftTouched(false)
         setHydrated(true)
       } else if (!loading) {
@@ -181,7 +198,18 @@ export default function PoolBuilder() {
 
   const updateDraft = (patch: Partial<NftPoolDraftModel>) => {
     setDraftTouched(true)
-    setDraft((current) => ({ ...current, ...patch, updatedAt: Date.now() }))
+    setDraft((current) => {
+      const next = { ...current, ...patch, updatedAt: Date.now() }
+      if ('collections' in patch) {
+        const participantThreshold = reconcileMinimumEffectivePower(
+          current.constraints.participantThreshold,
+          current.collections,
+          next.collections,
+        )
+        next.constraints = { ...next.constraints, participantThreshold }
+      }
+      return next
+    })
     setReviewResult(null)
     setMessage('')
   }
@@ -267,9 +295,10 @@ export default function PoolBuilder() {
   }
 
   const setPrimaryRewardAsset = (primary: NftPoolDraftReward | null) => {
-    const nextRewards = [primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
+    const rewards = selectPrimaryReward(draft.rewards.primary, draft.rewards.side, primary)
+    const nextRewards = [rewards.primary, ...rewards.side].filter(Boolean) as NftPoolDraftReward[]
     updateDraft({
-      rewards: { ...draft.rewards, primary },
+      rewards: { ...draft.rewards, ...rewards },
       economics: { ...withAllocation(draft, nextRewards), quotes: {}, quoteErrors: {} },
     })
   }
@@ -811,14 +840,30 @@ export default function PoolBuilder() {
                 Minimum effective staking power
                 <Input
                   type="number"
-                  min="0"
+                  min={minimumEffectivePower.toString()}
                   step="1"
                   value={draft.constraints.participantThreshold}
                   onChange={(event) =>
                     updateDraft({ constraints: { ...draft.constraints, participantThreshold: event.target.value } })
                   }
-                  placeholder="e.g. 300"
+                  onBlur={(event) =>
+                    updateDraft({
+                      constraints: {
+                        ...draft.constraints,
+                        participantThreshold: enforceMinimumEffectivePower(
+                          event.currentTarget.value,
+                          draft.collections,
+                        ),
+                      },
+                    })
+                  }
+                  placeholder={minimumEffectivePower.isZero() ? 'Select NFTs first' : minimumEffectivePower.toString()}
                 />
+                <Muted>
+                  {minimumEffectivePower.isZero()
+                    ? 'Select NFT collections to calculate the minimum effective power.'
+                    : `Must be at least the combined power of selected NFTs (${minimumEffectivePower.toString()}).`}
+                </Muted>
               </Field>
               <Field>
                 Original configured capacity

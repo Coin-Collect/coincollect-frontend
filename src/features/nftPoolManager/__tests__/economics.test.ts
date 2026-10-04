@@ -3,8 +3,11 @@ import {
   applySoliditySideReward,
   calculatePoolEconomics,
   calculateSideReward,
+  enforceMinimumEffectivePower,
   estimateBlocksForDuration,
   parseUnitsExact,
+  reconcileMinimumEffectivePower,
+  totalNftCollectionPower,
 } from '../economics'
 import { createEmptyNftPoolDraft } from '../registry'
 
@@ -19,6 +22,23 @@ describe('NFT pool exact economics', () => {
 
   it('uses measured block time for duration estimates', () => {
     expect(estimateBlocksForDuration('1 month', undefined, 2)).toBe(1_296_000)
+  })
+
+  it('floors minimum effective power at the exact sum of selected collection weights', () => {
+    const collections = [
+      { chainId: 137, address: primaryAddress, collectionId: 'key', name: 'KEY NFT', weight: '30', primary: true },
+      { chainId: 137, address: sideAddress, collectionId: 'starter', name: 'Starter NFT', weight: '1', primary: false },
+    ]
+
+    expect(totalNftCollectionPower(collections).toString()).toBe('31')
+    expect(enforceMinimumEffectivePower('20', collections)).toBe('31')
+    expect(enforceMinimumEffectivePower('100', collections)).toBe('100')
+    expect(
+      reconcileMinimumEffectivePower('31', collections, [{ ...collections[0], weight: '35' }, collections[1]]),
+    ).toBe('36')
+    expect(
+      reconcileMinimumEffectivePower('40', collections, [{ ...collections[0], weight: '35' }, collections[1]]),
+    ).toBe('40')
   })
 
   it('mirrors Solidity side reward scaling for equal and different decimals', () => {
@@ -59,6 +79,32 @@ describe('NFT pool exact economics', () => {
     )
     expect(outside.representability).toBe('OUTSIDE_TOLERANCE')
     expect(outside.blocking).toBe(true)
+
+    const quotedPolTarget = calculateSideReward(
+      '0xside',
+      BigNumber.from('44458333000000000000'),
+      BigNumber.from('24927464022000000000000'),
+      18,
+      18,
+      'quote',
+      'FRESH',
+    )
+    expect(quotedPolTarget.encodedPercentage.toString()).toBe('0')
+    expect(quotedPolTarget.maximumImpliedSideFunding.toString()).toBe('0')
+    expect(quotedPolTarget.blocking).toBe(true)
+
+    const quotedCollectTarget = calculateSideReward(
+      '0xside',
+      BigNumber.from('24927464022000000000000'),
+      BigNumber.from('44458333000000000000'),
+      18,
+      18,
+      'quote',
+      'FRESH',
+    )
+    expect(quotedCollectTarget.encodedPercentage.toString()).toBe('56069')
+    expect(quotedCollectTarget.maximumImpliedSideFunding.gt(0)).toBe(true)
+    expect(quotedCollectTarget.blocking).toBe(false)
   })
 
   it('shows that fragmented Solidity payouts can be lower than one aggregate application', () => {

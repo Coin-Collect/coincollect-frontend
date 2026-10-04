@@ -13,7 +13,7 @@ export const QUICK_CREATE_DURATION_PRESETS: NftPoolDraft['economics']['durationP
 /** Placeholder only. New cards intentionally keep the financial input empty. */
 export const QUICK_CREATE_DEFAULT_BUDGET = ''
 export const QUICK_CREATE_DEFAULT_POOL_CAPACITY = '1000'
-export const QUICK_CREATE_DEFAULT_PARTICIPANT_THRESHOLD = '20'
+export const QUICK_CREATE_DEFAULT_PARTICIPANT_THRESHOLD = '1'
 
 export interface QuickCreatePolicy {
   reward: NftPoolDraftReward

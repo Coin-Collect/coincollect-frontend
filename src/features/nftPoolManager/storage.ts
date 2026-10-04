@@ -101,6 +101,11 @@ function safeSourceEconomics(input: any): NftPoolSourceEconomics | undefined {
           .filter((item: any) => item.tokenAddress)
       : [],
     originalParticipantThreshold: reviveBigNumber(input.originalParticipantThreshold),
+    originalParticipantThresholdSource: ['deployment-provenance', 'on-chain-configuration', 'frontend-config'].includes(
+      input.originalParticipantThresholdSource,
+    )
+      ? input.originalParticipantThresholdSource
+      : undefined,
     originalInitialPoolCapacity: reviveBigNumber(input.originalInitialPoolCapacity),
     currentRemainingCapacity: reviveBigNumber(input.currentRemainingCapacity),
     originalPoolLimitPerUser: reviveBigNumber(input.originalPoolLimitPerUser),

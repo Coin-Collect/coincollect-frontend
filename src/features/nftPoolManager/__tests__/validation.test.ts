@@ -55,6 +55,37 @@ describe('NFT pool draft validation', () => {
     expect(validateNftPoolDraft(draft).blockers).not.toContain('Collection weights must be positive integers.')
   })
 
+  it('requires minimum effective power to cover the combined selected NFT power', () => {
+    const draft = createEmptyNftPoolDraft()
+    draft.collections = [
+      {
+        chainId: 137,
+        address: '0x1111111111111111111111111111111111111111',
+        collectionId: 'key',
+        name: 'KEY NFT',
+        weight: '30',
+        primary: true,
+      },
+      {
+        chainId: 137,
+        address: '0x2222222222222222222222222222222222222222',
+        collectionId: 'starter',
+        name: 'Starter NFT',
+        weight: '1',
+        primary: false,
+      },
+    ]
+    draft.constraints.participantThreshold = '30'
+
+    expect(validateNftPoolDraft(draft).blockers).toContain(
+      'Minimum effective staking power must be at least the combined NFT power (31).',
+    )
+    draft.constraints.participantThreshold = '31'
+    expect(validateNftPoolDraft(draft).blockers).not.toContain(
+      'Minimum effective staking power must be at least the combined NFT power (31).',
+    )
+  })
+
   it('marks manual amounts for review without pretending they have a budget valuation', () => {
     const draft = createEmptyNftPoolDraft()
     draft.name = 'Manual amount pool'
@@ -77,7 +108,7 @@ describe('NFT pool draft validation', () => {
     draft.economics.totalBudget = '10'
     draft.economics.allocationBps = { '0x2222222222222222222222222222222222222222': '10000' }
     draft.economics.manualAmounts = { '0x2222222222222222222222222222222222222222': '2500' }
-    draft.constraints.participantThreshold = '0'
+    draft.constraints.participantThreshold = '1'
     draft.constraints.poolCapacity = '100'
     const result = validateNftPoolDraft(draft)
     expect(result.readiness).toBe('NEEDS_REVIEW')
@@ -128,7 +159,7 @@ describe('NFT pool draft validation', () => {
         expirySeconds: 120,
       },
     }
-    draft.constraints.participantThreshold = '0'
+    draft.constraints.participantThreshold = '1'
     draft.constraints.poolCapacity = '100'
     const validation = validateNftPoolDraft(draft, 2, false, {
       factoryAddress: '0x3333333333333333333333333333333333333333',

@@ -215,7 +215,18 @@ export default function NftPoolDetail() {
                   <tbody>
                     <tr>
                       <th>Participant threshold</th>
-                      <td>{pool.onChain.participantThreshold?.toString() || 'Unavailable'}</td>
+                      <td>
+                        {pool.onChain.participantThreshold?.toString() ||
+                          pool.sourceEconomics.originalParticipantThreshold?.toString() ||
+                          'Unavailable'}
+                        {!pool.onChain.participantThreshold &&
+                        pool.sourceEconomics.originalParticipantThresholdSource === 'frontend-config'
+                          ? ' · frontend config'
+                          : !pool.onChain.participantThreshold &&
+                            pool.sourceEconomics.originalParticipantThresholdSource === 'deployment-provenance'
+                          ? ' · deployment input'
+                          : null}
+                      </td>
                     </tr>
                     <tr>
                       <th>Initial capacity</th>
@@ -331,9 +342,14 @@ export default function NftPoolDetail() {
                   <Muted>Reward token:</Muted> <code>{pool.onChain.rewardTokenAddress || 'Unavailable'}</code>
                 </div>
                 <div>
-                  <Muted>Side rewards:</Muted>{' '}
+                  <Muted>Side payout ratios (% of primary reward):</Muted>{' '}
                   {pool.rewards.side
-                    .map((reward) => `${reward.token.symbol} (${reward.onChainPercentage?.toString() || 'unknown'})`)
+                    .map(
+                      (reward) =>
+                        `${reward.token.symbol} (${
+                          reward.onChainPercentage?.toString() || reward.configuredPercentage || 'unknown'
+                        }%)`,
+                    )
                     .join(', ') || 'None detected'}
                 </div>
                 <div>

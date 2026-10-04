@@ -119,8 +119,27 @@ function PoolCollectionStack({ pool }: { pool: NftPool }) {
   )
 }
 
+function formatRatio(value: string): string {
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
 export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; secondsPerBlock: number }) {
   const rewards = [pool.rewards.primary, ...pool.rewards.side]
+  const threshold = pool.onChain.participantThreshold || pool.sourceEconomics.originalParticipantThreshold
+  const thresholdSourceLabel = !pool.onChain.participantThreshold
+    ? pool.sourceEconomics.originalParticipantThresholdSource === 'frontend-config'
+      ? ' · config'
+      : pool.sourceEconomics.originalParticipantThresholdSource === 'deployment-provenance'
+      ? ' · deployment'
+      : ''
+    : ''
+  const sideRatios = pool.rewards.side.flatMap((reward) => {
+    const value = reward.onChainPercentage?.toString() || reward.configuredPercentage
+    return value && /^\d+$/.test(value) ? [`${reward.token.symbol} ${formatRatio(value)}%`] : []
+  })
+  const sideRatioTitle = sideRatios.length
+    ? `${sideRatios.join(' · ')} of primary reward`
+    : 'No side reward ratio available'
   const renewalLink = `/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`
   const prepareClone = () => saveNftPoolCloneDraft(pool, secondsPerBlock)
   return (
@@ -159,6 +178,20 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
             <AdminPoolMetricLabel>Reward rate</AdminPoolMetricLabel>
             <AdminPoolMetricValue>
               {formatBaseUnits(pool.onChain.rewardPerBlock, pool.rewards.primary.token.decimals)} / block
+            </AdminPoolMetricValue>
+          </AdminPoolMetric>
+        </AdminPoolMetricRow>
+        <AdminPoolMetricRow>
+          <AdminPoolMetric>
+            <AdminPoolMetricLabel>Min. effective power{thresholdSourceLabel}</AdminPoolMetricLabel>
+            <AdminPoolMetricValue>{threshold?.toString() || 'Unavailable'}</AdminPoolMetricValue>
+          </AdminPoolMetric>
+          <AdminPoolMetric title={sideRatioTitle}>
+            <AdminPoolMetricLabel>Side payout ratio</AdminPoolMetricLabel>
+            <AdminPoolMetricValue>
+              {sideRatios.length
+                ? `${sideRatios[0]}${sideRatios.length > 1 ? ` +${sideRatios.length - 1}` : ''}`
+                : 'None'}
             </AdminPoolMetricValue>
           </AdminPoolMetric>
         </AdminPoolMetricRow>
