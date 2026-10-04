@@ -123,6 +123,7 @@ export interface NftPoolOnChainTruth {
   configuredInitialPoolCapacity?: BigNumber
   currentRemainingPoolCapacity?: BigNumber
   totalShares?: BigNumber
+  /** Number of NFTs held by the pool across its configured collections. */
   stakedBalance?: BigNumber
   poolLimitPerUser?: BigNumber
   numberBlocksForUserLimit?: number

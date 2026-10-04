@@ -189,6 +189,7 @@ it('hydrates card power from chain and recovers block timing for older publicati
   expect(record.snapshot.secondsPerBlock).toBe(3)
   const updated = pool()
   updated.onChain.totalShares = BigNumber.from(36)
+  updated.onChain.stakedBalance = BigNumber.from(2)
   ;(readNftPoolByAddress as jest.Mock).mockResolvedValue(updated)
   const hydrated = await hydratePublishedPool(
     { ...record, snapshot: { ...record.snapshot, secondsPerBlock: undefined } },
@@ -196,7 +197,7 @@ it('hydrates card power from chain and recovers block timing for older publicati
   )
   expect(hydrated.snapshot.secondsPerBlock).toBe(3)
   expect(hydrated.snapshot.totalShares).toBe('36')
-  expect(hydrated.snapshot.stakedBalance).toBeUndefined()
+  expect(hydrated.snapshot.stakedBalance).toBe('2')
   expect(hydrated.snapshot.collections[0].weight).toBe('30')
 })
 

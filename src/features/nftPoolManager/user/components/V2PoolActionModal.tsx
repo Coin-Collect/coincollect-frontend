@@ -90,7 +90,61 @@ const ActionFeedbackCard = styled.div<{ $kind: 'cancelled' | 'error' }>`
   background: ${({ theme }) => theme.colors.backgroundAlt};
 `
 
+const ActionNoticeCard = styled.div<{ $kind: 'success' | 'pending' }>`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 12px;
+  padding: 13px 15px;
+  border: 1px solid
+    ${({ theme, $kind }) => ($kind === 'success' ? theme.colors.success : theme.colors.warning)};
+  border-radius: 14px;
+  background: ${({ $kind }) =>
+    $kind === 'success' ? 'rgba(49, 208, 170, 0.1)' : 'rgba(255, 178, 55, 0.1)'};
+`
+
+const NoticeIcon = styled.div<{ $kind: 'success' | 'pending' }>`
+  display: flex;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: ${({ $kind }) =>
+    $kind === 'success' ? 'rgba(49, 208, 170, 0.16)' : 'rgba(255, 178, 55, 0.16)'};
+`
+
+const NoticeContent = styled.div`
+  min-width: 0;
+  flex: 1;
+`
+
+const TransactionHash = styled.code`
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 7px;
+  padding: 4px 8px;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  border-radius: 8px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  font-size: 12px;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+`
+
 type ActionFeedback = { kind: 'cancelled' | 'error'; title: string; message: string }
+type ActionNotice = {
+  kind: 'success' | 'pending'
+  title: string
+  message?: string
+  transactionHash?: string
+}
 
 function getActionFeedback(cause: unknown): ActionFeedback {
   const value = cause as {
@@ -184,7 +238,7 @@ export default function V2PoolActionModal({
   const [working, setWorking] = useState(false)
   const [approvingCollection, setApprovingCollection] = useState<string>()
   const [error, setError] = useState<ActionFeedback>()
-  const [notice, setNotice] = useState<string>()
+  const [notice, setNotice] = useState<ActionNotice>()
   const [pendingVerification, setPendingVerification] = useState<ConfirmedV2WriteVerificationError>()
   const [refreshPending, setRefreshPending] = useState(false)
   const [forfeitConfirmed, setForfeitConfirmed] = useState(false)
@@ -438,21 +492,31 @@ export default function V2PoolActionModal({
     setNotice(undefined)
     try {
       const result = await operation()
-      setNotice(`${successText} · ${result.transactionHash.slice(0, 10)}…`)
+      setNotice({ kind: 'success', title: successText, transactionHash: result.transactionHash })
       try {
         await onSuccess()
         const updated = await refresh()
         if (!updated) throw new Error('Position data is not available yet.')
       } catch {
         setRefreshPending(true)
-        setNotice('Transaction confirmed; position refresh is pending. Do not submit this transaction again.')
+        setNotice({
+          kind: 'pending',
+          title: 'Transaction confirmed',
+          message: 'Position refresh is pending. Do not submit this transaction again.',
+          transactionHash: result.transactionHash,
+        })
         return
       }
       if (mode !== 'stake' || successText === 'NFTs staked') onDismiss?.()
     } catch (cause) {
       if (cause instanceof ConfirmedV2WriteVerificationError) {
         setPendingVerification(cause)
-        setNotice(`${cause.message} Do not submit this transaction again.`)
+        setNotice({
+          kind: 'pending',
+          title: 'Transaction confirmed; verification is pending',
+          message: `${cause.message} Do not submit this transaction again.`,
+          transactionHash: cause.receipt.transactionHash,
+        })
         notifyV2UserPositionChanged()
         void onSuccess().catch(() => undefined)
         return
@@ -475,7 +539,10 @@ export default function V2PoolActionModal({
       if (!updated) throw new Error('Position data is not available yet.')
       setPendingVerification(undefined)
       setRefreshPending(false)
-      setNotice(t('Confirmed transaction and on-chain position are now verified.'))
+      setNotice({
+        kind: 'success',
+        title: t('Transaction and on-chain position verified'),
+      })
       onDismiss?.()
     } catch (cause) {
       setError(getActionFeedback(cause))
@@ -941,9 +1008,35 @@ export default function V2PoolActionModal({
             </ActionFeedbackCard>
           )}
           {notice && (
-            <Text role="status" color="success" mt="12px">
-              {notice}
-            </Text>
+            <ActionNoticeCard
+              $kind={notice.kind}
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <NoticeIcon $kind={notice.kind}>
+                {notice.kind === 'success' ? (
+                  <CheckmarkCircleFillIcon width="20px" color="success" />
+                ) : (
+                  <InfoIcon width="20px" color="warning" />
+                )}
+              </NoticeIcon>
+              <NoticeContent>
+                <Text bold color={notice.kind === 'success' ? 'success' : 'warning'}>
+                  {t(notice.title)}
+                </Text>
+                {notice.message && (
+                  <Text small color="textSubtle" mt="3px" style={{ overflowWrap: 'anywhere' }}>
+                    {t(notice.message)}
+                  </Text>
+                )}
+                {notice.transactionHash && (
+                  <TransactionHash title={notice.transactionHash}>
+                    {notice.transactionHash}
+                  </TransactionHash>
+                )}
+              </NoticeContent>
+            </ActionNoticeCard>
           )}
           {actionsBlocked && (
             <Button width="100%" variant="secondary" mt="10px" disabled={working} onClick={retryConfirmedVerification}>

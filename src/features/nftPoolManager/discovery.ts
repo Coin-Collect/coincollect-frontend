@@ -83,6 +83,17 @@ const asBigNumber = (value: any): BigNumber | undefined => {
   }
 }
 
+export async function readPoolStakedNftCount(
+  collectionAddresses: string[],
+  readCollectionBalance: (collectionAddress: string) => Promise<BigNumber>,
+): Promise<BigNumber> {
+  const uniqueAddresses = Array.from(
+    new Map(collectionAddresses.map((address) => [address.toLowerCase(), address])).values(),
+  )
+  const balances = await Promise.all(uniqueAddresses.map(readCollectionBalance))
+  return balances.reduce((total, balance) => total.add(balance), ZERO)
+}
+
 async function readOptional<T>(
   contract: Contract,
   method: string,
@@ -1105,7 +1116,8 @@ export async function getNftPoolRegistry(
 /** Exact-address read, independent from indexer discovery and legacy pid lookup. */
 async function readExactV2Pool(provider: Provider, address: string): Promise<NftPool> {
   const network = await provider.getNetwork()
-  if (network.chainId !== getPolygonRuntimeChainId()) throw new Error('Expected Polygon network or its isolated local fork.')
+  if (network.chainId !== getPolygonRuntimeChainId())
+    throw new Error('Expected Polygon network or its isolated local fork.')
   const currentBlock = await provider.getBlockNumber()
   const pool = await readV2PoolWithTimeout(
     provider,
@@ -1123,6 +1135,15 @@ async function readExactV2Pool(provider: Provider, address: string): Promise<Nft
     [pool.rewards.primary, ...pool.rewards.side].map(
       (reward) => new Contract(reward!.token.address, erc20Abi, provider).balanceOf(address) as Promise<BigNumber>,
     ),
+  )
+  // V2 totalShares is weighted power, not an NFT count. Count ERC-721s held by
+  // the pool across every configured collection, pinned to this read's block.
+  pool.onChain.stakedBalance = await readPoolStakedNftCount(
+    pool.collections.map(({ collection }) => collection.address),
+    async (collectionAddress) =>
+      new Contract(collectionAddress, erc721Abi, provider).callStatic.balanceOf(address, {
+        blockTag: currentBlock,
+      }) as Promise<BigNumber>,
   )
   pool.onChain.rewardBalance = balances[0]
   pool.rewards.side.forEach((reward, index) => {
