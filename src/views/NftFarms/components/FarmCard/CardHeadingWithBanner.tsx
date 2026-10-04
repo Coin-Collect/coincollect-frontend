@@ -18,7 +18,7 @@ import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import AllowedNftsModal from 'components/AllowedNftsModal/AllowedNftsModal'
 import { NextLinkFromReactRouter } from 'components/NextLink'
-import { useNftFallbackSource } from 'utils/nftFallback'
+import { isRemoteNftImageSource, useNftFallbackSource } from 'utils/nftFallback'
 
 export interface ExpandableSectionProps {
   lpLabel?: string
@@ -299,7 +299,14 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
           $clickable={pid !== undefined || Boolean(poolPageUrl || onOpenDetails)}
           onClick={handleOpenPoolPage}
         >
-          <StyledImage src={bannerSrc} alt={`${lpLabel} banner`} height={220} width={550} onError={handleBannerError} />
+          <StyledImage
+            src={bannerSrc}
+            alt={`${lpLabel} banner`}
+            height={220}
+            width={550}
+            unoptimized={isRemoteNftImageSource(bannerSrc)}
+            onError={handleBannerError}
+          />
           <BannerOverlay />
           <StatusContainer>
             <StatusBadge status={status}>{statusLabel}</StatusBadge>

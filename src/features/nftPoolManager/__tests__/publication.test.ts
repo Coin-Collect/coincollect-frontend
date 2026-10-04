@@ -101,12 +101,17 @@ it('captures metadata separately, retains plan hash and survives session reload'
 it('publishes exactly one address-native card and notifies the current tab', async () => {
   const listener = jest.fn()
   window.addEventListener(PUBLICATION_EVENT, listener)
-  const value = { ...session(), publicationMetadata: { name: 'KEY Rewards', collections: [] } }
+  const banner = 'https://images.example.org/custom-key-pool-banner.webp'
+  const value = {
+    ...session(),
+    publicationMetadata: { name: 'KEY Rewards', banner, collections: [] },
+  }
   await publishCompletedNftPool(value, provider)
   await publishCompletedNftPool(value, provider)
   const records = localPublicationStore.read()
   expect(records).toHaveLength(1)
   expect(records[0].metadata.name).toBe('KEY Rewards')
+  expect(records[0].metadata.banner).toBe(banner)
   expect(records[0].snapshot.rewards[0].symbol).toBe('WPOL')
   expect(records[0]).not.toHaveProperty('pid')
   expect(listener).toHaveBeenCalledTimes(2)

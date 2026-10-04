@@ -5,6 +5,9 @@ const FALLBACK_IMAGE_COUNT = 38
 
 const buildFallbackSrc = (index: number) => `${FALLBACK_IMAGE_BASE_PATH}/${index}.jpg`
 
+/** Public pool artwork can come from arbitrary operator-provided image hosts. */
+export const isRemoteNftImageSource = (src?: string): boolean => Boolean(src && /^https?:\/\//i.test(src))
+
 export const getRandomNftFallbackSrc = (exclude?: string): string => {
   let candidate = exclude
 
@@ -20,10 +23,7 @@ export const getRandomNftFallbackSrc = (exclude?: string): string => {
   return buildFallbackSrc(1)
 }
 
-export const useNftFallbackSource = (
-  src?: string,
-  onError?: (event: SyntheticEvent<Element, Event>) => void,
-) => {
+export const useNftFallbackSource = (src?: string, onError?: (event: SyntheticEvent<Element, Event>) => void) => {
   const [currentSrc, setCurrentSrc] = useState<string>(() => (src ? src : getRandomNftFallbackSrc()))
 
   useEffect(() => {

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NftCollection, NftPool, NftPoolDraft, NftPoolDraftReward } from '../../types'
 import type { PoolEconomicsCalculation } from '../../economics'
@@ -7,6 +8,7 @@ import type { NftDraftValidationResult } from '../../validation'
 import type { NftPreflightResult } from '../../launch/types'
 import { findNftCollection } from '../../registry'
 import { collectionImageCandidates, resolveNftAssetUrl } from '../../assets'
+import { isLocalForkMode } from 'config/localFork'
 import {
   calculateRewardSharePreview,
   calculateSoloStakeRewardSharePreview,
@@ -54,7 +56,15 @@ import {
   RewardAreaButton,
   RewardChip,
   ReviewCheck,
+  ReviewCheckDetail,
   ReviewChecks,
+  ReviewCheckGroup,
+  ReviewGroupCount,
+  ReviewGroupHeader,
+  ReviewGroupMark,
+  ReviewGroupTitle,
+  ReviewToggle,
+  ReviewSummary,
   SidePanel,
   SidePanelTitle,
   SharingCallout,
@@ -175,7 +185,28 @@ function StudioModalShell({
   onClose: () => void
   children: React.ReactNode
 }) {
-  return (
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const body = document.body
+    const previousOverflow = body.style.overflow
+    const previousPaddingRight = body.style.paddingRight
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    const currentPaddingRight = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0
+
+    setPortalTarget(body)
+    body.style.overflow = 'hidden'
+    if (scrollbarWidth > 0) body.style.paddingRight = `${currentPaddingRight + scrollbarWidth}px`
+
+    return () => {
+      body.style.overflow = previousOverflow
+      body.style.paddingRight = previousPaddingRight
+    }
+  }, [])
+
+  if (!portalTarget) return null
+
+  return createPortal(
     <ModalBackdrop onClick={onClose}>
       <StudioModal role="dialog" aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}>
         <ModalHeader>
@@ -189,8 +220,45 @@ function StudioModalShell({
         </ModalHeader>
         {children}
       </StudioModal>
-    </ModalBackdrop>
+    </ModalBackdrop>,
+    portalTarget,
   )
+}
+
+function fundingCheckDetail(
+  key: string,
+  result: NftPreflightResult,
+  rewards: NftPoolDraftReward[],
+): string | undefined {
+  const match = /^token-balance-(\d+)$/.exec(key)
+  if (!match) return undefined
+
+  const index = Number(match[1])
+  const reward = rewards[index]
+  if (!reward) return undefined
+  const balance = result.tokenBalances.find((item) => item.tokenAddress.toLowerCase() === reward.address.toLowerCase())
+  if (!balance || balance.decimals === undefined) return undefined
+
+  const required = BigNumber.from(balance.requiredBalance)
+  const available = BigNumber.from(balance.walletBalance)
+  const shortfall = required.gt(available) ? required.sub(available) : BigNumber.from(0)
+  const symbol = balance.symbol || reward.symbol
+  const selectedAddress = balance.tokenAddress
+  const requiredAmount = formatBaseUnits(required, balance.decimals)
+  const availableAmount = formatBaseUnits(available, balance.decimals)
+
+  if (shortfall.isZero()) {
+    return `Required ${requiredAmount} ${symbol}; this wallet has ${availableAmount} ${symbol}. The balance is sufficient. Selected contract: ${selectedAddress}.`
+  }
+
+  const nextStep = isLocalForkMode
+    ? 'Select a reward token with enough balance, or add the funded fork-only token by its exact address from npm run fork:status. Tokens with the same symbol can have different contract addresses.'
+    : 'Select a reward token with enough balance or fund this connected wallet before continuing.'
+
+  return `Required ${requiredAmount} ${symbol}; this wallet has ${availableAmount} ${symbol}; short by ${formatBaseUnits(
+    shortfall,
+    balance.decimals,
+  )} ${symbol}. Selected contract: ${selectedAddress}. ${nextStep}`
 }
 
 function statusTone(validation: NftDraftValidationResult): 'draft' | 'ready' {
@@ -265,6 +333,7 @@ export default function NftPoolCardStudio({
   onOpenAdvanced,
 }: NftPoolCardStudioProps) {
   const [modal, setModal] = useState<StudioModalName>(null)
+  const [showAllPassedChecks, setShowAllPassedChecks] = useState(false)
   const [customCollectionAddress, setCustomCollectionAddress] = useState('')
   const [customRewardAddress, setCustomRewardAddress] = useState('')
   const [customRewardIsSide, setCustomRewardIsSide] = useState(true)
@@ -649,7 +718,12 @@ export default function NftPoolCardStudio({
           <option value="side">Additional reward</option>
         </ModalSelect>
       </ModalField>
-      <Hint>ERC-20 metadata is read from Polygon. Custom tokens are saved in this pool draft only.</Hint>
+      <Hint>
+        ERC-20 metadata is read from the connected network.{' '}
+        {isLocalForkMode
+          ? 'On LOCAL FORK, same-symbol faucet tokens use a different contract address. Add the fork-only token address printed by npm run fork:status.'
+          : 'Custom tokens are saved in this pool draft only.'}
+      </Hint>
       <ButtonCluster style={{ marginTop: 12 }}>
         <StudioButton
           type="button"
@@ -830,21 +904,94 @@ export default function NftPoolCardStudio({
           }
         />
       </SidePanel>
+      {reviewResult ? (
+        <ReviewSummary $ok={reviewResult.ok} role={reviewResult.ok ? 'status' : 'alert'}>
+          <strong>{reviewResult.ok ? 'Preflight passed' : 'Pool creation is blocked'}</strong>
+          <span>
+            {reviewResult.ok
+              ? reviewResult.checks.some((check) => check.status === 'WARN')
+                ? 'The remaining warning is informational and does not prevent creation.'
+                : 'All required checks passed. Create Pool can continue.'
+              : `${
+                  reviewResult.checks.filter((check) => check.status === 'BLOCK').length
+                } blocking check(s) must be fixed. Informational warnings do not prevent creation.`}
+          </span>
+        </ReviewSummary>
+      ) : null}
       {!reviewResult && !reviewBusy ? (
         <Hint>Review runs the Polygon network, authority, balances, gas and launch simulation checks.</Hint>
       ) : null}
       {reviewBusy ? <Hint>Checking Polygon setup…</Hint> : null}
       {reviewResult ? (
         <ReviewChecks>
-          {reviewResult.checks.map((check) => (
-            <ReviewCheck key={`${check.key}-${check.label}`} $status={check.status}>
-              <strong>{check.status === 'PASS' ? '✓' : check.status === 'WARN' ? '!' : '×'}</strong>
-              <span>
-                {check.label}
-                {check.detail ? ` — ${check.detail}` : ''}
-              </span>
-            </ReviewCheck>
-          ))}
+          {(['BLOCK', 'WARN', 'PASS'] as const).map((status) => {
+            const checks = reviewResult.checks.filter((check) => check.status === status)
+            if (!checks.length) return null
+
+            const passedPreviewLimit = 3
+            const visibleChecks =
+              status === 'PASS' && !showAllPassedChecks ? checks.slice(0, passedPreviewLimit) : checks
+            const groupTitle = status === 'BLOCK' ? 'Needs fixing' : status === 'WARN' ? 'Warnings' : 'Passed checks'
+            const groupDescription =
+              status === 'BLOCK'
+                ? 'Resolve these items before creating the pool.'
+                : status === 'WARN'
+                ? 'Review these notes; warnings may still allow you to continue.'
+                : checks.length > passedPreviewLimit
+                ? showAllPassedChecks
+                  ? 'All passed checks are visible.'
+                  : 'The first three are shown. Expand to inspect every check.'
+                : 'All required checks passed.'
+
+            return (
+              <ReviewCheckGroup key={status} $status={status}>
+                <ReviewGroupHeader>
+                  <ReviewGroupMark $status={status} aria-hidden="true">
+                    {status === 'BLOCK' ? '×' : status === 'WARN' ? '!' : '✓'}
+                  </ReviewGroupMark>
+                  <ReviewGroupTitle>
+                    <strong>{groupTitle}</strong>
+                    <span>{groupDescription}</span>
+                  </ReviewGroupTitle>
+                  <ReviewGroupCount $status={status}>
+                    {status === 'PASS' && checks.length > passedPreviewLimit && !showAllPassedChecks
+                      ? `${Math.min(checks.length, passedPreviewLimit)} / ${checks.length}`
+                      : checks.length}
+                  </ReviewGroupCount>
+                </ReviewGroupHeader>
+                <div id={status === 'PASS' ? 'nft-pool-passed-checks' : undefined}>
+                  {visibleChecks.map((check) => {
+                    const fundingDetail = fundingCheckDetail(check.key, reviewResult, rewards)
+                    return (
+                      <ReviewCheck key={`${check.key}-${check.label}`} $status={check.status}>
+                        <strong aria-hidden="true">
+                          {check.status === 'PASS' ? '✓' : check.status === 'WARN' ? '!' : '×'}
+                        </strong>
+                        <div>
+                          <span>{check.label}</span>
+                          {check.detail ? <ReviewCheckDetail>{check.detail}</ReviewCheckDetail> : null}
+                          {fundingDetail ? <ReviewCheckDetail>{fundingDetail}</ReviewCheckDetail> : null}
+                        </div>
+                      </ReviewCheck>
+                    )
+                  })}
+                </div>
+                {status === 'PASS' && checks.length > passedPreviewLimit ? (
+                  <ReviewToggle
+                    type="button"
+                    aria-expanded={showAllPassedChecks}
+                    aria-controls="nft-pool-passed-checks"
+                    onClick={() => setShowAllPassedChecks((expanded) => !expanded)}
+                  >
+                    {showAllPassedChecks
+                      ? 'Show fewer passed checks'
+                      : `Show ${checks.length - passedPreviewLimit} more passed checks`}
+                    <span aria-hidden="true">{showAllPassedChecks ? '⌃' : '⌄'}</span>
+                  </ReviewToggle>
+                ) : null}
+              </ReviewCheckGroup>
+            )
+          })}
         </ReviewChecks>
       ) : null}
       {reviewResult && !reviewResult.ok ? (
@@ -853,7 +1000,10 @@ export default function NftPoolCardStudio({
       <ButtonCluster style={{ marginTop: 16 }}>
         <StudioButton
           type="button"
-          onClick={onReview}
+          onClick={() => {
+            setShowAllPassedChecks(false)
+            onReview()
+          }}
           disabled={reviewBusy || validation.blockers.length > 0 || !account}
         >
           {reviewBusy ? 'Checking…' : reviewResult ? 'Run checks again' : 'Run checks'}

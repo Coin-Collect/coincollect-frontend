@@ -451,19 +451,22 @@ export const Hint = styled.p`
 
 export const ModalBackdrop = styled.div`
   position: fixed;
-  z-index: 100;
+  z-index: 1200;
   inset: 0;
   display: grid;
   place-items: center;
   padding: 20px;
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: rgba(4, 6, 15, 0.72);
   backdrop-filter: blur(8px);
 `
 
 export const StudioModal = styled.section`
   width: min(100%, 700px);
-  max-height: min(760px, calc(100vh - 40px));
+  max-height: min(760px, calc(100dvh - 40px));
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid ${({ theme }) => `${theme.colors.primary}44`};
   border-radius: 22px;
   padding: 22px;
@@ -473,10 +476,9 @@ export const StudioModal = styled.section`
   animation: ${floatIn} 180ms ease-out;
 
   @media (max-width: 600px) {
-    align-self: end;
     width: 100%;
-    max-height: calc(100vh - 16px);
-    border-radius: 22px 22px 0 0;
+    max-height: calc(100dvh - 24px);
+    border-radius: 22px;
     padding: 18px;
   }
 `
@@ -631,17 +633,176 @@ export const ModalDivider = styled.div`
 
 export const ReviewChecks = styled.div`
   display: grid;
-  gap: 6px;
+  gap: 10px;
   margin-top: 14px;
+`
+
+export const ReviewCheckGroup = styled.section<{ $status: 'BLOCK' | 'WARN' | 'PASS' }>`
+  overflow: hidden;
+  border: 1px solid
+    ${({ theme, $status }) =>
+      `${
+        $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success
+      }55`};
+  border-radius: 15px;
+  background: ${({ theme, $status }) => {
+    const accent =
+      $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success
+    return `linear-gradient(145deg, ${accent}0d, ${theme.colors.background})`
+  }};
+`
+
+export const ReviewGroupHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px 13px;
+  border-bottom: 1px solid ${({ theme }) => `${theme.colors.cardBorder}88`};
+  background: ${({ theme }) => `${theme.colors.backgroundAlt}55`};
+`
+
+export const ReviewGroupMark = styled.span<{ $status: 'BLOCK' | 'WARN' | 'PASS' }>`
+  display: grid;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: ${({ theme, $status }) =>
+    $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success};
+  background: ${({ theme, $status }) =>
+    `${
+      $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success
+    }22`};
+  font-size: 15px;
+  font-weight: 900;
+`
+
+export const ReviewGroupTitle = styled.div`
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+
+  & > strong {
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  & > span {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 10px;
+    line-height: 1.35;
+  }
+`
+
+export const ReviewGroupCount = styled.span<{ $status: 'BLOCK' | 'WARN' | 'PASS' }>`
+  display: inline-flex;
+  min-width: 28px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: ${({ theme, $status }) =>
+    $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success};
+  background: ${({ theme, $status }) =>
+    `${
+      $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success
+    }18`};
+  font-size: 10px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
 `
 
 export const ReviewCheck = styled.div<{ $status: 'PASS' | 'WARN' | 'BLOCK' }>`
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 9px;
+  padding: 10px 13px;
   color: ${({ theme, $status }) =>
     $status === 'PASS' ? theme.colors.success : $status === 'WARN' ? theme.colors.warning : theme.colors.failure};
+  font-size: 11px;
+  line-height: 1.45;
+
+  & + & {
+    border-top: 1px solid ${({ theme }) => `${theme.colors.cardBorder}66`};
+  }
+
+  & > strong {
+    display: grid;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    margin-top: -1px;
+    border-radius: 50%;
+    background: ${({ theme, $status }) =>
+      `${
+        $status === 'BLOCK' ? theme.colors.failure : $status === 'WARN' ? theme.colors.warning : theme.colors.success
+      }18`};
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  & > div {
+    min-width: 0;
+    flex: 1;
+  }
+`
+
+export const ReviewToggle = styled.button`
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-top: 1px solid ${({ theme }) => `${theme.colors.cardBorder}66`};
+  padding: 10px 12px;
+  color: ${({ theme }) => theme.colors.primary};
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  transition: background 140ms ease, color 140ms ease;
+
+  &:hover,
+  &:focus-visible {
+    color: ${({ theme }) => theme.colors.text};
+    background: ${({ theme }) => `${theme.colors.primary}12`};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: -2px;
+  }
+`
+
+export const ReviewCheckDetail = styled.span`
+  display: block;
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+`
+
+export const ReviewSummary = styled.div<{ $ok: boolean }>`
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  border: 1px solid ${({ theme, $ok }) => ($ok ? theme.colors.success : theme.colors.failure)};
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: ${({ theme, $ok }) => ($ok ? theme.colors.success : theme.colors.failure)};
+  background: ${({ theme }) => theme.colors.background};
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
+
+  & > span {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
 `
