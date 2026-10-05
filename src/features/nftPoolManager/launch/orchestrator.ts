@@ -139,7 +139,9 @@ function commonChainReasons(session: NftPoolLaunchSession, snapshot: NftLaunchPo
   addReason(
     reasons,
     snapshot.chainId !== getPolygonRuntimeChainId(),
-    isLocalForkMode ? 'Connected chain is not the isolated local Polygon fork.' : 'Connected chain is not Polygon (chain 137).',
+    isLocalForkMode
+      ? 'Connected chain is not the isolated local Polygon fork.'
+      : 'Connected chain is not Polygon (chain 137).',
   )
   addReason(reasons, !snapshot.account, 'Connected wallet address could not be revalidated.')
   addReason(
@@ -395,9 +397,28 @@ export function nextNftLaunchStageAfterDeploy(session: NftPoolLaunchSession): La
 }
 
 export function nextNftLaunchStageAfterWeights(session: NftPoolLaunchSession): LaunchStage {
-  return session.plan.postDeploy.performanceFee || session.plan.postDeploy.feeTo
+  return (session.plan.postDeploy.performanceFee || session.plan.postDeploy.feeTo) && !session.verification.fee?.passed
     ? 'FEE_CONFIG_REQUIRED'
     : 'FUNDING_REQUIRED'
+}
+
+/**
+ * Finds required configuration whose read-back is missing and has no
+ * unresolved transaction hash. Resume can safely re-read this state and send
+ * the operator to the explicit setup action if the on-chain values differ.
+ */
+export function nextUnverifiedSetupStep(session: NftPoolLaunchSession): 'weights' | 'fee' | null {
+  if (
+    session.plan.collectionConfiguration.collectionWeightConfigurationRequired &&
+    !session.verification.weights?.passed &&
+    !session.transactionHashes.weights
+  )
+    return 'weights'
+
+  const feeRequired = Boolean(session.plan.postDeploy.performanceFee || session.plan.postDeploy.feeTo)
+  if (feeRequired && !session.verification.fee?.passed && !session.transactionHashes.fee) return 'fee'
+
+  return null
 }
 
 export function hasConfirmedDeployment(session: NftPoolLaunchSession): boolean {

@@ -67,9 +67,8 @@ After connecting, confirm MetaMask still shows **CoinCollect Polygon Fork (LOCAL
 
 `npm run fork:status` prints the current local balances and addresses. Every reset reseeds them.
 
-- 10,000 native POL is assigned before wrapping; after seeding, about 9,000 native POL remains for gas and 1,000 WPOL is held as a separate ERC-20 reward token.
-- 1,000 WPOL, wrapped from local native POL at the real Polygon WPOL contract address.
-- 1,000,000 COLLECT and 10,000 USDT on fork-only faucet contracts. The status output gives their addresses. The seed also tries local-only impersonated transfers from known Polygon holders; any canonical token balance is reported separately.
+- Both imported test wallets (admin account #0 and NFT user account #2) are seeded to at least 5,000,000 canonical Polygon COLLECT when a fork holder can provide it; otherwise a fork-only COLLECT faucet token fills the target. For USDT, the seed tries known Polygon holders first and uses the fork-only USDT faucet token when canonical funding is unavailable. `npm run fork:status` prints canonical and fork-only balances and addresses separately.
+- Both test wallets receive 1,000,000 WPOL at the real Polygon WPOL contract address, wrapped from synthetic native POL on this fork. About 10,000 native POL remains separately available for gas.
 - A local ERC-721 test collection with at least two wallet-owned token IDs. Status prints the contract and IDs. It supports the ERC-721 approval and transfer methods.
 - A second local user account with 10,000 native POL and three IDs in each test NFT collection. `fork:status` prints this wallet address and IDs; use it to test staking from a non-admin wallet.
 - The configured Polygon NFT SmartChef factory, forked at its real address, with its owner transferred to the test account **on the local fork only**.

@@ -18,6 +18,10 @@ const CHAIN_ID = 31337
 const TEST_WALLET = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 const DEPLOYER_WALLET = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
 const NFT_USER_WALLET = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC'
+const REWARD_WALLETS = [TEST_WALLET, NFT_USER_WALLET]
+const COLLECT_TARGET = '5000000'
+const USDT_TARGET = '1000000'
+const WPOL_TARGET = '1000000'
 const FACTORY = '0xa7983F8B45860626398b391E9Bb71416A26349D4'
 const COLLECT = '0x56633733fc8BAf9f730AD2b6b9956Ae22c6d4148'
 const USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
@@ -332,7 +336,15 @@ async function deployedFixtureContract(state, artifacts, name, args, signer, sta
   return contract
 }
 
-async function transferFromForkHolder(holderAddress, tokenAddress, decimals, amount, label, provider) {
+async function transferFromForkHolder(
+  holderAddress,
+  tokenAddress,
+  decimals,
+  amount,
+  label,
+  provider,
+  recipientAddress = TEST_WALLET,
+) {
   const holder = utils.getAddress(holderAddress)
   let impersonated = false
   try {
@@ -344,8 +356,10 @@ async function transferFromForkHolder(holderAddress, tokenAddress, decimals, amo
     await localRpc('anvil_impersonateAccount', [holder])
     impersonated = true
     const token = tokenRead.connect(provider.getSigner(holder))
-    await waitTx(await token.transfer(TEST_WALLET, target), `Fork-only ${label} transfer`)
-    console.log(`  ${label}: copied ${amount} from a fork-impersonated Polygon holder (local state only).`)
+    await waitTx(await token.transfer(recipientAddress, target), `Fork-only ${label} transfer`)
+    console.log(
+      `  ${label}: copied ${amount} to ${recipientAddress} from a fork-impersonated Polygon holder (local state only).`,
+    )
     return true
   } catch {
     return false
@@ -405,11 +419,23 @@ async function ensureTestWalletIsEoa(provider, wallet = TEST_WALLET) {
   console.log(`  removed inherited EIP-7702 delegation from ${wallet} on this local fork only.`)
 }
 
-async function ensureWrappedPol(provider, walletSigner) {
+async function ensureWrappedPol(provider, walletSigner, walletAddress) {
   const wrapped = new Contract(WPOL, ERC20_ABI, walletSigner)
-  const target = utils.parseEther('1000')
-  const current = await wrapped.balanceOf(TEST_WALLET)
-  if (current.lt(target)) await waitTx(await wrapped.deposit({ value: target.sub(current) }), 'Local WPOL wrapping')
+  const target = utils.parseEther(WPOL_TARGET)
+  const current = await wrapped.balanceOf(walletAddress)
+  if (current.lt(target)) {
+    const missing = target.sub(current)
+    const nativeBalance = await provider.getBalance(walletAddress)
+    // Native POL is gas; only the exact deficit is wrapped into WPOL.
+    await localRpc('anvil_setBalance', [
+      walletAddress,
+      nativeBalance.add(missing).add(utils.parseEther('5')).toHexString(),
+    ])
+    await waitTx(
+      await wrapped.deposit({ value: missing }),
+      `Local WPOL wrapping for ${walletAddress}`,
+    )
+  }
 }
 
 async function ensureTestNfts(nft, recipient = TEST_WALLET, minimumCount = 2, firstTokenId = 1) {
@@ -464,19 +490,83 @@ async function seedFork() {
   const communityNft = await deployedFixtureContract(state, artifacts, 'LaunchNFT', [], deployer, 'communityNft')
   const forkCollect = await deployedFixtureContract(state, artifacts, 'ForkCollect', [TEST_WALLET], deployer)
   const forkUsdt = await deployedFixtureContract(state, artifacts, 'ForkUSDT', [TEST_WALLET], deployer)
-  const forkCollectBalance = await forkCollect.balanceOf(TEST_WALLET)
-  const collectTarget = utils.parseUnits('100000', 18)
-  if (forkCollectBalance.lt(collectTarget))
-    await waitTx(
-      await forkCollect.mint(TEST_WALLET, collectTarget.sub(forkCollectBalance)),
-      'Fork COLLECT test funding',
-    )
-  const forkUsdtBalance = await forkUsdt.balanceOf(TEST_WALLET)
-  const usdtTarget = utils.parseUnits('10000', 6)
-  if (forkUsdtBalance.lt(usdtTarget))
-    await waitTx(await forkUsdt.mint(TEST_WALLET, usdtTarget.sub(forkUsdtBalance)), 'Fork USDT test funding')
+  const collectTarget = utils.parseUnits(COLLECT_TARGET, 18)
+  const usdtTarget = utils.parseUnits(USDT_TARGET, 6)
 
-  await ensureWrappedPol(provider, walletSigner)
+  const realCollect = new Contract(COLLECT, ERC20_ABI, provider)
+  let actualCollectCopied = false
+  for (const recipient of REWARD_WALLETS) {
+    const balance = await realCollect.balanceOf(recipient)
+    if (balance.lt(collectTarget)) {
+      const missing = utils.formatUnits(collectTarget.sub(balance), 18)
+      const copied = await transferFromForkHolder(
+        KNOWN_COLLECT_HOLDER,
+        COLLECT,
+        18,
+        missing,
+        'Polygon COLLECT',
+        provider,
+        recipient,
+      )
+      actualCollectCopied = copied || actualCollectCopied
+    }
+  }
+
+  const realUsdt = new Contract(USDT, ERC20_ABI, provider)
+  let actualUsdtCopied = false
+  for (const recipient of REWARD_WALLETS) {
+    const balance = await realUsdt.balanceOf(recipient)
+    if (balance.lt(usdtTarget)) {
+      const missing = utils.formatUnits(usdtTarget.sub(balance), 6)
+      for (const holder of KNOWN_USDT_HOLDERS) {
+        if (
+          await transferFromForkHolder(
+            holder,
+            USDT,
+            6,
+            missing,
+            'Polygon USDT',
+            provider,
+            recipient,
+          )
+        ) {
+          actualUsdtCopied = true
+          break
+        }
+      }
+    }
+  }
+
+  for (const recipient of REWARD_WALLETS) {
+    const canonicalCollectBalance = await realCollect.balanceOf(recipient)
+    const forkCollectBalance = await forkCollect.balanceOf(recipient)
+    if (canonicalCollectBalance.gte(collectTarget)) {
+      if (forkCollectBalance.gt(0))
+        await waitTx(await forkCollect.burn(recipient, forkCollectBalance), `Remove redundant fork COLLECT for ${recipient}`)
+    } else if (forkCollectBalance.lt(collectTarget)) {
+      await waitTx(
+        await forkCollect.mint(recipient, collectTarget.sub(forkCollectBalance)),
+        `Fork COLLECT test funding for ${recipient}`,
+      )
+    }
+
+    const canonicalUsdtBalance = await realUsdt.balanceOf(recipient)
+    const forkUsdtBalance = await forkUsdt.balanceOf(recipient)
+    if (canonicalUsdtBalance.gte(usdtTarget)) {
+      if (forkUsdtBalance.gt(0))
+        await waitTx(await forkUsdt.burn(recipient, forkUsdtBalance), `Remove redundant fork USDT for ${recipient}`)
+    } else if (forkUsdtBalance.lt(usdtTarget)) {
+      await waitTx(
+        await forkUsdt.mint(recipient, usdtTarget.sub(forkUsdtBalance)),
+        `Fork USDT test funding for ${recipient}`,
+      )
+    }
+  }
+
+  for (const recipient of REWARD_WALLETS) {
+    await ensureWrappedPol(provider, provider.getSigner(recipient), recipient)
+  }
+
   const nftSigner = nft.connect(deployer)
   const communityNftSigner = communityNft.connect(deployer)
   const nftIds = await ensureTestNfts(nftSigner, TEST_WALLET, 2, 1)
@@ -484,32 +574,12 @@ async function seedFork() {
   const userNftIds = await ensureTestNfts(nftSigner, NFT_USER_WALLET, 3, 501)
   const userCommunityNftIds = await ensureTestNfts(communityNftSigner, NFT_USER_WALLET, 3, 501)
 
-  const realCollectBefore = await new Contract(COLLECT, ERC20_ABI, provider).balanceOf(TEST_WALLET)
-  let actualCollectCopied = false
-  if (realCollectBefore.lt(collectTarget)) {
-    actualCollectCopied = await transferFromForkHolder(
-      KNOWN_COLLECT_HOLDER,
-      COLLECT,
-      18,
-      '100000',
-      'Polygon COLLECT',
-      provider,
-    )
-  }
-  const realUsdtBefore = await new Contract(USDT, ERC20_ABI, provider).balanceOf(TEST_WALLET)
-  let actualUsdtCopied = false
-  if (realUsdtBefore.lt(usdtTarget)) {
-    for (const holder of KNOWN_USDT_HOLDERS) {
-      if (await transferFromForkHolder(holder, USDT, 6, '10000', 'Polygon USDT', provider)) {
-        actualUsdtCopied = true
-        break
-      }
-    }
-  }
-  const canonicalCollectReady = (await new Contract(COLLECT, ERC20_ABI, provider).balanceOf(TEST_WALLET)).gte(
-    collectTarget,
+  const canonicalCollectReady = await Promise.all(
+    REWARD_WALLETS.map(async (recipient) => (await realCollect.balanceOf(recipient)).gte(collectTarget)),
   )
-  const canonicalUsdtReady = (await new Contract(USDT, ERC20_ABI, provider).balanceOf(TEST_WALLET)).gte(usdtTarget)
+  const canonicalUsdtReady = await Promise.all(
+    REWARD_WALLETS.map(async (recipient) => (await realUsdt.balanceOf(recipient)).gte(usdtTarget)),
+  )
 
   state = {
     ...state,
@@ -531,19 +601,29 @@ async function seedFork() {
     communityNftIds,
     userNftIds,
     userCommunityNftIds,
-    actualCollectCopied: state.actualCollectCopied || actualCollectCopied || canonicalCollectReady,
-    actualUsdtCopied: state.actualUsdtCopied || actualUsdtCopied || canonicalUsdtReady,
+    actualCollectCopied: actualCollectCopied || canonicalCollectReady.every(Boolean),
+    actualUsdtCopied: actualUsdtCopied || canonicalUsdtReady.every(Boolean),
     seededAt: new Date().toISOString(),
   }
   writeState(state)
   console.log('Local fork seeded. No transaction was sent to Polygon mainnet.')
-  console.log(`  wallet: ${TEST_WALLET}`)
-  console.log(`  native POL (gas): ${formatToken(await provider.getBalance(TEST_WALLET), 18)}`)
-  console.log(`  WPOL: 1,000 (real WPOL contract on this fork; ERC-20 reward)`)
-  console.log(
-    `  fork COLLECT: ${utils.formatUnits(await forkCollect.balanceOf(TEST_WALLET), 18)} at ${forkCollect.address}`,
-  )
-  console.log(`  fork USDT: ${utils.formatUnits(await forkUsdt.balanceOf(TEST_WALLET), 6)} at ${forkUsdt.address}`)
+  for (const recipient of REWARD_WALLETS) {
+    const [native, collect, usdt, wpol, forkOnlyCollect, forkOnlyUsdt] = await Promise.all([
+      provider.getBalance(recipient),
+      realCollect.balanceOf(recipient),
+      realUsdt.balanceOf(recipient),
+      new Contract(WPOL, ERC20_ABI, provider).balanceOf(recipient),
+      forkCollect.balanceOf(recipient),
+      forkUsdt.balanceOf(recipient),
+    ])
+    console.log(`  wallet: ${recipient}`)
+    console.log(`    native POL (gas): ${formatToken(native, 18)}`)
+    console.log(`    canonical COLLECT: ${formatToken(collect, 18)} · fork-only COLLECT: ${formatToken(forkOnlyCollect, 18)}`)
+    console.log(`    canonical USDT: ${formatToken(usdt, 6)} · fork-only USDT: ${formatToken(forkOnlyUsdt, 6)}`)
+    console.log(`    WPOL ERC-20: ${formatToken(wpol, 18)}`)
+  }
+  console.log(`  fork-only COLLECT address: ${forkCollect.address}`)
+  console.log(`  fork-only USDT address: ${forkUsdt.address}`)
   console.log(`  test NFT: ${nft.address}, wallet-owned token IDs ${nftIds.join(', ')}`)
   console.log(`  test community NFT: ${communityNft.address}, wallet-owned token IDs ${communityNftIds.join(', ')}`)
   console.log(
@@ -552,9 +632,9 @@ async function seedFork() {
   console.log(`  NFT user test collection ${nft.address}, IDs ${userNftIds.join(', ')}`)
   console.log(`  NFT user community ${communityNft.address}, IDs ${userCommunityNftIds.join(', ')}`)
   console.log(`  factory owner: ${state.factoryOwner}`)
-  if (!canonicalCollectReady)
+  if (!canonicalCollectReady.every(Boolean))
     console.log('  canonical COLLECT unavailable: fork-only COLLECT test token is ready instead.')
-  if (!canonicalUsdtReady) console.log('  canonical USDT unavailable: fork-only USDT test token is ready instead.')
+  if (!canonicalUsdtReady.every(Boolean)) console.log('  canonical USDT unavailable: fork-only USDT test token is ready instead.')
 }
 
 function formatToken(value, decimals, places = 4) {
@@ -582,26 +662,34 @@ async function getStatus() {
     provider.getBalance(NFT_USER_WALLET),
     provider.getCode(NFT_USER_WALLET),
   ])
-  const tokenBalance = async (address) => {
+  const tokenBalance = async (address, wallet) => {
     try {
       const contract = new Contract(address, ERC20_ABI, provider)
       const [symbol, decimals, balance] = await Promise.all([
         contract.symbol(),
         contract.decimals(),
-        contract.balanceOf(TEST_WALLET),
+        contract.balanceOf(wallet),
       ])
       return { symbol, decimals: Number(decimals), raw: balance, display: formatToken(balance, Number(decimals)) }
     } catch {
       return { symbol: 'unavailable', decimals: 0, raw: utils.parseUnits('0', 0), display: 'unavailable' }
     }
   }
-  const [collect, usdt, wpol, forkCollect, forkUsdt] = await Promise.all([
-    tokenBalance(COLLECT),
-    tokenBalance(USDT),
-    tokenBalance(WPOL),
-    state.assets.forkCollect ? tokenBalance(state.assets.forkCollect) : null,
-    state.assets.forkUsdt ? tokenBalance(state.assets.forkUsdt) : null,
+  const readRewardBalances = async (wallet) => {
+    const [collect, usdt, wpol, forkCollect, forkUsdt] = await Promise.all([
+      tokenBalance(COLLECT, wallet),
+      tokenBalance(USDT, wallet),
+      tokenBalance(WPOL, wallet),
+      state.assets.forkCollect ? tokenBalance(state.assets.forkCollect, wallet) : null,
+      state.assets.forkUsdt ? tokenBalance(state.assets.forkUsdt, wallet) : null,
+    ])
+    return { collect, usdt, wpol, forkCollect, forkUsdt }
+  }
+  const [testWalletTokens, nftUserTokens] = await Promise.all([
+    readRewardBalances(TEST_WALLET),
+    readRewardBalances(NFT_USER_WALLET),
   ])
+  const { collect, usdt, wpol, forkCollect, forkUsdt } = testWalletTokens
   let nftIds = []
   if (state.assets.nft) {
     try {
@@ -625,20 +713,27 @@ async function getStatus() {
     readOwnedIds(state.assets.communityNft),
   ])
   const factoryOk = factoryCode !== '0x' && factoryOwner.toLowerCase() === TEST_WALLET.toLowerCase()
+  const hasRewardTarget = (canonical, forkOnly, target) =>
+    canonical.raw.gte(target) || Boolean(forkOnly?.raw.gte(target))
+  const collectTarget = utils.parseUnits(COLLECT_TARGET, 18)
+  const usdtTarget = utils.parseUnits(USDT_TARGET, 6)
+  const wpolTarget = utils.parseEther(WPOL_TARGET)
   const ready = Boolean(
     native.gte(utils.parseEther('100')) &&
       (!testWalletCode || testWalletCode === '0x') &&
       factoryOk &&
-      (collect.raw.gt(0) || Boolean(forkCollect?.raw.gt(0))) &&
-      (usdt.raw.gt(0) || Boolean(forkUsdt?.raw.gt(0))) &&
-      wpol.raw.gte(utils.parseEther('100')) &&
+      hasRewardTarget(collect, forkCollect, collectTarget) &&
+      hasRewardTarget(usdt, forkUsdt, usdtTarget) &&
+      wpol.raw.gte(wpolTarget) &&
       state.assets.nft &&
       state.assets.communityNft &&
       state.assets.communityNft.toLowerCase() !== state.assets.nft.toLowerCase() &&
       nftIds.length > 0 &&
-      native.gte(utils.parseEther('100')) &&
       nftUserNative.gte(utils.parseEther('100')) &&
       (!nftUserCode || nftUserCode === '0x') &&
+      hasRewardTarget(nftUserTokens.collect, nftUserTokens.forkCollect, collectTarget) &&
+      hasRewardTarget(nftUserTokens.usdt, nftUserTokens.forkUsdt, usdtTarget) &&
+      nftUserTokens.wpol.raw.gte(wpolTarget) &&
       nftUserIds.length > 0 &&
       nftUserCommunityIds.length > 0,
   )
@@ -653,6 +748,8 @@ async function getStatus() {
     nftUserCode,
     nftUserIds,
     nftUserCommunityIds,
+    testWalletTokens,
+    nftUserTokens,
     collect,
     usdt,
     wpol,
@@ -684,6 +781,11 @@ async function printStatus() {
     console.log(`  community NFT contract: ${status.state.assets.communityNft || 'not seeded'}`)
     console.log(`  NFT test wallet: ${NFT_USER_WALLET}`)
     console.log(`  NFT test wallet native POL (gas): ${formatToken(status.nftUserNative, 18)} POL`)
+    console.log(`  NFT user canonical COLLECT: ${status.nftUserTokens.collect.display}`)
+    console.log(`  NFT user fork-only COLLECT: ${status.nftUserTokens.forkCollect?.display || 'not seeded'}`)
+    console.log(`  NFT user canonical USDT: ${status.nftUserTokens.usdt.display}`)
+    console.log(`  NFT user fork-only USDT: ${status.nftUserTokens.forkUsdt?.display || 'not seeded'}`)
+    console.log(`  NFT user WPOL ERC-20: ${status.nftUserTokens.wpol.display}`)
     console.log(`  NFT test wallet main collection IDs: ${status.nftUserIds.join(', ') || 'none'}`)
     console.log(`  NFT test wallet community IDs: ${status.nftUserCommunityIds.join(', ') || 'none'}`)
     console.log(`  NFT test wallet code: ${status.nftUserCode === '0x' ? 'clear (EOA)' : 'present (not ready)'}`)

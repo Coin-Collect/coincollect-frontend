@@ -30,7 +30,7 @@ import {
 } from '../launch/transactions'
 import { runNftPoolPreflight } from '../launch/preflight'
 import { fundNftPoolTokenIfNeeded, primaryFundingAmount, sideFundingAmount } from '../launch/funding'
-import { moveNftLaunchScheduleLater } from '../launch/schedule'
+import { moveNftLaunchScheduleLater, remainingNftLaunchSetupWriteCount } from '../launch/schedule'
 import {
   verifyDeployedNftPool,
   verifyNftCollectionWeights,
@@ -50,6 +50,7 @@ import {
   getNftCanaryRecommendation,
   nextNftLaunchStageAfterDeploy,
   nextNftLaunchStageAfterWeights,
+  nextUnverifiedSetupStep,
   validateLaunchSessionInvariant,
   updateNftLaunchSession,
 } from '../launch/orchestrator'
@@ -903,6 +904,7 @@ export default function NftPoolLaunch() {
     }
     setBusy(true)
     setError('')
+    setMessage('Checking the saved launch state…')
     try {
       let refreshed = sessionRef.current || currentSession
       const operation = nextPendingLaunchOperation(refreshed)
@@ -1026,6 +1028,48 @@ export default function NftPoolLaunch() {
         return
       }
       refreshed = sessionRef.current || refreshed
+      const missingSetupStep = nextUnverifiedSetupStep(refreshed)
+      if (missingSetupStep === 'weights' && refreshed.poolAddress) {
+        setMessage('Reading the pool’s NFT power settings before unlocking reward funding…')
+        const verification = await verifyNftCollectionWeights(
+          simplePolygonRpcProvider,
+          refreshed.plan,
+          refreshed.poolAddress,
+        )
+        const verificationSnapshot = { ...refreshed.verification, weights: verification }
+        update({
+          verification: verificationSnapshot,
+          currentStage: verification.passed
+            ? nextNftLaunchStageAfterWeights({ ...refreshed, verification: verificationSnapshot })
+            : 'WEIGHTS_REQUIRED',
+          error: undefined,
+        })
+        setMessage(
+          verification.passed
+            ? 'NFT power settings already match the frozen plan. No wallet transaction was sent; continue to the next step.'
+            : 'NFT power settings are not verified. Review the read-back below, then choose Confirm NFT setup to request any required wallet transaction.',
+        )
+        return
+      }
+      if (missingSetupStep === 'fee' && refreshed.poolAddress) {
+        setMessage('Reading the pool’s fee settings before unlocking reward funding…')
+        const verification = await verifyNftPerformanceFee(
+          simplePolygonRpcProvider,
+          refreshed.plan,
+          refreshed.poolAddress,
+        )
+        update({
+          verification: { ...refreshed.verification, fee: verification },
+          currentStage: verification.passed ? 'FUNDING_REQUIRED' : 'FEE_CONFIG_REQUIRED',
+          error: undefined,
+        })
+        setMessage(
+          verification.passed
+            ? 'Fee settings already match the frozen plan. No wallet transaction was sent; continue to reward funding.'
+            : 'Fee settings are not verified. Review the read-back and use Confirm fee setup if the values need updating.',
+        )
+        return
+      }
       if (operation === 'funding' || refreshed.currentStage === 'FUNDING_IN_PROGRESS') {
         setBusy(false)
         await fund()
@@ -1112,7 +1156,15 @@ export default function NftPoolLaunch() {
     try {
       const current = await readFreshSnapshot(currentSession)
       if (current.startBlock === undefined) throw new Error('Pool start block could not be read.')
-      const nextSchedule = moveNftLaunchScheduleLater(currentSession.schedule, current.currentBlock)
+      // The schedule-update transaction itself and every still-unverified
+      // setup write consume blocks before funding's safety gate can pass.
+      const nextSchedule = moveNftLaunchScheduleLater(
+        currentSession.schedule,
+        current.currentBlock,
+        currentSession.schedule.measuredSecondsPerBlock,
+        currentSession.schedule.bufferSeconds,
+        1 + remainingNftLaunchSetupWriteCount(currentSession),
+      )
       const receipt = await updateNftPoolSchedule(
         library.getSigner(),
         currentSession.poolAddress,
@@ -1228,10 +1280,14 @@ export default function NftPoolLaunch() {
     }
   }
   const stageDescription =
-    (activeGateReason
-      ? 'This step is waiting on a required safety check. Review the reason below before continuing.'
-      : error || session.error
-      ? 'A launch operation needs attention. Review the alert above before continuing.'
+    (error
+      ? `Could not continue: ${error}`
+      : message
+      ? message
+      : activeGateReason
+      ? `This step is blocked: ${activeGateReason}`
+      : session.error
+      ? `Launch needs attention: ${session.error}`
       : message) ||
     (session.currentStage === 'COMPLETE'
       ? 'All required on-chain checks passed. This browser can now list the pool locally.'
@@ -1520,6 +1576,32 @@ export default function NftPoolLaunch() {
                   <CheckTable checks={session.verification.deployment.checks} />
                 </div>
               ) : null}
+            </Panel>
+          ) : null}
+
+          {session.poolAddress && needsWeights ? (
+            <Panel>
+              <LaunchActionHeader>
+                <PanelTitle style={{ marginBottom: 0 }}>NFT power verification</PanelTitle>
+                <LaunchPill
+                  $tone={session.verification.weights?.passed ? 'good' : session.verification.weights ? 'bad' : 'warn'}
+                >
+                  {session.verification.weights?.passed
+                    ? 'Verified'
+                    : session.verification.weights
+                    ? 'Needs setup'
+                    : 'Not checked'}
+                </LaunchPill>
+              </LaunchActionHeader>
+              {session.verification.weights ? (
+                <CheckTable checks={session.verification.weights.checks} />
+              ) : (
+                <Muted style={{ display: 'block', marginTop: 10 }}>
+                  Green preflight checks validate the launch plan, not the deployed collection powers. Continue setup
+                  reads the pool values first; if they do not match, Confirm NFT setup is the separate wallet-confirmed
+                  action.
+                </Muted>
+              )}
             </Panel>
           ) : null}
 
