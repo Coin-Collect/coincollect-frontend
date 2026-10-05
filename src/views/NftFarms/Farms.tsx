@@ -920,7 +920,12 @@ const Farms: React.FC = ({ children }) => {
             </Heading>
             <FlexLayout>
               {publishedPools.map((pool) => (
-                <FarmCard key={pool.id} publishedPool={pool} error={published.errors[pool.id]} />
+                <FarmCard
+                  key={pool.id}
+                  publishedPool={pool}
+                  summary={publishedUserPositions.positions[pool.address.toLowerCase()]}
+                  error={published.errors[pool.id]}
+                />
               ))}
             </FlexLayout>
           </section>

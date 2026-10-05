@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ComponentType, ComponentProps, ReactNode } from 'react'
+import type { ComponentType, ComponentProps, ReactNode, Ref } from 'react'
 import BigNumber from 'bignumber.js'
 import styled, { css, keyframes } from 'styled-components'
 import {
@@ -35,7 +35,9 @@ import { applySoliditySideReward, formatBaseUnits } from 'features/nftPoolManage
 import { getPolygonRuntimeChainId } from 'config/localFork'
 import { calculateRewardSharePreview } from 'features/nftPoolManager/studio/economicsPreview'
 import useWeb3React from 'hooks/useWeb3React'
-import { usePublishedV2UserPosition } from 'features/nftPoolManager/user/hooks'
+import { getV2FullPositionReadPolicy, usePublishedV2UserPosition } from 'features/nftPoolManager/user/hooks'
+import type { V2UserPositionSummary } from 'features/nftPoolManager/user/types'
+import useNearViewport from 'hooks/useNearViewport'
 import V2PoolControls from 'features/nftPoolManager/user/components/V2PoolControls'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
@@ -593,6 +595,7 @@ function NftFarmCardLayout({
   details,
   poolAddress,
   rewards,
+  cardRef,
 }: {
   children: ReactNode
   heading: ReactNode | ((openDetails: () => void) => ReactNode)
@@ -605,6 +608,7 @@ function NftFarmCardLayout({
   details: ExpandableSectionProps
   poolAddress?: string
   rewards?: ComponentProps<typeof DailyRewards>
+  cardRef?: Ref<HTMLDivElement>
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
@@ -615,6 +619,7 @@ function NftFarmCardLayout({
       isActive={isActive}
       data-testid={poolAddress ? 'published-nft-pool' : undefined}
       data-pool-address={poolAddress}
+      ref={cardRef}
     >
       <FarmCardInnerContainer>
         {typeof heading === 'function' ? heading(() => setExpanded(true)) : heading}
@@ -745,15 +750,27 @@ function formatPublicPoolAmount(value: string | undefined, decimals: number | un
 function AddressNativeFarmCardAdapter({
   pool,
   error,
+  summary,
   variant = 'default',
 }: {
   pool: PublicV2Pool
   error?: string
+  summary?: V2UserPositionSummary
   variant?: 'default' | 'expanded'
 }) {
   const { t } = useTranslation()
   const { account, chainId, library } = useWeb3React()
-  const userPosition = usePublishedV2UserPosition(pool, account, chainId, library)
+  const { ref: cardRef, isNearViewport } = useNearViewport<HTMLDivElement>()
+  const positionReadPolicy = getV2FullPositionReadPolicy(isNearViewport, summary)
+  const userPosition = usePublishedV2UserPosition(
+    pool,
+    account,
+    chainId,
+    library,
+    positionReadPolicy.enabled,
+    positionReadPolicy.refreshIntervalMs,
+    positionReadPolicy.revalidateOnFocus,
+  )
   const { metadata, snapshot } = pool
   const lpLabel = metadata.name.replace('CoinCollect', '')
   const displayStatus = userPosition.position?.status || snapshot.status
@@ -806,6 +823,7 @@ function AddressNativeFarmCardAdapter({
 
   return (
     <NftFarmCardLayout
+      cardRef={cardRef}
       variant={variant}
       finished={displayStatus === 'FINISHED'}
       poolAddress={pool.address}
@@ -874,12 +892,22 @@ function AddressNativeFarmCardAdapter({
   )
 }
 
-type AddressNativeFarmCardProps = { publishedPool: PublicV2Pool; error?: string; variant?: 'default' | 'expanded' }
+type AddressNativeFarmCardProps = {
+  publishedPool: PublicV2Pool
+  summary?: V2UserPositionSummary
+  error?: string
+  variant?: 'default' | 'expanded'
+}
 
 /** One card entry point for both sources. Never feeds address-native pools into pid-based hooks. */
 const FarmCard: React.FC<FarmCardProps | AddressNativeFarmCardProps> = (props) =>
   'publishedPool' in props ? (
-    <AddressNativeFarmCardAdapter pool={props.publishedPool} error={props.error} variant={props.variant} />
+    <AddressNativeFarmCardAdapter
+      pool={props.publishedPool}
+      summary={props.summary}
+      error={props.error}
+      variant={props.variant}
+    />
   ) : (
     <LegacyFarmCard {...props} />
   )

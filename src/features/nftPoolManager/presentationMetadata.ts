@@ -1,6 +1,7 @@
 import { getAddress, isAddress } from '@ethersproject/address'
 import { getLocalForkStorageKey, isLocalForkMode } from 'config/localFork'
 import { resolveNftAssetUrl } from './assets'
+import type { PublicationMetadata } from './publication'
 
 export const NFT_POOL_PRESENTATION_URL = 'https://metadata.coincollect.org/nft-pools.json'
 const METADATA_CACHE_KEY = getLocalForkStorageKey('coincollect:nft-pool-presentations:v1')
@@ -20,14 +21,19 @@ export interface RemoteNftPoolPresentation {
   category?: 'PARTNER' | 'COMMUNITY'
 }
 
-interface MetadataDocument {
+export interface NftPoolPresentationDocument {
   schemaVersion: 1
   updatedAt: string
   pools: RemoteNftPoolPresentation[]
 }
 
-let memoryCache: { fetchedAt: number; document: MetadataDocument } | undefined
-let pending: Promise<MetadataDocument | undefined> | undefined
+type PresentationExportFields = Pick<
+  PublicationMetadata,
+  'name' | 'banner' | 'avatar' | 'projectUrl' | 'getNftUrl' | 'description' | 'isCommunity'
+>
+
+let memoryCache: { fetchedAt: number; document: NftPoolPresentationDocument } | undefined
+let pending: Promise<NftPoolPresentationDocument | undefined> | undefined
 
 function boundedText(value: unknown, max: number): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : undefined
@@ -45,8 +51,8 @@ function safeUrl(value: unknown, max = 2_048): string | undefined {
   }
 }
 
-export function validateNftPoolPresentationDocument(value: unknown): MetadataDocument {
-  const document = value as Partial<MetadataDocument> | null
+export function validateNftPoolPresentationDocument(value: unknown): NftPoolPresentationDocument {
+  const document = value as Partial<NftPoolPresentationDocument> | null
   if (!document || document.schemaVersion !== 1 || !Array.isArray(document.pools) || document.pools.length > 2_000)
     throw new Error('NFT pool presentation document has an unsupported schema or size.')
   const updatedAt = boundedText(document.updatedAt, 80)
@@ -80,7 +86,32 @@ export function validateNftPoolPresentationDocument(value: unknown): MetadataDoc
   }
 }
 
-function readStoredDocument(): { cachedAt: number; document: MetadataDocument } | undefined {
+/** Produces the shared metadata-repository document shape from presentation fields only. */
+export function createNftPoolPresentationExport(
+  poolAddress: string,
+  metadata: PresentationExportFields,
+  updatedAt = new Date().toISOString(),
+): NftPoolPresentationDocument {
+  if (!isAddress(poolAddress)) throw new Error('A valid Polygon pool address is required for metadata export.')
+  return validateNftPoolPresentationDocument({
+    schemaVersion: 1,
+    updatedAt,
+    pools: [
+      {
+        id: `137:${getAddress(poolAddress).toLowerCase()}`,
+        name: metadata.name,
+        banner: metadata.banner,
+        avatar: metadata.avatar,
+        projectUrl: metadata.projectUrl,
+        getNftUrl: metadata.getNftUrl,
+        description: metadata.description,
+        category: metadata.isCommunity === false ? 'PARTNER' : 'COMMUNITY',
+      },
+    ],
+  })
+}
+
+function readStoredDocument(): { cachedAt: number; document: NftPoolPresentationDocument } | undefined {
   if (typeof window === 'undefined') return undefined
   try {
     const stored = JSON.parse(window.localStorage.getItem(METADATA_CACHE_KEY) || 'null')
@@ -91,7 +122,7 @@ function readStoredDocument(): { cachedAt: number; document: MetadataDocument } 
   }
 }
 
-export async function loadNftPoolPresentations(force = false): Promise<MetadataDocument | undefined> {
+export async function loadNftPoolPresentations(force = false): Promise<NftPoolPresentationDocument | undefined> {
   if (isLocalForkMode) return undefined
   if (memoryCache && !force && Date.now() - memoryCache.fetchedAt < CACHE_TTL_MS) return memoryCache.document
   if (pending) return pending

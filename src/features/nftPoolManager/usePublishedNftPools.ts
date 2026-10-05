@@ -37,7 +37,7 @@ function metadataForPool(pool: NftPool, remote?: RemoteNftPoolPresentation): Nft
 
 async function readRegistry(force: boolean) {
   const registry = await getNftPoolRegistry(nftPoolRegistryRpcProvider, force)
-  const presentationDocument = await loadNftPoolPresentations(force)
+  const presentationDocument = await loadNftPoolPresentations(force).catch(() => undefined)
   const remoteById = new Map(presentationDocument?.pools.map((item) => [item.id, item]) || [])
   const verifiedPools = registry.pools
     .filter((pool) => pool.protocolVersion === 'NftStakeV2' && pool.verified === true)

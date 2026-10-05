@@ -225,6 +225,8 @@ export default function V2PoolActionModal({
     chainId,
     provider,
     mode === 'stake',
+    0,
+    false,
   )
   const recoveryUser = useVerifiedV2UserRecoveryPosition(
     mode === 'stake' ? undefined : pool,
@@ -232,7 +234,17 @@ export default function V2PoolActionModal({
     chainId,
     provider,
     mode !== 'stake',
+    0,
   )
+  const invalidatePosition = () => {
+    if (!account || !chainId) return
+    notifyV2UserPositionChanged({
+      poolAddress: pool.address,
+      factoryAddress: pool.factoryAddress,
+      account,
+      chainId,
+    })
+  }
   const position = mode === 'stake' ? publicUser.position : recoveryUser.position
   const stakePosition = position && 'rewards' in position ? position : undefined
   const positionError = mode === 'stake' ? publicUser.error : recoveryUser.error
@@ -502,6 +514,7 @@ export default function V2PoolActionModal({
     setNotice(undefined)
     try {
       const result = await operation()
+      invalidatePosition()
       setNotice({ kind: 'success', title: successText, transactionHash: result.transactionHash })
       try {
         await onSuccess()
@@ -527,7 +540,7 @@ export default function V2PoolActionModal({
           message: `${cause.message} Do not submit this transaction again.`,
           transactionHash: cause.receipt.transactionHash,
         })
-        notifyV2UserPositionChanged()
+        invalidatePosition()
         void onSuccess().catch(() => undefined)
         return
       }

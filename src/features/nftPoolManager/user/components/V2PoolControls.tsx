@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { AddIcon, AutoRenewIcon, Button, Flex, Heading, MinusIcon, Text, useModal } from '@pancakeswap/uikit'
 import { BigNumber } from '@ethersproject/bignumber'
 import { formatUnits } from '@ethersproject/units'
@@ -50,16 +50,23 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
   const [notice, setNotice] = useState<string>()
   const [pendingVerification, setPendingVerification] = useState<ConfirmedV2WriteVerificationError>()
   const [refreshPending, setRefreshPending] = useState(false)
-  const [readRecoveryFallback, setReadRecoveryFallback] = useState(false)
   const lock = useRef(false)
   const signer = useMemo(() => (account && library ? library.getSigner(account) : undefined), [account, library])
-  const recovery = useVerifiedV2UserRecoveryPosition(pool, account, chainId, library, readRecoveryFallback)
-  useEffect(() => setReadRecoveryFallback(Boolean(error)), [error])
+  const recovery = useVerifiedV2UserRecoveryPosition(pool, account, chainId, library, Boolean(error))
 
   const afterConfirmed = async () => {
-    notifyV2UserPositionChanged()
     setRefreshPending(false)
     setNotice(t('Transaction confirmed. Wallet position is refreshing from the chain.'))
+  }
+
+  const notifyPositionChanged = () => {
+    if (!account || !chainId) return
+    notifyV2UserPositionChanged({
+      poolAddress: pool.address,
+      factoryAddress: pool.factoryAddress,
+      account,
+      chainId,
+    })
   }
 
   const modalProps = {
@@ -89,13 +96,14 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
       const transaction = await harvestV2Pool({ signer, poolAddress: pool.address, poolRecord: pool, account })
       toastSuccess(t('Harvested!'), t('Your earnings have been sent to your wallet!'))
       setNotice(`${t('Harvest confirmed')} · ${transaction.transactionHash.slice(0, 10)}…`)
+      notifyPositionChanged()
       await afterConfirmed()
     } catch (cause) {
       if (cause instanceof ConfirmedV2WriteVerificationError) {
         setPendingVerification(cause)
         setActionError(undefined)
         setNotice(`${cause.message} Do not submit this transaction again.`)
-        notifyV2UserPositionChanged()
+        notifyPositionChanged()
       } else {
         setActionError(cause instanceof Error ? cause.message : String(cause))
       }
@@ -328,7 +336,6 @@ export function V2PoolEmergencyAction({ pool }: { pool: V2PoolIdentity | PublicV
       pool={pool}
       mode="emergency"
       onSuccess={async () => {
-        notifyV2UserPositionChanged()
         const updated = await user.refresh()
         if (!updated) throw new Error('Confirmed; position refresh is pending.')
       }}

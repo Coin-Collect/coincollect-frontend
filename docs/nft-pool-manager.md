@@ -154,13 +154,20 @@ factory provenance, position tuples and custody, then simulates, checks gas and 
 Receipt verification checks returned NFT ownership and remaining count/power without depending on reward presentation.
 An unavailable or inconsistent fresh read blocks the write and keeps a previous positive position visible for retry.
 
-The shared presentation document is `https://metadata.coincollect.org/nft-pools.json`, schema version 1, with canonical
+The shared presentation document is `https://metadata.coincollect.org/nft-pools.json`, authored in the separate
+[Coin-Collect/coincollect-metadata](https://github.com/Coin-Collect/coincollect-metadata) repository and validated
+against `schema/nft-pools.schema.json`. Static hosting,
+DNS, HTTPS and browser CORS for the production hostname are operator infrastructure; frontend fallback remains active
+until that endpoint is provisioned. Do not replace the consumer URL with GitHub raw content. The document is schema
+version 1, with canonical
 `137:<lowercase-address>` IDs. It contains presentation fields only (name, banner, avatar, URLs, description and
 Partner/Community category); it cannot affect verification, readiness, discovery or transaction parameters. Invalid IDs,
 duplicates, unsafe URLs and oversized input are rejected or omitted. Browser caching uses a five-minute TTL, a four-second
 request timeout and up to 24 hours of last-valid metadata during an outage. Fallback order is remote metadata, exact-address
 repository presentation, known/on-chain collection details, then deterministic generic name and CoinCollect artwork.
 Local presentation drafts remain available for operator preview and export, with Community as the default category.
+The COMPLETE export is one canonical metadata document containing exactly one presentation record; local-fork addresses
+cannot be exported under Polygon's `137:` identity.
 
 Old `coincollect.nft-pool-publications.v1` records remain for operator recovery/export, but they cannot create a catalogue
 entry, mark a pool verified or ready, or restrict wallet scans. The launch COMPLETE screen offers **View pool**,

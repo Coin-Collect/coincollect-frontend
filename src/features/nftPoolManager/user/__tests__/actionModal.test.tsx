@@ -80,13 +80,21 @@ jest.mock('contexts/Localization', () => ({
 }))
 jest.mock('../hooks', () => ({
   notifyV2UserPositionChanged: jest.fn(),
-  usePublishedV2UserPosition: () => ({ position: mockPosition, loading: false, refresh: async () => mockPosition }),
+  usePublishedV2UserPosition: (...args: any[]) => {
+    mockPublicPositionHookArgs = args
+    return { position: mockPosition, loading: false, refresh: () => mockPublicPositionRefresh() }
+  },
   useVerifiedV2UserRecoveryPosition: () => ({
     position: mockRecoveryPosition,
     loading: false,
     refreshing: false,
     refresh: async () => mockRecoveryPosition,
   }),
+}))
+jest.mock('@ethersproject/contracts', () => ({
+  Contract: class {
+    ownerOf = jest.fn().mockResolvedValue('0x2222222222222222222222222222222222222222')
+  },
 }))
 jest.mock('../nftDiscovery', () => ({
   readV2OwnedNfts: jest.fn(),
@@ -105,6 +113,8 @@ const hugeId = '900719925474099300000'
 const pool = { id: '137:test', address } as PublicV2Pool
 let mockPosition: any
 let mockRecoveryPosition: any
+let mockPublicPositionRefresh: jest.Mock
+let mockPublicPositionHookArgs: any[]
 const mockWallet = {
   account: '0x2222222222222222222222222222222222222222',
   chainId: 31337,
@@ -127,6 +137,8 @@ beforeEach(() => {
     collections: [{ address, name: 'KEY NFT', image: '/key.png', weight: '10', approved: true, staked: [] }],
   }
   mockRecoveryPosition = undefined
+  mockPublicPositionRefresh = jest.fn(async () => mockPosition)
+  mockPublicPositionHookArgs = []
   ;(readV2OwnedNfts as jest.Mock).mockResolvedValue({ tokenIds: [hugeId], complete: true })
   container = document.createElement('div')
   document.body.appendChild(container)
@@ -157,6 +169,23 @@ it('opens the collection picker, then its NFT image tiles instead of checkbox ro
   expect((screen.getByText('Confirm') as HTMLButtonElement).disabled).toBe(false)
   fireEvent.click(screen.getByText('Back'))
   expect(screen.getByRole('button', { name: 'Choose KEY NFT' })).toBeTruthy()
+})
+it('uses an explicit fresh position refresh before building a stake transaction', async () => {
+  ;(stakeV2Nfts as jest.Mock).mockResolvedValue({ transactionHash: '0xstaked' })
+  await render()
+
+  expect(mockPublicPositionHookArgs.slice(4)).toEqual([true, 0, false])
+  fireEvent.click(screen.getByRole('button', { name: 'Choose KEY NFT' }))
+  fireEvent.click(screen.getByLabelText(`KEY NFT NFT #${hugeId}`))
+  await act(async () => {
+    fireEvent.click(screen.getByText('Confirm'))
+  })
+
+  expect(mockPublicPositionRefresh).toHaveBeenCalledTimes(2)
+  expect(stakeV2Nfts).toHaveBeenCalledTimes(1)
+  expect(mockPublicPositionRefresh.mock.invocationCallOrder[0]).toBeLessThan(
+    (stakeV2Nfts as jest.Mock).mock.invocationCallOrder[0],
+  )
 })
 it('only enables the chosen collection and keeps approval separate from NFT staking', async () => {
   mockPosition.collections[0].approved = false

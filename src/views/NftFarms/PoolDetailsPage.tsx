@@ -29,7 +29,7 @@ import { V2PoolEmergencyAction } from 'features/nftPoolManager/user/components/V
 import { useModal } from '@pancakeswap/uikit'
 import type { VerifiedNftPool } from 'features/nftPoolManager/publication'
 import V2PoolActionModal from 'features/nftPoolManager/user/components/V2PoolActionModal'
-import { notifyV2UserPositionChanged, useVerifiedV2UserRecoveryPosition } from 'features/nftPoolManager/user/hooks'
+import { useVerifiedV2UserRecoveryPosition } from 'features/nftPoolManager/user/hooks'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
@@ -1077,7 +1077,6 @@ function RecoveryOnlyPoolDetails({ pool }: { pool: VerifiedNftPool }) {
   const { account, chainId, library } = useWeb3React()
   const user = useVerifiedV2UserRecoveryPosition(pool, account, chainId, library)
   const onSuccess = async () => {
-    notifyV2UserPositionChanged()
     const updated = await user.refresh()
     if (!updated) throw new Error('Confirmed; position refresh is pending.')
   }

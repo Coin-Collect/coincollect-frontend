@@ -169,3 +169,14 @@ it('retains the last verified registry when a refresh fails', async () => {
   expect(readValue().errors['*']).toBe('RPC unavailable')
   unmount()
 })
+
+it('keeps verified public pools available when presentation metadata fails', async () => {
+  ;(loadNftPoolPresentations as jest.Mock).mockRejectedValueOnce(new Error('metadata DNS failure'))
+  render(<Reader />)
+  await flush()
+
+  expect(readValue().pools.map((pool: any) => pool.address)).toEqual([readyAddress])
+  expect(readValue().pools[0].metadata.name).toBe('Chain fallback')
+  expect(readValue().errors['*']).toBeUndefined()
+  expect(getNftPoolRegistry).toHaveBeenCalledTimes(1)
+})

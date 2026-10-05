@@ -83,7 +83,7 @@ Fork-only mock token balances are not real Polygon assets. When selecting these 
 4. Add the test NFT collection by its status-printed address. Select token ID `1` (or another wallet-owned ID shown by status).
 5. Select WPOL, or add the fork-only COLLECT/USDT reward address as a custom token. Set budget/duration, then **Review Pool**.
 6. Click **Create Pool** and approve the guided deployment, NFT power configuration and funding transactions in MetaMask. These confirmations target only chain `31337` through the local RPC.
-7. Wait for **COMPLETE**. Use **View pool** or **Refresh discovery**; the catalogue reads factory deployments and chain readiness, so it may take one refresh for the new pool to appear. **Export presentation metadata** saves an operator-owned JSON record without publishing catalogue membership.
+7. Wait for **COMPLETE**. Use **View pool** or **Refresh discovery**; the catalogue reads factory deployments and chain readiness, so it may take one refresh for the new pool to appear. Production presentation metadata export is disabled in fork mode because fork addresses are not canonical Polygon `137:` identities.
 
 For a clean-browser discovery check, open `http://localhost:3001/nftpools` in a separate browser profile with no launch session or
 publication storage. The pool should be found from the fork RPC's factory logs once its on-chain configuration passes readiness.

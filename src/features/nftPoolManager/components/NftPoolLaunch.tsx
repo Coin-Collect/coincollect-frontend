@@ -38,6 +38,8 @@ import {
   verifyFinalNftLaunch,
 } from '../launch/verification'
 import { readNftLaunchChainSnapshot } from '../launch/fingerprint'
+import { createNftPoolPresentationExport } from '../presentationMetadata'
+import { getPolygonRuntimeChainId } from 'config/localFork'
 import {
   canConfigureFee,
   canConfigureWeights,
@@ -172,18 +174,27 @@ export default function NftPoolLaunch() {
 
   const exportPresentationMetadata = () => {
     if (!session?.poolAddress || typeof window === 'undefined') return
-    const metadata = session.publicationMetadata
-    const entry = {
-      id: `137:${session.poolAddress.toLowerCase()}`,
-      name: metadata?.name || 'NFT pool',
-      banner: metadata?.banner,
-      avatar: metadata?.avatar,
-      projectUrl: metadata?.projectUrl,
-      getNftUrl: metadata?.getNftUrl,
-      description: metadata?.description,
-      category: metadata?.isCommunity === false ? 'PARTNER' : 'COMMUNITY',
+    if (getPolygonRuntimeChainId() !== 137) {
+      setError(
+        'Presentation metadata export is available for Polygon deployments only; local fork addresses are not canonical IDs.',
+      )
+      return
     }
-    const document = { schemaVersion: 1, updatedAt: new Date().toISOString(), pools: [entry] }
+    let document
+    try {
+      document = createNftPoolPresentationExport(session.poolAddress, {
+        name: session.publicationMetadata?.name || 'NFT pool',
+        banner: session.publicationMetadata?.banner,
+        avatar: session.publicationMetadata?.avatar,
+        projectUrl: session.publicationMetadata?.projectUrl,
+        getNftUrl: session.publicationMetadata?.getNftUrl,
+        description: session.publicationMetadata?.description,
+        isCommunity: session.publicationMetadata?.isCommunity,
+      })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not create presentation metadata export.')
+      return
+    }
     const blobUrl = URL.createObjectURL(new Blob([JSON.stringify(document, null, 2)], { type: 'application/json' }))
     const anchor = window.document.createElement('a')
     anchor.href = blobUrl
