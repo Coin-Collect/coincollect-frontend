@@ -360,8 +360,10 @@ export default function NftPoolCardStudio({
   const [nameDraft, setNameDraft] = useState(draft.name)
   const [detailsDraft, setDetailsDraft] = useState({
     name: draft.name,
+    description: draft.description || '',
     projectUrl: draft.projectUrl || '',
     getNftUrl: draft.getNftUrl || '',
+    isCommunity: draft.isCommunity !== false,
   })
   const rewards = [draft.rewards.primary, ...draft.rewards.side].filter(Boolean) as NftPoolDraftReward[]
   const selectedCollections = draft.collections.map(
@@ -474,8 +476,10 @@ export default function NftPoolCardStudio({
   const saveDetails = () => {
     onUpdateDraft({
       name: detailsDraft.name.trim(),
+      description: detailsDraft.description.trim().slice(0, 1_000) || undefined,
       projectUrl: detailsDraft.projectUrl.trim() || undefined,
       getNftUrl: detailsDraft.getNftUrl.trim() || undefined,
+      isCommunity: detailsDraft.isCommunity,
     })
     setNameDraft(detailsDraft.name.trim())
     setModal(null)
@@ -843,6 +847,30 @@ export default function NftPoolCardStudio({
           onChange={(event) => setDetailsDraft({ ...detailsDraft, name: event.target.value })}
           placeholder="Gold NFT Rewards"
         />
+      </FieldLabel>
+      <FieldLabel>
+        Description (optional)
+        <ModalInput
+          value={detailsDraft.description}
+          maxLength={1_000}
+          onChange={(event) => setDetailsDraft({ ...detailsDraft, description: event.target.value })}
+          placeholder="A short overview of this NFT pool"
+        />
+      </FieldLabel>
+      <FieldLabel>
+        Catalogue category
+        <ModalSelect
+          value={detailsDraft.isCommunity ? 'COMMUNITY' : 'PARTNER'}
+          onChange={(event) =>
+            setDetailsDraft({
+              ...detailsDraft,
+              isCommunity: event.target.value === 'COMMUNITY',
+            })
+          }
+        >
+          <option value="COMMUNITY">Community</option>
+          <option value="PARTNER">Partner</option>
+        </ModalSelect>
       </FieldLabel>
       <FieldLabel>
         Project link (optional)

@@ -68,3 +68,39 @@ export interface V2UserPositionResult {
   error?: string
   refresh: () => Promise<V2UserPosition | undefined>
 }
+
+export type V2PositionSummaryState = 'positive' | 'zero' | 'unknown'
+
+export interface V2UserPositionSummary {
+  state: V2PositionSummaryState
+  poolAddress: string
+  account: string
+  count?: string
+  power?: string
+  blockNumber?: number
+  stale?: boolean
+  error?: string
+}
+
+export interface V2RecoveryCollection {
+  address: string
+  name: string
+  image?: string
+  /** Present only when a current public config view is also available. */
+  weight?: string
+  approved?: boolean
+  staked: V2NftTuple[]
+}
+
+/** Minimum chain-derived data needed to recover an existing position. */
+export interface V2RecoveryPosition {
+  chainId: number
+  poolAddress: string
+  account: string
+  blockNumber: number
+  nftCount: string
+  power: string
+  collections: V2RecoveryCollection[]
+  complete: true
+  stale?: boolean
+}

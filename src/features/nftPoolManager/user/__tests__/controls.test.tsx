@@ -62,7 +62,17 @@ jest.mock('views/NftFarms/components/FarmCard/HarvestAction', () => {
   }
 })
 jest.mock('../components/V2PoolActionModal', () => ({ __esModule: true, default: () => null }))
-jest.mock('../hooks', () => ({ notifyV2UserPositionChanged: jest.fn(), usePublishedV2UserPosition: jest.fn() }))
+jest.mock('../hooks', () => ({
+  notifyV2UserPositionChanged: jest.fn(),
+  usePublishedV2UserPosition: jest.fn(),
+  useVerifiedV2UserRecoveryPosition: () => ({
+    position: undefined,
+    error: undefined,
+    loading: false,
+    refreshing: false,
+    refresh: async () => undefined,
+  }),
+}))
 jest.mock('../transactions', () => ({
   ConfirmedV2WriteVerificationError: class extends Error {},
   harvestV2Pool: jest.fn(),

@@ -18,7 +18,6 @@ import {
 import useWeb3React from 'hooks/useWeb3React'
 import { simplePolygonRpcProvider } from 'utils/providers'
 import { loadNftPoolLaunchSession } from '../launch/storage'
-import { publishCompletedNftPool } from '../publication'
 import { launchStageLabel } from '../launch/presentation'
 import {
   mapNftLaunchError,
@@ -159,9 +158,6 @@ export default function NftPoolLaunch() {
   const [confirmDeploy, setConfirmDeploy] = useState(false)
   const [chainSnapshot, setChainSnapshot] = useState<NftLaunchPoolSnapshot | null>(null)
   const [snapshotError, setSnapshotError] = useState('')
-  const [publicationStatus, setPublicationStatus] = useState('')
-  const [publicationError, setPublicationError] = useState('')
-  const [publicationRetry, setPublicationRetry] = useState(0)
   const sessionRef = useRef<NftPoolLaunchSession | null>(null)
   const reconciledDeployRef = useRef<string>()
 
@@ -174,25 +170,31 @@ export default function NftPoolLaunch() {
     setSession(loadNftPoolLaunchSession(sessionId) || null)
   }, [router.isReady, sessionId])
 
-  useEffect(() => {
-    if (session?.currentStage !== 'COMPLETE') return undefined
-    let active = true
-    setPublicationStatus('Publishing locally…')
-    setPublicationError('')
-    publishCompletedNftPool(session, simplePolygonRpcProvider)
-      .then(() => {
-        if (active) setPublicationStatus('Published on this browser’s /nftpools page.')
-      })
-      .catch((reason) => {
-        if (active) {
-          setPublicationStatus('')
-          setPublicationError(reason instanceof Error ? reason.message : 'Local publication failed.')
-        }
-      })
-    return () => {
-      active = false
+  const exportPresentationMetadata = () => {
+    if (!session?.poolAddress || typeof window === 'undefined') return
+    const metadata = session.publicationMetadata
+    const entry = {
+      id: `137:${session.poolAddress.toLowerCase()}`,
+      name: metadata?.name || 'NFT pool',
+      banner: metadata?.banner,
+      avatar: metadata?.avatar,
+      projectUrl: metadata?.projectUrl,
+      getNftUrl: metadata?.getNftUrl,
+      description: metadata?.description,
+      category: metadata?.isCommunity === false ? 'PARTNER' : 'COMMUNITY',
     }
-  }, [session, publicationRetry])
+    const document = { schemaVersion: 1, updatedAt: new Date().toISOString(), pools: [entry] }
+    const blobUrl = URL.createObjectURL(new Blob([JSON.stringify(document, null, 2)], { type: 'application/json' }))
+    const anchor = window.document.createElement('a')
+    anchor.href = blobUrl
+    anchor.download = `nft-pool-${session.poolAddress.toLowerCase()}.json`
+    anchor.click()
+    URL.revokeObjectURL(blobUrl)
+  }
+
+  const refreshPublicDiscovery = () => {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('coincollect:nft-pool-discovery-refresh'))
+  }
 
   useEffect(() => {
     if (!session || !library) {
@@ -1608,18 +1610,18 @@ export default function NftPoolLaunch() {
           {session.currentStage === 'COMPLETE' ? (
             <Panel>
               <LaunchPill $tone="good">Launch complete</LaunchPill>
-              <h3>Pool is ready for its upcoming start block.</h3>
-              <p role="status">{publicationStatus}</p>
-              {publicationError ? (
-                <div role="alert">
-                  <p>Pool setup is complete. Local publication failed: {publicationError}</p>
-                  <ActionButton onClick={() => setPublicationRetry((count) => count + 1)}>Publish locally</ActionButton>
+              <h3>Deployment, configuration and funding checks are complete.</h3>
+              <p role="status">Factory discovery and chain readiness control public catalogue admission.</p>
+              {session.poolAddress ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  <Link href={`/nftpools/pool/${session.poolAddress}`}>View pool</Link>
+                  <ActionButton onClick={refreshPublicDiscovery}>Refresh factory discovery</ActionButton>
+                  <ActionButton onClick={exportPresentationMetadata}>Export presentation metadata</ActionButton>
                 </div>
               ) : null}
-              <Link href="/nftpools">View NFT pools</Link>
               <Muted>
                 Required deployment, configuration and funding read-backs passed. No automatic swap or hidden
-                transaction was performed.
+                transaction was performed. A pool that still needs on-chain setup remains in the admin discovery view.
               </Muted>
             </Panel>
           ) : null}

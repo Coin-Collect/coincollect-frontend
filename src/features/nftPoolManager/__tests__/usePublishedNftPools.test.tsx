@@ -1,40 +1,85 @@
 /** @jest-environment jsdom */
-import { screen, act } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { createRoot } from 'react-dom/client'
 import type { ReactElement } from 'react'
+import type { NftPool } from '../types'
 import { usePublishedNftPools } from '../usePublishedNftPools'
-import {
-  hydratePublishedPool,
-  localPublicationStore,
-  publishCompletedNftPool,
-  PUBLICATION_EVENT,
-  PUBLICATION_STORAGE_KEY,
-  PublicV2Pool,
-} from '../publication'
-import { loadNftPoolLaunchSessions } from '../launch/storage'
+import { getNftPoolRegistry } from '../discovery'
+import { localPublicationStore, toPublicV2Pool, toVerifiedNftPool } from '../publication'
+import { loadNftPoolPresentations } from '../presentationMetadata'
 
 jest.mock('utils/providers', () => ({ nftPoolRegistryRpcProvider: {} }))
-jest.mock('../publication', () => ({
-  hydratePublishedPool: jest.fn(),
-  publishCompletedNftPool: jest.fn(),
-  localPublicationStore: { read: jest.fn() },
-  PUBLICATION_EVENT: 'coincollect:nft-pool-publication',
-  PUBLICATION_STORAGE_KEY: 'coincollect.nft-pool-publications.v1',
+jest.mock('config/localFork', () => ({
+  getLocalForkStorageKey: (key: string) => key,
+  isLocalForkMode: false,
 }))
-jest.mock('../launch/storage', () => ({ loadNftPoolLaunchSessions: jest.fn() }))
+jest.mock('../discovery', () => ({ getNftPoolRegistry: jest.fn() }))
+jest.mock('../presentationMetadata', () => ({ loadNftPoolPresentations: jest.fn() }))
+jest.mock('../publication', () => ({
+  localPublicationStore: { read: jest.fn() },
+  toVerifiedNftPool: jest.fn((pool: NftPool) => ({
+    id: pool.canonicalId,
+    address: pool.address,
+    chainId: pool.chainId,
+    factoryAddress: pool.onChain.factoryAddress,
+    verified: pool.verified,
+    publicReady: pool.publicReadiness?.ready === true,
+    readinessStale: pool.publicReadiness?.stale === true,
+    readinessReasons: pool.publicReadiness?.reasons || [],
+    metadata: pool.metadata,
+    pool,
+  })),
+  toPublicV2Pool: jest.fn((pool: any) =>
+    pool.publicReady
+      ? {
+          id: pool.id,
+          address: pool.address,
+          verified: true,
+          publicReady: true,
+          metadata: pool.metadata,
+        }
+      : undefined,
+  ),
+}))
 
-let records: PublicV2Pool[]
-let serial = 0
+const readyAddress = '0x1111111111111111111111111111111111111111'
+const unreadyAddress = '0x2222222222222222222222222222222222222222'
+const discoveredAddress = '0x3333333333333333333333333333333333333333'
 const mounted = new Set<() => void>()
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
-// These readers resolve in microtasks. Flush the React 18 root explicitly;
-// the repository's older testing-library async wrapper uses legacy render.
-async function waitFor(assertion: () => void) {
+
+function makePool(address: string, verified: boolean, ready: boolean): NftPool {
+  return {
+    id: `137:${address.toLowerCase()}`,
+    canonicalId: `137:${address.toLowerCase()}`,
+    chainId: 137,
+    address,
+    deployment: { factoryAddress: '0x4444444444444444444444444444444444444444' },
+    onChain: { factoryAddress: '0x4444444444444444444444444444444444444444' },
+    protocolVersion: 'NftStakeV2',
+    source: 'nft-factory',
+    discoveryStatus: verified ? 'verified' : 'discovered',
+    verified,
+    publicReadiness: { ready, checkedAtBlock: 100, reasons: ready ? [] : ['Missing collection weight.'] },
+    metadata: { name: `Pool ${address.slice(0, 6)}`, isCommunity: true },
+    collections: [],
+    rewards: { primary: {}, side: [] },
+  } as unknown as NftPool
+}
+
+const registryPools = [
+  makePool(readyAddress, true, true),
+  makePool(unreadyAddress, true, false),
+  makePool(discoveredAddress, false, false),
+]
+
+async function flush() {
   await act(async () => {
     await Promise.resolve()
+    await Promise.resolve()
   })
-  assertion()
 }
+
 function render(element: ReactElement) {
   const container = document.createElement('div')
   document.body.appendChild(container)
@@ -48,90 +93,79 @@ function render(element: ReactElement) {
   mounted.add(unmount)
   return { unmount }
 }
+
 function Reader() {
   const value = usePublishedNftPools()
   return <output data-testid="read-model">{JSON.stringify(value)}</output>
 }
-function value() {
+
+function readValue() {
   return JSON.parse(screen.getByTestId('read-model').textContent!)
 }
+
 beforeEach(() => {
   jest.clearAllMocks()
-  records = [
-    {
-      id: `137:fixture-${serial++}`,
-      address: '0x2222222222222222222222222222222222222222',
-      metadata: { name: 'Saved artwork' },
-      snapshot: { checkedAt: Date.now(), currentBlock: 100, status: 'UPCOMING' },
-    } as PublicV2Pool,
-  ]
-  ;(localPublicationStore.read as jest.Mock).mockImplementation(() => records)
-  ;(loadNftPoolLaunchSessions as jest.Mock).mockReturnValue([])
-  ;(hydratePublishedPool as jest.Mock).mockImplementation(async (record) => record)
+  registryPools[0].metadata.name = 'Chain fallback'
+  ;(getNftPoolRegistry as jest.Mock).mockResolvedValue({
+    pools: registryPools,
+    secondsPerBlock: 2,
+    coverage: { fromBlock: 1, throughBlock: 100, backfillComplete: true },
+  })
+  ;(loadNftPoolPresentations as jest.Mock).mockResolvedValue({
+    pools: [
+      {
+        id: `137:${readyAddress.toLowerCase()}`,
+        name: 'Remote presentation',
+        category: 'PARTNER',
+      },
+    ],
+  })
 })
+
 afterEach(() => {
   mounted.forEach((unmount) => unmount())
 })
 
-it('hydrates exact records and responds to same-tab and cross-tab publication', async () => {
+it('admits only verified and public-ready pools while retaining verified recovery identities', async () => {
   render(<Reader />)
-  await waitFor(() => expect(value().loading).toBe(false))
-  expect(hydratePublishedPool).toHaveBeenCalledTimes(1)
-  act(() => window.dispatchEvent(new Event(PUBLICATION_EVENT)))
-  await waitFor(() => expect(hydratePublishedPool).toHaveBeenCalledTimes(2))
-  act(() => window.dispatchEvent(new StorageEvent('storage', { key: PUBLICATION_STORAGE_KEY })))
-  await waitFor(() => expect(hydratePublishedPool).toHaveBeenCalledTimes(3))
+  await flush()
+
+  expect(readValue().loading).toBe(false)
+  expect(readValue().pools.map((pool: any) => pool.address)).toEqual([readyAddress])
+  expect(readValue().verifiedPools.map((pool: any) => pool.address)).toEqual([readyAddress, unreadyAddress])
+  expect(readValue().verifiedPools[1].publicReady).toBe(false)
+  expect(toVerifiedNftPool).toHaveBeenCalledTimes(2)
+  expect(toPublicV2Pool).toHaveBeenCalledTimes(1)
+  expect(readValue().pools[0].metadata.name).toBe('Remote presentation')
+  expect(readValue().pools[0].metadata.isCommunity).toBe(false)
+  expect(localPublicationStore.read).not.toHaveBeenCalled()
 })
 
-it('keeps the latest verified cache and labels RPC failure instead of making up balances', async () => {
-  ;(hydratePublishedPool as jest.Mock).mockImplementationOnce(async (record) => ({
-    ...record,
-    snapshot: { ...record.snapshot, currentBlock: 150 },
-  }))
+it('refreshes discovery on the operator event and does not depend on publication or COMPLETE session events', async () => {
   render(<Reader />)
-  await waitFor(() => expect(value().loading).toBe(false))
-  ;(hydratePublishedPool as jest.Mock).mockRejectedValue(new Error('RPC unavailable'))
-  act(() => window.dispatchEvent(new Event(PUBLICATION_EVENT)))
-  await waitFor(() => expect(value().errors[records[0].id]).toContain('last verified snapshot'))
-  expect(value().pools[0].snapshot.currentBlock).toBe(150)
+  await flush()
+  expect(getNftPoolRegistry).toHaveBeenCalledTimes(1)
+
+  act(() => window.dispatchEvent(new Event('coincollect:nft-pool-publication')))
+  await flush()
+  expect(getNftPoolRegistry).toHaveBeenCalledTimes(1)
+
+  act(() => window.dispatchEvent(new Event('coincollect:nft-pool-discovery-refresh')))
+  await flush()
+  expect(getNftPoolRegistry).toHaveBeenCalledTimes(2)
+  expect(getNftPoolRegistry).toHaveBeenLastCalledWith({}, true)
+  expect(localPublicationStore.read).not.toHaveBeenCalled()
 })
 
-it('recovers interrupted COMPLETE publication from the public page without wallet writes', async () => {
-  const session = { currentStage: 'COMPLETE', poolAddress: '0x4444444444444444444444444444444444444444' }
-  ;(loadNftPoolLaunchSessions as jest.Mock).mockReturnValue([session, { currentStage: 'FUNDING_REQUIRED' }])
-  ;(publishCompletedNftPool as jest.Mock).mockResolvedValue(undefined)
-  render(<Reader />)
-  await waitFor(() => expect(value().loading).toBe(false))
-  expect(publishCompletedNftPool).toHaveBeenCalledTimes(1)
-  expect(publishCompletedNftPool).toHaveBeenCalledWith(session, {})
-})
-
-it('ignores unrelated storage events and removes subscriptions on unmount', async () => {
+it('retains the last verified registry when a refresh fails', async () => {
   const { unmount } = render(<Reader />)
-  await waitFor(() => expect(value().loading).toBe(false))
-  act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'unrelated' })))
-  expect(hydratePublishedPool).toHaveBeenCalledTimes(1)
-  unmount()
-  act(() => window.dispatchEvent(new Event(PUBLICATION_EVENT)))
-  expect(hydratePublishedPool).toHaveBeenCalledTimes(1)
-})
+  await flush()
+  ;(getNftPoolRegistry as jest.Mock).mockRejectedValueOnce(new Error('RPC unavailable'))
+  act(() => window.dispatchEvent(new Event('coincollect:nft-pool-discovery-refresh')))
+  await flush()
 
-it('polls only while visible at the bounded 30 second interval', async () => {
-  jest.useFakeTimers()
-  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
-  const { unmount } = render(<Reader />)
-  await act(async () => {
-    await Promise.resolve()
-    await Promise.resolve()
-  })
-  act(() => jest.advanceTimersByTime(30_000))
-  expect(hydratePublishedPool).toHaveBeenCalledTimes(1)
-  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
-  await act(async () => {
-    jest.advanceTimersByTime(30_000)
-    await Promise.resolve()
-  })
-  expect(hydratePublishedPool).toHaveBeenCalledTimes(2)
+  expect(readValue().verifiedPools.map((pool: any) => pool.address)).toEqual([readyAddress, unreadyAddress])
+  expect(readValue().pools.map((pool: any) => pool.address)).toEqual([readyAddress])
+  expect(readValue().errors['*']).toBe('RPC unavailable')
   unmount()
-  jest.useRealTimers()
 })

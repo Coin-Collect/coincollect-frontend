@@ -80,7 +80,9 @@ export default function NftPoolDetail() {
               <StatusPill $status={pool.status}>{pool.status}</StatusPill>
               <DetailTitle>{pool.metadata.name}</DetailTitle>
               <Muted>
-                {pool.protocolVersion} · {shortAddress(pool.address)} · {pool.source}
+                {pool.protocolVersion} · {shortAddress(pool.address)} · {pool.source} ·{' '}
+                {pool.discoveryStatus || 'unverified'} / {pool.verified ? 'verified' : 'unverified'} /{' '}
+                {pool.publicReadiness?.ready ? 'publicReady' : 'not publicReady'}
               </Muted>
             </DetailHeroContent>
           </DetailHero>
@@ -140,6 +142,17 @@ export default function NftPoolDetail() {
                       <td>
                         <code>{pool.onChain.factoryAddress || 'Legacy MasterChef'}</code>
                       </td>
+                    </tr>
+                    <tr>
+                      <th>Public readiness</th>
+                      <td>
+                        {pool.publicReadiness?.ready ? 'Ready' : 'Setup required'}
+                        {pool.publicReadiness?.stale ? ' · last verified result' : ''}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Readiness checks</th>
+                      <td>{pool.publicReadiness?.reasons.join(' ') || 'All chain checks passed.'}</td>
                     </tr>
                     <tr>
                       <th>Start block</th>

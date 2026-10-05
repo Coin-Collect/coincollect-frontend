@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AddIcon, AutoRenewIcon, Button, Flex, Heading, MinusIcon, Text, useModal } from '@pancakeswap/uikit'
 import { BigNumber } from '@ethersproject/bignumber'
 import { formatUnits } from '@ethersproject/units'
@@ -21,9 +21,9 @@ import useToast from 'hooks/useToast'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
-import { PublicV2Pool } from '../../publication'
+import { PublicV2Pool, V2PoolIdentity } from '../../publication'
 import { ConfirmedV2WriteVerificationError, harvestV2Pool } from '../transactions'
-import { notifyV2UserPositionChanged, usePublishedV2UserPosition } from '../hooks'
+import { notifyV2UserPositionChanged, usePublishedV2UserPosition, useVerifiedV2UserRecoveryPosition } from '../hooks'
 import type { V2UserPosition } from '../types'
 import V2PoolActionModal from './V2PoolActionModal'
 
@@ -41,28 +41,25 @@ interface V2PoolControlsProps {
   refresh: () => Promise<V2UserPosition | undefined>
 }
 
-export default function V2PoolControls({ pool, position, loading, error, refresh }: V2PoolControlsProps) {
+export default function V2PoolControls({ pool, position, loading, refreshing, error, refresh }: V2PoolControlsProps) {
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
-  const { account, library } = useWeb3React()
+  const { account, chainId, library } = useWeb3React()
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState<string>()
   const [notice, setNotice] = useState<string>()
   const [pendingVerification, setPendingVerification] = useState<ConfirmedV2WriteVerificationError>()
   const [refreshPending, setRefreshPending] = useState(false)
+  const [readRecoveryFallback, setReadRecoveryFallback] = useState(false)
   const lock = useRef(false)
   const signer = useMemo(() => (account && library ? library.getSigner(account) : undefined), [account, library])
+  const recovery = useVerifiedV2UserRecoveryPosition(pool, account, chainId, library, readRecoveryFallback)
+  useEffect(() => setReadRecoveryFallback(Boolean(error)), [error])
 
   const afterConfirmed = async () => {
     notifyV2UserPositionChanged()
-    try {
-      const updated = await refresh()
-      if (!updated) throw new Error('Position data is not available yet.')
-      setRefreshPending(false)
-    } catch {
-      setRefreshPending(true)
-      setNotice(t('Transaction confirmed; position refresh is pending. Do not submit it again.'))
-    }
+    setRefreshPending(false)
+    setNotice(t('Transaction confirmed. Wallet position is refreshing from the chain.'))
   }
 
   const modalProps = {
@@ -128,7 +125,10 @@ export default function V2PoolControls({ pool, position, loading, error, refresh
     }
   }
 
-  const hasPosition = Boolean(position && BigNumber.from(position.nftCount).gt(0))
+  const hasPosition = Boolean(
+    (position && BigNumber.from(position.nftCount).gt(0)) ||
+      (recovery.position && BigNumber.from(recovery.position.nftCount).gt(0)),
+  )
   const canHarvest = Boolean(position && BigNumber.from(position.pendingPrimary).gt(0))
   const displayStatus = position?.status || pool.snapshot.status
 
@@ -161,6 +161,32 @@ export default function V2PoolControls({ pool, position, loading, error, refresh
           <Text small role="alert" color="failure">
             {error}
           </Text>
+          {recovery.position && BigNumber.from(recovery.position.nftCount).gt(0) ? (
+            <Flex mt="10px" flexDirection="column" style={{ gap: 8 }}>
+              <Text small color="warning">
+                {t('Rewards are unavailable, but your NFT position was independently verified for recovery.')}
+              </Text>
+              <Text small>
+                {t('{{count}} staked NFTs · {{power}} recorded power', {
+                  count: recovery.position.nftCount,
+                  power: recovery.position.power,
+                })}
+              </Text>
+              <ActionChipButton
+                variant="tertiary"
+                disabled={working || Boolean(pendingVerification) || refreshPending}
+                onClick={openUnstakeModal}
+              >
+                <MinusIcon width="13px" mr="4px" color="currentColor" />
+                {t('Withdraw staked NFTs')}
+              </ActionChipButton>
+              {recovery.error ? (
+                <Text small color="textSubtle">
+                  {recovery.error}
+                </Text>
+              ) : null}
+            </Flex>
+          ) : null}
           <Button variant="secondary" disabled={refreshing} onClick={() => refresh()}>
             {refreshing ? <AutoRenewIcon spin /> : t('Retry wallet position read')}
           </Button>
@@ -293,10 +319,10 @@ export default function V2PoolControls({ pool, position, loading, error, refresh
 }
 
 /** Recovery lives in the details drawer, keeping the regular V1 actions unchanged. */
-export function V2PoolEmergencyAction({ pool }: { pool: PublicV2Pool }) {
+export function V2PoolEmergencyAction({ pool }: { pool: V2PoolIdentity | PublicV2Pool }) {
   const { account, chainId, library } = useWeb3React()
   const { t } = useTranslation()
-  const user = usePublishedV2UserPosition(pool, account, chainId, library)
+  const user = useVerifiedV2UserRecoveryPosition(pool, account, chainId, library)
   const [open] = useModal(
     <V2PoolActionModal
       pool={pool}

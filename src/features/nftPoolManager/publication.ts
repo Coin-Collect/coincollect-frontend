@@ -6,7 +6,7 @@ import { validateLaunchSessionInvariant } from './launch/orchestrator'
 import { parseNftPoolAddress } from './launch/transactions'
 import { loadNftPoolDraft } from './storage'
 import { loadNftPoolLaunchSession } from './launch/storage'
-import { readNftPoolByAddress } from './discovery'
+import { readNftPoolByAddress, readNftPoolPublicReadiness } from './discovery'
 import { normalizeWrappedReward } from './rewardTokens'
 import { resolveNftAssetUrl } from './assets'
 import { getLocalForkStorageKey, getPolygonRuntimeChainId } from 'config/localFork'
@@ -18,19 +18,49 @@ export interface PublicationMetadata extends NftPoolFrontendMetadata {
   collections: Array<{ address: string; name: string; image?: string }>
 }
 
+/** Verified factory identity is enough for recovery and never implies catalogue readiness. */
+export interface VerifiedNftPool {
+  id: string
+  chainId: number
+  address: string
+  factoryAddress: string
+  verified: true
+  publicReady: boolean
+  readinessStale?: boolean
+  readinessReasons: string[]
+  deploymentHash?: string
+  deploymentBlock?: number
+  metadata: PublicationMetadata
+  pool: NftPool
+}
+
+export interface V2PoolIdentity {
+  id: string
+  chainId: number
+  address: string
+  factoryAddress: string
+  verified: true
+  publicReady?: boolean
+  deploymentHash?: string
+  deploymentBlock?: number
+  pool?: NftPool
+}
+
 /** A serializable, address-native read model. It never enters the legacy pid store. */
 export interface PublicV2Pool {
   id: string
   chainId: number
   address: string
   factoryAddress: string
-  deploymentHash: string
-  deploymentBlock: number
-  sessionId: string
-  planHash: string
-  publishedAt: number
-  verifiedAt: number
+  deploymentHash?: string
+  deploymentBlock?: number
+  sessionId?: string
+  planHash?: string
+  publishedAt?: number
+  verifiedAt?: number
   verifiedAtBlock?: number
+  verified: true
+  publicReady: true
   metadata: PublicationMetadata
   snapshot: {
     checkedAt: number
@@ -64,11 +94,12 @@ function safeUrl(value?: string): string | undefined {
 function cleanMetadata(metadata: PublicationMetadata): PublicationMetadata {
   return {
     name: typeof metadata?.name === 'string' ? metadata.name.slice(0, 200) : 'NFT pool',
+    description: typeof metadata?.description === 'string' ? metadata.description.slice(0, 1_000) : undefined,
     banner: safeUrl(metadata?.banner),
     avatar: safeUrl(metadata?.avatar),
     projectUrl: safeUrl(metadata?.projectUrl),
     getNftUrl: safeUrl(metadata?.getNftUrl),
-    isCommunity: metadata?.isCommunity === true,
+    isCommunity: metadata?.isCommunity !== false,
     collections: Array.isArray(metadata?.collections)
       ? metadata.collections
           .filter((item) => isAddress(item?.address))
@@ -88,11 +119,12 @@ export function capturePublicationMetadata(
 ): PublicationMetadata {
   return cleanMetadata({
     name: draft.name || 'NFT pool',
+    description: draft.description,
     banner: draft.banner,
     avatar: draft.avatar,
     projectUrl: draft.projectUrl,
     getNftUrl: draft.getNftUrl,
-    isCommunity: source?.metadata.isCommunity,
+    isCommunity: draft.isCommunity ?? source?.metadata.isCommunity !== false,
     collections: draft.collections.map((item) => ({
       address: item.address,
       name: item.name,
@@ -148,6 +180,56 @@ export function projectPublicPool(pool: NftPool, metadata: PublicationMetadata):
   }
 }
 
+export function toVerifiedNftPool(pool: NftPool): VerifiedNftPool | undefined {
+  if (
+    !pool.verified ||
+    !pool.deployment.factoryAddress ||
+    !pool.onChain.factoryAddress ||
+    !/^0x[\da-f]{64}$/i.test(pool.deployment.transactionHash || '') ||
+    !Number.isSafeInteger(pool.deployment.blockNumber)
+  )
+    return undefined
+  const collections = pool.collections.map(({ collection }) => ({
+    address: collection.address,
+    name: collection.displayName || collection.name || 'NFT collection',
+    image: collection.image,
+  }))
+  const metadata = cleanMetadata({ ...pool.metadata, isCommunity: pool.metadata.isCommunity !== false, collections })
+  return {
+    id: pool.canonicalId,
+    chainId: pool.chainId,
+    address: pool.address,
+    factoryAddress: pool.onChain.factoryAddress,
+    verified: true,
+    publicReady: pool.publicReadiness?.ready === true,
+    readinessStale: pool.publicReadiness?.stale === true,
+    readinessReasons: pool.publicReadiness?.reasons || ['Readiness has not been verified on-chain.'],
+    deploymentHash: pool.deployment.transactionHash,
+    deploymentBlock: pool.deployment.blockNumber,
+    metadata,
+    pool,
+  }
+}
+
+export function toPublicV2Pool(pool: VerifiedNftPool, secondsPerBlock?: number): PublicV2Pool | undefined {
+  if (!pool.publicReady) return undefined
+  const snapshot = projectPublicPool(pool.pool, pool.metadata)
+  snapshot.secondsPerBlock = secondsPerBlock
+  return {
+    id: `137:${pool.address.toLowerCase()}`,
+    chainId: 137,
+    address: getAddress(pool.address),
+    factoryAddress: getAddress(pool.factoryAddress),
+    deploymentHash: pool.deploymentHash,
+    deploymentBlock: pool.deploymentBlock,
+    verifiedAtBlock: pool.pool.publicReadiness?.checkedAtBlock,
+    verified: true,
+    publicReady: true,
+    metadata: pool.metadata,
+    snapshot,
+  }
+}
+
 function validRecord(record: PublicV2Pool): boolean {
   try {
     const snapshot = record.snapshot
@@ -156,10 +238,16 @@ function validRecord(record: PublicV2Pool): boolean {
       isAddress(record.address) &&
       isAddress(record.factoryAddress) &&
       record.id === `137:${record.address.toLowerCase()}` &&
+      record.verified === true &&
+      record.publicReady === true &&
+      typeof record.deploymentHash === 'string' &&
       /^0x[\da-f]{64}$/i.test(record.deploymentHash) &&
+      typeof record.planHash === 'string' &&
       /^0x[\da-f]{64}$/i.test(record.planHash) &&
+      typeof record.deploymentBlock === 'number' &&
       Number.isInteger(record.deploymentBlock) &&
       record.deploymentBlock > 0 &&
+      typeof record.verifiedAt === 'number' &&
       Number.isFinite(record.verifiedAt) &&
       Number.isInteger(snapshot.currentBlock) &&
       snapshot.currentBlock > 0 &&
@@ -234,7 +322,10 @@ export function selectPublishedNftPools(
             ...pool.snapshot.rewards.map((item) => item.symbol),
           ].some((value) => value.toLocaleLowerCase().includes(query))),
     )
-    .sort((left, right) => right.deploymentBlock - left.deploymentBlock)
+    .sort(
+      (left, right) =>
+        (right.deploymentBlock || right.verifiedAtBlock || 0) - (left.deploymentBlock || left.verifiedAtBlock || 0),
+    )
 }
 
 export const localPublicationStore: PublicationStore = {
@@ -265,7 +356,8 @@ export async function hydratePublishedPool(record: PublicV2Pool, provider: Provi
   if (pool.onChain.factoryAddress?.toLowerCase() !== record.factoryAddress.toLowerCase())
     throw new Error('Pool factory does not match publication.')
   const secondsPerBlock =
-    record.snapshot.secondsPerBlock || loadNftPoolLaunchSession(record.sessionId)?.schedule?.measuredSecondsPerBlock
+    record.snapshot.secondsPerBlock ||
+    (record.sessionId ? loadNftPoolLaunchSession(record.sessionId)?.schedule?.measuredSecondsPerBlock : undefined)
   return { ...record, snapshot: { ...projectPublicPool(pool, record.metadata), secondsPerBlock } }
 }
 
@@ -295,6 +387,9 @@ export async function publishCompletedNftPool(
   const pool = await readNftPoolByAddress(provider, session.poolAddress)
   if (pool.onChain.factoryAddress?.toLowerCase() !== session.factoryAddress.toLowerCase())
     throw new Error('Unexpected pool factory.')
+  const readiness = await readNftPoolPublicReadiness(provider, session.poolAddress, session.factoryAddress)
+  if (!readiness.ready)
+    throw new Error(`Pool is not public-ready at the current chain state: ${readiness.reasons.join(' ')}`)
   const savedDraft = loadNftPoolDraft(session.draftId)
   const metadata = cleanMetadata(
     session.publicationMetadata ||
@@ -312,8 +407,10 @@ export async function publishCompletedNftPool(
     sessionId: session.sessionId,
     planHash: session.planHash,
     publishedAt: previous?.publishedAt || Date.now(),
-    verifiedAt: session.verification.final!.checkedAt,
-    verifiedAtBlock: session.verification.final!.checkedAtBlock,
+    verifiedAt: Date.now(),
+    verifiedAtBlock: readiness.checkedAtBlock,
+    verified: true,
+    publicReady: true,
     metadata,
     snapshot: { ...projectPublicPool(pool, metadata), secondsPerBlock: session.schedule?.measuredSecondsPerBlock },
   }

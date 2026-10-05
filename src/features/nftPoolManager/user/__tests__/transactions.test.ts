@@ -1,5 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { assertV2ConnectedNetwork, assertV2WriteGas, waitForV2Receipt } from '../transactions'
+import { getPolygonRuntimeChainId } from 'config/localFork'
+import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
+import { assertV2ConnectedNetwork, assertV2WriteGas, executeV2PoolWrite, waitForV2Receipt } from '../transactions'
 
 describe('V2 wallet transaction gas safety', () => {
   const provider = {
@@ -40,6 +42,37 @@ describe('V2 wallet transaction gas safety', () => {
     await expect(
       assertV2ConnectedNetwork(connectedProvider, signer, '0x0000000000000000000000000000000000000002', 31337),
     ).rejects.toThrow(/Wallet account changed/)
+  })
+
+  it('blocks a verified-looking pool record when its exact factory deployment proof is absent', async () => {
+    const connectedProvider = {
+      getNetwork: jest.fn().mockResolvedValue({ chainId: getPolygonRuntimeChainId() }),
+      getCode: jest.fn(),
+      getBlockNumber: jest.fn(),
+    } as any
+    const connectedSigner = {
+      provider: connectedProvider,
+      getAddress: jest.fn().mockResolvedValue('0x0000000000000000000000000000000000000001'),
+    } as any
+    const context = {
+      signer: connectedSigner,
+      poolAddress: '0x0000000000000000000000000000000000000002',
+      account: '0x0000000000000000000000000000000000000001',
+      expectedChainId: getPolygonRuntimeChainId(),
+      poolRecord: {
+        id: '137:pool',
+        chainId: 137,
+        address: '0x0000000000000000000000000000000000000002',
+        factoryAddress: getNftSmartChefFactoryAddress(137),
+        verified: true,
+      },
+    } as any
+
+    await expect(executeV2PoolWrite(context, 'harvest')).rejects.toThrow(
+      'Fresh factory deployment provenance is unavailable',
+    )
+    expect(connectedProvider.getCode).not.toHaveBeenCalled()
+    expect(connectedProvider.getBlockNumber).not.toHaveBeenCalled()
   })
 
   it('accepts only an identical replacement, including the native POL value', async () => {

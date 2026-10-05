@@ -5,10 +5,12 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import type { Provider, TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 import { getPolygonRuntimeChainId } from 'config/localFork'
 import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
+import { readNftPoolPublicReadiness, verifyNftPoolFactoryEventAtBlock } from '../discovery'
 import { v2Erc721UserAbi, v2PoolUserAbi } from './abi'
-import type { PublicV2Pool } from '../publication'
+import type { PublicV2Pool, V2PoolIdentity } from '../publication'
 import { readV2UserPosition } from './readers'
-import type { V2NftTuple, V2UserPosition } from './types'
+import { readV2UserRecoveryPosition } from './recovery'
+import type { V2NftTuple, V2RecoveryPosition, V2UserPosition } from './types'
 import { assertV2StakeLimits, assertV2StakeSelection } from './readers'
 
 const SAFETY_BPS = 125
@@ -18,7 +20,7 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export interface V2WriteContext {
   signer: Signer
   poolAddress: string
-  poolRecord: PublicV2Pool
+  poolRecord: V2PoolIdentity
   account: string
   expectedChainId?: number
   onSubmitted?: (hash: string) => void
@@ -63,7 +65,7 @@ async function verifyConfirmedReceipt(
   }
 }
 
-function allPositionNfts(position: V2UserPosition): V2NftTuple[] {
+function allPositionNfts(position: V2UserPosition | V2RecoveryPosition): V2NftTuple[] {
   return position.collections.flatMap((collection) => collection.staked)
 }
 
@@ -83,9 +85,11 @@ function assertPowerAndCount(
 }
 
 async function readPositionAfterReceipt(context: V2WriteContext): Promise<V2UserPosition> {
+  if (!('snapshot' in context.poolRecord))
+    throw new Error('The full public pool snapshot is unavailable for this action.')
   const provider = context.signer.provider
   if (!provider) throw new Error('Connected wallet did not expose a transaction provider.')
-  return readV2UserPosition(context.poolRecord, provider, context.account, {
+  return readV2UserPosition(context.poolRecord as PublicV2Pool, provider, context.account, {
     expectedChainId: context.expectedChainId ?? getPolygonRuntimeChainId(),
   })
 }
@@ -123,6 +127,51 @@ export async function assertV2WriteGas(
   return { gasLimit, requiredBalance }
 }
 
+async function assertFreshV2PoolIdentity(
+  context: V2WriteContext,
+  provider: Provider,
+  expectedChainId: number,
+): Promise<{ expectedFactory: string; checkedAtBlock: number }> {
+  if (
+    !isAddress(context.poolAddress) ||
+    !isAddress(context.account) ||
+    !context.poolRecord ||
+    context.poolRecord.verified !== true ||
+    !sameAddress(context.poolRecord.address, context.poolAddress)
+  )
+    throw new Error('The pool does not match its verified CoinCollect factory identity.')
+  await assertV2ConnectedNetwork(provider, context.signer, context.account, expectedChainId)
+  const expectedFactory = getNftSmartChefFactoryAddress(137)
+  if (!expectedFactory || !sameAddress(context.poolRecord.factoryAddress, expectedFactory))
+    throw new Error('This pool identity does not match the configured CoinCollect factory.')
+  if (
+    !context.poolRecord.deploymentHash ||
+    !Number.isSafeInteger(context.poolRecord.deploymentBlock) ||
+    (context.poolRecord.deploymentBlock as number) < 0
+  )
+    throw new Error('Fresh factory deployment provenance is unavailable; pool write blocked.')
+  const checkedAtBlock = await provider.getBlockNumber()
+  const [poolCode, factoryCode, actualFactory, eventProvenance] = await Promise.all([
+    provider.getCode(context.poolAddress, checkedAtBlock),
+    provider.getCode(expectedFactory, checkedAtBlock),
+    new Contract(context.poolAddress, v2PoolUserAbi, provider).callStatic.SMART_CHEF_FACTORY({
+      blockTag: checkedAtBlock,
+    }),
+    verifyNftPoolFactoryEventAtBlock(
+      provider,
+      expectedFactory,
+      context.poolAddress,
+      context.poolRecord.deploymentBlock as number,
+      context.poolRecord.deploymentHash,
+    ),
+  ])
+  if (!poolCode || poolCode === '0x' || !factoryCode || factoryCode === '0x')
+    throw new Error('Pool or factory code is unavailable on the connected network.')
+  if (!sameAddress(actualFactory, expectedFactory)) throw new Error('Pool factory verification failed; write blocked.')
+  if (!eventProvenance) throw new Error('Fresh factory deployment event verification failed; pool write blocked.')
+  return { expectedFactory, checkedAtBlock }
+}
+
 export async function waitForV2Receipt(
   transaction: TransactionResponse,
   destination: string,
@@ -157,25 +206,18 @@ export async function executeV2PoolWrite(
   args: unknown[] = [],
   value = BigNumber.from(0),
 ): Promise<TransactionReceipt> {
-  if (!isAddress(context.poolAddress) || !isAddress(context.account))
-    throw new Error('Pool or wallet address is invalid.')
-  if (!context.poolRecord || !sameAddress(context.poolRecord.address, context.poolAddress))
-    throw new Error('The pool does not match its verified address-native publication record.')
   const provider = context.signer.provider
   if (!provider) throw new Error('Connected wallet did not expose a transaction provider.')
   const expectedChainId = context.expectedChainId ?? getPolygonRuntimeChainId()
-  await assertV2ConnectedNetwork(provider, context.signer, context.account, expectedChainId)
-  const expectedFactory = getNftSmartChefFactoryAddress(137)
-  if (!expectedFactory) throw new Error('Configured Polygon NFT SmartChef Factory is unavailable.')
-  const [poolCode, factoryCode] = await Promise.all([
-    provider.getCode(context.poolAddress),
-    provider.getCode(expectedFactory),
-  ])
-  if (!poolCode || poolCode === '0x' || !factoryCode || factoryCode === '0x')
-    throw new Error('Pool or factory code is unavailable on the connected network.')
+  const { expectedFactory, checkedAtBlock } = await assertFreshV2PoolIdentity(context, provider, expectedChainId)
+  if (method === 'stakeAll' && !('publicReady' in context.poolRecord && context.poolRecord.publicReady))
+    throw new Error('This verified pool is not public-ready; new staking is unavailable.')
+  if (method === 'stakeAll') {
+    const readiness = await readNftPoolPublicReadiness(provider, context.poolAddress, expectedFactory, checkedAtBlock)
+    if (!readiness.ready)
+      throw new Error(`This pool is not public-ready for new staking: ${readiness.reasons.join(' ')}`)
+  }
   const poolRead = new Contract(context.poolAddress, v2PoolUserAbi, context.signer)
-  const actualFactory = await poolRead.SMART_CHEF_FACTORY()
-  if (!sameAddress(actualFactory, expectedFactory)) throw new Error('Pool factory verification failed; write blocked.')
   if (
     !poolRead.interface.functions[
       `${method}(${method === 'stakeAll' || method === 'unstakeAll' ? 'address[],uint256[]' : ''})`
@@ -200,24 +242,17 @@ export async function approveV2PoolCollection(
   const provider = context.signer.provider
   if (!provider) throw new Error('Connected wallet did not expose a transaction provider.')
   const expectedChainId = context.expectedChainId ?? getPolygonRuntimeChainId()
-  await assertV2ConnectedNetwork(provider, context.signer, context.account, expectedChainId)
-  const expectedFactory = getNftSmartChefFactoryAddress(137)
-  if (!expectedFactory) throw new Error('Configured Polygon NFT SmartChef Factory is unavailable.')
-  const [poolCode, factoryCode, collectionCode] = await Promise.all([
-    provider.getCode(context.poolAddress),
-    provider.getCode(expectedFactory),
-    provider.getCode(collectionAddress),
-  ])
-  if ([poolCode, factoryCode, collectionCode].some((code) => !code || code === '0x'))
+  const { checkedAtBlock } = await assertFreshV2PoolIdentity(context, provider, expectedChainId)
+  const collectionCode = await provider.getCode(collectionAddress, checkedAtBlock)
+  if (!collectionCode || collectionCode === '0x')
     throw new Error('Pool, NFT collection or factory code is unavailable on the connected network.')
   const poolRead = new Contract(context.poolAddress, v2PoolUserAbi, provider)
-  if (!sameAddress(await poolRead.SMART_CHEF_FACTORY(), expectedFactory))
-    throw new Error('Pool factory verification failed; approval blocked.')
-  const primaryCollection = await poolRead.stakedToken()
+  const readAt = { blockTag: checkedAtBlock }
+  const primaryCollection = await poolRead.callStatic.stakedToken(readAt)
   let belongsToPool = sameAddress(primaryCollection, collectionAddress)
-  for (let index = 0; !belongsToPool && index < 16; index += 1) {
+  for (let index = 0; !belongsToPool && index < 32; index += 1) {
     try {
-      const communityCollection = await poolRead.communityCollections(index)
+      const communityCollection = await poolRead.callStatic.communityCollections(index, readAt)
       belongsToPool = sameAddress(communityCollection, collectionAddress)
     } catch (error: any) {
       if (error?.code === 'CALL_EXCEPTION' || error?.error?.code === 'CALL_EXCEPTION') break
@@ -250,30 +285,47 @@ export async function approveV2PoolCollection(
 
 export async function stakeV2Nfts(
   context: V2WriteContext,
-  position: V2UserPosition,
   nfts: Array<{ collectionAddress: string; tokenId: string }>,
   owners: string[],
 ): Promise<TransactionReceipt> {
-  assertV2StakeSelection(nfts, position.collections)
-  assertV2StakeLimits(position, nfts.length)
+  const provider = context.signer.provider
+  if (!provider || !('snapshot' in context.poolRecord))
+    throw new Error('A public-ready pool and connected read provider are required for staking.')
+  const expectedChainId = context.expectedChainId ?? getPolygonRuntimeChainId()
+  const readiness = await readNftPoolPublicReadiness(
+    provider,
+    context.poolAddress,
+    getNftSmartChefFactoryAddress(137) || undefined,
+  )
+  if (!readiness.ready) throw new Error(`This pool is not public-ready for new staking: ${readiness.reasons.join(' ')}`)
+  const currentPosition = await readV2UserPosition(context.poolRecord as PublicV2Pool, provider, context.account, {
+    expectedChainId,
+  })
+  assertV2StakeSelection(nfts, currentPosition.collections)
+  assertV2StakeLimits(currentPosition, nfts.length)
   if (owners.length !== nfts.length || owners.some((owner) => !sameAddress(owner, context.account)))
     throw new Error('Selected NFT ownership changed. Refresh and select the wallet-owned NFTs again.')
+  const currentOwners = await Promise.all(
+    nfts.map((nft) => new Contract(nft.collectionAddress, v2Erc721UserAbi, provider).callStatic.ownerOf(nft.tokenId)),
+  )
+  if (currentOwners.some((owner) => !sameAddress(owner, context.account)))
+    throw new Error('Selected NFT ownership changed. Refresh and select the wallet-owned NFTs again.')
   const selectedCollections = new Set(nfts.map((item) => item.collectionAddress.toLowerCase()))
-  const missing = position.collections.filter(
+  const missing = currentPosition.collections.filter(
     (item) => selectedCollections.has(item.address.toLowerCase()) && !item.approved,
   )
   if (missing.length) throw new Error(`Approve ${missing.map((item) => item.name).join(', ')} before staking.`)
-  const currentFee = sameAddress(position.feeTo, ZERO_ADDRESS)
+  const currentFee = sameAddress(currentPosition.feeTo, ZERO_ADDRESS)
     ? BigNumber.from(0)
-    : BigNumber.from(position.performanceFee)
-  const expectedPower = BigNumber.from(position.power).add(
+    : BigNumber.from(currentPosition.performanceFee)
+  const expectedPower = BigNumber.from(currentPosition.power).add(
     nfts.reduce((sum, nft) => {
-      const collection = position.collections.find((item) => sameAddress(item.address, nft.collectionAddress))
+      const collection = currentPosition.collections.find((item) => sameAddress(item.address, nft.collectionAddress))
       if (!collection) throw new Error('Selected collection is not in the verified position.')
       return sum.add(collection.weight)
     }, BigNumber.from(0)),
   )
-  const expectedCount = BigNumber.from(position.nftCount).add(nfts.length)
+  const expectedCount = BigNumber.from(currentPosition.nftCount).add(nfts.length)
   const receipt = await executeV2PoolWrite(
     context,
     'stakeAll',
@@ -295,12 +347,18 @@ export async function stakeV2Nfts(
 
 export async function unstakeV2Nfts(
   context: V2WriteContext,
-  position: V2UserPosition,
   nfts: Array<{ collectionAddress: string; tokenId: string }>,
 ): Promise<TransactionReceipt> {
   if (!nfts.length) throw new Error('Select at least one staked NFT to withdraw.')
+  const provider = context.signer.provider
+  if (!provider) throw new Error('Connected wallet did not expose a transaction provider.')
+  const expectedChainId = context.expectedChainId ?? getPolygonRuntimeChainId()
+  const current = await readV2UserRecoveryPosition(context.poolRecord, provider, context.account, {
+    expectedChainId,
+    resumePartial: false,
+  })
   const currentlyStaked = new Set(
-    position.collections.flatMap((collection) =>
+    current.collections.flatMap((collection) =>
       collection.staked.map((item) => `${item.collectionAddress.toLowerCase()}:${item.tokenId}`),
     ),
   )
@@ -312,7 +370,7 @@ export async function unstakeV2Nfts(
     seen.add(key)
   }
   const selectedPower = nfts.reduce((sum, nft) => {
-    const tuple = position.collections
+    const tuple = current.collections
       .flatMap((collection) => collection.staked)
       .find(
         (item) =>
@@ -321,15 +379,14 @@ export async function unstakeV2Nfts(
     if (!tuple) throw new Error('Selected NFT is not in the verified on-chain position.')
     return sum.add(tuple.weight)
   }, BigNumber.from(0))
-  const expectedCount = BigNumber.from(position.nftCount).sub(nfts.length)
-  const expectedPower = BigNumber.from(position.power).sub(selectedPower)
+  const expectedCount = BigNumber.from(current.nftCount).sub(nfts.length)
+  const expectedPower = BigNumber.from(current.power).sub(selectedPower)
   if (expectedCount.lt(0) || expectedPower.lt(0)) throw new Error('Selected withdrawal exceeds the verified position.')
   const receipt = await executeV2PoolWrite(context, 'unstakeAll', [
     nfts.map((item) => getAddress(item.collectionAddress)),
     nfts.map((item) => BigNumber.from(item.tokenId)),
   ])
   return verifyConfirmedReceipt(receipt, async () => {
-    const provider = context.signer.provider!
     const owners = await Promise.all(
       nfts.map((nft) =>
         new Contract(nft.collectionAddress, v2Erc721UserAbi, provider).callStatic.ownerOf(nft.tokenId, {
@@ -339,8 +396,13 @@ export async function unstakeV2Nfts(
     )
     if (owners.some((owner) => !sameAddress(owner, context.account)))
       throw new Error('A withdrawn NFT is not back in the connected wallet at the confirmed block.')
-    const after = await readPositionAfterReceipt(context)
-    assertPowerAndCount(after, expectedCount, expectedPower, 'NFT withdrawal')
+    const after = await readV2UserRecoveryPosition(context.poolRecord, provider, context.account, {
+      expectedChainId,
+      blockTag: receipt.blockNumber,
+      resumePartial: false,
+    })
+    if (!BigNumber.from(after.nftCount).eq(expectedCount) || !BigNumber.from(after.power).eq(expectedPower))
+      throw new Error('NFT withdrawal confirmed, but the remaining position count or stored power did not match.')
     const remaining = new Set(
       allPositionNfts(after).map((item) => `${item.collectionAddress.toLowerCase()}:${item.tokenId}`),
     )
@@ -355,19 +417,21 @@ export async function unstakeV2Nfts(
 
 export async function emergencyWithdrawV2Position(
   context: V2WriteContext,
-  position: V2UserPosition,
   confirmed: boolean,
 ): Promise<TransactionReceipt> {
   if (!confirmed) throw new Error('Confirm that emergency withdrawal forfeits pending rewards.')
-  if (
-    position.nftCount === '0' ||
-    position.collections.reduce((sum, collection) => sum + collection.staked.length, 0) !== Number(position.nftCount)
-  )
+  const provider = context.signer.provider
+  if (!provider) throw new Error('Connected wallet did not expose a transaction provider.')
+  const expectedChainId = context.expectedChainId ?? getPolygonRuntimeChainId()
+  const current = await readV2UserRecoveryPosition(context.poolRecord, provider, context.account, {
+    expectedChainId,
+    resumePartial: false,
+  })
+  if (current.nftCount === '0' || !current.complete || allPositionNfts(current).length !== Number(current.nftCount))
     throw new Error('The complete position could not be verified; emergency withdrawal is blocked.')
-  const nfts = allPositionNfts(position)
+  const nfts = allPositionNfts(current)
   const receipt = await executeV2PoolWrite(context, 'emergencyWithdraw')
   return verifyConfirmedReceipt(receipt, async () => {
-    const provider = context.signer.provider!
     const owners = await Promise.all(
       nfts.map((nft) =>
         new Contract(nft.collectionAddress, v2Erc721UserAbi, provider).callStatic.ownerOf(nft.tokenId, {
@@ -377,8 +441,13 @@ export async function emergencyWithdrawV2Position(
     )
     if (owners.some((owner) => !sameAddress(owner, context.account)))
       throw new Error('An emergency-withdrawn NFT is not back in the connected wallet at the confirmed block.')
-    const after = await readPositionAfterReceipt(context)
-    assertPowerAndCount(after, BigNumber.from(0), BigNumber.from(0), 'Emergency withdrawal')
+    const after = await readV2UserRecoveryPosition(context.poolRecord, provider, context.account, {
+      expectedChainId,
+      blockTag: receipt.blockNumber,
+      resumePartial: false,
+    })
+    if (after.nftCount !== '0' || after.power !== '0')
+      throw new Error('Emergency withdrawal confirmed, but a position remains at the confirmed block.')
   })
 }
 

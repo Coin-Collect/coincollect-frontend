@@ -40,9 +40,9 @@ import {
 } from 'components/CollectionSelectModal/CollectionList'
 import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
-import type { PublicV2Pool } from '../../publication'
+import type { PublicV2Pool, V2PoolIdentity } from '../../publication'
 import { readV2NftMetadata, readV2OwnedNfts } from '../nftDiscovery'
-import { usePublishedV2UserPosition } from '../hooks'
+import { notifyV2UserPositionChanged, usePublishedV2UserPosition, useVerifiedV2UserRecoveryPosition } from '../hooks'
 import {
   ConfirmedV2WriteVerificationError,
   emergencyWithdrawV2Position,
@@ -50,13 +50,12 @@ import {
   stakeV2Nfts,
   unstakeV2Nfts,
 } from '../transactions'
-import { notifyV2UserPositionChanged } from '../hooks'
-import type { V2NftTuple, V2UserCollection, V2UserPosition } from '../types'
+import type { V2NftTuple, V2UserCollection } from '../types'
 
 export type V2PoolActionMode = 'stake' | 'unstake' | 'emergency'
 
 interface V2PoolActionModalProps {
-  pool: PublicV2Pool
+  pool: V2PoolIdentity | PublicV2Pool
   mode: V2PoolActionMode
   onSuccess: () => Promise<void>
 }
@@ -98,11 +97,9 @@ const ActionNoticeCard = styled.div<{ $kind: 'success' | 'pending' }>`
   box-sizing: border-box;
   margin-top: 12px;
   padding: 13px 15px;
-  border: 1px solid
-    ${({ theme, $kind }) => ($kind === 'success' ? theme.colors.success : theme.colors.warning)};
+  border: 1px solid ${({ theme, $kind }) => ($kind === 'success' ? theme.colors.success : theme.colors.warning)};
   border-radius: 14px;
-  background: ${({ $kind }) =>
-    $kind === 'success' ? 'rgba(49, 208, 170, 0.1)' : 'rgba(255, 178, 55, 0.1)'};
+  background: ${({ $kind }) => ($kind === 'success' ? 'rgba(49, 208, 170, 0.1)' : 'rgba(255, 178, 55, 0.1)')};
 `
 
 const NoticeIcon = styled.div<{ $kind: 'success' | 'pending' }>`
@@ -113,8 +110,7 @@ const NoticeIcon = styled.div<{ $kind: 'success' | 'pending' }>`
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: ${({ $kind }) =>
-    $kind === 'success' ? 'rgba(49, 208, 170, 0.16)' : 'rgba(255, 178, 55, 0.16)'};
+  background: ${({ $kind }) => ($kind === 'success' ? 'rgba(49, 208, 170, 0.16)' : 'rgba(255, 178, 55, 0.16)')};
 `
 
 const NoticeContent = styled.div`
@@ -222,12 +218,26 @@ export default function V2PoolActionModal({
   const account = connectedAccount || ''
   const provider = library as Provider | undefined
   const signer = useMemo(() => (account && library ? library.getSigner(account) : undefined), [account, library])
-  const {
-    position,
-    error: positionError,
-    loading,
-    refresh,
-  } = usePublishedV2UserPosition(pool, account, chainId, provider)
+  const hasPublicSnapshot = 'snapshot' in pool
+  const publicUser = usePublishedV2UserPosition(
+    mode === 'stake' && hasPublicSnapshot ? (pool as PublicV2Pool) : undefined,
+    account,
+    chainId,
+    provider,
+    mode === 'stake',
+  )
+  const recoveryUser = useVerifiedV2UserRecoveryPosition(
+    mode === 'stake' ? undefined : pool,
+    account,
+    chainId,
+    provider,
+    mode !== 'stake',
+  )
+  const position = mode === 'stake' ? publicUser.position : recoveryUser.position
+  const stakePosition = position && 'rewards' in position ? position : undefined
+  const positionError = mode === 'stake' ? publicUser.error : recoveryUser.error
+  const loading = mode === 'stake' ? publicUser.loading : recoveryUser.loading
+  const refresh = mode === 'stake' ? publicUser.refresh : recoveryUser.refresh
   const [inventory, setInventory] = useState<Record<string, string[]>>({})
   const [inventoryStatus, setInventoryStatus] = useState<Record<string, 'loading' | 'ready' | 'error'>>({})
   const [tokenMetadata, setTokenMetadata] = useState<Record<string, { name?: string; image?: string }>>({})
@@ -287,7 +297,7 @@ export default function V2PoolActionModal({
   const metadataLoadedFor = useRef<{ key: string; provider?: Provider }>()
 
   useEffect(() => {
-    if (mode !== 'stake' || !account || !provider || !position) {
+    if (mode !== 'stake' || !account || !provider || !stakePosition) {
       inventoryLoadedFor.current = undefined
       setInventoryLoading(false)
       setInventory({})
@@ -307,7 +317,7 @@ export default function V2PoolActionModal({
           address: item.address,
           name: item.name,
           image: item.image,
-          weight: item.weight,
+          weight: item.weight || '0',
         } as V2UserCollection),
     )
     setInventoryLoading(true)
@@ -383,7 +393,7 @@ export default function V2PoolActionModal({
       // the old request's "already loaded" marker and waiting forever.
       if (inventoryLoadedFor.current?.key === inventoryRequestKey) inventoryLoadedFor.current = undefined
     }
-  }, [mode, pool.id, inventoryRequestKey, account, chainId, provider, Boolean(position)])
+  }, [mode, pool.id, inventoryRequestKey, account, chainId, provider, Boolean(stakePosition)])
 
   useEffect(() => {
     if (mode === 'emergency' || !account || !provider) {
@@ -463,7 +473,7 @@ export default function V2PoolActionModal({
       const newItems = result.tokenIds.map((tokenId) => ({
         collectionAddress: collection.address,
         tokenId,
-        weight: collection.weight,
+        weight: collection.weight || '0',
         name: collection.name,
         image: collection.image,
       }))
@@ -573,13 +583,12 @@ export default function V2PoolActionModal({
     try {
       if (!signer || !account) throw new Error('Reconnect the wallet before staking.')
       const current = await refresh()
-      if (!current) throw new Error('Could not refresh the pool position before staking.')
+      if (!current || !('rewards' in current)) throw new Error('Could not refresh the pool position before staking.')
       const owners = await readSelectedOwners(selectedNfts)
       await completeAction(
         () =>
           stakeV2Nfts(
             { signer, poolAddress: pool.address, poolRecord: pool, account },
-            current,
             selectedNfts.map(({ collectionAddress, tokenId }) => ({ collectionAddress, tokenId })),
             owners,
           ),
@@ -597,7 +606,6 @@ export default function V2PoolActionModal({
       if (!current) throw new Error('Could not refresh the pool position before withdrawing.')
       return unstakeV2Nfts(
         { signer, poolAddress: pool.address, poolRecord: pool, account },
-        current,
         selectedNfts.map(({ collectionAddress, tokenId }) => ({ collectionAddress, tokenId })),
       )
     }, 'NFTs withdrawn')
@@ -609,7 +617,6 @@ export default function V2PoolActionModal({
       if (!current) throw new Error('Could not refresh the pool position before emergency withdrawal.')
       return emergencyWithdrawV2Position(
         { signer, poolAddress: pool.address, poolRecord: pool, account },
-        current,
         forfeitConfirmed,
       )
     }, 'Emergency withdrawal confirmed')
@@ -627,7 +634,7 @@ export default function V2PoolActionModal({
   const selectedPower = selectedNfts.reduce((sum, item) => sum.add(item.weight), BigNumber.from(0))
   const totalCount = BigNumber.from(position?.nftCount || '0').add(selectedNfts.length)
   const limitReached =
-    mode === 'stake' && Boolean(position?.userLimit) && totalCount.gt(position?.poolLimitPerUser || '0')
+    mode === 'stake' && Boolean(stakePosition?.userLimit) && totalCount.gt(stakePosition?.poolLimitPerUser || '0')
   const visibleCollections =
     mode === 'stake'
       ? configuredCollections.filter((collection) => collection.address.toLowerCase() === activeCollection)
@@ -649,7 +656,7 @@ export default function V2PoolActionModal({
         : {
             collectionAddress: collection.address,
             tokenId,
-            weight: collection.weight,
+            weight: collection.weight || '0',
             name: collection.name,
             image: collection.image,
           }
@@ -657,7 +664,7 @@ export default function V2PoolActionModal({
   )
   const missingApprovals = configuredCollections.filter(
     (collection) =>
-      !collection.approved &&
+      collection.approved !== true &&
       selectedNfts.some((nft) => nft.collectionAddress.toLowerCase() === collection.address.toLowerCase()),
   )
   const retryInventory = () => setInventoryRevision((value) => value + 1)
@@ -746,7 +753,7 @@ export default function V2PoolActionModal({
                   const isApproving = approvingCollection === address
                   let actionLabel = t('Choose')
                   if (inventoryState === 'ready' && ids.length === 0) actionLabel = t('No NFTs')
-                  else if (!collection.approved) actionLabel = t('Approve')
+                  else if (collection.approved !== true) actionLabel = t('Approve')
                   else if (inventoryState === 'error') actionLabel = t('Enter IDs')
                   return (
                     <MenuItem
@@ -782,11 +789,11 @@ export default function V2PoolActionModal({
                           </CollectionTitleText>
                           <PowerText bold fontSize="14px">
                             <LightningIcon />
-                            {collection.weight}
+                            {collection.weight || '—'}
                           </PowerText>
                         </CollectionTitleRow>
                         <Text color="textSubtle" small mt="2px">
-                          {collection.approved
+                          {collection.approved === true
                             ? t('Select NFTs you own')
                             : t('Approval needed for this collection')}
                         </Text>
@@ -795,7 +802,9 @@ export default function V2PoolActionModal({
                         {inventoryState === 'loading' ? (
                           <Flex alignItems="center" style={{ gap: 5 }} role="status" aria-live="polite">
                             <CircleLoader size="14px" />
-                            <Text small color="textSubtle">{t('Checking wallet NFTs')}</Text>
+                            <Text small color="textSubtle">
+                              {t('Checking wallet NFTs')}
+                            </Text>
                           </Flex>
                         ) : inventoryState === 'error' ? (
                           <Text small color="warning" role="status" aria-live="polite">
@@ -808,18 +817,20 @@ export default function V2PoolActionModal({
                         )}
                         <Button
                           scale="sm"
-                          variant={collection.approved ? 'secondary' : 'primary'}
+                          variant={collection.approved === true ? 'secondary' : 'primary'}
                           disabled={
                             working ||
                             actionsBlocked ||
-                            (collection.approved && inventoryState === 'loading') ||
-                            (collection.approved && inventoryState === 'error' && inventoryLoading) ||
+                            (collection.approved === true && inventoryState === 'loading') ||
+                            (collection.approved === true && inventoryState === 'error' && inventoryLoading) ||
                             (inventoryState === 'ready' && ids.length === 0)
                           }
                           aria-label={`${actionLabel} ${collection.name}`}
                           aria-busy={isApproving}
                           onClick={() =>
-                            collection.approved ? setActiveCollection(address) : void onApprove(collection)
+                            collection.approved === true
+                              ? setActiveCollection(address)
+                              : void onApprove(collection as V2UserCollection)
                           }
                         >
                           {isApproving ? <AutoRenewIcon spin mr="4px" /> : null}
@@ -836,7 +847,7 @@ export default function V2PoolActionModal({
             </>
           ) : (
             <>
-              {mode === 'stake' && position.userLimit && (
+              {mode === 'stake' && stakePosition?.userLimit && (
                 <SelectionInfo $error={limitReached}>
                   <Flex alignItems="center" justifyContent="space-between" flexWrap="wrap" style={{ gap: 12 }}>
                     <Flex alignItems="center" style={{ gap: 8 }}>
@@ -850,14 +861,14 @@ export default function V2PoolActionModal({
                       </Text>
                     </Flex>
                     <SelectionCountChip $error={limitReached}>
-                      {totalCount.toString()}/{position.poolLimitPerUser}
+                      {totalCount.toString()}/{stakePosition.poolLimitPerUser}
                     </SelectionCountChip>
                   </Flex>
                   <Text fontSize="14px" color={limitReached ? 'failure' : 'textSubtle'}>
                     {limitReached
                       ? t('Stake limit reached! Please remove extra NFTs to proceed.')
                       : t('Slots remaining: %remaining%', {
-                          remaining: BigNumber.from(position.poolLimitPerUser).sub(totalCount).toString(),
+                          remaining: BigNumber.from(stakePosition.poolLimitPerUser).sub(totalCount).toString(),
                         })}
                   </Text>
                 </SelectionInfo>
@@ -937,7 +948,9 @@ export default function V2PoolActionModal({
                         {inventoryErrors[key]}
                       </Text>
                       <Text small color="textSubtle" mt="6px">
-                        {t('Enter the token IDs you own. Each ID is checked against the connected wallet before it can be staked.')}
+                        {t(
+                          'Enter the token IDs you own. Each ID is checked against the connected wallet before it can be staked.',
+                        )}
                       </Text>
                       <Flex mt="10px" style={{ gap: 8 }}>
                         <TokenIdInput
@@ -950,7 +963,7 @@ export default function V2PoolActionModal({
                           scale="sm"
                           variant="secondary"
                           disabled={working || actionsBlocked}
-                          onClick={() => addManualIds(collection)}
+                          onClick={() => addManualIds(collection as V2UserCollection)}
                         >
                           {t('Verify IDs')}
                         </Button>
@@ -961,11 +974,14 @@ export default function V2PoolActionModal({
               <Text small color="textSubtle" mt="12px">
                 {t('Selected')}: {selectedNfts.length} NFT · {selectedPower.toString()} power
               </Text>
-              {mode === 'stake' && selectedNfts.length > 0 && BigNumber.from(position.performanceFee).gt(0) && (
-                <Text small color="textSubtle" mt="4px">
-                  {t('Stake fee')}: {formatUnits(position.performanceFee, 18)} POL
-                </Text>
-              )}
+              {mode === 'stake' &&
+                stakePosition &&
+                selectedNfts.length > 0 &&
+                BigNumber.from(stakePosition.performanceFee).gt(0) && (
+                  <Text small color="textSubtle" mt="4px">
+                    {t('Stake fee')}: {formatUnits(stakePosition.performanceFee, 18)} POL
+                  </Text>
+                )}
               {mode === 'stake' &&
                 missingApprovals.map((collection) => (
                   <Button
@@ -974,11 +990,9 @@ export default function V2PoolActionModal({
                     width="100%"
                     mt="12px"
                     disabled={working || actionsBlocked}
-                    onClick={() => onApprove(collection)}
+                    onClick={() => onApprove(collection as V2UserCollection)}
                   >
-                    {approvingCollection === collection.address.toLowerCase() ? (
-                      <AutoRenewIcon spin mr="6px" />
-                    ) : null}
+                    {approvingCollection === collection.address.toLowerCase() ? <AutoRenewIcon spin mr="6px" /> : null}
                     {approvingCollection === collection.address.toLowerCase()
                       ? t('Approving %collection%', { collection: collection.name })
                       : t('Enable %collection%', { collection: collection.name })}
@@ -1008,12 +1022,7 @@ export default function V2PoolActionModal({
             </ActionFeedbackCard>
           )}
           {notice && (
-            <ActionNoticeCard
-              $kind={notice.kind}
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
+            <ActionNoticeCard $kind={notice.kind} role="status" aria-live="polite" aria-atomic="true">
               <NoticeIcon $kind={notice.kind}>
                 {notice.kind === 'success' ? (
                   <CheckmarkCircleFillIcon width="20px" color="success" />
@@ -1031,9 +1040,7 @@ export default function V2PoolActionModal({
                   </Text>
                 )}
                 {notice.transactionHash && (
-                  <TransactionHash title={notice.transactionHash}>
-                    {notice.transactionHash}
-                  </TransactionHash>
+                  <TransactionHash title={notice.transactionHash}>{notice.transactionHash}</TransactionHash>
                 )}
               </NoticeContent>
             </ActionNoticeCard>

@@ -83,11 +83,15 @@ Fork-only mock token balances are not real Polygon assets. When selecting these 
 4. Add the test NFT collection by its status-printed address. Select token ID `1` (or another wallet-owned ID shown by status).
 5. Select WPOL, or add the fork-only COLLECT/USDT reward address as a custom token. Set budget/duration, then **Review Pool**.
 6. Click **Create Pool** and approve the guided deployment, NFT power configuration and funding transactions in MetaMask. These confirmations target only chain `31337` through the local RPC.
-7. Wait for **COMPLETE** and local publication confirmation. Open **NFT Pools** or `http://localhost:3001/nftpools`; the upcoming V2 pool card should be visible.
+7. Wait for **COMPLETE**. Use **View pool** or **Refresh discovery**; the catalogue reads factory deployments and chain readiness, so it may take one refresh for the new pool to appear. **Export presentation metadata** saves an operator-owned JSON record without publishing catalogue membership.
+
+For a clean-browser discovery check, open `http://localhost:3001/nftpools` in a separate browser profile with no launch session or
+publication storage. The pool should be found from the fork RPC's factory logs once its on-chain configuration passes readiness.
+Fork mode never requests production Blockscout history or the public presentation document.
 
 ### Stake, harvest and withdraw as a user
 
-Keep the same browser profile and local-fork origin so the locally published card remains visible. Use the pool address shown on the completed launch screen or its PolygonScan-style local card link.
+Use the pool address shown on the completed launch screen or its local address link. Catalogue membership comes from the fork factory and chain configuration, not the browser profile that performed the launch.
 
 1. In MetaMask, switch from account **#0** (pool administrator) to account **#2** (NFT user). Confirm chain `31337` and native POL in the wallet.
 2. In Terminal 2, activate the pool on the local chain:
@@ -114,11 +118,25 @@ Keep the same browser profile and local-fork origin so the locally published car
 
    Press **Withdraw staked NFTs**. The separate **Emergency withdraw all** path explicitly forfeits pending rewards and should only be used when testing that behavior.
 
-The frontend test uses a distinct origin (`localhost:3001`) and namespaced local storage, separate from the ordinary app at `localhost:3000`.
+The frontend test uses a distinct origin (`localhost:3001`) and fork-session-namespaced caches, separate from the ordinary app at `localhost:3000`.
+
+### Readiness regression and position recovery
+
+The recovery universe is every verified factory pool, not only pools that currently pass public readiness. If a contract-supported
+configuration change makes a pool non-ready after a user stakes, verify that the normal catalogue closes new staking while
+Staked-only and **History → Recovery needed** still show the position. Open the pool by address and use normal withdrawal when
+the fresh simulation permits it, or explicitly confirm emergency withdrawal when that is the supported recovery path. A fresh
+consistent zero summary removes the recovery entry. RPC errors should leave the previous positive summary visible as stale with
+a retry action.
+
+The automated fork test changed a staked pool's community collection weight to zero through the real pool owner method. The
+pool remained factory-verified, lost public readiness, rejected new staking, and retained both stored NFT weights for recovery;
+normal withdrawal succeeded and a fresh zero summary cleared the position. If a later pool implementation rejects that state
+transition, keep the reader/component regression fixtures and report that the fork transition was not reached.
 
 ## Automated fork verification
 
-With the fork running and seeded, the launch-engine fork integration test uses the real factory and deploys/configures/funds/verifies a pool on the local fork, then tests address-native publication and the complete user lifecycle: NFT discovery, collection approvals, multi-collection stake, harvest of primary and side tokens, stake-more, partial normal withdraw, explicit emergency recovery, and a finished-pool withdraw. It reverts its Anvil snapshot afterward:
+With the fork running and seeded, the launch-engine integration test uses the real factory and deploys/configures/funds/verifies a pool on the local fork. A fresh registry scan discovers it from the RPC factory event and derives public readiness without launch-session or publication storage. The test then covers NFT discovery, collection approvals, multi-collection stake, harvest of primary and side tokens, stake-more, partial normal withdraw, reward depletion without catalogue removal, explicit emergency recovery, finished-pool retention, a real readiness regression, and withdrawal from the non-ready pool. It reverts its Anvil snapshot afterward:
 
 ```sh
 npm run test:fork

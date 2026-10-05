@@ -36,8 +36,9 @@ import CommunitySwitch from './components/CommunitySwitch'
 import CompetitionBanner from 'views/Home/components/Banners/CompetitionBanner'
 import { CommunityCollectionsBanner } from 'views/Home/components/Banners/CommunityCollectionsBanner'
 import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPools'
-import { usePublishedV2UserPositions } from 'features/nftPoolManager/user/hooks'
+import { useVerifiedV2UserPositions } from 'features/nftPoolManager/user/hooks'
 import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
+import VerifiedPoolRecoveryCard from 'features/nftPoolManager/user/components/VerifiedPoolRecoveryCard'
 
 const ControlContainer = styled.div`
   display: flex;
@@ -442,16 +443,20 @@ const Farms: React.FC = ({ children }) => {
       ? selectPublishedNftPools(published.pools, { ...poolFilters, history: true, stakedOnly: false })
       : []),
   ].filter((pool, index, pools) => pools.findIndex((candidate) => candidate.id === pool.id) === index)
-  const publishedUserPositions = usePublishedV2UserPositions(
-    publishedCandidates,
+  const publishedUserPositions = useVerifiedV2UserPositions(
+    published.verifiedPools,
     account,
     chainId,
     library,
     Boolean(account),
   )
   const stakedPublishedAddresses = Object.values(publishedUserPositions.positions)
-    .filter((position) => new BigNumber(position.nftCount).gt(0))
+    .filter((position) => position.state === 'positive')
     .map((position) => position.poolAddress)
+  const recoveryPools = published.verifiedPools.filter((pool) => {
+    const summary = publishedUserPositions.positions[pool.address.toLowerCase()]
+    return !pool.publicReady && summary?.state === 'positive'
+  })
   const publishedPools = selectPublishedNftPools(publishedCandidates, {
     ...poolFilters,
     history: isInactive,
@@ -464,6 +469,7 @@ const Farms: React.FC = ({ children }) => {
     stakedOnly: true,
     stakedPoolAddresses: stakedPublishedAddresses,
   }).length
+  const hasVerifiedRecoveryPosition = recoveryPools.length > 0
 
   const activeFarms = farmsLP.filter(
     (farm) =>
@@ -782,7 +788,9 @@ const Farms: React.FC = ({ children }) => {
               <Text> {t('Staked only')}</Text>
             </ToggleWrapper>
             <FarmTabButtons
-              hasStakeInFinishedFarms={stakedInactiveFarms.length > 0 || publishedFinishedStakeCount > 0}
+              hasStakeInFinishedFarms={
+                stakedInactiveFarms.length > 0 || publishedFinishedStakeCount > 0 || hasVerifiedRecoveryPosition
+              }
             />
           </ViewControls>
           <FilterContainer>
@@ -822,28 +830,100 @@ const Farms: React.FC = ({ children }) => {
               <Text textTransform="uppercase">{t('Search')}</Text>
               <SearchInput onChange={handleChangeQuery} placeholder="Search Nft Pools" />
             </LabelWrapper>
+            <Button
+              mt="20px"
+              scale="sm"
+              variant="secondary"
+              onClick={() => void published.refresh()}
+              disabled={published.refreshing}
+              aria-label={t('Refresh pool discovery and presentation metadata')}
+            >
+              {published.refreshing ? t('Refreshing') : t('Refresh pools')}
+            </Button>
           </FilterContainer>
         </ControlContainer>
+        {published.errors['*'] ? (
+          <Flex
+            role="status"
+            aria-live="polite"
+            alignItems="center"
+            justifyContent="space-between"
+            mb="20px"
+            style={{ gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255, 178, 55, 0.1)' }}
+          >
+            <Text small color="warning">
+              {published.errors['*']}
+            </Text>
+            <Button
+              scale="sm"
+              variant="secondary"
+              disabled={published.refreshing}
+              onClick={() => void published.refresh()}
+            >
+              {t('Retry discovery')}
+            </Button>
+          </Flex>
+        ) : null}
+        {account && publishedUserPositions.loading ? (
+          <Text small color="textSubtle" mb="16px" role="status" aria-live="polite">
+            {t('Checking wallet positions across verified pools…')}
+          </Text>
+        ) : null}
+        {account && Object.keys(publishedUserPositions.errors).length > 0 ? (
+          <Flex
+            role="status"
+            aria-live="polite"
+            alignItems="center"
+            justifyContent="space-between"
+            mb="20px"
+            style={{ gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255, 178, 55, 0.1)' }}
+          >
+            <Text small color="warning">
+              {t('Some verified pool positions could not be read. They are kept as unknown, not treated as empty.')}
+            </Text>
+            <Button
+              scale="sm"
+              variant="secondary"
+              disabled={publishedUserPositions.refreshing}
+              onClick={() => void publishedUserPositions.refresh()}
+            >
+              {publishedUserPositions.refreshing ? t('Refreshing') : t('Retry position scan')}
+            </Button>
+          </Flex>
+        ) : null}
+        {recoveryPools.length ? (
+          <section aria-label="Verified pool recovery" style={{ marginBottom: 28 }}>
+            <Heading as="h2" scale="lg" mb="16px">
+              {t('Recovery needed')}
+            </Heading>
+            <Text small color="textSubtle" mb="12px">
+              {t(
+                'These verified pools are unavailable for new staking. Existing wallet positions remain available for recovery.',
+              )}
+            </Text>
+            <FlexLayout>
+              {recoveryPools.map((pool) => (
+                <VerifiedPoolRecoveryCard
+                  key={pool.id}
+                  pool={pool}
+                  summary={publishedUserPositions.positions[pool.address.toLowerCase()]}
+                  error={publishedUserPositions.errors[pool.address.toLowerCase()]}
+                />
+              ))}
+            </FlexLayout>
+          </section>
+        ) : null}
         {publishedPools.length ? (
           <section aria-label="New V2 pools">
             <Heading as="h2" scale="lg" mb="24px">
               New V2 pools
             </Heading>
-            {stakedOnly && Object.keys(publishedUserPositions.errors).length > 0 ? (
-              <Text small color="warning" mb="12px" role="status">
-                {t('Some V2 positions could not be verified on the connected network; they are not treated as empty.')}
-              </Text>
-            ) : null}
             <FlexLayout>
               {publishedPools.map((pool) => (
                 <FarmCard key={pool.id} publishedPool={pool} error={published.errors[pool.id]} />
               ))}
             </FlexLayout>
           </section>
-        ) : stakedOnly && Object.keys(publishedUserPositions.errors).length > 0 ? (
-          <Text small color="warning" role="status">
-            {t('V2 wallet positions could not be verified. Check the connected network and try again.')}
-          </Text>
         ) : null}
         {renderContent()}
         {account && !userDataLoaded && stakedOnly && (

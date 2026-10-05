@@ -114,21 +114,57 @@ The deployment and post-deploy state machine is explicit:
 Optional steps are skipped only when absent from the frozen plan. A pending or failed write remains visible in the session
 and can be resumed or retried only after the relevant receipt/read-back decision.
 
-## Verified launch and local public listing
+## Global discovery, public readiness and recovery
 
-A completed launch publishes one address-native, read-only V2 card on `/nftpools`. It never creates a legacy `pid`,
-changes static `nftFarmsConfig`, or enters legacy transaction hooks. Upcoming/active cards precede the legacy list;
-finished cards appear in history. Staked-only intentionally hides V2 cards until user-position reads are implemented.
+`/nftpools` is built from factory deployments read from chain, not from a browser's local publication records or a launch
+session. The catalogue read model separates three states:
 
-Publication uses the versioned `coincollect.nft-pool-publications.v1` localStorage registry. It is limited to the same
-browser profile and exact origin (host and port). Presentation metadata is captured with the launch session separately
-from its frozen plan hash. Contract status, schedule, powers, threshold and balances are refreshed by exact-address
-chain reads on publication, focus and every 30 seconds while visible. RPC failures retain a labelled historical snapshot.
-Broken artwork uses repository fallbacks. Metadata cannot override contract settings.
+- **Discovered** is an event candidate. It is visible to operator diagnostics but is not a public pool or a recovery target.
+- **Verified** means the event provenance, deployed code, configured factory pointer and V2 protocol identity have been
+  checked against the connected runtime chain. Every verified pool belongs to the wallet-recovery scan, whether or not it
+  is publicly ready.
+- **Public ready** means the pool also passes complete, block-pinned configuration checks. Only `verified && publicReady`
+  pools enter the normal catalogue and can accept new staking.
 
-Only integrity-valid `COMPLETE` sessions with confirmed factory receipt provenance and successful required read-backs
-can publish. Storage failures leave the chain launch complete and offer **Publish locally**; reopening the completed
-launch retries publication without another wallet transaction, including after the start block.
+Readiness reads the factory and pool code, exact factory pointer, the primary and bounded collection/reward lists, unique
+valid addresses, ERC-721 support and positive on-chain weights, reward-token code and decimals, required limit/fee/schedule
+getters, a positive primary reward rate, a readable non-negative participant threshold (zero is valid), and
+`startBlock < endBlock`. Required values are read at one block;
+summary defaults do not establish readiness. Current reward balances and the current block's position in the schedule
+are deliberately excluded: reward depletion and a finished schedule do not by themselves remove a ready pool from the
+catalogue.
+
+Production discovery combines Blockscout historical candidates with a 50,000-block RPC tail. RPC logs always prove a
+candidate before it is verified. Historical RPC backfill advances in bounded, resumable chunks and keeps overlap between
+refreshes. Partial coverage and stale registry data are surfaced as warnings. Temporary read failures retain the last
+verified identity and positive wallet-position hint. In local-fork mode, external indexer and metadata requests are
+disabled; discovery starts after the fork base block and its cache is namespaced by fork session.
+
+Wallet position discovery scans **all verified pools**, independently of search, category and readiness filters. A
+lightweight, same-block `userInfo` / NFT `balanceOf` summary tracks `positive`, `zero` or `unknown`. A previous positive
+summary survives a readiness regression and transient read error as stale; only a fresh, consistent zero clears it.
+Positive positions in non-ready pools appear in Staked-only and the History recovery section and can be opened by pool
+address. These recovery cards say **New staking unavailable** and do not invent reward estimates from incomplete public
+configuration.
+
+The recovery reader enumerates the pool's actual staked `(collection, tokenId)` tuples, checks NFT custody with
+`ownerOf`, and sums the stored per-NFT `tokenWeight`. It does not require today's collection list, weights, reward metadata
+or approvals. Before each withdrawal or emergency withdrawal, the transaction path freshly checks chain, signer,
+factory provenance, position tuples and custody, then simulates, checks gas and waits for explicit wallet confirmation.
+Receipt verification checks returned NFT ownership and remaining count/power without depending on reward presentation.
+An unavailable or inconsistent fresh read blocks the write and keeps a previous positive position visible for retry.
+
+The shared presentation document is `https://metadata.coincollect.org/nft-pools.json`, schema version 1, with canonical
+`137:<lowercase-address>` IDs. It contains presentation fields only (name, banner, avatar, URLs, description and
+Partner/Community category); it cannot affect verification, readiness, discovery or transaction parameters. Invalid IDs,
+duplicates, unsafe URLs and oversized input are rejected or omitted. Browser caching uses a five-minute TTL, a four-second
+request timeout and up to 24 hours of last-valid metadata during an outage. Fallback order is remote metadata, exact-address
+repository presentation, known/on-chain collection details, then deterministic generic name and CoinCollect artwork.
+Local presentation drafts remain available for operator preview and export, with Community as the default category.
+
+Old `coincollect.nft-pool-publications.v1` records remain for operator recovery/export, but they cannot create a catalogue
+entry, mark a pool verified or ready, or restrict wallet scans. The launch COMPLETE screen offers **View pool**,
+**Refresh discovery** and **Export presentation metadata**; there is no local-publication action.
 
 `participantThreshold` is independent of selected collection weights. It accepts non-negative integers including zero;
 editing powers does not reconcile it. Solo-NFT preview denominators include the NFT's actual weight, so a 30x NFT cannot
@@ -147,19 +183,9 @@ COINCOLLECT_NEXT_DIST_DIR=.next-verification npm run build
 
 The opt-in fork test requires a loopback HTTP endpoint and the Anvil-only identity method before writes. It uses fork
 impersonation, test-only assets and snapshot rollback; it never needs a production key. The regular suite skips it.
-The fork publication store is in memory and is never mixed with real browser records. Production launch remains a
-separately authorized browser-wallet operation.
-
-## Roadmap: Shared publication and public transactions
-
-The following phase is intentionally separate from the local listing integration. Its scope is to expose verified, public-safe
-state:
-
-- publish active/upcoming pool metadata and schedules through a stable public API/indexer;
-- show verified reward balances, collection weights, status and provenance without exposing operator controls;
-- add public pool detail, staking entry points and event-driven refresh with bounded RPC fallbacks;
-- define an audited analytics/indexing contract for historical launches, receipts and reconciliation outcomes;
-- add production monitoring, alerting and rollback procedures before widening operator permissions.
-
-No Phase 4 item should bypass the current wallet confirmation, owner checks, frozen-plan integrity, receipt reconciliation
-or no-duplicate funding rules.
+The automated lifecycle suite covers launch, clean registry discovery, reward depletion, finished status, and existing
+transaction invariants. On the checked local fork, setting a staked pool's community collection weight to zero was permitted:
+the test confirmed that the pool stayed verified, became non-ready, rejected new staking, retained its stored NFT tuple and
+power, and remained normally withdrawable. Reader fixtures also cover transient stale positives and fresh zero removal. A
+manual Browser A / clean Browser B acceptance should still use separate browser profiles to verify the same catalogue and
+wallet UX end to end without draft or publication storage.

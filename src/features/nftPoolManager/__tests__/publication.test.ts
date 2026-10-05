@@ -8,7 +8,7 @@ import {
   loadNftPoolLaunchSession,
   saveNftPoolLaunchSession,
 } from '../launch/storage'
-import { readNftPoolByAddress } from '../discovery'
+import { readNftPoolByAddress, readNftPoolPublicReadiness } from '../discovery'
 import {
   capturePublicationMetadata,
   hydratePublishedPool,
@@ -21,7 +21,7 @@ import {
 import type { NftPool, NftPoolDeploymentPlan } from '../types'
 import { createEmptyNftPoolDraft } from '../registry'
 
-jest.mock('../discovery', () => ({ readNftPoolByAddress: jest.fn() }))
+jest.mock('../discovery', () => ({ readNftPoolByAddress: jest.fn(), readNftPoolPublicReadiness: jest.fn() }))
 
 const factory = '0x1111111111111111111111111111111111111111'
 const address = '0x2222222222222222222222222222222222222222'
@@ -86,6 +86,7 @@ beforeEach(() => {
   window.localStorage.clear()
   jest.clearAllMocks()
   ;(readNftPoolByAddress as jest.Mock).mockResolvedValue(pool())
+  ;(readNftPoolPublicReadiness as jest.Mock).mockResolvedValue({ ready: true, checkedAtBlock: 101, reasons: [] })
 })
 
 it('captures metadata separately, retains plan hash and survives session reload', () => {
@@ -120,6 +121,17 @@ it('publishes exactly one address-native card and notifies the current tab', asy
 
 it.each(['FUNDING_REQUIRED', 'DEPLOY_SUBMITTED', 'CORRUPTED'])('does not publish stage %s', async (stage) => {
   await expect(publishCompletedNftPool({ ...session(), currentStage: stage as any }, provider)).rejects.toThrow()
+  expect(localPublicationStore.read()).toEqual([])
+})
+
+it('never marks a local operator record public-ready without a fresh chain readiness result', async () => {
+  ;(readNftPoolPublicReadiness as jest.Mock).mockResolvedValue({
+    ready: false,
+    checkedAtBlock: 101,
+    reasons: ['Missing on-chain collection weight.'],
+  })
+
+  await expect(publishCompletedNftPool(session(), provider)).rejects.toThrow('Missing on-chain collection weight')
   expect(localPublicationStore.read()).toEqual([])
 })
 

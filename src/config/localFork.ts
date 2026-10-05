@@ -37,6 +37,12 @@ export function getPolygonRuntimeChainId(): number {
   return isLocalForkMode ? LOCAL_FORK_CHAIN_ID : POLYGON_CHAIN_ID
 }
 
+export function getLocalForkBaseBlock(): number | undefined {
+  if (!isLocalForkMode) return undefined
+  const block = Number(process.env.NEXT_PUBLIC_FORK_BLOCK)
+  return Number.isSafeInteger(block) && block >= 0 ? block : undefined
+}
+
 export function getLocalForkStorageKey(key: string): string {
   if (!isLocalForkMode) return key
   const session = process.env.NEXT_PUBLIC_FORK_SESSION_ID || 'unscoped'

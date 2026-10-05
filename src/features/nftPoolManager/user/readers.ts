@@ -11,8 +11,8 @@ import { v2Erc20UserAbi, v2Erc721UserAbi, v2PoolUserAbi } from './abi'
 import type { V2NftTuple, V2PendingReward, V2UserCollection, V2UserPosition } from './types'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-const MAX_COLLECTIONS = 16
-const MAX_SIDE_REWARDS = 16
+const MAX_COLLECTIONS = 32
+const MAX_SIDE_REWARDS = 32
 
 function sameAddress(left: string, right: string): boolean {
   return left.toLowerCase() === right.toLowerCase()

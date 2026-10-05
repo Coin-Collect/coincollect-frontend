@@ -157,6 +157,17 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
           <PoolMeta style={{ marginTop: 3 }}>
             {pool.metadata.projectUrl ? 'Project artwork ready' : 'Polygon NFT staking'}
           </PoolMeta>
+          <PoolMeta style={{ marginTop: 3 }}>
+            Discovery · {pool.discoveryStatus || 'unverified'} ·{' '}
+            {pool.verified ? 'verified factory pool' : 'not verified'}
+          </PoolMeta>
+          <PoolMeta style={{ marginTop: 3 }}>
+            Public readiness · {pool.publicReadiness?.ready ? 'ready for catalogue' : 'setup required'}
+            {pool.publicReadiness?.stale ? ' · last verified result' : ''}
+          </PoolMeta>
+          {!pool.publicReadiness?.ready && pool.publicReadiness?.reasons.length ? (
+            <PoolMeta style={{ marginTop: 3 }}>Setup: {pool.publicReadiness.reasons[0]}</PoolMeta>
+          ) : null}
         </div>
         <div>
           <PoolMeta style={{ marginBottom: 7 }}>Rewards</PoolMeta>

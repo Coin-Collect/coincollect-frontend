@@ -348,12 +348,17 @@ export function createNftPoolCloneDraft(pool: NftPool, secondsPerBlock = 2.2): N
     chainId: pool.chainId,
     source: 'cloned',
     name: pool.metadata.name,
+    description: pool.metadata.description,
     banner: resolveNftAssetUrl(pool.metadata.banner),
     avatar: resolveNftAssetUrl(pool.metadata.avatar),
     projectUrl: pool.metadata.projectUrl,
     getNftUrl: pool.metadata.getNftUrl,
+    isCommunity: pool.metadata.isCommunity !== false,
     collections,
-    rewards: { primary: normalizeWrappedReward(draftReward(primaryReward)), side: sideRewards.map(normalizeWrappedReward) },
+    rewards: {
+      primary: normalizeWrappedReward(draftReward(primaryReward)),
+      side: sideRewards.map(normalizeWrappedReward),
+    },
     sourceEconomics: resolvedSourceEconomics,
     unsafe: {},
     economics: {
@@ -397,6 +402,8 @@ export function createEmptyNftPoolDraft(chainId = NFT_POOL_MANAGER_CHAIN_ID): Nf
     chainId,
     source: 'manual',
     name: '',
+    description: '',
+    isCommunity: true,
     collections: [],
     rewards: {
       // COLLECT is a suggested reward identity, not a financial commitment.

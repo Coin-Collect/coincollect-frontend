@@ -1,6 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
 
 export type NftPoolStatus = 'UPCOMING' | 'ACTIVE' | 'FINISHED' | 'UNKNOWN'
+export type NftPoolDiscoveryStatus = 'discovered' | 'verified' | 'unverified'
 export type NftPoolProtocolVersion = 'NftStakeV2' | 'LegacyNFTStake' | 'StaticCollectionDefinition' | 'Unknown'
 export type NftPoolSource = 'nft-farms-config' | 'nft-factory' | 'legacy-masterchef'
 export type NftPoolKind = 'POOL' | 'COLLECTION_DEFINITION'
@@ -55,6 +56,7 @@ export interface NftRewardAsset {
 
 export interface NftPoolFrontendMetadata {
   name: string
+  description?: string
   banner?: string
   avatar?: string
   projectUrl?: string
@@ -159,6 +161,15 @@ export interface NftPool {
   onChain: NftPoolOnChainTruth
   sourceEconomics: NftPoolSourceEconomics
   deployment: NftPoolDeploymentProvenance
+  /** Factory event proof is retained independently from public readiness. */
+  discoveryStatus?: NftPoolDiscoveryStatus
+  verified?: boolean
+  publicReadiness?: {
+    ready: boolean
+    checkedAtBlock?: number
+    stale?: boolean
+    reasons: string[]
+  }
   collections: NftPoolCollection[]
   rewards: {
     primary: NftRewardAsset
@@ -180,6 +191,13 @@ export interface NftPoolRegistryResult {
   secondsPerBlock: number
   factoryAddress?: string
   factoryOwner?: string
+  coverage?: {
+    fromBlock: number
+    throughBlock: number
+    backfillComplete: boolean
+    stale?: boolean
+    warning?: string
+  }
   warning?: string
 }
 
@@ -337,10 +355,12 @@ export interface NftPoolDraft {
   chainId: number
   source: 'manual' | 'cloned'
   name: string
+  description?: string
   banner?: string
   avatar?: string
   projectUrl?: string
   getNftUrl?: string
+  isCommunity?: boolean
   intendedAdmin?: string
   collections: NftPoolDraftCollection[]
   rewards: {

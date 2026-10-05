@@ -4,13 +4,13 @@ import { createRoot } from 'react-dom/client'
 import { ThemeProvider } from 'styled-components'
 import V2PoolActionModal from '../components/V2PoolActionModal'
 import { readV2OwnedNfts } from '../nftDiscovery'
-import { approveV2PoolCollection } from '../transactions'
+import { approveV2PoolCollection, stakeV2Nfts } from '../transactions'
 import type { PublicV2Pool } from '../../publication'
 
 jest.mock('@pancakeswap/uikit', () => {
   const box = ({ children }: any) => <div>{children}</div>
-  const button = ({ children, disabled, onClick }: any) => (
-    <button disabled={disabled} onClick={onClick}>
+  const button = ({ children, disabled, onClick, scale, variant, isLoading, endIcon, ...props }: any) => (
+    <button disabled={disabled} onClick={onClick} {...props}>
       {children}
     </button>
   )
@@ -61,9 +61,9 @@ jest.mock('components/CollectionSelectModal/CollectionList', () => {
     CollectionTitleText: box,
     PowerText: box,
     MenuItem: ({ children, onClick, disabled }: any) => (
-      <button onClick={onClick} disabled={disabled}>
+      <div onClick={onClick} aria-disabled={disabled}>
         {children}
-      </button>
+      </div>
     ),
   }
 })
@@ -81,6 +81,12 @@ jest.mock('contexts/Localization', () => ({
 jest.mock('../hooks', () => ({
   notifyV2UserPositionChanged: jest.fn(),
   usePublishedV2UserPosition: () => ({ position: mockPosition, loading: false, refresh: async () => mockPosition }),
+  useVerifiedV2UserRecoveryPosition: () => ({
+    position: mockRecoveryPosition,
+    loading: false,
+    refreshing: false,
+    refresh: async () => mockRecoveryPosition,
+  }),
 }))
 jest.mock('../nftDiscovery', () => ({
   readV2OwnedNfts: jest.fn(),
@@ -98,6 +104,7 @@ const address = '0x1111111111111111111111111111111111111111'
 const hugeId = '900719925474099300000'
 const pool = { id: '137:test', address } as PublicV2Pool
 let mockPosition: any
+let mockRecoveryPosition: any
 const mockWallet = {
   account: '0x2222222222222222222222222222222222222222',
   chainId: 31337,
@@ -110,10 +117,16 @@ beforeEach(() => {
   ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
   mockPosition = {
     nftCount: '0',
+    power: '0',
+    status: 'ACTIVE',
+    startBlock: 0,
+    endBlock: 100,
+    rewards: [],
     performanceFee: '0',
     userLimit: false,
     collections: [{ address, name: 'KEY NFT', image: '/key.png', weight: '10', approved: true, staked: [] }],
   }
+  mockRecoveryPosition = undefined
   ;(readV2OwnedNfts as jest.Mock).mockResolvedValue({ tokenIds: [hugeId], complete: true })
   container = document.createElement('div')
   document.body.appendChild(container)
@@ -132,10 +145,10 @@ async function render(mode: 'stake' | 'unstake' = 'stake') {
     )
   })
 }
-it('opens the legacy collection picker, then its NFT image tiles instead of checkbox rows', async () => {
+it('opens the collection picker, then its NFT image tiles instead of checkbox rows', async () => {
   await render()
-  expect(screen.getByText('Select from 1 collection')).toBeTruthy()
-  fireEvent.click(screen.getByText('Click to Start Staking'))
+  expect(screen.getByRole('heading', { name: 'Choose an NFT collection' })).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Choose KEY NFT' }))
   expect(screen.getByText('Select NFTs to Stake')).toBeTruthy()
   expect(screen.getByTestId('legacy-nft-image')).toBeTruthy()
   expect(document.querySelector('input[type=checkbox]')).toBeNull()
@@ -143,7 +156,7 @@ it('opens the legacy collection picker, then its NFT image tiles instead of chec
   expect(screen.getByTestId('legacy-selected-image')).toBeTruthy()
   expect((screen.getByText('Confirm') as HTMLButtonElement).disabled).toBe(false)
   fireEvent.click(screen.getByText('Back'))
-  expect(screen.getByText('Click to Start Staking')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Choose KEY NFT' })).toBeTruthy()
 })
 it('only enables the chosen collection and keeps approval separate from NFT staking', async () => {
   mockPosition.collections[0].approved = false
@@ -153,23 +166,33 @@ it('only enables the chosen collection and keeps approval separate from NFT stak
   })
   await render()
   await act(async () => {
-    fireEvent.click(screen.getByText('Click to Enable'))
+    fireEvent.click(screen.getByRole('button', { name: 'Approve KEY NFT' }))
   })
   expect(approveV2PoolCollection).toHaveBeenCalledWith(expect.objectContaining({ poolAddress: address }), address)
-  expect(screen.getByText('Click to Start Staking')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Choose KEY NFT' })).toBeTruthy()
+  expect(stakeV2Nfts).not.toHaveBeenCalled()
   expect(screen.queryByText('Select NFTs to Stake')).toBeNull()
 })
 it('requires explicit unstake selection and retains the recorded NFT power', async () => {
-  mockPosition.nftCount = '1'
-  mockPosition.collections[0].staked = [
-    {
-      collectionAddress: address,
-      tokenId: hugeId,
-      weight: '30',
-      collectionName: 'KEY NFT',
-      collectionImage: '/key.png',
-    },
-  ]
+  mockRecoveryPosition = {
+    nftCount: '1',
+    power: '30',
+    collections: [
+      {
+        address,
+        name: 'KEY NFT',
+        staked: [
+          {
+            collectionAddress: address,
+            tokenId: hugeId,
+            weight: '30',
+            collectionName: 'KEY NFT',
+            collectionImage: '/key.png',
+          },
+        ],
+      },
+    ],
+  }
   await render('unstake')
   expect((screen.getByText('Confirm') as HTMLButtonElement).disabled).toBe(true)
   expect(readV2OwnedNfts).not.toHaveBeenCalled()

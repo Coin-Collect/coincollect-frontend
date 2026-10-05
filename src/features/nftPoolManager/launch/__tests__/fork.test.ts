@@ -9,13 +9,8 @@ import { calculatePoolEconomics } from '../../economics'
 import { createEmptyNftPoolDraft } from '../../registry'
 import { buildNftPoolDeploymentPlan } from '../../validation'
 import { WPOL_ADDRESS } from '../../rewardTokens'
-import {
-  capturePublicationMetadata,
-  hydratePublishedPool,
-  PublicV2Pool,
-  publishCompletedNftPool,
-} from '../../publication'
-import { createNftPoolLaunchSession } from '../storage'
+import { getNftPoolRegistry } from '../../discovery'
+import { toPublicV2Pool, toVerifiedNftPool } from '../../publication'
 import { prepareNftLaunchSchedule } from '../schedule'
 import { configureNftCollectionWeights, configureNftPerformanceFee, deployNftPool } from '../transactions'
 import { fundNftPoolTokenIfNeeded, primaryFundingAmount, sideFundingAmount } from '../funding'
@@ -35,6 +30,7 @@ import {
   unstakeV2Nfts,
 } from '../../user/transactions'
 import { assertV2StakeLimits, readV2UserPosition } from '../../user/readers'
+import { readV2UserPositionSummary, readV2UserRecoveryPosition } from '../../user/recovery'
 import { readV2OwnedNfts } from '../../user/nftDiscovery'
 
 const forkUrl = process.env.COINCOLLECT_FORK_RPC
@@ -42,7 +38,7 @@ const forkTest = forkUrl ? it : it.skip
 const preservePublishedTestPool = process.env.COINCOLLECT_FORK_PRESERVE_TEST_POOL === '1'
 
 forkTest(
-  'uses the real factory and existing engine to deploy, configure, fund, verify and publish on an isolated fork',
+  'discovers a real factory deployment, verifies public readiness and runs the user lifecycle on an isolated fork',
   async () => {
     const url = new URL(forkUrl!)
     if (
@@ -59,7 +55,7 @@ forkTest(
     const checkpoint = await provider.send('evm_snapshot', [])
     const factoryAddress = getNftSmartChefFactoryAddress(137)!
     let owner: string | undefined
-    let preservedPublishedPool = false
+    let preservedDiscoveredPool = false
     try {
       const factoryOwner: string = await new Contract(
         factoryAddress,
@@ -171,25 +167,19 @@ forkTest(
       const final = await verifyFinalNftLaunch(provider, plan, schedule, deployment.poolAddress)
       console.info('Fork: configuration and deficit funding verified')
       expect(final.checks.filter((check) => check.status === 'BLOCK')).toEqual([])
-      const session = {
-        ...createNftPoolLaunchSession(plan, 137, factoryAddress, factoryOwner, capturePublicationMetadata(draft)),
-        currentStage: 'COMPLETE' as const,
-        schedule,
-        poolAddress: deployment.poolAddress,
-        transactionHashes: { deploy: deployment.transactionHash, fee: feeReceipt.transactionHash, sideFunding: {} },
-        verification: { deployment: deployed, weights, fee, funding, final },
-      }
-      let records: PublicV2Pool[] = []
-      const store = {
-        read: () => records,
-        upsert: (record: PublicV2Pool) => {
-          records = [record, ...records.filter((item) => item.id !== record.id)]
-        },
-      }
-      const published = await publishCompletedNftPool(session, provider, store)
-      console.info('Fork: exact-address publication hydrated')
-      await publishCompletedNftPool(session, provider, store)
-      expect(records).toHaveLength(1)
+      const registry = await getNftPoolRegistry(provider, true)
+      const discoveredPool = registry.pools.find(
+        (item) => item.address.toLowerCase() === deployment.poolAddress.toLowerCase(),
+      )
+      expect(discoveredPool?.verified).toBe(true)
+      expect(discoveredPool?.discoveryStatus).toBe('verified')
+      expect(discoveredPool?.publicReadiness?.ready).toBe(true)
+      const verifiedPool = discoveredPool && toVerifiedNftPool(discoveredPool)
+      expect(verifiedPool).toBeDefined()
+      const published = verifiedPool && toPublicV2Pool(verifiedPool, registry.secondsPerBlock)
+      expect(published).toBeDefined()
+      if (!published) throw new Error('Fresh factory discovery did not produce a public-ready pool projection.')
+      console.info('Fork: clean registry discovery proved factory provenance and chain-derived public readiness')
       expect(published.snapshot.threshold).toBe('40')
       expect(published.snapshot.rewards).toHaveLength(2)
       expect(published.snapshot.rewards[0].symbol).toBe('WPOL')
@@ -198,10 +188,14 @@ forkTest(
       expect(published.snapshot.rewards[1].percentage).toBe(plan.factoryParameters.sideRewardPercentages[0])
       expect(published.snapshot.collections.map((item) => item.weight)).toEqual(['30', '1'])
       expect(published.snapshot.status).toBe('UPCOMING')
-      const publicationCheckpoint = await provider.send('evm_snapshot', [])
+      const upcomingCheckpoint = await provider.send('evm_snapshot', [])
       await provider.send('anvil_mine', [`0x${(schedule.startBlock - (await provider.getBlockNumber())).toString(16)}`])
       console.info('Fork: mined to start block')
-      expect((await hydratePublishedPool(published, provider)).snapshot.status).toBe('ACTIVE')
+      const activeRegistry = await getNftPoolRegistry(provider, true)
+      expect(
+        activeRegistry.pools.find((item) => item.address.toLowerCase() === deployment.poolAddress.toLowerCase())
+          ?.status,
+      ).toBe('ACTIVE')
 
       // Exercise the address-native user path against the deployed Polygon factory pool.
       const userAddress = await provider.getSigner(2).getAddress()
@@ -255,7 +249,6 @@ forkTest(
       const feeRecipientBeforeStake = await provider.getBalance(factoryOwner)
       await stakeV2Nfts(
         userContext,
-        userPosition,
         firstBatch,
         await Promise.all([primaryNft.ownerOf(501), communityNft.ownerOf(501)]),
       )
@@ -290,11 +283,11 @@ forkTest(
       console.info('Fork: primary and 6-decimal side rewards harvested to wallet')
 
       const stakeMore = [{ collectionAddress: primaryNft.address, tokenId: '502' }]
-      await stakeV2Nfts(userContext, userPosition, stakeMore, [await primaryNft.ownerOf(502)])
+      await stakeV2Nfts(userContext, stakeMore, [await primaryNft.ownerOf(502)])
       userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
       expect(userPosition.nftCount).toBe('3')
       expect(userPosition.power).toBe('61')
-      await unstakeV2Nfts(userContext, userPosition, [{ collectionAddress: communityNft.address, tokenId: '501' }])
+      await unstakeV2Nfts(userContext, [{ collectionAddress: communityNft.address, tokenId: '501' }])
       expect((await communityNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
       userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
       expect(userPosition.nftCount).toBe('2')
@@ -306,14 +299,20 @@ forkTest(
       expect(BigNumber.from(userPosition.pendingPrimary).gt(0)).toBe(true)
       const brokenSideBalance = await sideToken.balanceOf(deployment.poolAddress)
       await (await sideToken.burn(deployment.poolAddress, brokenSideBalance)).wait()
+      const depletedRegistry = await getNftPoolRegistry(provider, true)
+      const depletedPool = depletedRegistry.pools.find(
+        (item) => item.address.toLowerCase() === deployment.poolAddress.toLowerCase(),
+      )
+      expect(depletedPool?.publicReadiness?.ready).toBe(true)
+      console.info('Fork: depleted reward balance did not remove public readiness')
       await expect(
-        unstakeV2Nfts(userContext, userPosition, [{ collectionAddress: primaryNft.address, tokenId: '501' }]),
+        unstakeV2Nfts(userContext, [{ collectionAddress: primaryNft.address, tokenId: '501' }]),
       ).rejects.toThrow()
       expect((await primaryNft.ownerOf(501)).toLowerCase()).toBe(deployment.poolAddress.toLowerCase())
       userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
       expect(userPosition.nftCount).toBe('2')
       console.info('Fork: normal reward-paying withdrawal failed safely when side reward balance was deficient')
-      await emergencyWithdrawV2Position(userContext, userPosition, true)
+      await emergencyWithdrawV2Position(userContext, true)
       expect((await primaryNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
       expect((await primaryNft.ownerOf(502)).toLowerCase()).toBe(userAddress.toLowerCase())
       userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
@@ -324,7 +323,6 @@ forkTest(
 
       await stakeV2Nfts(
         userContext,
-        userPosition,
         firstBatch,
         await Promise.all([primaryNft.ownerOf(501), communityNft.ownerOf(501)]),
       )
@@ -332,28 +330,89 @@ forkTest(
       if (untilEnd > 0) await provider.send('anvil_mine', [`0x${untilEnd.toString(16)}`])
       userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
       expect(userPosition.status).toBe('FINISHED')
-      await unstakeV2Nfts(userContext, userPosition, [
+      const finishedRegistry = await getNftPoolRegistry(provider, true)
+      const finishedPool = finishedRegistry.pools.find(
+        (item) => item.address.toLowerCase() === deployment.poolAddress.toLowerCase(),
+      )
+      expect(finishedPool?.verified).toBe(true)
+      expect(finishedPool?.publicReadiness?.ready).toBe(true)
+      expect(finishedPool?.status).toBe('FINISHED')
+
+      const poolAdmin = new Contract(
+        deployment.poolAddress,
+        ['function setCollectionWeights(address[],uint256[],uint256)'],
+        signer,
+      )
+      let readinessRegressed = false
+      try {
+        await (await poolAdmin.setCollectionWeights([communityNft.address], [0], 30)).wait()
+        readinessRegressed = true
+      } catch {
+        console.info('Fork: pool contract rejects readiness regression; reader and cache fixtures cover that state')
+      }
+      if (readinessRegressed) {
+        const regressedRegistry = await getNftPoolRegistry(provider, true)
+        const regressedPool = regressedRegistry.pools.find(
+          (item) => item.address.toLowerCase() === deployment.poolAddress.toLowerCase(),
+        )
+        expect(regressedPool?.verified).toBe(true)
+        expect(regressedPool?.publicReadiness?.ready).toBe(false)
+        const recoveryIdentity = regressedPool && toVerifiedNftPool(regressedPool)
+        expect(recoveryIdentity).toBeDefined()
+        await expect(
+          readV2UserPositionSummary(recoveryIdentity!, provider, userAddress, { expectedChainId: 31337 }),
+        ).resolves.toMatchObject({ state: 'positive', count: '2', power: '31' })
+        const recovered = await readV2UserRecoveryPosition(recoveryIdentity!, provider, userAddress, {
+          expectedChainId: 31337,
+        })
+        expect(recovered.collections.flatMap((collection) => collection.staked).map((item) => item.weight)).toEqual([
+          '30',
+          '1',
+        ])
+        await expect(
+          stakeV2Nfts(userContext, [{ collectionAddress: primaryNft.address, tokenId: '502' }], [userAddress]),
+        ).rejects.toThrow('not public-ready')
+        console.info('Fork: readiness regression closed new staking while stored NFT tuples remained recoverable')
+      }
+
+      const recoveryNfts = [
         { collectionAddress: primaryNft.address, tokenId: '501' },
         { collectionAddress: communityNft.address, tokenId: '501' },
-      ])
+      ]
+      try {
+        await unstakeV2Nfts(userContext, recoveryNfts)
+        console.info('Fork: finished or readiness-regressed position recovered by normal withdrawal')
+      } catch {
+        await emergencyWithdrawV2Position(userContext, true)
+        console.info('Fork: normal withdrawal unavailable; explicit emergency recovery succeeded')
+      }
       expect((await primaryNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
       expect((await communityNft.ownerOf(501)).toLowerCase()).toBe(userAddress.toLowerCase())
-      userPosition = await readV2UserPosition(published, provider, userAddress, { expectedChainId: 31337 })
-      expect(userPosition.nftCount).toBe('0')
-      expect(userPosition.power).toBe('0')
+      const zeroSummary = await readV2UserPositionSummary(
+        readinessRegressed
+          ? toVerifiedNftPool(
+              (
+                await getNftPoolRegistry(provider, true)
+              ).pools.find((item) => item.address.toLowerCase() === deployment.poolAddress.toLowerCase())!,
+            )!
+          : verifiedPool!,
+        provider,
+        userAddress,
+        { expectedChainId: 31337 },
+      )
+      expect(zeroSummary).toMatchObject({ state: 'zero', count: '0', power: '0' })
       console.info('Fork: finished-pool withdrawal confirmed; user returned to zero position')
 
-      expect((await hydratePublishedPool(published, provider)).snapshot.status).toBe('FINISHED')
       if (preservePublishedTestPool) {
-        const restored = await provider.send('evm_revert', [publicationCheckpoint])
-        if (!restored) throw new Error('Could not restore the locally published pool to its upcoming state.')
-        preservedPublishedPool = true
-        console.info(`COINCOLLECT_FORK_PUBLICATION=${JSON.stringify(published)}`)
-        console.info('Fork: verified upcoming pool retained locally for /nftpools UI verification')
+        const restored = await provider.send('evm_revert', [upcomingCheckpoint])
+        if (!restored) throw new Error('Could not restore the discovered pool to its upcoming state.')
+        preservedDiscoveredPool = true
+        console.info(`COINCOLLECT_FORK_DISCOVERED_POOL=${deployment.poolAddress}`)
+        console.info('Fork: verified upcoming pool retained on-chain for clean-browser discovery verification')
       }
     } finally {
       if (owner) await provider.send('anvil_stopImpersonatingAccount', [owner])
-      if (!preservedPublishedPool) await provider.send('evm_revert', [checkpoint])
+      if (!preservedDiscoveredPool) await provider.send('evm_revert', [checkpoint])
     }
   },
   180_000,

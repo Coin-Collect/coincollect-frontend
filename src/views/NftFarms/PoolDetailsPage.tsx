@@ -26,6 +26,10 @@ import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard
 import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPools'
 import { usePublishedV2UserPosition } from 'features/nftPoolManager/user/hooks'
 import { V2PoolEmergencyAction } from 'features/nftPoolManager/user/components/V2PoolControls'
+import { useModal } from '@pancakeswap/uikit'
+import type { VerifiedNftPool } from 'features/nftPoolManager/publication'
+import V2PoolActionModal from 'features/nftPoolManager/user/components/V2PoolActionModal'
+import { notifyV2UserPositionChanged, useVerifiedV2UserRecoveryPosition } from 'features/nftPoolManager/user/hooks'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import { mintingConfig } from 'config/constants'
 import { getNftFarmApr } from 'utils/apr'
@@ -926,17 +930,27 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 export function PublishedPoolDetailsPage({ address }: { address?: string }) {
   const { t } = useTranslation()
   const { account, chainId, library } = useWeb3React()
-  const { pools, errors, loading } = usePublishedNftPools()
+  const { pools, verifiedPools, errors, loading, refreshing, refresh } = usePublishedNftPools()
   const pool = pools.find((entry) => entry.address.toLowerCase() === address?.toLowerCase())
+  const verifiedPool = verifiedPools.find((entry) => entry.address.toLowerCase() === address?.toLowerCase())
   const user = usePublishedV2UserPosition(pool, account, chainId, library)
+  if (!pool && verifiedPool) return <RecoveryOnlyPoolDetails pool={verifiedPool} />
   if (!pool)
     return (
       <Page withMeta={false}>
         <EmptyState>
-          <Heading>{loading ? t('Loading') : t('Pool not available in this browser')}</Heading>
+          <Heading>{loading ? t('Loading') : t('Verified pool not found on this chain')}</Heading>
           {!loading && (
-            <Text mt="16px">{t('Open the same browser and local origin where this pool was published.')}</Text>
+            <Text mt="16px">{t('Check the pool address and connected network, then refresh factory discovery.')}</Text>
           )}
+          {errors['*'] ? (
+            <Text mt="12px" small color="warning" role="status" aria-live="polite">
+              {errors['*']}
+            </Text>
+          ) : null}
+          <Button mt="16px" variant="secondary" onClick={() => void refresh()} disabled={loading || refreshing}>
+            {t('Refresh discovery')}
+          </Button>
           <NextLinkFromReactRouter to="/nftpools">
             <Button mt="24px">{t('Back to Pools')}</Button>
           </NextLinkFromReactRouter>
@@ -1054,6 +1068,108 @@ export function PublishedPoolDetailsPage({ address }: { address?: string }) {
           </FlexLayout>
         </Section>
       )}
+    </Page>
+  )
+}
+
+function RecoveryOnlyPoolDetails({ pool }: { pool: VerifiedNftPool }) {
+  const { t } = useTranslation()
+  const { account, chainId, library } = useWeb3React()
+  const user = useVerifiedV2UserRecoveryPosition(pool, account, chainId, library)
+  const onSuccess = async () => {
+    notifyV2UserPositionChanged()
+    const updated = await user.refresh()
+    if (!updated) throw new Error('Confirmed; position refresh is pending.')
+  }
+  const [openWithdraw] = useModal(
+    <V2PoolActionModal pool={pool} mode="unstake" onSuccess={onSuccess} />,
+    false,
+    false,
+    `v2-recovery-withdraw-${pool.address.toLowerCase()}`,
+  )
+  const [openEmergency] = useModal(
+    <V2PoolActionModal pool={pool} mode="emergency" onSuccess={onSuccess} />,
+    false,
+    false,
+    `v2-recovery-emergency-${pool.address.toLowerCase()}`,
+  )
+  const hasPosition = Boolean(user.position && BigNumber(user.position.nftCount).gt(0))
+  return (
+    <Page withMeta={false}>
+      <Hero $banner={pool.metadata.banner}>
+        <HeroTopBar>
+          <Heading scale="xl">{pool.metadata.name}</Heading>
+          <NextLinkFromReactRouter to="/nftpools">
+            <Button variant="secondary" scale="sm">
+              {t('Back to Pools')}
+            </Button>
+          </NextLinkFromReactRouter>
+        </HeroTopBar>
+        <HeroBadges mt="12px">
+          <HeroBadge variant={pool.metadata.isCommunity ? 'community' : 'partner'}>
+            {pool.metadata.isCommunity ? t('Community') : t('Partner')}
+          </HeroBadge>
+          <HeroBadge variant="finished">{t('New staking unavailable')}</HeroBadge>
+        </HeroBadges>
+        <HeroDescription mt="12px">
+          {t('This verified pool is not ready for new staking. Existing positions remain available for recovery.')}
+        </HeroDescription>
+      </Hero>
+      <Section>
+        <SectionHeader>
+          <Heading scale="lg">{t('Recovery details')}</Heading>
+        </SectionHeader>
+        <Text mb="12px" style={{ overflowWrap: 'anywhere' }}>
+          {t('Pool contract')}: {pool.address}
+        </Text>
+        {user.error ? (
+          <Text color="warning" role="status">
+            {user.error}
+          </Text>
+        ) : null}
+        {user.position ? (
+          <>
+            {user.position.stale ? (
+              <Text small color="warning" role="status" mb="8px">
+                {t(
+                  'NFT enumeration resumed from pinned block {{block}}. Withdrawal actions always perform a fresh chain check.',
+                  {
+                    block: user.position.blockNumber,
+                  },
+                )}
+              </Text>
+            ) : null}
+            <Text mb="12px">
+              {t('Verified position: {{count}} NFT · {{power}} power', {
+                count: user.position.nftCount,
+                power: user.position.power,
+              })}
+            </Text>
+            {user.position.collections.map((collection) => (
+              <Text key={collection.address} small mb="4px">
+                {collection.name}: {collection.staked.map((item) => `#${item.tokenId}`).join(', ')}
+              </Text>
+            ))}
+          </>
+        ) : user.loading ? (
+          <Text color="textSubtle">{t('Reading verified wallet position…')}</Text>
+        ) : !user.error ? (
+          <Text color="textSubtle">{t('No wallet position was found at the latest verified block.')}</Text>
+        ) : null}
+        <Flex mt="16px" style={{ gap: 10 }} flexWrap="wrap">
+          <Button variant="secondary" disabled={!hasPosition || user.loading} onClick={openWithdraw}>
+            {t('Withdraw NFTs')}
+          </Button>
+          <Button variant="danger" disabled={!hasPosition || user.loading} onClick={openEmergency}>
+            {t('Emergency withdraw all · forfeits rewards')}
+          </Button>
+        </Flex>
+        <Text small color="textSubtle" mt="12px">
+          {t(
+            'Every recovery transaction rechecks the connected wallet, factory, NFT custody, and stored NFT power before signing.',
+          )}
+        </Text>
+      </Section>
     </Page>
   )
 }

@@ -16,7 +16,8 @@ import {
 } from 'utils/addressHelpers'
 import { nftPoolRegistryRpcProvider } from 'utils/providers'
 import { POLYGON_BLOCK_TIME } from 'config'
-import { getPolygonRuntimeChainId } from 'config/localFork'
+import { getLocalForkBaseBlock, getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
+import { getLocalForkStorageKey } from 'config/localFork'
 import {
   configuredPoolCollections,
   deriveNftPoolStatus,
@@ -48,18 +49,22 @@ import {
 
 const NFT_FACTORY_INDEXER_URL = 'https://polygon.blockscout.com/api/v2'
 const NFT_FACTORY_LOG_SCAN_CHUNK = 9_000
-const NFT_FACTORY_MAX_RPC_DISCOVERY_BLOCKS = 2_000_000
+const NFT_FACTORY_RECENT_TAIL_BLOCKS = 50_000
+const NFT_FACTORY_BACKFILL_CHUNKS_PER_REFRESH = 3
+const NFT_FACTORY_CHECKPOINT_OVERLAP = 128
 const NFT_FACTORY_INDEXER_TIMEOUT_MS = 10_000
-const NFT_POOL_REGISTRY_CACHE_TTL = 30_000
+const NFT_POOL_REGISTRY_CACHE_TTL = 5 * 60_000
 const NFT_FACTORY_DEPLOYMENT_FALLBACK = 45_594_882
 const NFT_POOL_INTROSPECTION_CONCURRENCY = 8
 const NFT_POOL_INTROSPECTION_TIMEOUT_MS = 15_000
+const NFT_POOL_READINESS_TIMEOUT_MS = 15_000
 const ZERO = BigNumber.from(0)
 
 interface FactoryEvent {
   address: string
   blockNumber?: number
   transactionHash?: string
+  rpcProvenanceVerified?: boolean
 }
 
 type FarmConfigLike = NonNullable<ReturnType<typeof getNftFarmConfig>>
@@ -181,13 +186,13 @@ function configuredSideRewardAsset(
   const tokenContract = new Contract(address, erc20Abi, provider)
   return Promise.all([
     readTokenMetadata(provider, address),
-    readOptional<BigNumber>(tokenContract, 'balanceOf', [poolAddress], ZERO),
+    readOptional<BigNumber>(tokenContract, 'balanceOf', [poolAddress]),
   ]).then(([token, poolBalance]) => ({
     token,
     configuredSymbol: configured?.symbol,
     configuredPercentage: configured?.percentage,
     onChainPercentage: percentage,
-    poolBalance: asBigNumber(poolBalance) || ZERO,
+    poolBalance: asBigNumber(poolBalance),
   }))
 }
 
@@ -206,6 +211,35 @@ function summarizePoolReadError(error: unknown): string {
     return 'Pool contract did not answer one of the expected read calls.'
   if (message.length > 180) return `${message.slice(0, 177)}…`
   return message || 'Pool introspection failed.'
+}
+
+function isTransientPoolReadFailure(error: unknown): boolean {
+  const value = error as any
+  const codes = [value?.code, value?.error?.code, value?.error?.error?.code]
+    .filter((code) => code !== undefined && code !== null)
+    .map((code) => String(code).toUpperCase())
+  if (
+    codes.some((code) =>
+      [
+        'NETWORK_ERROR',
+        'SERVER_ERROR',
+        'TIMEOUT',
+        'UNKNOWN_ERROR',
+        'ECONNRESET',
+        'ECONNREFUSED',
+        'ETIMEDOUT',
+        'ENOTFOUND',
+      ].includes(code),
+    )
+  )
+    return true
+  const message = [value?.message, value?.error?.message, value?.error?.error?.message]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  return /\b429\b|too many requests|missing response|network error|timed out|timeout|failed to fetch|fetch failed|temporarily unavailable|service unavailable|\b50[234]\b|gateway|connection reset|socket hang up|could not detect network/.test(
+    message,
+  )
 }
 
 function healthFor(
@@ -338,6 +372,9 @@ function unreadablePool(
       originalSideRewardPercentages: [],
     },
     deployment,
+    discoveryStatus: source === 'nft-factory' ? 'discovered' : 'unverified',
+    verified: false,
+    publicReadiness: { ready: false, reasons: [warning] },
     collections: primaryCollection
       ? [{ collection: primaryCollection, primary: true, weight: BigNumber.from(1), weightSource: 'default' }]
       : [],
@@ -540,7 +577,7 @@ async function readV2Pool(
             new Contract(normalizedRewardAddress, erc20Abi, provider),
             'balanceOf',
             [poolAddress],
-            ZERO,
+            fullRead ? undefined : ZERO,
           ),
       isSummaryPool && farm
         ? Promise.resolve(poolCollections.map(({ collection }) => collection))
@@ -663,7 +700,7 @@ async function readV2Pool(
       hasUserLimitRuntime: Boolean(hasUserLimitRuntime),
       performanceFee: asBigNumber(performanceFee),
       feeTo: normalizeOrFallback(feeTo),
-      rewardBalance: asBigNumber(rewardBalance) || ZERO,
+      rewardBalance: asBigNumber(rewardBalance),
       currentBlock,
     }
     const status = deriveNftPoolStatus(currentBlock, onChain.startBlock, onChain.endBlock)
@@ -696,6 +733,9 @@ async function readV2Pool(
       onChain,
       sourceEconomics,
       deployment,
+      discoveryStatus: source === 'nft-factory' ? 'discovered' : 'unverified',
+      verified: false,
+      publicReadiness: { ready: false, reasons: [] },
       collections: resolvedPoolCollections,
       rewards: {
         primary: { token: rewardToken },
@@ -716,6 +756,213 @@ async function readV2Pool(
       `Pool introspection failed: ${summarizePoolReadError(error)}`,
       deploymentHintValue,
     )
+  }
+}
+
+function callException(error: any): boolean {
+  return error?.code === 'CALL_EXCEPTION' || error?.error?.code === 'CALL_EXCEPTION'
+}
+
+async function readBoundedArrayAtBlock(
+  pool: Contract,
+  method: string,
+  blockTag: number,
+  hardCap = 32,
+): Promise<string[]> {
+  const values: string[] = []
+  for (let index = 0; index <= hardCap; index += 1) {
+    try {
+      const value = await pool.callStatic[method](index, { blockTag })
+      if (index === hardCap) throw new Error(`${method} exceeds the ${hardCap}-item public readiness limit.`)
+      const normalized = normalizeNftAddress(String(value))
+      if (!normalized) throw new Error(`${method}[${index}] is not a valid address.`)
+      values.push(normalized)
+    } catch (error) {
+      if (index < hardCap && callException(error)) return values
+      throw error
+    }
+  }
+  return values
+}
+
+/**
+ * Public admission is based on a complete, block-pinned protocol configuration.
+ * Dynamic reward balances and the current schedule phase are intentionally not
+ * consulted, so depletion and FINISHED status do not remove an admitted pool.
+ */
+async function readNftPoolPublicReadinessAtBlock(
+  provider: Provider,
+  address: string,
+  expectedFactory = getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID),
+  blockTag?: number,
+): Promise<{ ready: boolean; checkedAtBlock: number; reasons: string[]; transient?: boolean }> {
+  const checkedAtBlock = blockTag ?? (await provider.getBlockNumber())
+  const reasons: string[] = []
+  if (!expectedFactory) return { ready: false, checkedAtBlock, reasons: ['Configured NFT factory is unavailable.'] }
+  try {
+    const [poolCode, factoryCode] = await Promise.all([
+      provider.getCode(address, checkedAtBlock),
+      provider.getCode(expectedFactory, checkedAtBlock),
+    ])
+    if (!poolCode || poolCode === '0x') reasons.push('Pool bytecode is unavailable.')
+    if (!factoryCode || factoryCode === '0x') reasons.push('Factory bytecode is unavailable.')
+    if (reasons.length) return { ready: false, checkedAtBlock, reasons }
+
+    const pool = new Contract(address, nftStakeAbi, provider)
+    const at = (method: string, args: unknown[] = []) => pool.callStatic[method](...args, { blockTag: checkedAtBlock })
+    const [
+      factory,
+      primaryCollection,
+      primaryReward,
+      start,
+      end,
+      rewardPerBlock,
+      threshold,
+      capacity,
+      totalShares,
+      perUserLimit,
+      limitBlocks,
+      hasUserLimit,
+      userLimit,
+      fee,
+      feeTo,
+      sideRewardActive,
+    ] = await Promise.all([
+      at('SMART_CHEF_FACTORY'),
+      at('stakedToken'),
+      at('rewardToken'),
+      at('startBlock'),
+      at('bonusEndBlock'),
+      at('rewardPerBlock'),
+      at('participantThreshold'),
+      at('poolCapacity'),
+      at('totalShares'),
+      at('poolLimitPerUser'),
+      at('numberBlocksForUserLimit'),
+      at('hasUserLimit'),
+      at('userLimit'),
+      at('performanceFee'),
+      at('feeTo'),
+      at('isSideRewardActive'),
+    ])
+    if (String(factory).toLowerCase() !== expectedFactory.toLowerCase())
+      reasons.push('Pool factory pointer does not match the configured factory.')
+
+    const [community, side] = await Promise.all([
+      readBoundedArrayAtBlock(pool, 'communityCollections', checkedAtBlock),
+      readBoundedArrayAtBlock(pool, 'sideRewardTokens', checkedAtBlock),
+    ])
+    const collectionCandidates = [normalizeNftAddress(String(primaryCollection)), ...community]
+    const rewardCandidates = [normalizeNftAddress(String(primaryReward)), ...side]
+    const collections = collectionCandidates.filter((item): item is string => Boolean(item))
+    const rewards = rewardCandidates.filter((item): item is string => Boolean(item))
+    if (
+      collections.length !== collectionCandidates.length ||
+      collections.length !== new Set(collections.map((item) => item.toLowerCase())).size
+    )
+      reasons.push('NFT collection addresses are invalid or duplicated.')
+    if (
+      rewards.length !== rewardCandidates.length ||
+      rewards.length !== new Set(rewards.map((item) => item.toLowerCase())).size
+    )
+      reasons.push('Reward token addresses are invalid or duplicated.')
+    const startBlock = BigNumber.from(start)
+    const endBlock = BigNumber.from(end)
+    if (!startBlock.lt(endBlock)) reasons.push('Pool schedule must have startBlock < endBlock.')
+    if (BigNumber.from(rewardPerBlock).lte(0))
+      reasons.push('Primary reward rate must be greater than zero.')
+      // These values may legitimately be zero, but all must exist on this block.
+    ;[capacity, totalShares, perUserLimit, limitBlocks, hasUserLimit, userLimit, fee, feeTo, sideRewardActive].forEach(
+      (value) => {
+        if (value === undefined || value === null)
+          reasons.push('Pool limits, fee, or schedule settings are incomplete.')
+      },
+    )
+
+    const collectionResults = await Promise.all(
+      collections.map(async (collectionAddress) => {
+        const [code, supported, weight] = await Promise.all([
+          provider.getCode(collectionAddress, checkedAtBlock),
+          new Contract(collectionAddress, erc721Abi, provider).callStatic.supportsInterface('0x80ac58cd', {
+            blockTag: checkedAtBlock,
+          }),
+          at('collectionWeights', [collectionAddress]),
+        ])
+        return { code, supported, weight }
+      }),
+    )
+    if (
+      collectionResults.some(
+        ({ code, supported, weight }) => !code || code === '0x' || !supported || BigNumber.from(weight).lte(0),
+      )
+    )
+      reasons.push('Every configured ERC-721 collection must have code, ERC-721 support, and positive on-chain weight.')
+
+    const rewardResults = await Promise.all(
+      rewards.map(async (rewardAddress) => {
+        const code = await provider.getCode(rewardAddress, checkedAtBlock)
+        const token = new Contract(rewardAddress, erc20Abi, provider)
+        const [decimals, recordedDecimals] = await Promise.all([
+          token.callStatic.decimals({ blockTag: checkedAtBlock }),
+          at('rewardTokenDecimals', [rewardAddress]),
+        ])
+        return { code, decimals: Number(decimals), recordedDecimals: Number(recordedDecimals) }
+      }),
+    )
+    if (
+      rewardResults.some(
+        ({ code, decimals, recordedDecimals }) =>
+          !code ||
+          code === '0x' ||
+          !Number.isInteger(decimals) ||
+          decimals < 0 ||
+          decimals >= 30 ||
+          decimals !== recordedDecimals,
+      )
+    )
+      reasons.push('Every reward token must have code and decimals matching the pool record.')
+
+    return { ready: reasons.length === 0, checkedAtBlock, reasons }
+  } catch (error) {
+    return {
+      ready: false,
+      checkedAtBlock,
+      reasons: [summarizePoolReadError(error)],
+      transient: isTransientPoolReadFailure(error),
+    }
+  }
+}
+
+export async function readNftPoolPublicReadiness(
+  provider: Provider,
+  address: string,
+  expectedFactory = getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID),
+  blockTag?: number,
+): Promise<{ ready: boolean; checkedAtBlock: number; reasons: string[]; transient?: boolean }> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let checkedAtBlock = blockTag
+  try {
+    const readiness = (async () => {
+      if (checkedAtBlock === undefined) checkedAtBlock = await provider.getBlockNumber()
+      return readNftPoolPublicReadinessAtBlock(provider, address, expectedFactory, checkedAtBlock)
+    })()
+    return await Promise.race([
+      readiness,
+      new Promise<{ ready: boolean; checkedAtBlock: number; reasons: string[]; transient?: boolean }>((resolve) => {
+        timer = setTimeout(
+          () =>
+            resolve({
+              ready: false,
+              checkedAtBlock: checkedAtBlock ?? 0,
+              reasons: [`Public readiness read timed out after ${NFT_POOL_READINESS_TIMEOUT_MS / 1000} seconds.`],
+              transient: true,
+            }),
+          NFT_POOL_READINESS_TIMEOUT_MS,
+        )
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
   }
 }
 
@@ -853,78 +1100,221 @@ export async function discoverNftFactoryPoolAddresses(
   factoryAddress = getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID),
   fromBlock = getNftSmartChefFactoryDeploymentBlock(NFT_POOL_MANAGER_CHAIN_ID) || NFT_FACTORY_DEPLOYMENT_FALLBACK,
   toBlock?: number,
-): Promise<{ events: FactoryEvent[]; warning?: string }> {
-  if (!factoryAddress) return { events: [], warning: 'NFT SmartChefFactory is not configured.' }
+): Promise<{
+  events: FactoryEvent[]
+  warning?: string
+  coverage: { fromBlock: number; throughBlock: number; backfillComplete: boolean }
+}> {
+  if (!factoryAddress)
+    return {
+      events: [],
+      warning: 'NFT SmartChefFactory is not configured.',
+      coverage: { fromBlock, throughBlock: toBlock || fromBlock, backfillComplete: false },
+    }
   const latest = toBlock === undefined ? await provider.getBlockNumber() : toBlock
   const events = new Map<string, FactoryEvent>()
-  let indexerError = ''
-  try {
-    let nextPageParams: Record<string, string> | undefined
-    do {
-      const query = nextPageParams
-        ? `?${new URLSearchParams(Object.entries(nextPageParams).map(([key, value]) => [key, String(value)]))}`
-        : `?topic=${encodeURIComponent(newPoolTopic)}`
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), NFT_FACTORY_INDEXER_TIMEOUT_MS)
-      const response = await fetch(`${NFT_FACTORY_INDEXER_URL}/addresses/${factoryAddress}/logs${query}`, {
-        signal: controller.signal,
-      })
-      clearTimeout(timeout)
-      if (!response.ok) throw new Error(`Indexer returned HTTP ${response.status}`)
-      const payload: any = await response.json()
-      ;(payload.items || []).forEach((item: any) => {
-        if (item.topics?.[0] && item.topics[0].toLowerCase() !== newPoolTopic.toLowerCase()) return
-        const decoded = item.decoded?.parameters?.find((parameter: any) => parameter.name === 'smartChef')
-        const address = decoded?.value || (item.topics?.[1] ? `0x${item.topics[1].slice(-40)}` : '')
-        if (address)
-          events.set(address.toLowerCase(), {
-            address: normalizeOrFallback(address),
-            blockNumber: Number(item.block_number || 0) || undefined,
-            transactionHash: item.transaction_hash,
-          })
-      })
-      nextPageParams = payload.next_page_params || undefined
-    } while (nextPageParams)
-    if (events.size > 0) return { events: Array.from(events.values()) }
-    indexerError = 'Indexer returned no NFT pool events.'
-  } catch (error) {
-    indexerError = error instanceof Error ? error.message : 'NFT factory indexer discovery failed.'
+  const warnings: string[] = []
+  const mergeEvent = (event: FactoryEvent) => {
+    const key = event.address.toLowerCase()
+    const previous = events.get(key)
+    if (!previous || event.rpcProvenanceVerified || (!previous.blockNumber && event.blockNumber)) events.set(key, event)
   }
+  const forkBaseBlock = isLocalForkMode ? getLocalForkBaseBlock() : undefined
+  const configuredStart = forkBaseBlock === undefined ? fromBlock : forkBaseBlock + 1
+  const tailStart = isLocalForkMode
+    ? configuredStart
+    : Math.max(configuredStart, latest - NFT_FACTORY_RECENT_TAIL_BLOCKS + 1)
+
+  // Blockscout supplies historical candidates only. Every candidate is later
+  // checked against the factory log on the connected RPC before it is verified.
+  if (!isLocalForkMode) {
+    try {
+      let nextPageParams: Record<string, string> | undefined
+      let pages = 0
+      do {
+        const query = nextPageParams
+          ? `?${new URLSearchParams(Object.entries(nextPageParams).map(([key, value]) => [key, String(value)]))}`
+          : `?topic=${encodeURIComponent(newPoolTopic)}`
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), NFT_FACTORY_INDEXER_TIMEOUT_MS)
+        const response = await fetch(`${NFT_FACTORY_INDEXER_URL}/addresses/${factoryAddress}/logs${query}`, {
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout))
+        if (!response.ok) throw new Error(`Indexer returned HTTP ${response.status}`)
+        const payload: any = await response.json()
+        ;(payload.items || []).forEach((item: any) => {
+          if (item.topics?.[0] && item.topics[0].toLowerCase() !== newPoolTopic.toLowerCase()) return
+          const decoded = item.decoded?.parameters?.find((parameter: any) => parameter.name === 'smartChef')
+          const candidate = decoded?.value || (item.topics?.[1] ? `0x${item.topics[1].slice(-40)}` : '')
+          const address = normalizeNftAddress(candidate)
+          if (address)
+            mergeEvent({
+              address,
+              blockNumber: Number(item.block_number || 0) || undefined,
+              transactionHash: item.transaction_hash,
+            })
+        })
+        nextPageParams = payload.next_page_params || undefined
+        pages += 1
+        if (pages >= 250 && nextPageParams) throw new Error('Historical indexer pagination reached its 250-page bound.')
+      } while (nextPageParams)
+    } catch (error) {
+      warnings.push(`Blockscout history unavailable: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  const checkpointKey = getLocalForkStorageKey(`coincollect.nft-factory-backfill.v1:${factoryAddress.toLowerCase()}`)
+  let backfillCursor = configuredStart
   try {
-    const scanFrom = Math.max(fromBlock, latest - NFT_FACTORY_MAX_RPC_DISCOVERY_BLOCKS + 1)
-    for (let start = scanFrom; start <= latest; start += NFT_FACTORY_LOG_SCAN_CHUNK) {
-      const end = Math.min(start + NFT_FACTORY_LOG_SCAN_CHUNK - 1, latest)
-      const logs = await provider.getLogs({
-        address: factoryAddress,
-        topics: [newPoolTopic],
-        fromBlock: start,
-        toBlock: end,
-      })
-      logs.forEach((log: Log) => {
-        const address = log.topics[1] ? `0x${log.topics[1].slice(-40)}` : ''
+    if (!isLocalForkMode && typeof window !== 'undefined') {
+      const stored = Number(window.localStorage.getItem(checkpointKey))
+      if (Number.isSafeInteger(stored) && stored >= configuredStart && stored <= tailStart) backfillCursor = stored
+    }
+  } catch {
+    // Storage is an optimization; discovery continues without a checkpoint.
+  }
+
+  const rpcRanges: Array<{ fromBlock: number; toBlock: number }> = []
+  const addRanges = (start: number, end: number, limit?: number) => {
+    let cursor = start
+    let count = 0
+    while (cursor <= end && (limit === undefined || count < limit)) {
+      const next = Math.min(cursor + NFT_FACTORY_LOG_SCAN_CHUNK - 1, end)
+      rpcRanges.push({ fromBlock: cursor, toBlock: next })
+      cursor = next + 1
+      count += 1
+    }
+    return cursor
+  }
+  const nextCursor = isLocalForkMode
+    ? tailStart
+    : addRanges(backfillCursor, Math.min(tailStart - 1, latest), NFT_FACTORY_BACKFILL_CHUNKS_PER_REFRESH)
+  addRanges(tailStart, latest)
+
+  let failedRange: { fromBlock: number; toBlock: number } | undefined
+  const queryRange = async (from: number, to: number): Promise<Log[]> => {
+    try {
+      return await provider.getLogs({ address: factoryAddress!, topics: [newPoolTopic], fromBlock: from, toBlock: to })
+    } catch (error) {
+      if (from >= to) throw error
+      const middle = Math.floor((from + to) / 2)
+      return [...(await queryRange(from, middle)), ...(await queryRange(middle + 1, to))]
+    }
+  }
+  for (const range of rpcRanges) {
+    try {
+      const logs = await queryRange(range.fromBlock, range.toBlock)
+      logs.forEach((log) => {
+        const address = normalizeNftAddress(log.topics[1] ? `0x${log.topics[1].slice(-40)}` : '')
         if (address)
-          events.set(address.toLowerCase(), {
-            address: normalizeOrFallback(address),
+          mergeEvent({
+            address,
             blockNumber: log.blockNumber,
             transactionHash: log.transactionHash,
+            rpcProvenanceVerified: true,
           })
       })
-    }
-    return {
-      events: Array.from(events.values()),
-      warning:
-        scanFrom > fromBlock
-          ? `NFT factory indexer unavailable; RPC scanned the latest ${NFT_FACTORY_MAX_RPC_DISCOVERY_BLOCKS.toLocaleString()} blocks. ${indexerError}`
-          : undefined,
-    }
-  } catch (error) {
-    return {
-      events: Array.from(events.values()),
-      warning: `NFT factory discovery partially unavailable. ${
-        error instanceof Error ? error.message : 'Unknown RPC error'
-      } Indexer: ${indexerError}`,
+    } catch (error) {
+      failedRange = range
+      warnings.push(`RPC factory scan stopped at ${range.fromBlock}-${range.toBlock}: ${String(error)}`)
+      break
     }
   }
+
+  // Verify indexer-only event claims at their exact block with RPC logs.
+  const unverifiedByBlock = new Map<number, FactoryEvent[]>()
+  events.forEach((event) => {
+    if (event.rpcProvenanceVerified || !event.blockNumber || event.blockNumber < configuredStart) return
+    const items = unverifiedByBlock.get(event.blockNumber) || []
+    items.push(event)
+    unverifiedByBlock.set(event.blockNumber, items)
+  })
+  const blocks = Array.from(unverifiedByBlock.keys())
+  let failedIndexerProofs = 0
+  await mapWithConcurrency(blocks, 4, async (blockNumber) => {
+    try {
+      const logs = await provider.getLogs({
+        address: factoryAddress!,
+        topics: [newPoolTopic],
+        fromBlock: blockNumber,
+        toBlock: blockNumber,
+      })
+      const proof = new Set(
+        logs
+          .filter((log) => !log.topics[0] || log.topics[0].toLowerCase() === newPoolTopic.toLowerCase())
+          .map((log) => {
+            const poolAddress = normalizeNftAddress(log.topics[1] ? `0x${log.topics[1].slice(-40)}` : '')
+            return poolAddress ? `${poolAddress.toLowerCase()}:${log.transactionHash.toLowerCase()}` : ''
+          })
+          .filter(Boolean),
+      )
+      unverifiedByBlock.get(blockNumber)!.forEach((event) => {
+        const hash = event.transactionHash?.toLowerCase()
+        const addressHash = `${event.address.toLowerCase()}:${hash || ''}`
+        const addressOnly = Array.from(proof).some((entry) => entry.startsWith(`${event.address.toLowerCase()}:`))
+        if (proof.has(addressHash) || (!hash && addressOnly)) mergeEvent({ ...event, rpcProvenanceVerified: true })
+      })
+    } catch {
+      // An indexer claim whose RPC proof is unavailable remains discovered only.
+      failedIndexerProofs += 1
+    }
+  })
+
+  if (!isLocalForkMode && !failedRange && typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(
+        checkpointKey,
+        String(Math.max(configuredStart, nextCursor - NFT_FACTORY_CHECKPOINT_OVERLAP)),
+      )
+    } catch {
+      // Continue without persistent backfill state.
+    }
+  }
+  const backfillComplete = isLocalForkMode || nextCursor >= tailStart
+  if (failedIndexerProofs)
+    warnings.push(`${failedIndexerProofs} indexer deployment claim(s) still need RPC proof; they remain unverified.`)
+  if (!backfillComplete && !failedRange)
+    warnings.push('Bounded historical factory backfill is continuing and will resume on a later refresh.')
+  const coverageFrom = configuredStart
+  if (backfillComplete && !failedRange && warnings.length === 0) {
+    return {
+      events: Array.from(events.values()).sort((left, right) => (left.blockNumber || 0) - (right.blockNumber || 0)),
+      coverage: { fromBlock: coverageFrom, throughBlock: latest, backfillComplete },
+    }
+  }
+  return {
+    events: Array.from(events.values()).sort((left, right) => (left.blockNumber || 0) - (right.blockNumber || 0)),
+    warning: warnings.join(' '),
+    coverage: { fromBlock: coverageFrom, throughBlock: latest, backfillComplete: backfillComplete && !failedRange },
+  }
+}
+
+/** Re-prove the exact factory deployment log before any pool write. */
+export async function verifyNftPoolFactoryEventAtBlock(
+  provider: Provider,
+  factoryAddress: string,
+  poolAddress: string,
+  deploymentBlock: number,
+  deploymentHash: string,
+): Promise<boolean> {
+  if (!Number.isSafeInteger(deploymentBlock) || deploymentBlock < 0 || !/^0x[\da-f]{64}$/i.test(deploymentHash))
+    return false
+  const logs = await provider.getLogs({
+    address: factoryAddress,
+    topics: [newPoolTopic],
+    fromBlock: deploymentBlock,
+    toBlock: deploymentBlock,
+  })
+  return logs.some((log) => {
+    const emittedPool = log.topics?.[1] ? `0x${log.topics[1].slice(-40)}` : ''
+    return (
+      log.blockNumber === deploymentBlock &&
+      log.address.toLowerCase() === factoryAddress.toLowerCase() &&
+      log.topics?.[0]?.toLowerCase() === newPoolTopic.toLowerCase() &&
+      emittedPool.toLowerCase() === poolAddress.toLowerCase() &&
+      log.transactionHash.toLowerCase() === deploymentHash.toLowerCase()
+    )
+  })
 }
 
 async function sampleBlockTime(provider: Provider, currentBlock: number): Promise<number> {
@@ -946,8 +1336,8 @@ async function sampleBlockTime(provider: Provider, currentBlock: number): Promis
   return POLYGON_BLOCK_TIME
 }
 
-let registryCache: { cachedAt: number; value: NftPoolRegistryResult } | null = null
-let registryLoadPromise: Promise<NftPoolRegistryResult> | null = null
+let registryCache: { key: string; cachedAt: number; value: NftPoolRegistryResult } | null = null
+const registryLoadPromises = new Map<string, Promise<NftPoolRegistryResult>>()
 
 async function mapWithConcurrency<T, R>(
   items: T[],
@@ -1041,11 +1431,21 @@ export async function getNftPoolRegistry(
   provider: Provider = nftPoolRegistryRpcProvider,
   forceRefresh = false,
 ): Promise<NftPoolRegistryResult> {
-  if (!forceRefresh && registryCache && Date.now() - registryCache.cachedAt < NFT_POOL_REGISTRY_CACHE_TTL)
+  const cacheKey = `${getPolygonRuntimeChainId()}:${getLocalForkStorageKey('nft-pool-registry')}`
+  if (
+    !forceRefresh &&
+    registryCache?.key === cacheKey &&
+    Date.now() - registryCache.cachedAt < NFT_POOL_REGISTRY_CACHE_TTL
+  )
     return registryCache.value
-  if (registryLoadPromise) return registryLoadPromise
+  const existingLoad = registryLoadPromises.get(cacheKey)
+  if (existingLoad) return existingLoad
 
-  registryLoadPromise = (async () => {
+  const loadPromise = (async () => {
+    const previous = registryCache?.key === cacheKey ? registryCache.value : undefined
+    const network = await provider.getNetwork()
+    if (network.chainId !== getPolygonRuntimeChainId())
+      throw new Error(`Expected Polygon or its isolated fork (chain ${getPolygonRuntimeChainId()}).`)
     const currentBlock = await provider.getBlockNumber()
     const currentBlockData: Block = await provider.getBlock(currentBlock)
     const [secondsPerBlock, discovery] = await Promise.all([
@@ -1067,17 +1467,58 @@ export async function getNftPoolRegistry(
       if (!events.has(address)) events.set(address, { address })
     })
     const collections = normalizeNftCollectionRegistry(configuredFarms as any, NFT_POOL_MANAGER_CHAIN_ID)
-    const v2Pools = await mapWithConcurrency(Array.from(events.values()), NFT_POOL_INTROSPECTION_CONCURRENCY, (event) =>
-      readV2PoolWithTimeout(
-        provider,
-        event,
-        configByAddress.get(event.address.toLowerCase()),
-        discovery.events.some((candidate) => candidate.address.toLowerCase() === event.address.toLowerCase())
-          ? 'nft-factory'
-          : 'nft-farms-config',
-        collections,
-        currentBlock,
-      ),
+    const factoryEventsByAddress = new Map(discovery.events.map((event) => [event.address.toLowerCase(), event]))
+    const v2Pools = await mapWithConcurrency(
+      Array.from(events.values()),
+      NFT_POOL_INTROSPECTION_CONCURRENCY,
+      async (event) => {
+        const factoryEvent = factoryEventsByAddress.get(event.address.toLowerCase())
+        const pool = await readV2PoolWithTimeout(
+          provider,
+          factoryEvent || event,
+          configByAddress.get(event.address.toLowerCase()),
+          factoryEvent ? 'nft-factory' : 'nft-farms-config',
+          collections,
+          currentBlock,
+          Boolean(factoryEvent),
+        )
+        const verified = Boolean(
+          factoryEvent?.rpcProvenanceVerified &&
+            Number.isSafeInteger(factoryEvent.blockNumber) &&
+            /^0x[\da-f]{64}$/i.test(factoryEvent.transactionHash || '') &&
+            pool.onChain.codeFound &&
+            pool.onChain.abiCompatible &&
+            pool.onChain.factoryAddress?.toLowerCase() === factoryAddress?.toLowerCase(),
+        )
+        pool.verified = verified
+        pool.discoveryStatus = verified ? 'verified' : factoryEvent ? 'discovered' : 'unverified'
+        if (verified) {
+          const readiness = await readNftPoolPublicReadiness(provider, pool.address, factoryAddress, currentBlock)
+          const previousPool = previous?.pools.find(
+            (entry) => entry.address.toLowerCase() === pool.address.toLowerCase(),
+          )
+          const transient = readiness.transient === true
+          pool.publicReadiness =
+            !readiness.ready && transient && previousPool?.publicReadiness?.ready
+              ? {
+                  ...previousPool.publicReadiness,
+                  stale: true,
+                  reasons: ['Current readiness read failed; showing the last verified readiness result.'],
+                }
+              : { ready: readiness.ready, checkedAtBlock: readiness.checkedAtBlock, reasons: readiness.reasons }
+        } else {
+          pool.publicReadiness = {
+            ready: false,
+            checkedAtBlock: currentBlock,
+            reasons: [
+              factoryEvent
+                ? 'Factory deployment event or pool identity could not be proven by the connected RPC.'
+                : 'Pool does not have a verified factory deployment event.',
+            ],
+          }
+        }
+        return pool
+      },
     )
     const legacyFarms = configuredFarms.filter((farm) => !farm.contractAddresses && farm.pid > 0)
     const legacyPools = await mapWithConcurrency(legacyFarms, NFT_POOL_INTROSPECTION_CONCURRENCY, (farm) =>
@@ -1091,8 +1532,30 @@ export async function getNftPoolRegistry(
         factoryOwner = undefined
       }
     }
+    const incompleteDiscovery = Boolean(discovery.warning) || !discovery.coverage.backfillComplete
+    const currentByAddress = new Map(v2Pools.map((pool) => [pool.address.toLowerCase(), pool]))
+    if (previous) {
+      previous.pools
+        .filter((pool) => pool.verified)
+        .forEach((pool) => {
+          const current = currentByAddress.get(pool.address.toLowerCase())
+          if (current && !current.verified) {
+            currentByAddress.set(pool.address.toLowerCase(), {
+              ...pool,
+              warnings: [...pool.warnings, 'Current discovery could not refresh this previously verified pool.'],
+            })
+          }
+        })
+    }
+    if (incompleteDiscovery && previous) {
+      previous.pools
+        .filter((pool) => pool.verified && !currentByAddress.has(pool.address.toLowerCase()))
+        .forEach((pool) => currentByAddress.set(pool.address.toLowerCase(), pool))
+    }
     const value: NftPoolRegistryResult = {
-      pools: [...legacyPools, ...v2Pools].sort((left, right) => (left.pid || 999999) - (right.pid || 999999)),
+      pools: [...legacyPools, ...Array.from(currentByAddress.values())].sort(
+        (left, right) => (left.pid || 999999) - (right.pid || 999999),
+      ),
       collections: collections.sort((left, right) => (left.knownPid || 999999) - (right.knownPid || 999999)),
       chainId: NFT_POOL_MANAGER_CHAIN_ID,
       currentBlock,
@@ -1100,16 +1563,33 @@ export async function getNftPoolRegistry(
       secondsPerBlock,
       factoryAddress,
       factoryOwner,
+      coverage: { ...discovery.coverage, stale: false, warning: discovery.warning },
       warning: discovery.warning,
     }
-    registryCache = { cachedAt: Date.now(), value }
+    registryCache = { key: cacheKey, cachedAt: Date.now(), value }
     return value
   })()
+  registryLoadPromises.set(cacheKey, loadPromise)
 
   try {
-    return await registryLoadPromise
+    return await loadPromise
+  } catch (error) {
+    const previous = registryCache?.key === cacheKey ? registryCache.value : undefined
+    if (previous)
+      return {
+        ...previous,
+        coverage: {
+          fromBlock: previous.coverage?.fromBlock || 0,
+          throughBlock: previous.coverage?.throughBlock || 0,
+          backfillComplete: previous.coverage?.backfillComplete || false,
+          stale: true,
+          warning: String(error),
+        },
+        warning: String(error),
+      }
+    throw error
   } finally {
-    registryLoadPromise = null
+    if (registryLoadPromises.get(cacheKey) === loadPromise) registryLoadPromises.delete(cacheKey)
   }
 }
 

@@ -1,116 +1,168 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { nftPoolRegistryRpcProvider } from 'utils/providers'
-import {
-  hydratePublishedPool,
-  publishCompletedNftPool,
-  localPublicationStore,
-  PUBLICATION_EVENT,
-  PUBLICATION_STORAGE_KEY,
-  PublicV2Pool,
-} from './publication'
-import { loadNftPoolLaunchSessions } from './launch/storage'
+import { getLocalForkStorageKey, isLocalForkMode } from 'config/localFork'
+import { getNftPoolRegistry } from './discovery'
+import { toPublicV2Pool, toVerifiedNftPool, type PublicV2Pool, type VerifiedNftPool } from './publication'
+import { loadNftPoolPresentations, type RemoteNftPoolPresentation } from './presentationMetadata'
+import type { NftPool } from './types'
 
-const cache = new Map<string, PublicV2Pool>()
-const pending = new Map<string, Promise<PublicV2Pool>>()
+const REFRESH_INTERVAL_MS = 5 * 60_000
+const registryCache = new Map<string, { pools: PublicV2Pool[]; verifiedPools: VerifiedNftPool[] }>()
 
-function readPool(record: PublicV2Pool, force: boolean): Promise<PublicV2Pool> {
-  const current = cache.get(record.id)
-  if (!force && current && Date.now() - current.snapshot.checkedAt < 30_000)
-    return Promise.resolve({ ...current, metadata: record.metadata })
-  const running = pending.get(record.id)
-  if (running) return running
-  const task = hydratePublishedPool(record, nftPoolRegistryRpcProvider)
-    .then((pool) => {
-      cache.set(pool.id, pool)
-      return pool
+function metadataForPool(pool: NftPool, remote?: RemoteNftPoolPresentation): NftPool['metadata'] {
+  const collection = pool.collections.find((item) => item.primary)?.collection || pool.collections[0]?.collection
+  const configuredName = pool.metadata.name?.trim()
+  const name =
+    remote?.name ||
+    (configuredName && configuredName !== 'Unlabelled NFT pool' ? configuredName : undefined) ||
+    collection?.displayName ||
+    collection?.name ||
+    `CoinCollect NFT Pool ${pool.address.slice(0, 6)}…${pool.address.slice(-4)}`
+  return {
+    ...pool.metadata,
+    name,
+    description: remote?.description || pool.metadata.description,
+    banner: remote?.banner || pool.metadata.banner || collection?.image,
+    avatar: remote?.avatar || pool.metadata.avatar || collection?.image,
+    projectUrl: remote?.projectUrl || pool.metadata.projectUrl,
+    getNftUrl: remote?.getNftUrl || pool.metadata.getNftUrl,
+    isCommunity:
+      remote?.category === 'PARTNER'
+        ? false
+        : remote?.category === 'COMMUNITY'
+        ? true
+        : pool.metadata.isCommunity !== false,
+  }
+}
+
+async function readRegistry(force: boolean) {
+  const registry = await getNftPoolRegistry(nftPoolRegistryRpcProvider, force)
+  const presentationDocument = await loadNftPoolPresentations(force)
+  const remoteById = new Map(presentationDocument?.pools.map((item) => [item.id, item]) || [])
+  const verifiedPools = registry.pools
+    .filter((pool) => pool.protocolVersion === 'NftStakeV2' && pool.verified === true)
+    .map((pool) => {
+      const withMetadata = { ...pool, metadata: metadataForPool(pool, remoteById.get(pool.canonicalId)) }
+      return toVerifiedNftPool(withMetadata)
     })
-    .finally(() => {
-      pending.delete(record.id)
-    })
-  pending.set(record.id, task)
-  return task
+    .filter(Boolean) as VerifiedNftPool[]
+  const pools = verifiedPools.flatMap((pool) => {
+    if (!pool.publicReady) return []
+    try {
+      const projection = toPublicV2Pool(pool, registry.secondsPerBlock)
+      return projection ? [projection] : []
+    } catch (error) {
+      pool.publicReady = false
+      pool.readinessReasons = [
+        ...pool.readinessReasons,
+        error instanceof Error ? error.message : 'A complete public pool projection is unavailable.',
+      ]
+      return []
+    }
+  })
+  const result = { pools, verifiedPools }
+  const cacheKey = getLocalForkStorageKey('coincollect:nft-pool-catalogue:v1')
+  registryCache.set(cacheKey, result)
+  return { ...result, registry }
 }
 
 export function usePublishedNftPools() {
   const [pools, setPools] = useState<PublicV2Pool[]>([])
+  const [verifiedPools, setVerifiedPools] = useState<VerifiedNftPool[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
-  const [refreshingPools, setRefreshingPools] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const refresh = useCallback(async (force = false, shouldUpdate: () => boolean = () => true) => {
+    const cacheKey = getLocalForkStorageKey('coincollect:nft-pool-catalogue:v1')
+    const previous = registryCache.get(cacheKey)
+    if (previous && shouldUpdate()) {
+      setPools(previous.pools)
+      setVerifiedPools(previous.verifiedPools)
+    }
+    if (shouldUpdate()) setRefreshing(true)
+    try {
+      const result = await readRegistry(force)
+      if (shouldUpdate()) {
+        setPools(result.pools)
+        setVerifiedPools(result.verifiedPools)
+      }
+      const nextErrors: Record<string, string> = {}
+      const warnings: string[] = []
+      if (result.registry.coverage?.warning || result.registry.warning) {
+        warnings.push(result.registry.coverage?.warning || result.registry.warning || 'Factory discovery is partial.')
+      }
+      if (result.registry.coverage?.stale)
+        warnings.push('Showing the last verified factory registry while RPC discovery is unavailable.')
+      const staleReadinessCount = result.verifiedPools.filter((pool) => pool.readinessStale).length
+      if (staleReadinessCount)
+        warnings.push(
+          `${staleReadinessCount} pool readiness result${
+            staleReadinessCount === 1 ? ' is' : 's are'
+          } stale; new writes recheck chain state.`,
+        )
+      if (warnings.length) nextErrors['*'] = warnings.join(' ')
+      if (shouldUpdate()) setErrors(nextErrors)
+    } catch (error) {
+      if (shouldUpdate()) {
+        setErrors({
+          '*': error instanceof Error ? error.message : 'Factory pool discovery could not be refreshed.',
+        })
+        if (!previous) {
+          setPools([])
+          setVerifiedPools([])
+        }
+      }
+    } finally {
+      if (shouldUpdate()) {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     let active = true
-    let refreshing = false
-    let queued = false
-    const refresh = async (force = false) => {
-      if (refreshing) {
-        queued = true
+    let pendingRefresh = false
+    let busy = false
+    const run = async (force = false) => {
+      if (busy) {
+        pendingRefresh = true
         return
       }
-      refreshing = true
-      let records = localPublicationStore.read()
-      if (active) {
-        setRefreshingPools(true)
-        setPools(records.map((record) => cache.get(record.id) || record))
+      busy = true
+      if (active) await refresh(force, () => active)
+      busy = false
+      if (pendingRefresh && active) {
+        pendingRefresh = false
+        void run(true)
       }
-      // A crash after COMPLETE but before the storage write must not require
-      // another transaction or even reopening the operator's launch screen.
-      const ids = new Set(records.map((record) => record.id))
-      await Promise.allSettled(
-        loadNftPoolLaunchSessions()
-          .filter(
-            (session) =>
-              session.currentStage === 'COMPLETE' &&
-              session.poolAddress &&
-              !ids.has(`137:${session.poolAddress.toLowerCase()}`),
-          )
-          .map((session) => publishCompletedNftPool(session, nftPoolRegistryRpcProvider)),
-      )
-      records = localPublicationStore.read()
-      if (active) setPools(records.map((record) => cache.get(record.id) || record))
-      const results = await Promise.allSettled(records.map((record) => readPool(record, force)))
-      if (active) {
-        const nextErrors: Record<string, string> = {}
-        setPools(
-          results.map((result, index) => {
-            if (result.status === 'fulfilled') return result.value
-            nextErrors[records[index].id] = 'Current chain data unavailable. Showing the last verified snapshot.'
-            return cache.get(records[index].id) || records[index]
-          }),
-        )
-        setErrors(nextErrors)
-        setLoading(false)
-        setRefreshingPools(false)
-      }
-      refreshing = false
-      if (queued && active) {
-        queued = false
-        void refresh(true)
-      }
-    }
-    const changed = () => {
-      void refresh(true)
-    }
-    const storage = (event: StorageEvent) => {
-      if (!event.key || event.key === PUBLICATION_STORAGE_KEY) changed()
     }
     const visible = () => {
-      if (document.visibilityState === 'visible') void refresh()
+      if (document.visibilityState === 'visible') void run()
     }
-    window.addEventListener(PUBLICATION_EVENT, changed)
-    window.addEventListener('coincollect:nft-v2-position-changed', changed)
-    window.addEventListener('storage', storage)
+    const revalidate = () => void run(true)
+    window.addEventListener('coincollect:nft-pool-discovery-refresh', revalidate)
     window.addEventListener('focus', visible)
     document.addEventListener('visibilitychange', visible)
-    const timer = window.setInterval(visible, 30_000)
-    void refresh()
+    const timer = window.setInterval(visible, REFRESH_INTERVAL_MS)
+    void run()
     return () => {
       active = false
       window.clearInterval(timer)
-      window.removeEventListener(PUBLICATION_EVENT, changed)
-      window.removeEventListener('coincollect:nft-v2-position-changed', changed)
-      window.removeEventListener('storage', storage)
+      window.removeEventListener('coincollect:nft-pool-discovery-refresh', revalidate)
       window.removeEventListener('focus', visible)
       document.removeEventListener('visibilitychange', visible)
     }
-  }, [])
-  return { pools, errors, loading, refreshing: refreshingPools }
+  }, [refresh])
+
+  return {
+    pools,
+    verifiedPools,
+    errors,
+    loading,
+    refreshing,
+    refresh: () => refresh(true),
+    isLocalFork: isLocalForkMode,
+  }
 }

@@ -141,10 +141,12 @@ function migrateDraft(input: any): NftPoolDraft | null {
       chainId: Number(input.chainId) || 137,
       source: input.source === 'cloned' ? 'cloned' : 'manual',
       name: typeof input.name === 'string' ? input.name : '',
+      description: typeof input.description === 'string' ? input.description.slice(0, 1_000) : '',
       banner: typeof input.banner === 'string' ? input.banner : undefined,
       avatar: typeof input.avatar === 'string' ? input.avatar : undefined,
       projectUrl: typeof input.projectUrl === 'string' ? input.projectUrl : undefined,
       getNftUrl: typeof input.getNftUrl === 'string' ? input.getNftUrl : undefined,
+      isCommunity: typeof input.isCommunity === 'boolean' ? input.isCommunity : true,
       intendedAdmin: typeof input.intendedAdmin === 'string' ? input.intendedAdmin : undefined,
       collections: Array.isArray(input.collections) ? input.collections : [],
       rewards: {
@@ -190,10 +192,12 @@ function migrateDraft(input: any): NftPoolDraft | null {
     chainId: Number(input.chainId) || 137,
     source: input.source === 'cloned' ? 'cloned' : 'manual',
     name: typeof input.name === 'string' ? input.name : '',
+    description: typeof input.description === 'string' ? input.description.slice(0, 1_000) : '',
     banner: typeof input.banner === 'string' ? input.banner : undefined,
     avatar: typeof input.avatar === 'string' ? input.avatar : undefined,
     projectUrl: typeof input.projectUrl === 'string' ? input.projectUrl : undefined,
     getNftUrl: typeof input.getNftUrl === 'string' ? input.getNftUrl : undefined,
+    isCommunity: typeof input.isCommunity === 'boolean' ? input.isCommunity : true,
     intendedAdmin: typeof input.intendedAdmin === 'string' ? input.intendedAdmin : undefined,
     collections: Array.isArray(input.collections)
       ? input.collections.map((item: any) => ({
