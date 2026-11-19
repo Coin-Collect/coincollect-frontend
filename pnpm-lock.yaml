@@ -63,8 +63,8 @@ importers:
         specifier: ^11.1.2
         version: 11.1.2(@ethersproject/abi@5.8.0)(@ethersproject/providers@5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(ethers@5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typechain@8.3.2(supports-color@5.5.0)(typescript@5.9.3))(typescript@5.9.3)
       '@uniswap/token-lists':
-        specifier: ^1.0.0-beta.19
-        version: 1.0.0-beta.35
+        specifier: 1.0.0-beta.34
+        version: 1.0.0-beta.34
       '@web3-react/injected-connector':
         specifier: ^6.0.7
         version: 6.0.7
@@ -2930,8 +2930,8 @@ packages:
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
 
-  '@uniswap/token-lists@1.0.0-beta.35':
-    resolution: {integrity: sha512-v43brw8Fx+D904fOCXL5kTU75cIPH40U/WTKB96K1gxOibk2jVsxW3AULBE5Buj5dJpeVwj/l6TNgB6QPw7lJg==}
+  '@uniswap/token-lists@1.0.0-beta.34':
+    resolution: {integrity: sha512-Hc3TfrFaupg0M84e/Zv7BoF+fmMWDV15mZ5s8ZQt2qZxUcNw2GQW+L6L/2k74who31G+p1m3GRYbJpAo7d1pqA==}
     engines: {node: '>=10'}
 
   '@wagmi/connectors@6.2.0':
@@ -13056,7 +13056,7 @@ snapshots:
       '@types/node': 13.13.52
     optional: true
 
-  '@uniswap/token-lists@1.0.0-beta.35': {}
+  '@uniswap/token-lists@1.0.0-beta.34': {}
 
   '@wagmi/connectors@6.2.0(@tanstack/react-query@5.104.0(react@18.3.1))(@types/react@18.3.31)(@wagmi/core@2.22.1(@tanstack/query-core@5.104.0)(@types/react@18.3.31)(immer@9.0.21)(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.56.9(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.6.5)))(bufferutil@4.1.0)(debug@4.3.4(supports-color@5.5.0))(encoding@0.1.13)(immer@9.0.21)(react@18.3.1)(supports-color@5.5.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@18.3.1))(utf-8-validate@6.0.6)(viem@2.56.9(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.6.5))(wagmi@2.19.5(@tanstack/query-core@5.104.0)(@tanstack/react-query@5.104.0(react@18.3.1))(@types/react@18.3.31)(bufferutil@4.1.0)(debug@4.3.4(supports-color@5.5.0))(encoding@0.1.13)(immer@9.0.21)(react@18.3.1)(supports-color@5.5.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.56.9(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
     dependencies:

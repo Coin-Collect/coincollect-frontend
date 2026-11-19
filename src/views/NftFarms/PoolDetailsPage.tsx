@@ -930,7 +930,7 @@ const PoolDetailsPage: React.FC<PoolDetailsPageProps> = ({ pid }) => {
 export function PublishedPoolDetailsPage({ address }: { address?: string }) {
   const { t } = useTranslation()
   const { account, chainId, library } = useWeb3React()
-  const { pools, verifiedPools, errors, loading, refreshing, refresh } = usePublishedNftPools()
+  const { pools, verifiedPools, connectionError, loading, refreshing, refresh } = usePublishedNftPools()
   const pool = pools.find((entry) => entry.address.toLowerCase() === address?.toLowerCase())
   const verifiedPool = verifiedPools.find((entry) => entry.address.toLowerCase() === address?.toLowerCase())
   const user = usePublishedV2UserPosition(pool, account, chainId, library)
@@ -939,15 +939,16 @@ export function PublishedPoolDetailsPage({ address }: { address?: string }) {
     return (
       <Page withMeta={false}>
         <EmptyState>
-          <Heading>{loading ? t('Loading') : t('Verified pool not found on this chain')}</Heading>
-          {!loading && (
+          <Heading role="status">
+            {loading
+              ? t('Loading')
+              : connectionError
+              ? t('Could not check this NFT pool. Please try again.')
+              : t('Verified pool not found on this chain')}
+          </Heading>
+          {!loading && !connectionError && (
             <Text mt="16px">{t('Check the pool address and connected network, then refresh factory discovery.')}</Text>
           )}
-          {errors['*'] ? (
-            <Text mt="12px" small color="warning" role="status" aria-live="polite">
-              {errors['*']}
-            </Text>
-          ) : null}
           <Button mt="16px" variant="secondary" onClick={() => void refresh()} disabled={loading || refreshing}>
             {t('Refresh discovery')}
           </Button>
@@ -1046,7 +1047,7 @@ export function PublishedPoolDetailsPage({ address }: { address?: string }) {
           <span className="corner corner--bl" />
           <span className="corner corner--br" />
           <div className="frame-content">
-            <FarmCard publishedPool={pool} error={errors[pool.id]} variant="expanded" />
+            <FarmCard publishedPool={pool} variant="expanded" />
           </div>
         </AnimatedFrame>
         <Text id="contract" mt="16px" style={{ overflowWrap: 'anywhere' }}>
@@ -1063,7 +1064,7 @@ export function PublishedPoolDetailsPage({ address }: { address?: string }) {
             {pools
               .filter((entry) => entry.id !== pool.id)
               .map((entry) => (
-                <FarmCard key={entry.id} publishedPool={entry} error={errors[entry.id]} />
+                <FarmCard key={entry.id} publishedPool={entry} />
               ))}
           </FlexLayout>
         </Section>

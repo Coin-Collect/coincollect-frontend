@@ -738,6 +738,7 @@ const Farms: React.FC = ({ children }) => {
       activeFarms.length === 0 &&
       publishedPools.length === 0 &&
       !published.loading &&
+      !published.connectionError &&
       !query.trim() &&
       !stakedOnly
     )
@@ -842,28 +843,30 @@ const Farms: React.FC = ({ children }) => {
             </Button>
           </FilterContainer>
         </ControlContainer>
-        {published.errors['*'] ? (
-          <Flex
-            role="status"
-            aria-live="polite"
-            alignItems="center"
-            justifyContent="space-between"
-            mb="20px"
-            style={{ gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255, 178, 55, 0.1)' }}
-          >
-            <Text small color="warning">
-              {published.errors['*']}
-            </Text>
+        <Flex
+          alignItems="center"
+          justifyContent="space-between"
+          mb={published.connectionError ? '20px' : undefined}
+          style={
+            published.connectionError
+              ? { gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255, 178, 55, 0.1)' }
+              : undefined
+          }
+        >
+          <Text small color="warning" role="status">
+            {published.connectionError ? t('Could not reach the network to check NFT pools.') : null}
+          </Text>
+          {published.connectionError ? (
             <Button
               scale="sm"
               variant="secondary"
               disabled={published.refreshing}
               onClick={() => void published.refresh()}
             >
-              {t('Retry discovery')}
+              {published.refreshing ? t('Refreshing') : t('Try again')}
             </Button>
-          </Flex>
-        ) : null}
+          ) : null}
+        </Flex>
         {account && publishedUserPositions.loading ? (
           <Text small color="textSubtle" mb="16px" role="status" aria-live="polite">
             {t('Checking wallet positions across verified pools…')}
@@ -924,7 +927,6 @@ const Farms: React.FC = ({ children }) => {
                   key={pool.id}
                   publishedPool={pool}
                   summary={publishedUserPositions.positions[pool.address.toLowerCase()]}
-                  error={published.errors[pool.id]}
                 />
               ))}
             </FlexLayout>

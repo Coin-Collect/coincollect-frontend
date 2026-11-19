@@ -109,7 +109,7 @@ beforeEach(() => {
   ;(getNftPoolRegistry as jest.Mock).mockResolvedValue({
     pools: registryPools,
     secondsPerBlock: 2,
-    coverage: { fromBlock: 1, throughBlock: 100, backfillComplete: true },
+    coverage: { fromBlock: 1, throughBlock: 100, backfillComplete: true, recentScanFailed: false },
   })
   ;(loadNftPoolPresentations as jest.Mock).mockResolvedValue({
     pools: [
@@ -157,7 +157,7 @@ it('refreshes discovery on the operator event and does not depend on publication
   expect(localPublicationStore.read).not.toHaveBeenCalled()
 })
 
-it('retains the last verified registry when a refresh fails', async () => {
+it('retains the last verified registry and clears the connection error after a successful retry', async () => {
   const { unmount } = render(<Reader />)
   await flush()
   ;(getNftPoolRegistry as jest.Mock).mockRejectedValueOnce(new Error('RPC unavailable'))
@@ -166,9 +166,40 @@ it('retains the last verified registry when a refresh fails', async () => {
 
   expect(readValue().verifiedPools.map((pool: any) => pool.address)).toEqual([readyAddress, unreadyAddress])
   expect(readValue().pools.map((pool: any) => pool.address)).toEqual([readyAddress])
-  expect(readValue().errors['*']).toBe('RPC unavailable')
+  expect(readValue().connectionError).toBe(true)
+  expect(screen.getByTestId('read-model').textContent).not.toContain('RPC unavailable')
+
+  act(() => window.dispatchEvent(new Event('coincollect:nft-pool-discovery-refresh')))
+  await flush()
+  expect(readValue().connectionError).toBe(false)
   unmount()
 })
+
+it('treats an empty catalogue with historical discovery warnings as a successful load', async () => {
+  const warning = '2 indexer deployment claim(s) still need RPC proof; they remain unverified.'
+  ;(getNftPoolRegistry as jest.Mock).mockResolvedValueOnce({
+    pools: [],
+    coverage: { backfillComplete: false, recentScanFailed: false, warning },
+    warning,
+  })
+  render(<Reader />)
+  await flush()
+
+  expect(readValue()).toMatchObject({ loading: false, pools: [], connectionError: false })
+  expect(screen.getByTestId('read-model').textContent).not.toContain(warning)
+})
+
+it.each([{ recentScanFailed: true }, { recentScanFailed: false, stale: true }])(
+  'reports when the current catalogue could not be refreshed (%j)',
+  async (coverage) => {
+    ;(getNftPoolRegistry as jest.Mock).mockResolvedValueOnce({ pools: registryPools, coverage })
+    render(<Reader />)
+    await flush()
+
+    expect(readValue().connectionError).toBe(true)
+    expect(readValue().pools.map((pool: any) => pool.address)).toEqual([readyAddress])
+  },
+)
 
 it('keeps verified public pools available when presentation metadata fails', async () => {
   ;(loadNftPoolPresentations as jest.Mock).mockRejectedValueOnce(new Error('metadata DNS failure'))
@@ -177,6 +208,6 @@ it('keeps verified public pools available when presentation metadata fails', asy
 
   expect(readValue().pools.map((pool: any) => pool.address)).toEqual([readyAddress])
   expect(readValue().pools[0].metadata.name).toBe('Chain fallback')
-  expect(readValue().errors['*']).toBeUndefined()
+  expect(readValue().connectionError).toBe(false)
   expect(getNftPoolRegistry).toHaveBeenCalledTimes(1)
 })

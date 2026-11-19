@@ -1103,13 +1103,13 @@ export async function discoverNftFactoryPoolAddresses(
 ): Promise<{
   events: FactoryEvent[]
   warning?: string
-  coverage: { fromBlock: number; throughBlock: number; backfillComplete: boolean }
+  coverage: NonNullable<NftPoolRegistryResult['coverage']>
 }> {
   if (!factoryAddress)
     return {
       events: [],
       warning: 'NFT SmartChefFactory is not configured.',
-      coverage: { fromBlock, throughBlock: toBlock || fromBlock, backfillComplete: false },
+      coverage: { fromBlock, throughBlock: toBlock || fromBlock, backfillComplete: false, recentScanFailed: true },
     }
   const latest = toBlock === undefined ? await provider.getBlockNumber() : toBlock
   const events = new Map<string, FactoryEvent>()
@@ -1174,24 +1174,21 @@ export async function discoverNftFactoryPoolAddresses(
     // Storage is an optimization; discovery continues without a checkpoint.
   }
 
-  const rpcRanges: Array<{ fromBlock: number; toBlock: number }> = []
-  const addRanges = (start: number, end: number, limit?: number) => {
+  const buildRanges = (start: number, end: number, limit?: number) => {
+    const ranges: Array<{ fromBlock: number; toBlock: number }> = []
     let cursor = start
-    let count = 0
-    while (cursor <= end && (limit === undefined || count < limit)) {
+    while (cursor <= end && (limit === undefined || ranges.length < limit)) {
       const next = Math.min(cursor + NFT_FACTORY_LOG_SCAN_CHUNK - 1, end)
-      rpcRanges.push({ fromBlock: cursor, toBlock: next })
+      ranges.push({ fromBlock: cursor, toBlock: next })
       cursor = next + 1
-      count += 1
     }
-    return cursor
+    return { ranges, nextCursor: cursor }
   }
-  const nextCursor = isLocalForkMode
-    ? tailStart
-    : addRanges(backfillCursor, Math.min(tailStart - 1, latest), NFT_FACTORY_BACKFILL_CHUNKS_PER_REFRESH)
-  addRanges(tailStart, latest)
+  const history = isLocalForkMode
+    ? { ranges: [], nextCursor: tailStart }
+    : buildRanges(backfillCursor, Math.min(tailStart - 1, latest), NFT_FACTORY_BACKFILL_CHUNKS_PER_REFRESH)
+  const recent = buildRanges(tailStart, latest)
 
-  let failedRange: { fromBlock: number; toBlock: number } | undefined
   const queryRange = async (from: number, to: number): Promise<Log[]> => {
     try {
       return await provider.getLogs({ address: factoryAddress!, topics: [newPoolTopic], fromBlock: from, toBlock: to })
@@ -1201,25 +1198,31 @@ export async function discoverNftFactoryPoolAddresses(
       return [...(await queryRange(from, middle)), ...(await queryRange(middle + 1, to))]
     }
   }
-  for (const range of rpcRanges) {
-    try {
-      const logs = await queryRange(range.fromBlock, range.toBlock)
-      logs.forEach((log) => {
-        const address = normalizeNftAddress(log.topics[1] ? `0x${log.topics[1].slice(-40)}` : '')
-        if (address)
-          mergeEvent({
-            address,
-            blockNumber: log.blockNumber,
-            transactionHash: log.transactionHash,
-            rpcProvenanceVerified: true,
-          })
-      })
-    } catch (error) {
-      failedRange = range
-      warnings.push(`RPC factory scan stopped at ${range.fromBlock}-${range.toBlock}: ${String(error)}`)
-      break
+  const scanRanges = async (ranges: typeof recent.ranges) => {
+    for (const range of ranges) {
+      try {
+        const logs = await queryRange(range.fromBlock, range.toBlock)
+        logs.forEach((log) => {
+          const address = normalizeNftAddress(log.topics[1] ? `0x${log.topics[1].slice(-40)}` : '')
+          if (address)
+            mergeEvent({
+              address,
+              blockNumber: log.blockNumber,
+              transactionHash: log.transactionHash,
+              rpcProvenanceVerified: true,
+            })
+        })
+      } catch (error) {
+        warnings.push(`RPC factory scan stopped at ${range.fromBlock}-${range.toBlock}: ${String(error)}`)
+        return false
+      }
     }
+    return true
   }
+  // Check current deployments even if the historical RPC scan stalls.
+  const backfillFailed = !(await scanRanges(history.ranges))
+  const recentScanFailed = !(await scanRanges(recent.ranges))
+  const scanFailed = backfillFailed || recentScanFailed
 
   // Verify indexer-only event claims at their exact block with RPC logs.
   const unverifiedByBlock = new Map<number, FactoryEvent[]>()
@@ -1260,32 +1263,30 @@ export async function discoverNftFactoryPoolAddresses(
     }
   })
 
-  if (!isLocalForkMode && !failedRange && typeof window !== 'undefined') {
+  if (!isLocalForkMode && !scanFailed && typeof window !== 'undefined') {
     try {
       window.localStorage.setItem(
         checkpointKey,
-        String(Math.max(configuredStart, nextCursor - NFT_FACTORY_CHECKPOINT_OVERLAP)),
+        String(Math.max(configuredStart, history.nextCursor - NFT_FACTORY_CHECKPOINT_OVERLAP)),
       )
     } catch {
       // Continue without persistent backfill state.
     }
   }
-  const backfillComplete = isLocalForkMode || nextCursor >= tailStart
+  const backfillComplete = isLocalForkMode || history.nextCursor >= tailStart
   if (failedIndexerProofs)
     warnings.push(`${failedIndexerProofs} indexer deployment claim(s) still need RPC proof; they remain unverified.`)
-  if (!backfillComplete && !failedRange)
+  if (!backfillComplete && !scanFailed)
     warnings.push('Bounded historical factory backfill is continuing and will resume on a later refresh.')
-  const coverageFrom = configuredStart
-  if (backfillComplete && !failedRange && warnings.length === 0) {
-    return {
-      events: Array.from(events.values()).sort((left, right) => (left.blockNumber || 0) - (right.blockNumber || 0)),
-      coverage: { fromBlock: coverageFrom, throughBlock: latest, backfillComplete },
-    }
-  }
   return {
     events: Array.from(events.values()).sort((left, right) => (left.blockNumber || 0) - (right.blockNumber || 0)),
-    warning: warnings.join(' '),
-    coverage: { fromBlock: coverageFrom, throughBlock: latest, backfillComplete: backfillComplete && !failedRange },
+    warning: warnings.length ? warnings.join(' ') : undefined,
+    coverage: {
+      fromBlock: configuredStart,
+      throughBlock: latest,
+      backfillComplete: backfillComplete && !scanFailed,
+      recentScanFailed,
+    },
   }
 }
 
@@ -1582,6 +1583,7 @@ export async function getNftPoolRegistry(
           fromBlock: previous.coverage?.fromBlock || 0,
           throughBlock: previous.coverage?.throughBlock || 0,
           backfillComplete: previous.coverage?.backfillComplete || false,
+          recentScanFailed: true,
           stale: true,
           warning: String(error),
         },

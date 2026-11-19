@@ -195,6 +195,7 @@ export interface NftPoolRegistryResult {
     fromBlock: number
     throughBlock: number
     backfillComplete: boolean
+    recentScanFailed: boolean
     stale?: boolean
     warning?: string
   }

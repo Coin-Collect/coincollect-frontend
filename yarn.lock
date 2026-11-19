@@ -4391,7 +4391,7 @@
   dependencies:
     "@types/node" "*"
 
-"@uniswap/token-lists@^1.0.0-beta.19":
+"@uniswap/token-lists@1.0.0-beta.34":
   version "1.0.0-beta.34"
   resolved "https://registry.yarnpkg.com/@uniswap/token-lists/-/token-lists-1.0.0-beta.34.tgz#879461f5d4009327a24259bbab797e0f22db58c8"
   integrity sha512-Hc3TfrFaupg0M84e/Zv7BoF+fmMWDV15mZ5s8ZQt2qZxUcNw2GQW+L6L/2k74who31G+p1m3GRYbJpAo7d1pqA==

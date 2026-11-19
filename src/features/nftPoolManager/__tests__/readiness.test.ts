@@ -1,7 +1,11 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
-import { readNftPoolPublicReadiness, verifyNftPoolFactoryEventAtBlock } from '../discovery'
+import {
+  discoverNftFactoryPoolAddresses,
+  readNftPoolPublicReadiness,
+  verifyNftPoolFactoryEventAtBlock,
+} from '../discovery'
 
 jest.mock('@ethersproject/contracts', () => ({
   Contract: jest.fn().mockImplementation(() => ({ interface: { getEventTopic: () => `0x${'1'.repeat(64)}` } })),
@@ -59,6 +63,29 @@ beforeEach(() => {
 })
 
 afterEach(() => mockContract.mockReset())
+
+it.each([
+  { historicalFails: true, recentFails: false },
+  { historicalFails: false, recentFails: true },
+])('distinguishes historical and recent RPC failures (%j)', async ({ historicalFails, recentFails }) => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ items: [] }) })
+  const latest = 100_000
+  const recentStart = 50_001
+  const getLogs = jest.fn(async ({ fromBlock }: { fromBlock: number }) => {
+    if (fromBlock < recentStart ? historicalFails : recentFails) throw new Error('RPC offline')
+    return []
+  })
+  try {
+    const result = await discoverNftFactoryPoolAddresses({ getLogs } as unknown as Provider, FACTORY, 1, latest)
+
+    expect(getLogs).toHaveBeenCalledWith(expect.objectContaining({ fromBlock: recentStart }))
+    expect(result.coverage).toMatchObject({ backfillComplete: false, recentScanFailed: recentFails })
+    expect(result.warning).toContain('RPC factory scan stopped')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
 
 it('admits a fully configured finished pool with zero threshold despite depleted rewards', async () => {
   const result = await readNftPoolPublicReadiness(provider as Provider, POOL, FACTORY, 777)

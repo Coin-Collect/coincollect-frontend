@@ -69,7 +69,7 @@ async function readRegistry(force: boolean) {
 export function usePublishedNftPools() {
   const [pools, setPools] = useState<PublicV2Pool[]>([])
   const [verifiedPools, setVerifiedPools] = useState<VerifiedNftPool[]>([])
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [connectionError, setConnectionError] = useState(false)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -86,28 +86,14 @@ export function usePublishedNftPools() {
       if (shouldUpdate()) {
         setPools(result.pools)
         setVerifiedPools(result.verifiedPools)
-      }
-      const nextErrors: Record<string, string> = {}
-      const warnings: string[] = []
-      if (result.registry.coverage?.warning || result.registry.warning) {
-        warnings.push(result.registry.coverage?.warning || result.registry.warning || 'Factory discovery is partial.')
-      }
-      if (result.registry.coverage?.stale)
-        warnings.push('Showing the last verified factory registry while RPC discovery is unavailable.')
-      const staleReadinessCount = result.verifiedPools.filter((pool) => pool.readinessStale).length
-      if (staleReadinessCount)
-        warnings.push(
-          `${staleReadinessCount} pool readiness result${
-            staleReadinessCount === 1 ? ' is' : 's are'
-          } stale; new writes recheck chain state.`,
+        setConnectionError(
+          Boolean(result.registry.coverage?.recentScanFailed || result.registry.coverage?.stale) ||
+            result.verifiedPools.some((pool) => pool.readinessStale),
         )
-      if (warnings.length) nextErrors['*'] = warnings.join(' ')
-      if (shouldUpdate()) setErrors(nextErrors)
-    } catch (error) {
+      }
+    } catch {
       if (shouldUpdate()) {
-        setErrors({
-          '*': error instanceof Error ? error.message : 'Factory pool discovery could not be refreshed.',
-        })
+        setConnectionError(true)
         if (!previous) {
           setPools([])
           setVerifiedPools([])
@@ -159,7 +145,7 @@ export function usePublishedNftPools() {
   return {
     pools,
     verifiedPools,
-    errors,
+    connectionError,
     loading,
     refreshing,
     refresh: () => refresh(true),

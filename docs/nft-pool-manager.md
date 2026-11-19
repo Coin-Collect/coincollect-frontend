@@ -136,7 +136,8 @@ catalogue.
 
 Production discovery combines Blockscout historical candidates with a 50,000-block RPC tail. RPC logs always prove a
 candidate before it is verified. Historical RPC backfill advances in bounded, resumable chunks and keeps overlap between
-refreshes. Partial coverage and stale registry data are surfaced as warnings. Temporary read failures retain the last
+refreshes. Technical coverage warnings appear in NFT Pool Studio. The public catalogue displays a connection message
+if it cannot refresh recent pools. Temporary read failures retain the last
 verified identity and positive wallet-position hint. In local-fork mode, external indexer and metadata requests are
 disabled; discovery starts after the fork base block and its cache is namespaced by fork session.
 
