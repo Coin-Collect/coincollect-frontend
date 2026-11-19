@@ -15,7 +15,7 @@ import {
   buildNftPoolDeploymentPlan,
 } from '../validation'
 import { createEmptyNftPoolDraft, createNftPoolCloneDraft, findNftCollection, nftCollectionId } from '../registry'
-import { useNftPoolRegistry } from '../hooks'
+import { useNftPoolAdminDetail, useNftPoolRegistry } from '../hooks'
 import { loadNftPoolDraft, loadNftPoolDraftForSourcePool, saveNftPoolDraft } from '../storage'
 import { createNftPoolLaunchSession, findActiveNftPoolLaunchSession, saveNftPoolLaunchSession } from '../launch/storage'
 import { runNftPoolPreflight } from '../launch/preflight'
@@ -94,7 +94,11 @@ export default function PoolBuilder() {
   const router = useRouter()
   const cloneId = typeof router.query.clone === 'string' ? router.query.clone : ''
   const savedDraftId = typeof router.query.draft === 'string' ? router.query.draft : ''
-  const { data, loading, error } = useNftPoolRegistry()
+  const registry = useNftPoolRegistry(router.isReady && !cloneId)
+  const clone = useNftPoolAdminDetail(router.isReady && !savedDraftId ? cloneId : '')
+  const data = cloneId ? { ...registry.data, secondsPerBlock: clone.secondsPerBlock } : registry.data
+  const loading = cloneId ? clone.loading : registry.loading
+  const error = cloneId ? clone.error : registry.error
   const [draft, setDraft] = useState<NftPoolDraftModel>(() => createEmptyNftPoolDraft())
   const [mode, setMode] = useState<'card' | 'advanced'>('card')
   const [step, setStep] = useState(0)
@@ -113,16 +117,7 @@ export default function PoolBuilder() {
   const [reviewResult, setReviewResult] = useState<NftPreflightResult | null>(null)
   const { account, library } = useWeb3React()
 
-  const sourcePool = useMemo(
-    () =>
-      data?.pools.find(
-        (pool) =>
-          pool.id.toLowerCase() === cloneId.toLowerCase() ||
-          pool.canonicalId.toLowerCase() === cloneId.toLowerCase() ||
-          pool.address.toLowerCase() === cloneId.toLowerCase(),
-      ),
-    [cloneId, data?.pools],
-  )
+  const sourcePool = clone.pool?.cloneSupport !== 'UNAVAILABLE' ? clone.pool : undefined
   const validation = useMemo(
     () =>
       validateNftPoolDraft(draft, data?.secondsPerBlock || 2.2, false, {
@@ -1216,8 +1211,17 @@ export default function PoolBuilder() {
           Registry details are loading in the background. Configured collections and rewards are available now.
         </Notice>
       ) : null}
-      {cloneId && !loading && !sourcePool ? (
-        <Notice $error>Clone source was not found in the current registry.</Notice>
+      {cloneId && !savedDraftId && !loading && !error && !sourcePool ? (
+        <Notice $error>
+          {clone.pool
+            ? 'The source pool could not be read completely. Retry before copying it.'
+            : 'Clone source was not found.'}
+          {clone.pool ? (
+            <ActionButton onClick={() => void clone.refresh()} disabled={clone.refreshing}>
+              Retry
+            </ActionButton>
+          ) : null}
+        </Notice>
       ) : null}
       {sourcePool ? (
         <Notice>

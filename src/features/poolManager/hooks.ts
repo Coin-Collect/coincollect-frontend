@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useWeb3React from 'hooks/useWeb3React'
-import { simplePolygonRpcProvider } from 'utils/providers'
+import { poolManagerAuthorityRpcProvider, simplePolygonRpcProvider } from 'utils/providers'
 import { getFactoryAuthority } from './authority'
 import { getUnifiedPoolRegistry } from './discovery'
 import { PoolManagerAuthority, PoolRegistryResult } from './types'
@@ -59,7 +59,12 @@ export function usePoolManagerAuthority(
     setLoading(true)
 
     try {
-      const nextAuthority = await getFactoryAuthority(simplePolygonRpcProvider, account, 137, factoryAddressOverride)
+      const nextAuthority = await getFactoryAuthority(
+        poolManagerAuthorityRpcProvider,
+        account,
+        137,
+        factoryAddressOverride,
+      )
       if (currentRequestId !== requestId.current) return
       setAuthority(nextAuthority)
     } finally {

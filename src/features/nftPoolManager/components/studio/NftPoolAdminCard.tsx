@@ -3,8 +3,12 @@ import Link from 'next/link'
 import { NftPool, NftPoolDraft, NftPoolDraftReward, NftRewardAsset } from '../../types'
 import { formatBaseUnits } from '../../economics'
 import { formatNftDuration } from '../../registry'
-import { collectionImageCandidates, draftArtworkCandidates, poolArtworkCandidates } from '../../assets'
-import { saveNftPoolCloneDraft } from '../../storage'
+import {
+  collectionImageCandidates,
+  draftArtworkCandidates,
+  NFT_COLLECTION_PLACEHOLDER,
+  poolArtworkCandidates,
+} from '../../assets'
 import {
   AdminPoolArtwork,
   AdminPoolArtworkImage,
@@ -67,25 +71,19 @@ function RewardIcon({ reward }: { reward: RewardLike }) {
   )
 }
 
-function PoolArtwork({ pool }: { pool: NftPool }) {
+function PoolArtwork({ pool, eager }: { pool: NftPool; eager: boolean }) {
   const candidates = poolArtworkCandidates(pool)
   const [index, setIndex] = useState(0)
   const src = candidates[index]
   return (
     <AdminPoolArtwork>
       {!src ? (
-        <AdminPoolArtworkVideo
-          autoPlay
-          loop
-          muted
-          playsInline
-          src={fallbackHeroVideo(pool.address)}
-          aria-hidden="true"
-        />
+        <AdminPoolArtworkImage src={NFT_COLLECTION_PLACEHOLDER} loading={eager ? 'eager' : 'lazy'} alt="" />
       ) : (
         <AdminPoolArtworkImage
           src={src}
           alt=""
+          loading={eager ? 'eager' : 'lazy'}
           onError={() => setIndex((current) => Math.min(current + 1, candidates.length))}
         />
       )}
@@ -123,7 +121,15 @@ function formatRatio(value: string): string {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; secondsPerBlock: number }) {
+export function NftPoolAdminCard({
+  pool,
+  secondsPerBlock,
+  prioritizeArtwork = false,
+}: {
+  pool: NftPool
+  secondsPerBlock: number
+  prioritizeArtwork?: boolean
+}) {
   const rewards = [pool.rewards.primary, ...pool.rewards.side]
   const threshold = pool.onChain.participantThreshold || pool.sourceEconomics.originalParticipantThreshold
   const thresholdSourceLabel = !pool.onChain.participantThreshold
@@ -141,10 +147,9 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
     ? `${sideRatios.join(' · ')} of primary reward`
     : 'No side reward ratio available'
   const renewalLink = `/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`
-  const prepareClone = () => saveNftPoolCloneDraft(pool, secondsPerBlock)
   return (
     <AdminPoolCard>
-      <PoolArtwork pool={pool} />
+      <PoolArtwork pool={pool} eager={prioritizeArtwork} />
       <AdminPoolCardBody>
         <AdminPoolCardTop>
           <PoolCollectionStack pool={pool} />
@@ -162,7 +167,12 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
             {pool.verified ? 'verified factory pool' : 'not verified'}
           </PoolMeta>
           <PoolMeta style={{ marginTop: 3 }}>
-            Public readiness · {pool.publicReadiness?.ready ? 'ready for catalogue' : 'setup required'}
+            Public readiness ·{' '}
+            {pool.publicReadiness
+              ? pool.publicReadiness.ready
+                ? 'ready for catalogue'
+                : 'setup required'
+              : 'check in pool details'}
             {pool.publicReadiness?.stale ? ' · last verified result' : ''}
           </PoolMeta>
           {!pool.publicReadiness?.ready && pool.publicReadiness?.reasons.length ? (
@@ -219,7 +229,7 @@ export function NftPoolAdminCard({ pool, secondsPerBlock }: { pool: NftPool; sec
           </Link>
           {pool.cloneSupport !== 'UNAVAILABLE' ? (
             <Link href={renewalLink} passHref legacyBehavior>
-              <SoftLink onClick={prepareClone}>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
+              <SoftLink>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
             </Link>
           ) : null}
         </AdminPoolCardActions>

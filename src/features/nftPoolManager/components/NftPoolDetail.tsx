@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { formatUnits } from '@ethersproject/units'
 import AdminShell from 'features/poolManager/components/AdminShell'
 import {
+  ActionButton,
   LinkText,
   Metric,
   MetricGrid,
@@ -18,9 +18,8 @@ import {
   TableWrap,
 } from 'features/poolManager/components/styles'
 import { formatNftDuration } from '../registry'
-import { useNftPoolRegistry } from '../hooks'
+import { useNftPoolAdminDetail } from '../hooks'
 import { saveNftPoolCloneDraft } from '../storage'
-import { NftPool } from '../types'
 import {
   CollectionAddress,
   CollectionLine,
@@ -49,15 +48,10 @@ function shortAddress(address?: string): string {
   return `${address.slice(0, 10)}…${address.slice(-8)}`
 }
 
-function findPool(pools: NftPool[], id: string): NftPool | undefined {
-  return pools.find((pool) => pool.id === id || pool.address.toLowerCase() === id.toLowerCase())
-}
-
 export default function NftPoolDetail() {
   const router = useRouter()
-  const { data, loading, error } = useNftPoolRegistry()
   const poolId = typeof router.query.poolId === 'string' ? router.query.poolId : ''
-  const pool = useMemo(() => findPool(data?.pools || [], poolId), [data?.pools, poolId])
+  const { pool, secondsPerBlock, loading, error, refreshing, refresh } = useNftPoolAdminDetail(poolId)
 
   return (
     <AdminShell
@@ -65,14 +59,21 @@ export default function NftPoolDetail() {
       subtitle="A human-readable inspection of frontend metadata, on-chain configuration and contract health."
       authorityScope="nft"
     >
-      {error ? <Notice $error>{error}</Notice> : null}
-      {loading ? <Panel>Reading Polygon pool state…</Panel> : null}
-      {!loading && !pool ? (
+      {error ? (
+        <Notice $error>
+          {error}
+          <ActionButton onClick={() => void refresh()} disabled={refreshing}>
+            Retry
+          </ActionButton>
+        </Notice>
+      ) : null}
+      {!router.isReady || loading ? <Panel role="status">Reading Polygon pool state…</Panel> : null}
+      {router.isReady && !loading && !error && !pool ? (
         <Panel>
           NFT pool not found in the unified registry. <Link href="/admin/nft-pools">Return to NFT pools.</Link>
         </Panel>
       ) : null}
-      {pool && data ? (
+      {pool ? (
         <>
           <DetailHero>
             {pool.metadata.banner ? <DetailHeroImage src={pool.metadata.banner} alt="" /> : null}
@@ -82,7 +83,11 @@ export default function NftPoolDetail() {
               <Muted>
                 {pool.protocolVersion} · {shortAddress(pool.address)} · {pool.source} ·{' '}
                 {pool.discoveryStatus || 'unverified'} / {pool.verified ? 'verified' : 'unverified'} /{' '}
-                {pool.publicReadiness?.ready ? 'publicReady' : 'not publicReady'}
+                {pool.publicReadiness
+                  ? pool.publicReadiness.ready
+                    ? 'publicReady'
+                    : 'not publicReady'
+                  : 'readiness not checked'}
               </Muted>
             </DetailHeroContent>
           </DetailHero>
@@ -104,7 +109,7 @@ export default function NftPoolDetail() {
             </Metric>
             <Metric>
               <MetricLabel>Duration</MetricLabel>
-              <MetricValue style={{ fontSize: 17 }}>{formatNftDuration(pool, data.secondsPerBlock)}</MetricValue>
+              <MetricValue style={{ fontSize: 17 }}>{formatNftDuration(pool, secondsPerBlock)}</MetricValue>
             </Metric>
           </MetricGrid>
 
@@ -146,13 +151,21 @@ export default function NftPoolDetail() {
                     <tr>
                       <th>Public readiness</th>
                       <td>
-                        {pool.publicReadiness?.ready ? 'Ready' : 'Setup required'}
+                        {pool.publicReadiness
+                          ? pool.publicReadiness.ready
+                            ? 'Ready'
+                            : 'Setup required'
+                          : 'Not checked'}
                         {pool.publicReadiness?.stale ? ' · last verified result' : ''}
                       </td>
                     </tr>
                     <tr>
                       <th>Readiness checks</th>
-                      <td>{pool.publicReadiness?.reasons.join(' ') || 'All chain checks passed.'}</td>
+                      <td>
+                        {pool.publicReadiness
+                          ? pool.publicReadiness.reasons.join(' ') || 'All chain checks passed.'
+                          : 'A verified factory deployment is required for readiness checks.'}
+                      </td>
                     </tr>
                     <tr>
                       <th>Start block</th>
@@ -164,7 +177,7 @@ export default function NftPoolDetail() {
                     </tr>
                     <tr>
                       <th>Current block</th>
-                      <td>{data.currentBlock.toLocaleString()}</td>
+                      <td>{pool.onChain.currentBlock?.toLocaleString() || 'Unavailable'}</td>
                     </tr>
                   </tbody>
                 </Table>
@@ -378,7 +391,7 @@ export default function NftPoolDetail() {
             {pool.cloneSupport !== 'UNAVAILABLE' ? (
               <LinkText
                 href={`/admin/nft-pools/new?clone=${encodeURIComponent(pool.id)}`}
-                onClick={() => saveNftPoolCloneDraft(pool, data.secondsPerBlock)}
+                onClick={() => saveNftPoolCloneDraft(pool, secondsPerBlock)}
               >
                 {pool.status === 'FINISHED' ? 'Renew pool' : 'Duplicate pool'}
               </LinkText>

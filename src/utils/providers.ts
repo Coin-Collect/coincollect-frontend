@@ -78,11 +78,12 @@ class QueuedStaticJsonRpcProvider extends StaticJsonRpcProvider {
   private async sendWithRetry(method: string, params: any[], attempt = 0): Promise<any> {
     const provider = this.rpcProviders[this.nextProviderIndex % this.rpcProviders.length]
     this.nextProviderIndex += 1
+    let timer: ReturnType<typeof setTimeout> | undefined
     try {
       const request = provider.send(method, params)
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('RPC request timed out.')), RPC_REQUEST_TIMEOUT_MS),
-      )
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('RPC request timed out.')), RPC_REQUEST_TIMEOUT_MS)
+      })
       return await Promise.race([request, timeout])
     } catch (error) {
       const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase()
@@ -95,6 +96,8 @@ class QueuedStaticJsonRpcProvider extends StaticJsonRpcProvider {
       if (!retryable || attempt >= 2) throw error
       await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)))
       return this.sendWithRetry(method, params, attempt + 1)
+    } finally {
+      if (timer) clearTimeout(timer)
     }
   }
 }
@@ -105,10 +108,16 @@ export const simplePolygonRpcProvider = createFallbackProvider(maticNodes, {
   name: isLocalForkMode ? 'coincollect-polygon-fork' : 'polygon',
 })
 const registryRpcUrls = typeof window === 'undefined' ? maticNodes : ['/api/rpc/polygon']
-export const nftPoolRegistryRpcProvider = new QueuedStaticJsonRpcProvider(
+const polygonRegistryNetwork = {
+  chainId: getPolygonRuntimeChainId(),
+  name: isLocalForkMode ? 'coincollect-polygon-fork' : 'polygon',
+}
+export const nftPoolRegistryRpcProvider = new QueuedStaticJsonRpcProvider(registryRpcUrls, polygonRegistryNetwork, 8)
+// Keep the two ownership reads off the queue used to load all pool rows.
+export const poolManagerAuthorityRpcProvider = new QueuedStaticJsonRpcProvider(
   registryRpcUrls,
-  { chainId: getPolygonRuntimeChainId(), name: isLocalForkMode ? 'coincollect-polygon-fork' : 'polygon' },
-  8,
+  polygonRegistryNetwork,
+  2,
 )
 
 export default null

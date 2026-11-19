@@ -127,7 +127,7 @@ export default function NftPoolsAdmin() {
       }
       authorityScope="nft"
     >
-      {loading ? <PageLoader /> : null}
+      {loading && !data.currentBlock ? <PageLoader /> : null}
       {error ? <Notice $error>{error}</Notice> : null}
       {data?.warning ? <Notice>{data.warning}</Notice> : null}
       <StudioSummary>
@@ -186,7 +186,7 @@ export default function NftPoolsAdmin() {
       <Panel style={{ marginTop: 16 }}>
         <PanelTitle>Pool cards</PanelTitle>
         <Muted style={{ display: 'block', marginBottom: 14 }}>
-          The same artwork, collections and rewards model is used here as in the public staking experience.
+          View a pool to check its full collection, reward and readiness details.
         </Muted>
         {visibleDrafts.length ? (
           <>
@@ -217,12 +217,17 @@ export default function NftPoolsAdmin() {
         {poolGroups.published.length ? (
           <>
             <PoolSectionHeader>
-              <PoolSectionTitle>Published pools</PoolSectionTitle>
+              <PoolSectionTitle>Pools to review</PoolSectionTitle>
               <PoolSectionMeta>{poolGroups.published.length}</PoolSectionMeta>
             </PoolSectionHeader>
             <NftPoolList>
-              {poolGroups.published.map((pool) => (
-                <NftPoolAdminCard key={pool.id} pool={pool} secondsPerBlock={data?.secondsPerBlock || 2.2} />
+              {poolGroups.published.map((pool, index) => (
+                <NftPoolAdminCard
+                  key={pool.id}
+                  pool={pool}
+                  secondsPerBlock={data.secondsPerBlock}
+                  prioritizeArtwork={index === 0}
+                />
               ))}
             </NftPoolList>
           </>
@@ -234,13 +239,18 @@ export default function NftPoolsAdmin() {
               <PoolSectionMeta>{poolGroups.finished.length}</PoolSectionMeta>
             </PoolSectionHeader>
             <NftPoolList>
-              {poolGroups.finished.map((pool) => (
-                <NftPoolAdminCard key={pool.id} pool={pool} secondsPerBlock={data?.secondsPerBlock || 2.2} />
+              {poolGroups.finished.map((pool, index) => (
+                <NftPoolAdminCard
+                  key={pool.id}
+                  pool={pool}
+                  secondsPerBlock={data.secondsPerBlock}
+                  prioritizeArtwork={!poolGroups.published.length && index === 0}
+                />
               ))}
             </NftPoolList>
           </>
         ) : null}
-        {!loading && pools.length === 0 && visibleDrafts.length === 0 ? (
+        {!loading && !error && pools.length === 0 && visibleDrafts.length === 0 ? (
           data?.pools?.length || drafts.length ? (
             <Muted>No pool cards matched the current filters.</Muted>
           ) : (
