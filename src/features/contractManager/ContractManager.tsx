@@ -581,10 +581,10 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
                   ? amount(choice.amount, choice.decimals, choice.symbol, true)
                   : data.choices.length
                   ? amount(data.choices[0].amount, data.choices[0].decimals, data.choices[0].symbol, true)
-                  : '—'}
+                  : 'Unavailable'}
               </PrimaryValue>
               {error ? <Hint>Refresh the contract before making a withdrawal.</Hint> : null}
-              {data.withdrawalReason ? <Hint>{data.withdrawalReason}</Hint> : null}
+              <div role="status">{data.withdrawalReason ? <Hint>{data.withdrawalReason}</Hint> : null}</div>
               {!account && data.withdrawalProfile ? (
                 <Actions>
                   <ConnectWalletButton type="button" />

@@ -30,6 +30,7 @@ const TRACKED_TOKENS = [
   mainnetTokens.nitro,
 ]
 export const REVIEW_TTL_MS = 90_000
+const REVIEW_FEE_HEADROOM_PERCENT = 20
 
 export type AssetBalance = {
   address: string
@@ -67,6 +68,7 @@ export type WithdrawalReview = {
   symbol: string
   estimatedFee: BigNumber
   feeLimit: BigNumber
+  transactionFeeLimit: BigNumber
   gasLimit: BigNumber
   transaction: TransactionRequest
   expiresAt: number
@@ -226,13 +228,16 @@ export async function inspectContract(
   ])
   if (code === '0x') throw new Error('No contract was found at this address on the selected network.')
   const profile = getWithdrawalProfile(address, keccak256(code as Hex))
-  const verified = !profile && !isLocalForkMode ? await loadVerifiedAbi(chainId, address, code) : undefined
+  const verified =
+    !isLocalForkMode && (!profile || profile.id === 'zidanogo')
+      ? await loadVerifiedAbi(chainId, address, code)
+      : undefined
   const reference = !profile && !verified ? getCoinCollectAbi(address) : undefined
-  const abi = profile?.abi || verified || reference
-  const abiSource = profile
-    ? 'Reviewed runtime'
-    : verified
+  const abi = verified || profile?.abi || reference
+  const abiSource = verified
     ? 'Sourcify'
+    : profile
+    ? 'Reviewed runtime'
     : reference
     ? 'CoinCollect reference'
     : undefined
@@ -355,7 +360,9 @@ export function explainWithdrawalError(error: unknown): string {
     'There is no available balance for this withdrawal.',
     'The simulation could not verify the recipient and exact amount.',
     'Your wallet does not have enough POL for the estimated gas.',
-    'The balance, fee or wallet changed. Review the withdrawal again.',
+    'The amount available to withdraw changed. Review the new amount before withdrawing.',
+    'The withdrawal details changed. Review the withdrawal again.',
+    'The network fee is above the maximum you reviewed. Review the withdrawal again for an updated fee.',
     'The withdrawal review expired. Review it again.',
     'The network did not provide a usable gas quote.',
     'This contract only supports native POL withdrawals.',
@@ -374,7 +381,7 @@ type TraceCall = {
   calls?: TraceCall[]
 }
 
-async function verifyNitroTransfer(
+async function verifyNativeTransfer(
   provider: JsonRpcProvider,
   contract: string,
   account: string,
@@ -440,7 +447,8 @@ export async function prepareWithdrawal(
   const request = { to: contract, from: account, data, value: BigNumber.from(0) }
   // Only reviewed, exact calldata is simulated. No arbitrary ABI write is attempted.
   await provider.call(request, block)
-  if (profile.id === 'nitro') await verifyNitroTransfer(provider, contract, account, data, block, amount)
+  if (profile.id !== 'splitter' && profile.requiresNativeTransferTrace)
+    await verifyNativeTransfer(provider, contract, account, data, block, amount)
   const [estimate, feeData, walletBalance] = await Promise.all([
     provider.estimateGas(request),
     provider.getFeeData(),
@@ -450,8 +458,11 @@ export async function prepareWithdrawal(
   const maxFee = feeData.maxFeePerGas && feeData.maxPriorityFeePerGas ? feeData.maxFeePerGas : feeData.gasPrice
   if (!maxFee || maxFee.lte(0)) throw new Error('The network did not provide a usable gas quote.')
   const gasLimit = estimate.mul(120).add(99).div(100)
-  const feeLimit = gasLimit.mul(maxFee)
-  if (walletBalance.lt(feeLimit)) throw new Error('Your wallet does not have enough POL for the estimated gas.')
+  const transactionFeeLimit = gasLimit.mul(maxFee)
+  if (walletBalance.lt(transactionFeeLimit))
+    throw new Error('Your wallet does not have enough POL for the estimated gas.')
+  const bufferedFeeLimit = transactionFeeLimit.mul(100 + REVIEW_FEE_HEADROOM_PERCENT).div(100)
+  const feeLimit = walletBalance.lt(bufferedFeeLimit) ? walletBalance : bufferedFeeLimit
   const fee =
     feeData.maxFeePerGas && feeData.maxPriorityFeePerGas
       ? { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas: feeData.maxPriorityFeePerGas }
@@ -469,6 +480,7 @@ export async function prepareWithdrawal(
     decimals,
     estimatedFee: estimate.mul(typicalFee),
     feeLimit,
+    transactionFeeLimit,
     gasLimit,
     transaction: { ...request, ...fee, gasLimit, chainId },
     expiresAt: Date.now() + REVIEW_TTL_MS,
@@ -496,13 +508,14 @@ export async function submitReviewedWithdrawal(
   if (Date.now() >= review.expiresAt) throw new Error('The withdrawal review expired. Review it again.')
   await checkWallet()
   const fresh = await prepareWithdrawal(provider, review.chainId, review.contract, review.account, review.asset)
-  if (
-    !fresh.amount.eq(review.amount) ||
-    !sameAddress(fresh.recipient, review.recipient) ||
-    fresh.transaction.data !== review.transaction.data ||
-    fresh.feeLimit.gt(review.feeLimit)
-  )
-    throw new Error('The balance, fee or wallet changed. Review the withdrawal again.')
+  if (!fresh.amount.eq(review.amount))
+    throw new Error('The amount available to withdraw changed. Review the new amount before withdrawing.')
+  if (!sameAddress(fresh.recipient, review.recipient) || fresh.transaction.data !== review.transaction.data)
+    throw new Error('The withdrawal details changed. Review the withdrawal again.')
+  if (fresh.transactionFeeLimit.gt(review.feeLimit))
+    throw new Error(
+      'The network fee is above the maximum you reviewed. Review the withdrawal again for an updated fee.',
+    )
   if (Date.now() >= review.expiresAt) throw new Error('The withdrawal review expired. Review it again.')
   await checkWallet()
   const transaction = { ...fresh.transaction }

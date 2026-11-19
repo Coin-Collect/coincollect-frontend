@@ -6,8 +6,10 @@ import legacyNftStakeAbi from 'config/abi/coinCollectNftStake.json'
 import addresses from 'config/constants/contracts'
 
 export const NITRO_ADDRESS = addresses.nitroNft[137]
+export const ZIDANOGO_ADDRESS = addresses.zidanogoNft[137]
 export const WPOL_ADDRESS = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'
 export const NITRO_RUNTIME = '0xe7953ee386dea09f17c1019d35e7bb3a24eb022a0735bc08b20a951f966c9511'
+const ZIDANOGO_RUNTIME = '0xff65802850837c5f1cbb6336404ba0d6fe680c5ee274e18302b4b3a39ce1f4e0'
 export const RECEIPTS_RUNTIME = '0xeeb80f16c3b42688be43d06d4abb6f23b2dffc2365357aba55135adbcf85f9ca'
 const WPOL_RUNTIME = '0xae820ea59b005f58a45eea35b374afbd5dc503d4f219a6b670cd3453f1142ed5'
 
@@ -21,6 +23,7 @@ const SPLITTER_RUNTIMES = [
 ]
 
 const nft = new Interface(coinCollectNftAbi)
+const zidanogo = new Interface(['function owner() view returns (address)', 'function withdraw()'])
 const receipts = new Interface(['function owner() view returns (address)', 'function withdrawFunds()'])
 const splitter = new Interface([
   'function shares(address account) view returns (uint256)',
@@ -37,12 +40,28 @@ const splitter = new Interface([
 ])
 
 export type WithdrawalProfile =
-  | { id: 'nitro' | 'receipts'; name: string; abi: Interface; signature: 'withdraw()' | 'withdrawFunds()' }
+  | {
+      id: 'nitro' | 'zidanogo' | 'receipts'
+      name: string
+      abi: Interface
+      signature: 'withdraw()' | 'withdrawFunds()'
+      requiresNativeTransferTrace?: true
+    }
   | { id: 'splitter'; name: string; abi: Interface }
 
 export function getWithdrawalProfile(address: string, runtimeHash: string): WithdrawalProfile | undefined {
   if (address.toLowerCase() === NITRO_ADDRESS.toLowerCase() && runtimeHash === NITRO_RUNTIME) {
-    return { id: 'nitro', name: 'NitroClash', abi: nft, signature: 'withdraw()' }
+    return { id: 'nitro', name: 'NitroClash', abi: nft, signature: 'withdraw()', requiresNativeTransferTrace: true }
+  }
+  // Sourcify exact match: ZIDANOGO.withdraw is onlyOwner and sends the entire native balance to msg.sender.
+  if (address.toLowerCase() === ZIDANOGO_ADDRESS.toLowerCase() && runtimeHash === ZIDANOGO_RUNTIME) {
+    return {
+      id: 'zidanogo',
+      name: 'Zidanogo GentleMals',
+      abi: zidanogo,
+      signature: 'withdraw()',
+      requiresNativeTransferTrace: true,
+    }
   }
   if (runtimeHash === RECEIPTS_RUNTIME) {
     return { id: 'receipts', name: 'Ownable Receipts', abi: receipts, signature: 'withdrawFunds()' }

@@ -9,7 +9,7 @@ import {
   prepareWithdrawal,
   submitReviewedWithdrawal,
 } from '../chain'
-import { NITRO_ADDRESS, WPOL_ADDRESS } from '../profiles'
+import { NITRO_ADDRESS, WPOL_ADDRESS, ZIDANOGO_ADDRESS } from '../profiles'
 import { loadVerifiedAbi } from '../verifiedAbi'
 
 jest.mock('config/constants/tokens', () => ({
@@ -34,6 +34,7 @@ jest.mock('viem', () => ({
         '0x02': '0xeeb80f16c3b42688be43d06d4abb6f23b2dffc2365357aba55135adbcf85f9ca',
         '0x03': '0xca5c90ffe1d24c1d7fc301b0afb9c9fa92fc94af2fb68c14a7713ee728d38f76',
         '0x04': '0xae820ea59b005f58a45eea35b374afbd5dc503d4f219a6b670cd3453f1142ed5',
+        '0x05': '0xff65802850837c5f1cbb6336404ba0d6fe680c5ee274e18302b4b3a39ce1f4e0',
       }[code] || 'unreviewed'),
   ),
 }))
@@ -63,6 +64,8 @@ function rpcFixture(contract = NITRO_ADDRESS, code = '0x01') {
     shares: 1,
     chain: '0x89',
     fee: 3,
+    usesEip1559: false,
+    walletBalance: BigNumber.from(2_000_000),
     destination: WALLET,
   }
   const trace = jest.fn((params: any[]) => ({
@@ -104,8 +107,15 @@ function rpcFixture(contract = NITRO_ADDRESS, code = '0x01') {
     estimateGas,
     getBlockNumber: async () => 9_000,
     getBalance: async (address: string) =>
-      address.toLowerCase() === contract.toLowerCase() ? state.amount : BigNumber.from(2_000_000),
-    getFeeData: async () => ({ gasPrice: BigNumber.from(state.fee) }),
+      address.toLowerCase() === contract.toLowerCase() ? state.amount : state.walletBalance,
+    getFeeData: async () =>
+      state.usesEip1559
+        ? {
+            gasPrice: BigNumber.from(state.fee - 1),
+            maxFeePerGas: BigNumber.from(state.fee),
+            maxPriorityFeePerGas: BigNumber.from(1),
+          }
+        : { gasPrice: BigNumber.from(state.fee) },
   } as unknown as JsonRpcProvider
   return { provider, state, trace, send, call, estimateGas }
 }
@@ -152,6 +162,40 @@ it('shows verified ABI and roles without granting generic withdrawal access', as
   expect(trace).not.toHaveBeenCalled()
 })
 
+it('quotes Zidanogo for its owner while retaining the verified ABI for inspection', async () => {
+  ;(loadVerifiedAbi as jest.Mock).mockResolvedValue(abi)
+  const { provider, state, trace } = rpcFixture(ZIDANOGO_ADDRESS, '0x05')
+  const inspection = await inspectContract(provider, 137, ZIDANOGO_ADDRESS, WALLET)
+  expect(inspection).toMatchObject({
+    name: 'Zidanogo GentleMals',
+    owner: WALLET,
+    abiSource: 'Sourcify',
+    choices: [{ asset: 'native', symbol: 'POL', amount: BigNumber.from(60) }],
+  })
+
+  const quote = await prepareWithdrawal(provider, 137, ZIDANOGO_ADDRESS, WALLET)
+  expect(quote).toMatchObject({ recipient: WALLET, signature: 'withdraw()', amount: BigNumber.from(60) })
+
+  state.destination = OTHER
+  await expect(prepareWithdrawal(provider, 137, ZIDANOGO_ADDRESS, WALLET)).rejects.toThrow('recipient and exact amount')
+  state.owner = OTHER
+  await expect(prepareWithdrawal(provider, 137, ZIDANOGO_ADDRESS, WALLET)).rejects.toThrow('current contract owner')
+  expect(trace).toHaveBeenCalledTimes(2)
+})
+
+it('keeps a Zidanogo address or runtime mismatch read-only even when the ABI lists withdraw()', async () => {
+  ;(loadVerifiedAbi as jest.Mock).mockResolvedValue(abi)
+  for (const [address, code] of [
+    [ZIDANOGO_ADDRESS, '0xff'],
+    [CONTRACT, '0x05'],
+  ]) {
+    const { provider, trace } = rpcFixture(address, code)
+    expect((await inspectContract(provider, 137, address, WALLET)).choices).toEqual([])
+    await expect(prepareWithdrawal(provider, 137, address, WALLET)).rejects.toThrow('no reviewed withdrawal')
+    expect(trace).not.toHaveBeenCalled()
+  }
+})
+
 it('fails before simulation for a changed chain, changed runtime or wrong owner', async () => {
   const { provider, trace, state } = rpcFixture()
   state.chain = '0x1'
@@ -196,7 +240,11 @@ it('uses reviewed withdrawFunds and overloaded PaymentSplitter arguments only', 
   await expect(prepareWithdrawal(splitter.provider, 137, CONTRACT, WALLET)).rejects.toThrow('no payment share')
 })
 
-it.each(['amount', 'fee', 'wallet'] as const)('does not send when the reviewed %s changes', async (field) => {
+it.each([
+  ['amount', 'The amount available to withdraw changed.'],
+  ['fee', 'The network fee is above the maximum you reviewed.'],
+  ['wallet', 'The wallet changed.'],
+] as const)('does not send when the reviewed %s changes beyond its limit', async (field, message) => {
   const { provider, state } = rpcFixture()
   const { signer, wallet, getWallet, sendTransaction } = walletFixture()
   const review = await prepareWithdrawal(provider, 137, NITRO_ADDRESS, WALLET)
@@ -204,9 +252,45 @@ it.each(['amount', 'fee', 'wallet'] as const)('does not send when the reviewed %
   if (field === 'fee') state.fee = 4
   if (field === 'wallet') wallet.account = OTHER
 
-  await expect(submitReviewedWithdrawal(provider, signer, review, getWallet)).rejects.toThrow(
-    'Review the withdrawal again',
+  await expect(submitReviewedWithdrawal(provider, signer, review, getWallet)).rejects.toThrow(message)
+  expect(sendTransaction).not.toHaveBeenCalled()
+})
+
+it.each([
+  { name: 'legacy', usesEip1559: false, freshFee: 101, feeField: 'gasPrice' },
+  { name: 'EIP-1559', usesEip1559: true, freshFee: 120, feeField: 'maxFeePerGas' },
+])('uses the fresh $name fee within the reviewed maximum', async ({ usesEip1559, freshFee, feeField }) => {
+  const { provider, state, trace } = rpcFixture(ZIDANOGO_ADDRESS, '0x05')
+  const { signer, getWallet, sendTransaction } = walletFixture()
+  state.fee = 100
+  state.usesEip1559 = usesEip1559
+  state.walletBalance = BigNumber.from(4_000_000)
+  const review = await prepareWithdrawal(provider, 137, ZIDANOGO_ADDRESS, WALLET)
+  expect(review.feeLimit).toEqual(BigNumber.from(3_600_000))
+
+  state.fee = freshFee
+  await submitReviewedWithdrawal(provider, signer, review, getWallet)
+
+  expect(trace).toHaveBeenCalledTimes(2)
+  expect(sendTransaction).toHaveBeenCalledTimes(1)
+  expect(sendTransaction).toHaveBeenCalledWith(
+    expect.objectContaining({
+      to: ZIDANOGO_ADDRESS,
+      [feeField]: BigNumber.from(freshFee),
+      gasLimit: BigNumber.from(30_000),
+    }),
   )
+})
+
+it('caps the displayed maximum at the wallet balance and rechecks gas affordability', async () => {
+  const { provider, state } = rpcFixture()
+  const { signer, getWallet, sendTransaction } = walletFixture()
+  state.walletBalance = BigNumber.from(100_000)
+  const review = await prepareWithdrawal(provider, 137, NITRO_ADDRESS, WALLET)
+  expect(review.feeLimit).toEqual(state.walletBalance)
+
+  state.walletBalance = BigNumber.from(89_999)
+  await expect(submitReviewedWithdrawal(provider, signer, review, getWallet)).rejects.toThrow('enough POL')
   expect(sendTransaction).not.toHaveBeenCalled()
 })
 
