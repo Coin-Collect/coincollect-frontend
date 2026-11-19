@@ -7,6 +7,7 @@ export const ADMIN_NAVIGATION_LINKS = [
   { href: '/admin', label: 'Overview' },
   { href: '/admin/nft-pools', label: 'NFT Pools' },
   { href: '/admin/treasury', label: 'Treasury' },
+  { href: '/admin/contract-manager', label: 'Contract Manager' },
   { href: '/admin/pools', label: 'Legacy ERC20' },
 ] as const
 
@@ -28,16 +29,11 @@ export function hasAdminWalletAccess(input: {
   ownerIsContract: boolean
 }): boolean {
   const sameCheckedAccount = Boolean(
-    input.account &&
-      input.checkedAccount &&
-      input.account.toLowerCase() === input.checkedAccount.toLowerCase(),
+    input.account && input.checkedAccount && input.account.toLowerCase() === input.checkedAccount.toLowerCase(),
   )
 
   return Boolean(
-    sameCheckedAccount &&
-      input.authorityState === 'AUTHORIZED' &&
-      input.authorized &&
-      !input.ownerIsContract,
+    sameCheckedAccount && input.authorityState === 'AUTHORIZED' && input.authorized && !input.ownerIsContract,
   )
 }
 

@@ -38,7 +38,8 @@ export async function loadVerifiedAbi(chainId: number, address: string, code: st
       result.runtimeBytecode?.onchainBytecode?.toLowerCase() !== code.toLowerCase() ||
       !Array.isArray(result.abi) ||
       result.abi.length > 512
-    ) return undefined
+    )
+      return undefined
     return new Interface(result.abi)
   } catch {
     return undefined

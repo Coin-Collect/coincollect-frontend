@@ -62,9 +62,18 @@ export function getCoinCollectAbi(address: string): Interface | undefined {
   if (key === addresses.nftSmartChefFactory[137].toLowerCase()) return new Interface(nftFactoryAbi)
   if (key === addresses.coinCollectNftStake[137].toLowerCase()) return new Interface(legacyNftStakeAbi)
   const nftAddresses = [
-    addresses.coinCollectNft, addresses.coinCollectBronzeNft, addresses.coinCollectSilverNft, addresses.coinCollectGoldNft,
-    addresses.lotNft, addresses.blitzBrawlerNft, addresses.avatarsAiNft, addresses.beastHunterNft, addresses.nitroNft,
-    addresses.placeDjNft, addresses.zidanogoNft, addresses.sapienXNft,
+    addresses.coinCollectNft,
+    addresses.coinCollectBronzeNft,
+    addresses.coinCollectSilverNft,
+    addresses.coinCollectGoldNft,
+    addresses.lotNft,
+    addresses.blitzBrawlerNft,
+    addresses.avatarsAiNft,
+    addresses.beastHunterNft,
+    addresses.nitroNft,
+    addresses.placeDjNft,
+    addresses.zidanogoNft,
+    addresses.sapienXNft,
   ]
   return nftAddresses.some((entry) => entry[137]?.toLowerCase() === key) ? nft : undefined
 }

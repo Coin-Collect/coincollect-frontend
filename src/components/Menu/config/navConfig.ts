@@ -90,6 +90,11 @@ export const getNavConfig = (t: ContextApi['t'], account?: string | null, adminH
       initialOpenState: false,
       children: [
         {
+          id: 'contract-manager',
+          label: t('Contract Manager'),
+          href: '/contract-manager',
+        },
+        {
           id: 'collect-domain',
           label: t('.COLLECT Domain'),
           href: 'https://get.unstoppabledomains.com/collect/',

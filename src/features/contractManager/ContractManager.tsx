@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import styled from 'styled-components'
 import useSWR from 'swr'
 import { Button } from '@pancakeswap/uikit'
@@ -13,7 +13,11 @@ import { getLocalForkStorageKey, getPolygonRuntimeChainId, isLocalForkMode } fro
 import { nftPoolRegistryRpcProvider as rpc } from 'utils/providers'
 import { config } from 'utils/wagmi'
 import {
-  explainWithdrawalError, inspectContract, parseContractAddress, prepareWithdrawal, submitReviewedWithdrawal,
+  explainWithdrawalError,
+  inspectContract,
+  parseContractAddress,
+  prepareWithdrawal,
+  submitReviewedWithdrawal,
   type WithdrawalReview,
 } from './chain'
 import { NITRO_ADDRESS } from './profiles'
@@ -52,12 +56,22 @@ const Surface = styled.section`
   border-radius: 20px;
   padding: clamp(16px, 3.5vw, 28px);
   background: ${({ theme }) => theme.colors.backgroundAlt};
-  h2, h3 { font-size: 19px; font-weight: 650; letter-spacing: -0.025em; margin-bottom: 10px; }
+  h2,
+  h3 {
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    margin-bottom: 10px;
+  }
 `
 const SearchForm = styled.form`
   display: grid;
   gap: 10px;
-  label { color: ${({ theme }) => theme.colors.text}; font-weight: 650; font-size: 14px; }
+  label {
+    color: ${({ theme }) => theme.colors.text};
+    font-weight: 650;
+    font-size: 14px;
+  }
 `
 const Input = styled.input`
   min-width: 0;
@@ -69,21 +83,35 @@ const Input = styled.input`
   font: inherit;
   font-size: 16px;
   line-height: 1.3;
-  &[aria-invalid='true'] { border-color: ${({ theme }) => theme.colors.failure}; }
-  &:focus-visible { outline: 2px solid ${({ theme }) => theme.colors.primary}; outline-offset: 2px; }
+  &[aria-invalid='true'] {
+    border-color: ${({ theme }) => theme.colors.failure};
+  }
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+  }
 `
 const FormRow = styled.div`
   display: grid;
   gap: 8px;
-  @media (min-width: 560px) { grid-template-columns: minmax(0, 1fr) auto; }
+  @media (min-width: 560px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 `
 const Grid = styled.div`
   display: grid;
   gap: 14px;
   margin-top: 14px;
-  @media (min-width: 820px) { grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr); align-items: start; }
+  @media (min-width: 820px) {
+    grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr);
+    align-items: start;
+  }
 `
-const Stack = styled.div`display: grid; gap: 14px; min-width: 0;`
+const Stack = styled.div`
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+`
 const Network = styled.span`
   font-size: 13px;
   color: ${({ theme }) => theme.colors.textSubtle};
@@ -92,7 +120,13 @@ const Network = styled.span`
   padding: 7px 11px;
   white-space: nowrap;
 `
-const TopRow = styled.div`display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;`
+const TopRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+`
 const PrimaryValue = styled.p`
   font-size: clamp(32px, 6vw, 48px);
   font-weight: 670;
@@ -118,8 +152,14 @@ const TextButton = styled.button`
   padding: 10px 0;
   font-size: 14px;
   min-height: 44px;
-  &:disabled { opacity: 0.65; cursor: default; }
-  &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  &:disabled {
+    opacity: 0.65;
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
 `
 const Explorer = styled.a`
   color: ${({ theme }) => theme.colors.primary};
@@ -127,7 +167,11 @@ const Explorer = styled.a`
   text-underline-offset: 2px;
   font-size: 14px;
 `
-const Divider = styled.div`height: 1px; background: ${({ theme }) => theme.colors.cardBorder}; margin-block: 15px;`
+const Divider = styled.div`
+  height: 1px;
+  background: ${({ theme }) => theme.colors.cardBorder};
+  margin-block: 15px;
+`
 const Rows = styled.dl`
   margin: 0;
   & > div {
@@ -138,14 +182,35 @@ const Rows = styled.dl`
     padding: 9px 0;
     border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
   }
-  dt { font-size: 14px; color: ${({ theme }) => theme.colors.textSubtle}; }
-  dd { margin: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  dt {
+    font-size: 14px;
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+  dd {
+    margin: 0;
+    text-align: right;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
 `
 const Disclosure = styled.details`
   margin-top: 14px;
-  summary { cursor: pointer; font-size: 14px; font-weight: 650; line-height: 1.4; padding-block: 6px; }
-  ul { list-style: none; padding: 0; margin-top: 6px; }
-  li { padding-block: 4px; }
+  summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.4;
+    padding-block: 6px;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 6px;
+  }
+  li {
+    padding-block: 4px;
+  }
 `
 const ErrorText = styled.p`
   color: ${({ theme }) => theme.colors.failure};
@@ -153,7 +218,12 @@ const ErrorText = styled.p`
   font-size: 14px;
   line-height: 1.45;
 `
-const Actions = styled.div`display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px;`
+const Actions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+`
 
 type TxStatus = { hash: string; phase: 'pending' | 'confirmed' | 'failed' | 'replaced' }
 
@@ -166,8 +236,12 @@ function amount(value: BigNumber, decimals: number, symbol: string, compact = fa
 }
 
 function sameTransaction(tx: TransactionResponse | undefined, review: WithdrawalReview) {
-  return tx?.to?.toLowerCase() === review.contract.toLowerCase() &&
-    tx?.from.toLowerCase() === review.account.toLowerCase() && tx?.data === review.transaction.data && tx?.value.isZero()
+  return (
+    tx?.to?.toLowerCase() === review.contract.toLowerCase() &&
+    tx?.from.toLowerCase() === review.account.toLowerCase() &&
+    tx?.data === review.transaction.data &&
+    tx?.value.isZero()
+  )
 }
 
 export default function ContractManager({ embedded = false }: { embedded?: boolean }) {
@@ -188,7 +262,9 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
   const lock = useRef(false)
   const networkLabel = isLocalForkMode ? 'Local Polygon fork' : 'Polygon'
   const readyWallet = Boolean(account && library && chainId === chain)
-  const key = contract ? getLocalForkStorageKey(['contract-manager', chain, contract, account?.toLowerCase(), ...tokens].join(':')) : null
+  const key = contract
+    ? getLocalForkStorageKey(['contract-manager', chain, contract, account?.toLowerCase(), ...tokens].join(':'))
+    : null
   const { data, error, isValidating, mutate } = useSWR(
     key,
     () => inspectContract(rpc, chain, contract, account || undefined, tokens),
@@ -196,9 +272,21 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
   )
   const available = data?.choices.filter((choice) => choice.amount.gt(0)) || []
   const choice = available.find(({ asset }) => asset === selectedAsset) || available[0]
-  const shownReview = review && review.contract === contract && review.account.toLowerCase() === account?.toLowerCase() &&
-    review.asset === choice?.asset && readyWallet ? review : undefined
+  const shownReview =
+    review &&
+    review.contract === contract &&
+    review.account.toLowerCase() === account?.toLowerCase() &&
+    review.asset === choice?.asset &&
+    readyWallet
+      ? review
+      : undefined
   const locked = Boolean(busy || txStatus?.phase === 'pending')
+
+  useEffect(() => {
+    if (!review) return undefined
+    const timer = setTimeout(() => setReview(undefined), Math.max(0, review.expiresAt - Date.now()))
+    return () => clearTimeout(timer)
+  }, [review])
 
   function analyze(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -257,9 +345,9 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
   }
 
   function showReceipt(hash: string, receipt: TransactionReceipt) {
-    setTxStatus((previous) => previous?.hash === hash
-      ? { hash, phase: receipt.status === 1 ? 'confirmed' : 'failed' }
-      : previous)
+    setTxStatus((previous) =>
+      previous?.hash === hash ? { hash, phase: receipt.status === 1 ? 'confirmed' : 'failed' } : previous,
+    )
     void mutate()
   }
 
@@ -267,14 +355,29 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
     try {
       showReceipt(tx.hash, await tx.wait())
     } catch (cause) {
-      const replacement = cause as { code?: string; cancelled?: boolean; replacement?: TransactionResponse; receipt?: TransactionReceipt }
+      const replacement = cause as {
+        code?: string
+        cancelled?: boolean
+        replacement?: TransactionResponse
+        receipt?: TransactionReceipt
+      }
       if (replacement.code === 'TRANSACTION_REPLACED' && replacement.replacement) {
         const replaced = replacement.replacement
-        setTxStatus((previous) => previous?.hash === tx.hash
-          ? { hash: replaced.hash, phase: !replacement.cancelled && sameTransaction(replaced, sentReview)
-              ? replacement.receipt?.status === 1 ? 'confirmed' : replacement.receipt ? 'failed' : 'pending'
-              : 'replaced' }
-          : previous)
+        setTxStatus((previous) =>
+          previous?.hash === tx.hash
+            ? {
+                hash: replaced.hash,
+                phase:
+                  !replacement.cancelled && sameTransaction(replaced, sentReview)
+                    ? replacement.receipt?.status === 1
+                      ? 'confirmed'
+                      : replacement.receipt
+                      ? 'failed'
+                      : 'pending'
+                    : 'replaced',
+              }
+            : previous,
+        )
         void mutate()
       } else if (replacement.receipt) {
         showReceipt(tx.hash, replacement.receipt)
@@ -298,7 +401,13 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
       void watchTransaction(tx, shownReview)
     } catch (cause) {
       setReview(undefined)
-      setActionError(explainWithdrawalError(cause))
+      // The wallet can return a hash before its RPC can fetch the submitted transaction.
+      const hash = (cause as { transactionHash?: unknown })?.transactionHash
+      if (typeof hash === 'string' && /^0x[\da-f]{64}$/i.test(hash)) {
+        setTxStatus({ hash, phase: 'pending' })
+      } else {
+        setActionError(explainWithdrawalError(cause))
+      }
     } finally {
       lock.current = false
       setBusy(undefined)
@@ -319,7 +428,10 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
     <Shell>
       {!embedded ? (
         <Intro>
-          <div><h1>Contract Manager</h1><Hint>Check a contract’s balances and withdraw funds available to your wallet.</Hint></div>
+          <div>
+            <h1>Contract Manager</h1>
+            <Hint>Check a contract’s balances and withdraw funds available to your wallet.</Hint>
+          </div>
           <Network>{networkLabel}</Network>
         </Intro>
       ) : null}
@@ -327,16 +439,35 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
         <SearchForm onSubmit={analyze} noValidate>
           <label htmlFor="manager-contract-address">Contract address</label>
           <FormRow>
-            <Input id="manager-contract-address" required value={input} placeholder="0x…" spellCheck={false}
-              autoComplete="off" autoCapitalize="none" aria-invalid={Boolean(inputError)}
+            <Input
+              id="manager-contract-address"
+              required
+              value={input}
+              placeholder="0x…"
+              spellCheck={false}
+              autoComplete="off"
+              autoCapitalize="none"
+              aria-invalid={Boolean(inputError)}
               aria-describedby={inputError ? 'manager-address-hint manager-address-error' : 'manager-address-hint'}
-              onChange={(event) => { setInput(event.target.value); setInputError('') }} />
-            <Button type="submit" disabled={locked}>{isValidating ? 'Checking…' : 'Analyze contract'}</Button>
+              onChange={(event) => {
+                setInput(event.target.value)
+                setInputError('')
+              }}
+            />
+            <Button type="submit" disabled={locked}>
+              {isValidating ? 'Checking…' : 'Analyze contract'}
+            </Button>
           </FormRow>
           <Hint id="manager-address-hint">Use a contract address on {networkLabel}.</Hint>
-          <div id="manager-address-error" role="status">{inputError ? <ErrorText>{inputError}</ErrorText> : null}</div>
+          <div id="manager-address-error" role="status">
+            {inputError ? <ErrorText>{inputError}</ErrorText> : null}
+          </div>
         </SearchForm>
-        {!isLocalForkMode && !contract ? <TextButton type="button" onClick={() => setInput(NITRO_ADDRESS)}>Use NitroClash example</TextButton> : null}
+        {!isLocalForkMode && !contract ? (
+          <TextButton type="button" onClick={() => setInput(NITRO_ADDRESS)}>
+            Use NitroClash example
+          </TextButton>
+        ) : null}
         <div role="status">
           {key && !data && isValidating ? <Hint>Reading balances and contract information…</Hint> : null}
           {error ? <ErrorText>{explainWithdrawalError(error)}</ErrorText> : null}
@@ -345,23 +476,43 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
 
       {data ? (
         <Grid>
-          <Stack>
-            <Surface aria-labelledby="contract-balances-title">
-              <TopRow><h2 id="contract-balances-title">{data.name || 'Contract balances'}</h2><Network>{networkLabel}</Network></TopRow>
-              <Code>{data.address}</Code>
-              {!isLocalForkMode && <div><Explorer href={`https://polygonscan.com/address/${data.address}`} target="_blank" rel="noreferrer">View contract on PolygonScan</Explorer></div>}
-              <Divider />
-              <Hint>Native balance</Hint>
-              <PrimaryValue title={amount(data.nativeBalance, 18, 'POL')}>{amount(data.nativeBalance, 18, 'POL', true)}</PrimaryValue>
-              <Hint>Block {data.block.toLocaleString()}</Hint>
-              <Divider />
-              <h3>Token balances</h3>
+          <Surface aria-labelledby="contract-balances-title">
+            <TopRow>
+              <h2 id="contract-balances-title">{data.name || 'Contract balances'}</h2>
+              <Network>{networkLabel}</Network>
+            </TopRow>
+            <Code>{data.address}</Code>
+            {!isLocalForkMode && (
+              <div>
+                <Explorer href={`https://polygonscan.com/address/${data.address}`} target="_blank" rel="noreferrer">
+                  View contract on PolygonScan
+                </Explorer>
+              </div>
+            )}
+            <Divider />
+            <Hint>Native balance</Hint>
+            <PrimaryValue title={amount(data.nativeBalance, 18, 'POL')}>
+              {amount(data.nativeBalance, 18, 'POL', true)}
+            </PrimaryValue>
+            <Hint>Block {data.block.toLocaleString()}</Hint>
+            <Divider />
+            <Disclosure>
+              <summary>Token balances ({data.tokens.length})</summary>
               <Rows>
                 {data.tokens.map((token) => (
                   <div key={token.address}>
-                    <dt><span>{token.symbol}</span><br /><Code>{token.address.slice(0, 8)}…{token.address.slice(-4)}</Code></dt>
-                    <dd title={token.address}>{token.balance !== undefined && token.decimals !== undefined
-                      ? amount(token.balance, token.decimals, token.symbol, true) : 'Unavailable'}</dd>
+                    <dt>
+                      <span>{token.symbol}</span>
+                      <br />
+                      <Code>
+                        {token.address.slice(0, 8)}…{token.address.slice(-4)}
+                      </Code>
+                    </dt>
+                    <dd title={token.address}>
+                      {token.balance !== undefined && token.decimals !== undefined
+                        ? amount(token.balance, token.decimals, token.symbol, true)
+                        : 'Unavailable'}
+                    </dd>
                   </div>
                 ))}
               </Rows>
@@ -370,92 +521,202 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
                 <SearchForm onSubmit={addToken} noValidate>
                   <label htmlFor="manager-token-address">Token address</label>
                   <FormRow>
-                    <Input id="manager-token-address" required value={tokenInput} placeholder="0x…" spellCheck={false}
-                      autoComplete="off" autoCapitalize="none" aria-invalid={Boolean(tokenError)}
+                    <Input
+                      id="manager-token-address"
+                      required
+                      value={tokenInput}
+                      placeholder="0x…"
+                      spellCheck={false}
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      aria-invalid={Boolean(tokenError)}
                       aria-describedby={tokenError ? 'manager-token-error' : undefined}
-                      onChange={(event) => { setTokenInput(event.target.value); setTokenError('') }} />
-                    <Button type="submit" variant="secondary" disabled={locked}>Check token</Button>
+                      onChange={(event) => {
+                        setTokenInput(event.target.value)
+                        setTokenError('')
+                      }}
+                    />
+                    <Button type="submit" variant="secondary" disabled={locked}>
+                      Check token
+                    </Button>
                   </FormRow>
-                  <div id="manager-token-error" role="status">{tokenError ? <ErrorText>{tokenError}</ErrorText> : null}</div>
+                  <div id="manager-token-error" role="status">
+                    {tokenError ? <ErrorText>{tokenError}</ErrorText> : null}
+                  </div>
                 </SearchForm>
               </Disclosure>
-              <Hint>Includes CoinCollect’s tracked tokens, tokens referenced by the contract and addresses you add.</Hint>
+              <Hint>
+                Includes CoinCollect’s tracked tokens, tokens referenced by the contract and addresses you add.
+              </Hint>
+            </Disclosure>
+          </Surface>
+          <Stack>
+            <Surface aria-labelledby="contract-withdraw-title">
+              <h2 id="contract-withdraw-title">Withdraw</h2>
+              <Hint>{data.withdrawalProfile || 'Withdrawal availability depends on the contract and wallet.'}</Hint>
+              {available.length > 1 ? (
+                <Actions aria-label="Withdrawal asset">
+                  {available.map(({ asset, symbol }) => (
+                    <Button
+                      key={asset}
+                      scale="sm"
+                      type="button"
+                      variant={choice?.asset === asset ? 'primary' : 'secondary'}
+                      aria-pressed={choice?.asset === asset}
+                      disabled={locked}
+                      onClick={() => {
+                        setSelectedAsset(asset)
+                        setReview(undefined)
+                      }}
+                    >
+                      {symbol}
+                    </Button>
+                  ))}
+                </Actions>
+              ) : null}
+              <Divider />
+              <Hint>Available to this wallet</Hint>
+              <PrimaryValue>
+                {choice
+                  ? amount(choice.amount, choice.decimals, choice.symbol, true)
+                  : data.choices.length
+                  ? amount(data.choices[0].amount, data.choices[0].decimals, data.choices[0].symbol, true)
+                  : '—'}
+              </PrimaryValue>
+              {error ? <Hint>Refresh the contract before making a withdrawal.</Hint> : null}
+              {data.withdrawalReason ? <Hint>{data.withdrawalReason}</Hint> : null}
+              {!account && data.withdrawalProfile ? (
+                <Actions>
+                  <ConnectWalletButton type="button" />
+                </Actions>
+              ) : null}
+              {account && chainId !== chain && data.withdrawalProfile ? (
+                <Actions>
+                  <Button type="button" disabled={switching} onClick={() => switchChain({ chainId: chain })}>
+                    Switch to {networkLabel}
+                  </Button>
+                </Actions>
+              ) : null}
+              {shownReview ? (
+                <>
+                  <Rows aria-label="Withdrawal review">
+                    <div>
+                      <dt>Amount</dt>
+                      <dd>{amount(shownReview.amount, shownReview.decimals, shownReview.symbol)}</dd>
+                    </div>
+                    <div>
+                      <dt>Recipient</dt>
+                      <dd>
+                        <Code>{shownReview.recipient}</Code>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Estimated network fee</dt>
+                      <dd>{amount(shownReview.estimatedFee, 18, 'POL', true)}</dd>
+                    </div>
+                    <div>
+                      <dt>Maximum network fee</dt>
+                      <dd>{amount(shownReview.feeLimit, 18, 'POL')}</dd>
+                    </div>
+                    <div>
+                      <dt>Function</dt>
+                      <dd>
+                        <Code>{shownReview.signature}</Code>
+                      </dd>
+                    </div>
+                  </Rows>
+                  <Actions>
+                    <Button type="button" onClick={() => void withdraw()} disabled={locked || Boolean(error)}>
+                      {busy === 'wallet' ? 'Waiting for wallet…' : 'Withdraw'}
+                    </Button>
+                    <TextButton type="button" onClick={() => setReview(undefined)} disabled={locked}>
+                      Cancel review
+                    </TextButton>
+                  </Actions>
+                  <Hint>Review the transaction in your wallet before you confirm.</Hint>
+                </>
+              ) : readyWallet && choice ? (
+                <Actions>
+                  <Button
+                    type="button"
+                    onClick={() => void preview()}
+                    disabled={locked || isValidating || Boolean(error)}
+                  >
+                    {busy === 'review' ? 'Simulating…' : 'Review withdrawal'}
+                  </Button>
+                </Actions>
+              ) : null}
+              <div role="status">
+                {actionError ? <ErrorText>{actionError}</ErrorText> : null}
+                {txStatus ? (
+                  <>
+                    <Divider />
+                    <Hint>
+                      {txStatus.phase === 'confirmed'
+                        ? 'Withdrawal confirmed.'
+                        : txStatus.phase === 'pending'
+                        ? 'Transaction submitted. Waiting for confirmation.'
+                        : txStatus.phase === 'replaced'
+                        ? 'This transaction was replaced or cancelled in your wallet.'
+                        : 'The withdrawal transaction failed.'}
+                    </Hint>
+                    {isLocalForkMode ? (
+                      <Code>{txStatus.hash}</Code>
+                    ) : (
+                      <Explorer href={`https://polygonscan.com/tx/${txStatus.hash}`} target="_blank" rel="noreferrer">
+                        View transaction on PolygonScan
+                      </Explorer>
+                    )}
+                  </>
+                ) : null}
+              </div>
+              {txStatus?.phase === 'pending' ? (
+                <TextButton type="button" onClick={() => void checkTransaction()}>
+                  Check status
+                </TextButton>
+              ) : null}
             </Surface>
             <Surface>
               <h2>Contract access</h2>
               <Rows>
-                <div><dt>ABI</dt><dd>{data.abiSource || 'Unavailable'}</dd></div>
-                <div><dt>Owner</dt><dd>{data.owner ? <Code>{data.owner}</Code> : 'Not available'}</dd></div>
-                {data.owner && account ? <div><dt>Connected wallet</dt><dd>{data.owner.toLowerCase() === account.toLowerCase() ? 'Current owner' : 'Not the owner'}</dd></div> : null}
+                <div>
+                  <dt>ABI</dt>
+                  <dd>{data.abiSource || 'Unavailable'}</dd>
+                </div>
+                <div>
+                  <dt>Owner</dt>
+                  <dd>{data.owner ? <Code>{data.owner}</Code> : 'Not available'}</dd>
+                </div>
+                {data.owner && account ? (
+                  <div>
+                    <dt>Connected wallet</dt>
+                    <dd>{data.owner.toLowerCase() === account.toLowerCase() ? 'Current owner' : 'Not the owner'}</dd>
+                  </div>
+                ) : null}
                 {data.roles.map((role) => (
-                  <div key={role.label}><dt>{role.label}</dt><dd>{role.granted === undefined ? 'Could not verify' : role.granted ? 'Granted' : 'Not granted'}</dd></div>
+                  <div key={role.label}>
+                    <dt>{role.label}</dt>
+                    <dd>
+                      {role.granted === undefined ? 'Could not verify' : role.granted ? 'Granted' : 'Not granted'}
+                    </dd>
+                  </div>
                 ))}
               </Rows>
               {data.functions.length ? (
                 <Disclosure>
                   <summary>Contract functions ({data.functions.length})</summary>
-                  <ul>{data.functions.map((fn) => <li key={fn.signature}><Code>{fn.signature}</Code>{fn.readOnly ? ' · Read' : fn.withdrawal ? ' · Withdrawal-related' : ' · Write'}</li>)}</ul>
+                  <ul>
+                    {data.functions.map((fn) => (
+                      <li key={fn.signature}>
+                        <Code>{fn.signature}</Code>
+                        {fn.readOnly ? ' · Read' : fn.withdrawal ? ' · Withdrawal-related' : ' · Write'}
+                      </li>
+                    ))}
+                  </ul>
                 </Disclosure>
               ) : null}
             </Surface>
           </Stack>
-
-          <Surface aria-labelledby="contract-withdraw-title">
-            <h2 id="contract-withdraw-title">Withdraw</h2>
-            <Hint>{data.withdrawalProfile || 'Withdrawal availability depends on the contract and wallet.'}</Hint>
-            {available.length > 1 ? (
-              <Actions aria-label="Withdrawal asset">
-                {available.map(({ asset, symbol }) => (
-                  <Button key={asset} scale="sm" type="button" variant={choice?.asset === asset ? 'primary' : 'secondary'}
-                    aria-pressed={choice?.asset === asset} disabled={locked} onClick={() => { setSelectedAsset(asset); setReview(undefined) }}>{symbol}</Button>
-                ))}
-              </Actions>
-            ) : null}
-            <Divider />
-            <Hint>Available to this wallet</Hint>
-            <PrimaryValue>{choice ? amount(choice.amount, choice.decimals, choice.symbol, true)
-              : data.choices.length ? amount(data.choices[0].amount, data.choices[0].decimals, data.choices[0].symbol, true) : '—'}</PrimaryValue>
-            {error ? <Hint>Refresh the contract before making a withdrawal.</Hint> : null}
-            {data.withdrawalReason ? <Hint>{data.withdrawalReason}</Hint> : null}
-            {!account && data.withdrawalProfile ? <Actions><ConnectWalletButton type="button" /></Actions> : null}
-            {account && chainId !== chain && data.withdrawalProfile ? (
-              <Actions><Button type="button" disabled={switching} onClick={() => switchChain({ chainId: chain })}>Switch to {networkLabel}</Button></Actions>
-            ) : null}
-            {shownReview ? (
-              <>
-                <Rows aria-label="Withdrawal review">
-                  <div><dt>Amount</dt><dd>{amount(shownReview.amount, shownReview.decimals, shownReview.symbol)}</dd></div>
-                  <div><dt>Recipient</dt><dd><Code>{shownReview.recipient}</Code></dd></div>
-                  <div><dt>Estimated network fee</dt><dd>{amount(shownReview.estimatedFee, 18, 'POL', true)}</dd></div>
-                  <div><dt>Maximum network fee</dt><dd>{amount(shownReview.feeLimit, 18, 'POL')}</dd></div>
-                  <div><dt>Function</dt><dd><Code>{shownReview.signature}</Code></dd></div>
-                </Rows>
-                <Actions>
-                  <Button type="button" onClick={() => void withdraw()} disabled={locked || Boolean(error)}>{busy === 'wallet' ? 'Waiting for wallet…' : 'Withdraw'}</Button>
-                  <TextButton type="button" onClick={() => setReview(undefined)} disabled={locked}>Cancel review</TextButton>
-                </Actions>
-                <Hint>Review the transaction in your wallet before you confirm.</Hint>
-              </>
-            ) : readyWallet && choice ? (
-              <Actions><Button type="button" onClick={() => void preview()} disabled={locked || isValidating || Boolean(error)}>
-                {busy === 'review' ? 'Simulating…' : 'Review withdrawal'}
-              </Button></Actions>
-            ) : null}
-            <div role="status">
-              {actionError ? <ErrorText>{actionError}</ErrorText> : null}
-              {txStatus ? (
-                <>
-                  <Divider />
-                  <Hint>{txStatus.phase === 'confirmed' ? 'Withdrawal confirmed.' : txStatus.phase === 'pending'
-                    ? 'Transaction submitted. Waiting for confirmation.' : txStatus.phase === 'replaced'
-                    ? 'This transaction was replaced or cancelled in your wallet.' : 'The withdrawal transaction failed.'}</Hint>
-                  {isLocalForkMode ? <Code>{txStatus.hash}</Code> : <Explorer href={`https://polygonscan.com/tx/${txStatus.hash}`}
-                    target="_blank" rel="noreferrer">View transaction on PolygonScan</Explorer>}
-                </>
-              ) : null}
-            </div>
-            {txStatus?.phase === 'pending' ? <TextButton type="button" onClick={() => void checkTransaction()}>Check status</TextButton> : null}
-          </Surface>
         </Grid>
       ) : null}
     </Shell>

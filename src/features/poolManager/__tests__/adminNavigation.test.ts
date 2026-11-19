@@ -6,6 +6,7 @@ describe('admin navigation', () => {
       'Overview',
       'NFT Pools',
       'Treasury',
+      'Contract Manager',
       'Legacy ERC20',
     ])
     expect(PRIMARY_CREATE_POOL_HREF).toBe('/admin/nft-pools/new')
