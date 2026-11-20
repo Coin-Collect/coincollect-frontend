@@ -57,6 +57,11 @@ function injectedWallet(account, node, announceProvider) {
     },
     async request({ method, params = [] }) {
       if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [account]
+      if (method === 'eth_sendTransaction' && window.__nextV3WalletError) {
+        const { message, code } = window.__nextV3WalletError
+        delete window.__nextV3WalletError
+        throw Object.assign(new Error(message), { code })
+      }
       if (method === 'wallet_switchEthereumChain' && params[0]?.chainId === '0x7a69') {
         listeners.get('chainChanged')?.('0x7a69')
         return null
@@ -366,9 +371,32 @@ async function testBrowser() {
       )
     await selectNft(fixture.tokenId)
     await has('Estimated next 24 hours')
+    const beforeRejection = await rpc('eth_getTransactionCount', [fixture.participant, 'latest'])
+    await evalPage(() => {
+      window.__nextV3WalletError = { message: 'User rejected the request.', code: 4001 }
+    })
+    await click('dialog button', 'Confirm')
+    await wait('wallet rejection is visible', () => /user (rejected|denied)/i.test(document.body.innerText))
+    assert.equal(await rpc('eth_getTransactionCount', [fixture.participant, 'latest']), beforeRejection)
+    await visit('/nftpools', fixture.participant)
+    await click('article button', 'Click to Stake Now')
+    await selectNft(fixture.tokenId)
+    await evalPage(() => {
+      window.__nextV3WalletError = { message: 'Wallet provider disconnected.', code: 4900 }
+    })
+    await click('dialog button', 'Confirm')
+    await wait('wallet disconnect is visible', () => /(?:provider|wallet)(?: is)? disconnected/i.test(document.body.innerText))
+    assert.equal(await rpc('eth_getTransactionCount', [fixture.participant, 'latest']), beforeRejection)
+    await visit('/nftpools', fixture.participant)
+    await click('article button', 'Click to Stake Now')
+    await selectNft(fixture.tokenId)
     await click('dialog button', 'Confirm')
     await has('Confirmed on the settlement network.')
     await has('STAKED NFT COUNT')
+    console.log('PASS rejected requests and disconnected wallets leave positions untouched and permit retry')
+    await command('Page.reload')
+    await has('STAKED NFT COUNT')
+    console.log('PASS wallet reconnects to the existing position after page reload')
     await has('Stake More')
     await has('Unstake')
     await click('article button', 'Stake More')

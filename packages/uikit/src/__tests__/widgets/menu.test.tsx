@@ -40,6 +40,7 @@ it("renders correctly", () => {
         currentLang="en-US"
         cakePriceUsd={0.23158668932877668}
         links={menuConfig}
+        drawerLinks={menuConfig}
         subLinks={menuConfig[0].items as SubMenuItemsType[]}
         footerLinks={footerLinks}
         activeItem="Trade"

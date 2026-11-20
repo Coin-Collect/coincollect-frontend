@@ -4,6 +4,7 @@ import Button from "./Button";
 import IconButton from "./IconButton";
 
 interface Props {
+  children?: React.ReactNode;
   onClick?: () => void;
   expanded?: boolean;
 }

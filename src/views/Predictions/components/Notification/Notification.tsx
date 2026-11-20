@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import { Card, CardBody, Heading } from '@pancakeswap/uikit'
 
 interface NotificationProps {
+  children?: React.ReactNode
   title: string
 }
 

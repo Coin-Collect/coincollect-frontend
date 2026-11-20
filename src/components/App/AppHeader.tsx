@@ -29,11 +29,9 @@ const AppHeader: React.FC<Props> = ({ title, subtitle, helper, backTo, noConfig 
     <AppHeaderContainer>
       <Flex alignItems="center" mr={noConfig ? 0 : '16px'}>
         {backTo && (
-          <Link passHref href={backTo}>
-            <IconButton as="a">
-              <ArrowBackIcon width="32px" />
-            </IconButton>
-          </Link>
+          <IconButton as={Link} href={backTo}>
+            <ArrowBackIcon width="32px" />
+          </IconButton>
         )}
         <Flex flexDirection="column">
           <Heading as="h2" mb="8px">

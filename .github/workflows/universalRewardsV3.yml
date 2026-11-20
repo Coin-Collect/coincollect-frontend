@@ -3,41 +3,16 @@ name: Universal Rewards V3 frontend
 on:
   pull_request:
     paths:
-      - src/features/universalRewards/**
-      - src/pages/*/v3/**
-      - src/pages/api/v3/**
-      - packages/coincollect-sdk/src/index.ts
-      - src/views/Ifos/components/IfoFoldableCard/IfoPoolCard/IfoCardTokens.tsx
-      - src/pages/admin/nft-pools/v3.tsx
-      - src/views/NftFarms/**
-      - .eslintrc
-      - next.config.js
-      - src/instrumentation.ts
-      - scripts/verify-v3-browser.cjs
-      - scripts/run-v3-browser-acceptance.cjs
-      - tsconfig.v3.json
-      - package.json
+      - src/**
+      - packages/**
+      - scripts/**
+      - '*.json'
+      - '*.js'
+      - 'eslint.config.cjs'
       - yarn.lock
       - .github/workflows/universalRewardsV3.yml
   push:
     branches: [pool-management]
-    paths:
-      - src/features/universalRewards/**
-      - src/pages/*/v3/**
-      - src/pages/api/v3/**
-      - packages/coincollect-sdk/src/index.ts
-      - src/views/Ifos/components/IfoFoldableCard/IfoPoolCard/IfoCardTokens.tsx
-      - src/pages/admin/nft-pools/v3.tsx
-      - src/views/NftFarms/**
-      - .eslintrc
-      - next.config.js
-      - src/instrumentation.ts
-      - scripts/verify-v3-browser.cjs
-      - scripts/run-v3-browser-acceptance.cjs
-      - tsconfig.v3.json
-      - package.json
-      - yarn.lock
-      - .github/workflows/universalRewardsV3.yml
   workflow_dispatch:
 
 permissions:
@@ -56,7 +31,14 @@ jobs:
       - run: yarn lint:v3
       - run: yarn typecheck:v3
       - run: yarn test --runInBand --silent src/features/universalRewards src/features/nftPoolManager src/state/nftFarms
+      - run: yarn typecheck
+        if: ${{ !cancelled() }}
+      - run: yarn lint
+        if: ${{ !cancelled() }}
+      - run: yarn test --runInBand --silent
+        if: ${{ !cancelled() }}
       - run: yarn build
+        if: ${{ !cancelled() }}
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
@@ -70,7 +52,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Coin-Collect/coincollect-smart-contracts
-          ref: b375dddeac4c3d11f1ad1ced9288e1f10eb7e56e
+          ref: e744a98fb648ad521591084307aa676e916ea71f
           path: contracts
       - uses: actions/setup-node@v4
         with:
@@ -86,6 +68,6 @@ jobs:
         run: |
           node scripts/export-abi.cjs "$RUNNER_TEMP/v3-abi.ts"
           cmp "$RUNNER_TEMP/v3-abi.ts" ../../../frontend/src/features/universalRewards/abi.ts
-      - name: Run isolated browser acceptance
+      - name: Run isolated production browser acceptance
         working-directory: frontend
         run: node scripts/run-v3-browser-acceptance.cjs ../contracts/projects/universal-rewards-v3

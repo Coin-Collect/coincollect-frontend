@@ -81,9 +81,7 @@ export default function AdminShell({
   const resolvedHeaderAction =
     headerAction ||
     (!createActionHidden ? (
-      <Link href={PRIMARY_CREATE_POOL_HREF} passHref legacyBehavior>
-        <AdminCreateLink>+ Create Pool</AdminCreateLink>
-      </Link>
+      <AdminCreateLink as={Link} href={PRIMARY_CREATE_POOL_HREF}>+ Create Pool</AdminCreateLink>
     ) : null)
 
   if (authority.loading || !authorityMatchesWallet) {
@@ -187,16 +185,12 @@ export default function AdminShell({
 
       <AdminNav aria-label="Pool Manager navigation">
         {ADMIN_NAVIGATION_LINKS.map((link) => (
-          <Link href={link.href} passHref key={link.href} legacyBehavior>
-            <NavLink $active={activePath === link.href || (link.href !== '/admin' && activePath.startsWith(link.href))}>
-              {link.label}
-            </NavLink>
-          </Link>
+          <NavLink as={Link} href={link.href} key={link.href} $active={activePath === link.href || (link.href !== '/admin' && activePath.startsWith(link.href))}>
+            {link.label}
+          </NavLink>
         ))}
         {getV3Deployment() && (
-          <Link href="/admin/nft-pools/v3" passHref legacyBehavior>
-            <NavLink $active={activePath === '/admin/nft-pools/v3'}>Pool Studio V3</NavLink>
-          </Link>
+          <NavLink as={Link} href="/admin/nft-pools/v3" $active={activePath === '/admin/nft-pools/v3'}>Pool Studio V3</NavLink>
         )}
       </AdminNav>
 

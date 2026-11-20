@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import { Button } from '@pancakeswap/uikit'
 
 interface NumTicketsToBuyButtonProps {
+  children?: React.ReactNode
   onClick: () => void
   disabled?: boolean
 }

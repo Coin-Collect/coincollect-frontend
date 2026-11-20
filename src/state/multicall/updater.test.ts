@@ -1,4 +1,4 @@
-import { activeListeningKeys, outdatedListeningKeys } from './updater'
+import { activeListeningKeys, outdatedListeningKeys } from './listenerKeys'
 
 describe('multicall updater', () => {
   describe('#activeListeningKeys', () => {

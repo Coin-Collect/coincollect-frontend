@@ -1,7 +1,7 @@
-import Link, { LinkProps } from 'next/link'
+import Link from 'next/link'
 import styled from 'styled-components'
 
-const StyledInternalLink = styled('a')`
+const StyledInternalLink = styled(Link)`
   text-decoration: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.primary};
@@ -21,12 +21,4 @@ const StyledInternalLink = styled('a')`
   }
 `
 
-const InternalLink: React.FC<LinkProps> = ({ children, ...props }) => {
-  return (
-    <Link {...props}>
-      <StyledInternalLink>{children}</StyledInternalLink>
-    </Link>
-  )
-}
-
-export default InternalLink
+export default StyledInternalLink

@@ -5,6 +5,7 @@ import { NextLinkFromReactRouter } from 'components/NextLink'
 import styled, { css } from 'styled-components'
 
 interface HotCollectionCardProps {
+  children?: React.ReactNode
   bgSrc: string
   avatarSrc?: string
   collectionName: string

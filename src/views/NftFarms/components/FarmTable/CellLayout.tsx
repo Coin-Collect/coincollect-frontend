@@ -13,6 +13,7 @@ const ContentContainer = styled.div`
 `
 
 interface CellLayoutProps {
+  children?: React.ReactNode
   label?: string
 }
 

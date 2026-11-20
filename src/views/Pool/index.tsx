@@ -95,20 +95,16 @@ export default function Pool() {
               <Text color="textSubtle" mb="8px">
                 {t("Don't see a pool you joined?")}
               </Text>
-              <Link href="/find" passHref>
-                <Button id="import-pool-link" variant="secondary" scale="sm" as="a">
-                  {t('Find other LP tokens')}
-                </Button>
-              </Link>
+              <Button as={Link} href="/find" id="import-pool-link" variant="secondary" scale="sm">
+                {t('Find other LP tokens')}
+              </Button>
             </Flex>
           )}
         </Body>
         <CardFooter style={{ textAlign: 'center' }}>
-          <Link href="/add" passHref>
-            <Button id="join-pool-button" width="100%" startIcon={<AddIcon color="white" />}>
-              {t('Add Liquidity')}
-            </Button>
-          </Link>
+          <Button as={Link} href="/add" id="join-pool-button" width="100%" startIcon={<AddIcon color="white" />}>
+            {t('Add Liquidity')}
+          </Button>
         </CardFooter>
       </AppBody>
     </Page>

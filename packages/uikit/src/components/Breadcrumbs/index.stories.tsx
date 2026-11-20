@@ -18,8 +18,8 @@ export const Default: React.FC = () => {
     <BrowserRouter>
       <Text p="32px">
         <BreadCrumbs mb="32px">
-          <a href="/">Link</a>
-          <a href="/">Link</a>
+          <RouterLink to="/">Link</RouterLink>
+          <RouterLink to="/">Link</RouterLink>
           <RouterLink to="/">React Router Link</RouterLink>
           <Text color="textDisabled">Crumb 1</Text>
           <Text color="textDisabled">Crumb 2</Text>

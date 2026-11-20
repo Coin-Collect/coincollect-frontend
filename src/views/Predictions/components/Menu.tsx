@@ -83,11 +83,9 @@ const Menu = () => {
             </Button>
           </HelpButtonWrapper>
           <LeaderboardButtonWrapper>
-            <Link href="/prediction/leaderboard" passHref>
-              <Button as="a" variant="subtle" width="48px">
-                <PrizeIcon color="white" />
-              </Button>
-            </Link>
+            <Button as={Link} href="/prediction/leaderboard" variant="subtle" width="48px">
+              <PrizeIcon color="white" />
+            </Button>
           </LeaderboardButtonWrapper>
           <ButtonWrapper style={{ order: 4 }}>
             <HistoryButton />

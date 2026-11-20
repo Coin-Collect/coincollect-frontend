@@ -224,13 +224,9 @@ export function NftPoolAdminCard({
           <PoolMeta>Schedule unavailable</PoolMeta>
         )}
         <AdminPoolCardActions>
-          <Link href={`/admin/nft-pools/${pool.id}`} passHref legacyBehavior>
-            <SoftLink>{pool.status === 'FINISHED' ? 'View' : 'View'}</SoftLink>
-          </Link>
+          <SoftLink as={Link} href={`/admin/nft-pools/${pool.id}`}>{pool.status === 'FINISHED' ? 'View' : 'View'}</SoftLink>
           {pool.cloneSupport !== 'UNAVAILABLE' ? (
-            <Link href={renewalLink} passHref legacyBehavior>
-              <SoftLink>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
-            </Link>
+            <SoftLink as={Link} href={renewalLink}>{pool.status === 'FINISHED' ? 'Renew' : 'Duplicate'}</SoftLink>
           ) : null}
         </AdminPoolCardActions>
         {pool.warnings.length > 0 ? <PoolMeta style={{ color: 'inherit' }}>⚠ {pool.warnings[0]}</PoolMeta> : null}
@@ -347,13 +343,9 @@ export function NftPoolDraftCard({
         <PoolMeta>Saved {new Date(draft.updatedAt).toLocaleString()}</PoolMeta>
         <AdminPoolCardActions>
           {resumeSessionId ? (
-            <Link href={`/admin/nft-pools/launch/${resumeSessionId}`} passHref legacyBehavior>
-              <SoftLink>Resume launch</SoftLink>
-            </Link>
+            <SoftLink as={Link} href={`/admin/nft-pools/launch/${resumeSessionId}`}>Resume launch</SoftLink>
           ) : null}
-          <Link href={`/admin/nft-pools/new?draft=${encodeURIComponent(draft.id)}`} passHref legacyBehavior>
-            <SoftLink>Continue editing</SoftLink>
-          </Link>
+          <SoftLink as={Link} href={`/admin/nft-pools/new?draft=${encodeURIComponent(draft.id)}`}>Continue editing</SoftLink>
           <SoftLink
             href="#"
             onClick={(event) => {

@@ -53,7 +53,7 @@ describe('Check translations available', () => {
   }
 
   throughDirectory('src/')
-  throughDirectory('node_modules/@pancakeswap/uikit/dist', true)
+  throughDirectory('packages/uikit/src')
 
   let match
 
@@ -85,7 +85,7 @@ describe('Check translations available', () => {
     ) {
       if (match[1].trim()) {
         const placeHolderMatch = regexWithSearchInputPlaceHolder.exec(match[1])
-        if (placeHolderMatch[1]) {
+        if (placeHolderMatch?.[1]) {
           extractedKeys.add(placeHolderMatch[1])
         }
       }

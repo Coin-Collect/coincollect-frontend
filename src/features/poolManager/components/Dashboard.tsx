@@ -150,15 +150,13 @@ export default function Dashboard() {
           ) : attentionItems.length ? (
             <AttentionList>
               {attentionItems.slice(0, 6).map((item) => (
-                <Link href={item.href} passHref legacyBehavior key={`${item.kind}:${item.id}`}>
-                  <AttentionLink>
-                    <span style={{ minWidth: 0 }}>
-                      <AttentionItemTitle>{item.title}</AttentionItemTitle>
-                      <AttentionItemStatus>{item.status}</AttentionItemStatus>
-                    </span>
-                    <AttentionAction>{attentionAction(item.kind)} →</AttentionAction>
-                  </AttentionLink>
-                </Link>
+                <AttentionLink as={Link} href={item.href} key={`${item.kind}:${item.id}`}>
+                  <span style={{ minWidth: 0 }}>
+                    <AttentionItemTitle>{item.title}</AttentionItemTitle>
+                    <AttentionItemStatus>{item.status}</AttentionItemStatus>
+                  </span>
+                  <AttentionAction>{attentionAction(item.kind)} →</AttentionAction>
+                </AttentionLink>
               ))}
             </AttentionList>
           ) : (
@@ -192,27 +190,20 @@ export default function Dashboard() {
           ) : recentPools.length ? (
             <RecentPoolGrid>
               {recentPools.map((pool) => (
-                <Link
-                  href={`/admin/nft-pools/${encodeURIComponent(pool.id)}`}
-                  passHref
-                  legacyBehavior
-                  key={pool.canonicalId}
-                >
-                  <RecentPoolLink>
-                    <span style={{ minWidth: 0 }}>
-                      <RecentPoolName>{pool.metadata.name || 'Untitled NFT pool'}</RecentPoolName>
-                      <RecentPoolMeta>
-                        {pool.collections.length} {pool.collections.length === 1 ? 'collection' : 'collections'}
-                        {pool.rewards.primary.token.symbol ? ` · ${pool.rewards.primary.token.symbol} rewards` : ''}
-                      </RecentPoolMeta>
-                    </span>
-                    <RecentPoolStatus
-                      $tone={pool.status === 'ACTIVE' ? 'active' : pool.status === 'UNKNOWN' ? 'warning' : 'muted'}
-                    >
-                      {poolStatusLabel(pool.status)}
-                    </RecentPoolStatus>
-                  </RecentPoolLink>
-                </Link>
+                <RecentPoolLink as={Link} href={`/admin/nft-pools/${encodeURIComponent(pool.id)}`} key={pool.canonicalId}>
+                  <span style={{ minWidth: 0 }}>
+                    <RecentPoolName>{pool.metadata.name || 'Untitled NFT pool'}</RecentPoolName>
+                    <RecentPoolMeta>
+                      {pool.collections.length} {pool.collections.length === 1 ? 'collection' : 'collections'}
+                      {pool.rewards.primary.token.symbol ? ` · ${pool.rewards.primary.token.symbol} rewards` : ''}
+                    </RecentPoolMeta>
+                  </span>
+                  <RecentPoolStatus
+                    $tone={pool.status === 'ACTIVE' ? 'active' : pool.status === 'UNKNOWN' ? 'warning' : 'muted'}
+                  >
+                    {poolStatusLabel(pool.status)}
+                  </RecentPoolStatus>
+                </RecentPoolLink>
               ))}
             </RecentPoolGrid>
           ) : (
@@ -239,11 +230,9 @@ export default function Dashboard() {
             {data.factoryOwner ? ` · Owner ${data.factoryOwner}` : ''}
           </OverviewSectionSubtitle>
           <div style={{ marginTop: 14 }}>
-            <Link href="/admin/nft-pools" passHref legacyBehavior>
-              <ActionButton as="a" $secondary>
-                Open NFT Pool Studio
-              </ActionButton>
-            </Link>
+            <ActionButton as={Link} href="/admin/nft-pools" $secondary>
+              Open NFT Pool Studio
+            </ActionButton>
           </div>
         </OverviewPanel>
       </OverviewSection>

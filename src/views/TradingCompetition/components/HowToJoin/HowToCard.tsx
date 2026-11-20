@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import { Heading, Card, CardBody } from '@pancakeswap/uikit'
 
 interface HowToCardProps {
+  children?: React.ReactNode
   number?: number
   title?: string
 }

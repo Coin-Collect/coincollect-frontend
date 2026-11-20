@@ -65,7 +65,7 @@ const claims: any[] = [
   {
     cid: 3,
     name: 'Galxe OAT Rewards',
-    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
+    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you&apos;ll be eligible to claim exclusive rewards.</Trans>,
     imageLink: '/images/coincollect-assets/claim/GalxeClaim.webp',
     rewardToken: 'AVATAR',
     requiredToken: 'GALXE OAT', 
@@ -142,7 +142,7 @@ const claims: any[] = [
   {
     cid: 8,
     name: 'Tasker Rewards',
-    description: <Trans>The CoinCollect Tasker Claim Pool is now open to all TASKER NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards.</Trans>,
+    description: <Trans>The CoinCollect Tasker Claim Pool is now open to all TASKER NFT holders! Be among the first 10,000 to hit the claim button, and you&apos;ll be eligible to claim exclusive rewards.</Trans>,
     imageLink: '/images/coincollect-assets/claim/taskonclaim.webp',
     rewardToken: 'AVATAR',
     requiredToken: 'TASKER NFT', 
@@ -189,7 +189,7 @@ const claims: any[] = [
   {
     cid: 4,
     name: 'Galxe Pass Rewards',
-    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you'll be eligible to claim exclusive rewards. Act fast, as these rewards are only available to the quickest claimers!</Trans>,
+    description: <Trans>The CoinCollect Galxe Claim Pool is now open to all OAT NFT holders! Be among the first 10,000 to hit the claim button, and you&apos;ll be eligible to claim exclusive rewards. Act fast, as these rewards are only available to the quickest claimers!</Trans>,
     imageLink: '/images/coincollect-assets/claim/GalxeClaim.webp',
     rewardToken: 'AVATAR',
     requiredToken: 'GALXE PASS', 

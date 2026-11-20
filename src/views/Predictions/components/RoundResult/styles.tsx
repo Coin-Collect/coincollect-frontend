@@ -83,6 +83,7 @@ export const LockPriceRow: React.FC<LockPriceRowProps> = ({ lockPrice, ...props 
 
 // RoundResultBox
 interface RoundResultBoxProps {
+  children?: React.ReactNode
   betPosition?: BetPosition
   isNext?: boolean
   isLive?: boolean

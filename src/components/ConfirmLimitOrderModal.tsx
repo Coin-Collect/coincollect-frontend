@@ -110,12 +110,12 @@ interface LimitTradeInfoCardProps {
 }
 
 const LimitTradeInfoCard: React.FC<LimitTradeInfoCardProps> = memo(
-  ({
+  function LimitTradeInfoCard({
     currentPriceExchangeRateText,
     currentPriceExchangeRateTextReversed,
     limitPriceExchangeRateText,
     limitPriceExchangeRateTextReversed,
-  }) => {
+  }) {
     const { t } = useTranslation()
     return (
       <InfoCardWrapper>
@@ -150,7 +150,7 @@ const LimitTradeInfoCard: React.FC<LimitTradeInfoCardProps> = memo(
   },
 )
 
-const LoadingContent: React.FC = memo(() => {
+const LoadingContent: React.FC = memo(function LoadingContent() {
   const { t } = useTranslation()
   return (
     <Flex>

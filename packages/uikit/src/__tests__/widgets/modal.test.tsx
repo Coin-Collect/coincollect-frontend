@@ -13,9 +13,9 @@ it("renders correctly", () => {
     <DocumentFragment>
       .c5 {
       color: #280D5F;
-      font-size: 16px;
       font-weight: 600;
       line-height: 1.5;
+      font-size: 16px;
     }
 
     .c6 {
@@ -43,7 +43,7 @@ it("renders correctly", () => {
       -webkit-align-self: center;
       -ms-flex-item-align: center;
       align-self: center;
-      fill: #1FC7D4;
+      fill: #E91E63;
       -webkit-flex-shrink: 0;
       -ms-flex-negative: 0;
       flex-shrink: 0;
@@ -81,7 +81,7 @@ it("renders correctly", () => {
       height: 48px;
       padding: 0 24px;
       background-color: transparent;
-      color: #1FC7D4;
+      color: #E91E63;
       box-shadow: none;
     }
 
@@ -160,6 +160,13 @@ it("renders correctly", () => {
       }
     }
 
+    @supports (-webkit-text-size-adjust:none) and (not (-ms-accelerator:true)) and (not (-moz-appearance:none)) {
+      .c9 {
+        -webkit-filter: none !important;
+        filter: none !important;
+      }
+    }
+
     @media screen and (min-width:370px) {
       .c1 {
         width: auto;
@@ -180,6 +187,7 @@ it("renders correctly", () => {
             <h2
               class="c5 c6"
               color="text"
+              font-size="16px"
             >
               Title
             </h2>

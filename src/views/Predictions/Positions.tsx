@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import SwiperCore, { Keyboard, Mousewheel } from 'swiper'
+import { FreeMode, Keyboard, Mousewheel } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Box } from '@pancakeswap/uikit'
 import { useGetCurrentEpoch, useGetSortedRounds } from 'state/predictions/hooks'
 import delay from 'lodash/delay'
-import 'swiper/swiper.min.css'
+import 'swiper/css'
+import 'swiper/css/free-mode'
 import RoundCard from './components/RoundCard'
 import Menu from './components/Menu'
 import useSwiper from './hooks/useSwiper'
@@ -13,8 +14,6 @@ import useOnNextRound from './hooks/useOnNextRound'
 import useOnViewChange from './hooks/useOnViewChange'
 import { PageView } from './types'
 import { CHART_DOT_CLICK_EVENT } from './helpers'
-
-SwiperCore.use([Keyboard, Mousewheel])
 
 const StyledSwiper = styled.div`
   .swiper-wrapper {
@@ -61,11 +60,9 @@ const Positions: React.FC<{ view?: PageView }> = ({ view }) => {
           onSwiper={setSwiper}
           spaceBetween={16}
           slidesPerView="auto"
-          freeMode
-          freeModeSticky
+          modules={[FreeMode, Keyboard, Mousewheel]}
+          freeMode={{ sticky: true, momentumRatio: 0.25, momentumVelocityRatio: 0.5 }}
           centeredSlides
-          freeModeMomentumRatio={0.25}
-          freeModeMomentumVelocityRatio={0.5}
           mousewheel
           keyboard
           resizeObserver

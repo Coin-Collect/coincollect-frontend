@@ -8,6 +8,7 @@ export interface MenuOptions {
 }
 
 export interface BaseMenuProps {
+  children?: ReactNode | ((controls: { toggle: () => void; open: () => void; close: () => void }) => ReactNode);
   component: ReactNode;
   options?: MenuOptions;
   isOpen?: boolean;

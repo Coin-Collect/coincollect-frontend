@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, ReactNode } from 'react'
 import shuffle from 'lodash/shuffle'
 import styled from 'styled-components'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import SwiperCore from 'swiper'
+import type SwiperCore from 'swiper'
 import { ArrowBackIcon, ArrowForwardIcon, Box, IconButton, Text, Flex, useMatchBreakpoints } from '@pancakeswap/uikit'
 import { isAddress } from 'utils'
 import { useNftsFromCollection } from 'state/nftMarket/hooks'
@@ -13,7 +13,7 @@ import { pancakeBunniesAddress } from '../../../constants'
 import { CollectibleLinkCard } from '../../../components/CollectibleCard'
 import useAllPancakeBunnyNfts from '../../../hooks/useAllPancakeBunnyNfts'
 
-import 'swiper/swiper-bundle.css'
+import 'swiper/css'
 
 const INITIAL_SLIDE = 4
 
@@ -46,7 +46,7 @@ const MoreFromThisCollection: React.FC<MoreFromThisCollectionProps> = ({
   title = <Trans>More from this collection</Trans>,
 }) => {
   const dispatch = useAppDispatch()
-  const [swiperRef, setSwiperRef] = useState<SwiperCore>(null)
+  const [swiperRef, setSwiperRef] = useState<SwiperCore | null>(null)
   const [activeIndex, setActiveIndex] = useState(1)
   const { isMobile, isMd, isLg } = useMatchBreakpoints()
   const allPancakeBunnyNfts = useAllPancakeBunnyNfts(collectionAddress)

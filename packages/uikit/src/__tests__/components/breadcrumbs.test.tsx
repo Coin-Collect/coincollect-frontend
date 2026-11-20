@@ -22,11 +22,11 @@ it("renders correctly", () => {
     }
 
     .c0 a {
-      color: #1FC7D4;
+      color: #E91E63;
     }
 
     .c0 a:hover {
-      color: #53DEE9;
+      color: #EC407A;
     }
 
     <ul

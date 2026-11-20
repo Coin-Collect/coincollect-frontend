@@ -4,24 +4,25 @@ import NextLink from 'next/link'
 
 // react-router-dom LinkProps types
 interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
-  to: any
+  to: React.ComponentProps<typeof NextLink>['href']
   replace?: boolean
   innerRef?: React.Ref<HTMLAnchorElement>
   // next
   prefetch?: boolean
 }
 
-const A = styled.a``
+const StyledNextLink = styled(NextLink)``
 
 /**
  * temporary solution for migrating React Router to Next.js Link
  */
-export const NextLinkFromReactRouter = forwardRef<any, LinkProps>(
-  ({ to, replace, children, prefetch, ...props }, ref) => (
-    <NextLink legacyBehavior href={to as string} replace={replace} passHref prefetch={prefetch}>
-      <A ref={ref} {...props}>
-        {children}
-      </A>
-    </NextLink>
-  ),
-)
+export const NextLinkFromReactRouter = forwardRef<HTMLAnchorElement, LinkProps>(function NextLinkFromReactRouter(
+  { to, replace, children, prefetch, innerRef, ...props },
+  ref,
+) {
+  return (
+    <StyledNextLink ref={ref ?? innerRef} href={to} replace={replace} prefetch={prefetch} {...props}>
+      {children}
+    </StyledNextLink>
+  )
+})

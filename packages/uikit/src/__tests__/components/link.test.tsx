@@ -7,10 +7,10 @@ it("renders link correctly", () => {
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
       .c0 {
-      color: #1FC7D4;
-      font-size: 16px;
+      color: #E91E63;
       font-weight: 600;
       line-height: 1.5;
+      font-size: 16px;
     }
 
     .c1 {
@@ -35,6 +35,7 @@ it("renders link correctly", () => {
     <a
         class="c0 c1"
         color="primary"
+        font-size="16px"
         href="https://pancakeswap.finance"
       >
         Link
@@ -48,10 +49,10 @@ it("renders link external link correctly", () => {
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
       .c0 {
-      color: #1FC7D4;
-      font-size: 16px;
+      color: #E91E63;
       font-weight: 600;
       line-height: 1.5;
+      font-size: 16px;
     }
 
     .c1 {
@@ -77,16 +78,24 @@ it("renders link external link correctly", () => {
       -webkit-align-self: center;
       -ms-flex-item-align: center;
       align-self: center;
-      fill: #1FC7D4;
+      fill: #E91E63;
       -webkit-flex-shrink: 0;
       -ms-flex-negative: 0;
       flex-shrink: 0;
       margin-left: 4px;
     }
 
+    @supports (-webkit-text-size-adjust:none) and (not (-ms-accelerator:true)) and (not (-moz-appearance:none)) {
+      .c2 {
+        -webkit-filter: none !important;
+        filter: none !important;
+      }
+    }
+
     <a
         class="c0 c1"
         color="primary"
+        font-size="16px"
         href="https://pancakeswap.finance"
         rel="noreferrer noopener"
         target="_blank"

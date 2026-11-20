@@ -22,7 +22,7 @@ it("renders ConnectModal correctly", () => {
       padding-bottom: 24px;
     }
 
-    .c20 {
+    .c21 {
       padding: 24px;
     }
 
@@ -33,26 +33,25 @@ it("renders ConnectModal correctly", () => {
 
     .c5 {
       color: #280D5F;
-      font-size: 16px;
       font-weight: 600;
       line-height: 1.5;
+      font-size: 16px;
     }
 
     .c18 {
       color: #280D5F;
-      font-size: 14px;
       font-weight: 400;
       line-height: 1.5;
       font-size: 14px;
     }
 
-    .c21 {
+    .c22 {
       color: #7A6EAA;
-      font-size: 16px;
       font-weight: 400;
       line-height: 1.5;
       margin-bottom: 16px;
       text-align: center;
+      font-size: 16px;
     }
 
     .c6 {
@@ -93,7 +92,7 @@ it("renders ConnectModal correctly", () => {
       height: 48px;
       padding: 0 24px;
       background-color: transparent;
-      color: #1FC7D4;
+      color: #E91E63;
       box-shadow: none;
     }
 
@@ -150,7 +149,7 @@ it("renders ConnectModal correctly", () => {
       height: 48px;
       padding: 0 24px;
       background-color: transparent;
-      color: #1FC7D4;
+      color: #E91E63;
       box-shadow: none;
       width: 100%;
       padding-top: 16px;
@@ -178,7 +177,7 @@ it("renders ConnectModal correctly", () => {
       cursor: not-allowed;
     }
 
-    .c22 {
+    .c23 {
       -webkit-align-items: center;
       -webkit-box-align: center;
       -ms-flex-align: center;
@@ -214,11 +213,11 @@ it("renders ConnectModal correctly", () => {
       width: 100%;
     }
 
-    .c22:hover:not(:disabled):not(.pancake-button--disabled):not(.pancake-button--disabled):not(:active) {
+    .c23:hover:not(:disabled):not(.pancake-button--disabled):not(.pancake-button--disabled):not(:active) {
       opacity: 0.65;
     }
 
-    .c22:active:not(:disabled):not(.pancake-button--disabled):not(.pancake-button--disabled) {
+    .c23:active:not(:disabled):not(.pancake-button--disabled):not(.pancake-button--disabled) {
       opacity: 0.85;
       -webkit-transform: translateY(1px);
       -ms-transform: translateY(1px);
@@ -226,8 +225,8 @@ it("renders ConnectModal correctly", () => {
       box-shadow: none;
     }
 
-    .c22:disabled,
-    .c22.pancake-button--disabled {
+    .c23:disabled,
+    .c23.pancake-button--disabled {
       background-color: #E9EAEB;
       border-color: #E9EAEB;
       box-shadow: none;
@@ -244,7 +243,7 @@ it("renders ConnectModal correctly", () => {
       -webkit-align-self: center;
       -ms-flex-item-align: center;
       align-self: center;
-      fill: #1FC7D4;
+      fill: #E91E63;
       -webkit-flex-shrink: 0;
       -ms-flex-negative: 0;
       flex-shrink: 0;
@@ -262,6 +261,16 @@ it("renders ConnectModal correctly", () => {
     }
 
     .c19 {
+      -webkit-align-self: center;
+      -ms-flex-item-align: center;
+      align-self: center;
+      fill: #280D5F;
+      -webkit-flex-shrink: 0;
+      -ms-flex-negative: 0;
+      flex-shrink: 0;
+    }
+
+    .c20 {
       -webkit-align-self: center;
       -ms-flex-item-align: center;
       align-self: center;
@@ -363,6 +372,34 @@ it("renders ConnectModal correctly", () => {
       }
     }
 
+    @supports (-webkit-text-size-adjust:none) and (not (-ms-accelerator:true)) and (not (-moz-appearance:none)) {
+      .c9 {
+        -webkit-filter: none !important;
+        filter: none !important;
+      }
+    }
+
+    @supports (-webkit-text-size-adjust:none) and (not (-ms-accelerator:true)) and (not (-moz-appearance:none)) {
+      .c17 {
+        -webkit-filter: none !important;
+        filter: none !important;
+      }
+    }
+
+    @supports (-webkit-text-size-adjust:none) and (not (-ms-accelerator:true)) and (not (-moz-appearance:none)) {
+      .c19 {
+        -webkit-filter: none !important;
+        filter: none !important;
+      }
+    }
+
+    @supports (-webkit-text-size-adjust:none) and (not (-ms-accelerator:true)) and (not (-moz-appearance:none)) {
+      .c20 {
+        -webkit-filter: none !important;
+        filter: none !important;
+      }
+    }
+
     @media screen and (min-width:370px) {
       .c1 {
         width: auto;
@@ -383,6 +420,7 @@ it("renders ConnectModal correctly", () => {
             <h2
               class="c5 c6"
               color="text"
+              font-size="16px"
             >
               Connect Wallet
             </h2>
@@ -415,6 +453,106 @@ it("renders ConnectModal correctly", () => {
             <div
               class="c14"
             >
+              <div
+                class=""
+              >
+                <button
+                  class="c15 c16"
+                  id="wallet-connect-okx wallet"
+                  scale="md"
+                  width="100%"
+                >
+                  <svg
+                    class="c17"
+                    color="text"
+                    viewBox="0 0 100 100"
+                    width="40px"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M0 0 H33.33 V33.33 H0 Z"
+                      fill="black"
+                    />
+                    <path
+                      d="M33.33 0 H66.67 V33.33 H33.33 Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M66.67 0 H100 V33.33 H66.67 Z"
+                      fill="black"
+                    />
+                    <path
+                      d="M0 33.33 H33.33 V66.67 H0 Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M33.33 33.33 H66.67 V66.67 H33.33 Z"
+                      fill="black"
+                    />
+                    <path
+                      d="M66.67 33.33 H100 V66.67 H66.67 Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M0 66.67 H33.33 V100 H0 Z"
+                      fill="black"
+                    />
+                    <path
+                      d="M33.33 66.67 H66.67 V100 H33.33 Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M66.67 66.67 H100 V100 H66.67 Z"
+                      fill="black"
+                    />
+                  </svg>
+                  <div
+                    class="c18"
+                    color="text"
+                    font-size="14px"
+                  >
+                    OKX Wallet
+                  </div>
+                </button>
+              </div>
+              <div
+                class=""
+              >
+                <button
+                  class="c15 c16"
+                  id="wallet-connect-bitkeep wallet"
+                  scale="md"
+                  width="100%"
+                >
+                  <svg
+                    class="c19"
+                    color="text"
+                    fill="none"
+                    height="45"
+                    viewBox="0 0 36 36"
+                    width="45"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M18 0C27.942 0 36 8.05967 36 18C36 27.942 27.942 36 18 36C8.05967 36 0 27.9413 0 18C0 8.05967 8.05967 0 18 0Z"
+                      fill="#7524F9"
+                    />
+                    <path
+                      clip-rule="evenodd"
+                      d="M28 13.1817V14.2863C28.0002 14.3931 27.9714 14.4981 27.9165 14.5907C27.8616 14.6833 27.7826 14.7601 27.6875 14.8135L24.0242 16.8686L27.2969 18.6995C27.5108 18.8196 27.6884 18.9924 27.8118 19.2005C27.9353 19.4085 28.0002 19.6445 28 19.8847V22.8302C28.0003 23.0705 27.9355 23.3066 27.812 23.5148C27.6886 23.723 27.5109 23.8959 27.2969 24.0161L18.6898 28.8168C18.4761 28.9368 18.2336 29 17.9867 29C17.7399 29 17.4974 28.9368 17.2836 28.8168L14.4672 27.235C14.4196 27.2084 14.3802 27.17 14.3527 27.1238C14.3253 27.0776 14.3108 27.0252 14.3108 26.9718C14.3108 26.9184 14.3253 26.866 14.3527 26.8198C14.3802 26.7736 14.4196 26.7352 14.4672 26.7086L23.7641 21.5052C23.7877 21.4918 23.8074 21.4727 23.8211 21.4496C23.8347 21.4265 23.8419 21.4004 23.8419 21.3738C23.8419 21.3472 23.8347 21.321 23.8211 21.2979C23.8074 21.2749 23.7877 21.2557 23.7641 21.2423L20.3125 19.3035C20.2175 19.2502 20.1097 19.2221 20 19.2221C19.8903 19.2221 19.7825 19.2502 19.6875 19.3035L10.2445 24.5927C10.1733 24.6327 10.0924 24.6538 10.0102 24.6538C9.92788 24.6538 9.84704 24.6327 9.77578 24.5927L8.70625 23.9979C8.4913 23.8779 8.31277 23.7048 8.18875 23.4961C8.06472 23.2875 7.99961 23.0507 8 22.8096V21.6055C7.99995 21.5254 8.02158 21.4468 8.06273 21.3774C8.10387 21.3081 8.16307 21.2505 8.23438 21.2104L21.7734 13.6443C21.7971 13.631 21.8168 13.6118 21.8304 13.5887C21.8441 13.5657 21.8513 13.5395 21.8513 13.5129C21.8513 13.4863 21.8441 13.4601 21.8304 13.4371C21.8168 13.414 21.7971 13.3948 21.7734 13.3815L18.3164 11.4358C18.2214 11.3825 18.1136 11.3544 18.0039 11.3544C17.8942 11.3544 17.7864 11.3825 17.6914 11.4358L8.46875 16.5936C8.42127 16.6202 8.36741 16.6343 8.31258 16.6343C8.25775 16.6343 8.20389 16.6203 8.15639 16.5937C8.10889 16.567 8.06944 16.5287 8.04199 16.4826C8.01454 16.4364 8.00006 16.384 8 16.3307V13.1672C7.99971 12.9269 8.06454 12.6907 8.18798 12.4825C8.31142 12.2743 8.4891 12.1015 8.70313 11.9813L17.3086 7.18212C17.5219 7.0628 17.7637 7 18.0098 7C18.2558 7 18.4976 7.0628 18.7109 7.18212L27.2969 11.998C27.5106 12.118 27.688 12.2905 27.8114 12.4983C27.9349 12.706 27.9999 12.9417 28 13.1817Z"
+                      fill="white"
+                      fill-rule="evenodd"
+                    />
+                  </svg>
+                  <div
+                    class="c18"
+                    color="text"
+                    font-size="14px"
+                  >
+                    BitKeep Wallet
+                  </div>
+                </button>
+              </div>
               <div
                 class=""
               >
@@ -557,74 +695,13 @@ it("renders ConnectModal correctly", () => {
                   </div>
                 </button>
               </div>
-              <div
-                class=""
-              >
-                <button
-                  class="c15 c16"
-                  id="wallet-connect-walletconnect"
-                  scale="md"
-                  width="100%"
-                >
-                  <svg
-                    class="c17"
-                    color="text"
-                    viewBox="0 0 40 40"
-                    width="40px"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M8.68096 12.4756C14.9323 6.39698 25.0677 6.39698 31.3191 12.4756L32.0714 13.2071C32.384 13.511 32.384 14.0038 32.0714 14.3077L29.4978 16.8103C29.3415 16.9622 29.0881 16.9622 28.9318 16.8103L27.8965 15.8036C23.5354 11.563 16.4647 11.563 12.1036 15.8036L10.9948 16.8817C10.8385 17.0336 10.5851 17.0336 10.4288 16.8817L7.85517 14.3791C7.54261 14.0752 7.54261 13.5824 7.85517 13.2785L8.68096 12.4756ZM36.6417 17.6511L38.9322 19.8783C39.2448 20.1823 39.2448 20.675 38.9322 20.979L28.6039 31.022C28.2913 31.3259 27.7846 31.3259 27.472 31.022C27.472 31.022 27.472 31.022 27.472 31.022L20.1416 23.8942C20.0634 23.8182 19.9367 23.8182 19.8586 23.8942C19.8586 23.8942 19.8586 23.8942 19.8586 23.8942L12.5283 31.022C12.2157 31.3259 11.709 31.3259 11.3964 31.022C11.3964 31.022 11.3964 31.022 11.3964 31.022L1.06775 20.9788C0.755186 20.6749 0.755186 20.1821 1.06775 19.8782L3.35833 17.6509C3.6709 17.347 4.17767 17.347 4.49024 17.6509L11.8208 24.7789C11.8989 24.8549 12.0256 24.8549 12.1038 24.7789C12.1038 24.7789 12.1038 24.7789 12.1038 24.7789L19.4339 17.6509C19.7465 17.347 20.2533 17.347 20.5658 17.6509C20.5658 17.6509 20.5658 17.6509 20.5658 17.6509L27.8964 24.7789C27.9745 24.8549 28.1012 24.8549 28.1794 24.7789L35.5098 17.6511C35.8223 17.3471 36.3291 17.3471 36.6417 17.6511Z"
-                      fill="#3389FB"
-                    />
-                  </svg>
-                  <div
-                    class="c18"
-                    color="text"
-                    font-size="14px"
-                  >
-                    WalletConnect
-                  </div>
-                </button>
-              </div>
-              <div
-                class=""
-              >
-                <button
-                  class="c15 c16"
-                  id="wallet-connect-trust wallet"
-                  scale="md"
-                  width="100%"
-                >
-                  <svg
-                    class="c17"
-                    color="text"
-                    viewBox="0 0 40 40"
-                    width="40px"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M19.9959 4.8377L20.7771 3.82105C20.5523 3.64825 20.2766 3.55457 19.9931 3.55457C19.7095 3.55457 19.4339 3.64825 19.209 3.82105L19.9959 4.8377ZM33.425 8.7837H34.7059C34.7081 8.61378 34.6767 8.44509 34.6134 8.28737C34.5502 8.12965 34.4563 7.98603 34.3372 7.8648C34.2181 7.74358 34.0762 7.64714 33.9196 7.58107C33.763 7.515 33.5949 7.4806 33.425 7.47985V8.7837ZM19.9959 36.2161L19.2837 37.2845C19.4936 37.425 19.7405 37.5 19.9931 37.5C20.2457 37.5 20.4925 37.425 20.7024 37.2845L19.9959 36.2161ZM6.57841 8.7837V7.49709C6.40847 7.49783 6.24036 7.53223 6.0838 7.5983C5.92723 7.66437 5.7853 7.76081 5.66621 7.88204C5.54712 8.00326 5.45322 8.14688 5.38995 8.3046C5.32667 8.46232 5.29526 8.63101 5.29754 8.80093L6.57841 8.7837ZM19.2148 5.84861C25.0275 10.3518 31.6846 10.0646 33.4307 10.0646V7.49709C31.6214 7.49709 25.8259 7.72684 20.7943 3.82105L19.2148 5.84861ZM32.1499 8.76073C32.0522 14.7113 31.7995 18.91 31.317 22.0174C30.8345 25.1248 30.1682 26.9399 29.2894 28.238C28.4106 29.5361 27.2848 30.3804 25.6364 31.3626C23.9879 32.3448 21.8799 33.4361 19.2837 35.1535L20.7312 37.2845C23.1895 35.6475 25.2343 34.6021 26.9747 33.5625C28.7284 32.6075 30.2502 31.2779 31.4319 29.6682C32.5806 27.9451 33.3675 25.6475 33.873 22.408C34.3785 19.1685 34.6369 14.809 34.7346 8.80093L32.1499 8.76073ZM20.7312 35.1535C18.1522 33.4304 16.05 32.362 14.413 31.3684C12.776 30.3747 11.6502 29.582 10.7656 28.238C9.8811 26.8939 9.16312 25.1076 8.66915 22.0174C8.17519 18.9273 7.95692 14.7113 7.85928 8.76073L5.29754 8.80093C5.39518 14.809 5.6594 19.18 6.15911 22.408C6.65882 25.636 7.42275 27.9336 8.59448 29.6682C9.77051 31.2788 11.2888 32.6088 13.0402 33.5625C14.7633 34.6021 16.8254 35.6475 19.2837 37.2845L20.7312 35.1535ZM6.57841 10.0646C8.30155 10.0646 14.9644 10.3518 20.7771 5.84861L19.209 3.82105C14.166 7.72684 8.37048 7.49709 6.57266 7.49709L6.57841 10.0646Z"
-                      fill="#3688EB"
-                      opacity="0.9"
-                    />
-                  </svg>
-                  <div
-                    class="c18"
-                    color="text"
-                    font-size="14px"
-                  >
-                    Trust Wallet
-                  </div>
-                </button>
-              </div>
               <button
                 class="c15 c16"
                 scale="md"
                 width="100%"
               >
                 <svg
-                  class="c19"
+                  class="c20"
                   color="textSubtle"
                   viewBox="0 0 24 24"
                   width="40px"
@@ -645,16 +722,17 @@ it("renders ConnectModal correctly", () => {
             </div>
           </div>
           <div
-            class="c20"
+            class="c21"
           >
             <p
-              class="c21"
+              class="c22"
               color="textSubtle"
+              font-size="16px"
             >
               Haven’t got a crypto wallet yet?
             </p>
             <a
-              class="c22"
+              class="c23"
               href="https://docs.coincollect.org/getting-started/create-a-wallet"
               rel="noreferrer noopener"
               scale="md"

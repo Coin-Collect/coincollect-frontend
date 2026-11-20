@@ -117,7 +117,7 @@ export const getDisplayApr = (cakeRewardsApr?: number, lpRewardsApr?: number) =>
   return null
 }
 
-const Farms: React.FC = ({ children }) => {
+const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { pathname } = useRouter()
   const { t } = useTranslation()
   const { data: farmsLP, userDataLoaded, poolLength } = useFarms()

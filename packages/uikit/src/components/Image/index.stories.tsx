@@ -1,5 +1,6 @@
 import React from "react";
-import { random, times } from "lodash";
+import random from "lodash/random";
+import times from "lodash/times";
 import styled from "styled-components";
 import Flex from "../Box/Flex";
 import Box from "../Box/Box";

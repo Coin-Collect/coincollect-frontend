@@ -17,7 +17,7 @@ describe('Config pools', () => {
   it.each(pools.map((pool) => [pool.sousId, pool.contractAddress]))(
     'Pool #%d has an unique contract address',
     (sousId, contractAddress) => {
-      const duplicates = pools.filter((p) => contractAddress[56] === p.contractAddress[56])
+      const duplicates = pools.filter((p) => contractAddress[137] === p.contractAddress[137])
       expect(duplicates).toHaveLength(1)
     },
   )
@@ -55,7 +55,7 @@ describe('Config pools', () => {
     },
   )
 
-  it.each(pools.map((p) => ({ deployedBlockNumber: p.deployedBlockNumber, address: p.contractAddress[56] })))(
+  it.each(pools.map((p) => ({ deployedBlockNumber: p.deployedBlockNumber, address: p.contractAddress[137] })))(
     'Pool %p has deployed block number',
     (pool) => {
       expect(pool.deployedBlockNumber || poolsDeployedBlockNumber[pool.address]).toBeTruthy()

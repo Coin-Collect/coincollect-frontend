@@ -1,10 +1,18 @@
-import map from 'lodash/map'
-import filter from 'lodash/filter'
+import { isAddress } from '@ethersproject/address'
 import contracts from 'config/constants/contracts'
 
-describe('Config contracts', () => {
-  it.each(map(contracts, (contract, key) => [key, contract]))('Contract %s has a unique address', (key, contract) => {
-    const duplicates = filter(contracts, (c) => contract[56] === c[56])
-    expect(duplicates).toHaveLength(1)
+const polygonContracts = Object.entries(contracts).flatMap(([name, addresses]) => {
+  const polygon = '137' in addresses ? addresses[137] : undefined
+  return typeof polygon === 'string' ? [[name, polygon] as const] : []
+})
+
+describe('Polygon contracts', () => {
+  it('contains the deployed contract addresses', () => {
+    expect(polygonContracts.length).toBeGreaterThan(0)
+  })
+
+  it.each(polygonContracts)('Contract %s has a valid unique address', (_name, address) => {
+    expect(isAddress(address)).toBe(true)
+    expect(polygonContracts.filter(([, candidate]) => candidate.toLowerCase() === address.toLowerCase())).toHaveLength(1)
   })
 })

@@ -15,6 +15,7 @@ export interface StatusProps extends ThemedProps {
 }
 
 export interface StepProps {
+  children?: React.ReactNode;
   index: number;
   statusFirstPart: Status;
   statusSecondPart?: Status;

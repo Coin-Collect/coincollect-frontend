@@ -126,11 +126,9 @@ const TeamCard: React.FC<TeamCardProps> = ({ rank, team }) => {
               </Flex>
             </Flex>
           </Info>
-          <Link href={`/teams/${team?.id}`} passHref>
-            <Button as="a" variant="secondary" scale="sm">
-              {t('See More')}
-            </Button>
-          </Link>
+          <Button as={Link} href={`/teams/${team?.id}`} variant="secondary" scale="sm">
+            {t('See More')}
+          </Button>
           <DesktopAvatar>{avatar}</DesktopAvatar>
         </Body>
       </Flex>

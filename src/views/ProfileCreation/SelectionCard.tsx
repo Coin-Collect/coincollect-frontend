@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import { Card, Radio } from '@pancakeswap/uikit'
 
 interface SelectionCardProps {
+  children?: React.ReactNode
   name: string
   value: string | number
   isChecked?: boolean

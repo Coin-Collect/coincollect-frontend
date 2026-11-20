@@ -20,6 +20,9 @@ const Amount = styled.span<{ earned: number }>`
 `
 
 const Earned: React.FunctionComponent<EarnedPropsWithLoading> = ({ earnings, userDataReady }) => {
+  const earningsBigNumber = new BigNumber(earnings || 0)
+  const { displayValue, baseValue, isAnimating } = useAnimatedRewardValue(earningsBigNumber)
+
   if (!userDataReady) {
     return (
       <Amount earned={0}>
@@ -28,8 +31,6 @@ const Earned: React.FunctionComponent<EarnedPropsWithLoading> = ({ earnings, use
     )
   }
 
-  const earningsBigNumber = new BigNumber(earnings || 0)
-  const { displayValue, baseValue, isAnimating } = useAnimatedRewardValue(earningsBigNumber)
 
   return (
     <Amount earned={baseValue.gt(0) ? 1 : 0}>

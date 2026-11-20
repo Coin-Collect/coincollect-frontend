@@ -14,8 +14,8 @@ it("renders correctly", () => {
     }
 
     .c1 {
-      -webkit-animation: wAFEO 2s infinite ease-out;
-      animation: wAFEO 2s infinite ease-out;
+      -webkit-animation: hDWTUO 2s infinite ease-out;
+      animation: hDWTUO 2s infinite ease-out;
       -webkit-transform: translate3d(0,0,0);
       -ms-transform: translate3d(0,0,0);
       transform: translate3d(0,0,0);
@@ -42,8 +42,8 @@ it("renders correctly avatar", () => {
     }
 
     .c1 {
-      -webkit-animation: wAFEO 2s infinite ease-out;
-      animation: wAFEO 2s infinite ease-out;
+      -webkit-animation: hDWTUO 2s infinite ease-out;
+      animation: hDWTUO 2s infinite ease-out;
       -webkit-transform: translate3d(0,0,0);
       -ms-transform: translate3d(0,0,0);
       transform: translate3d(0,0,0);
@@ -87,8 +87,8 @@ it("renders correctly waves animation", () => {
       left: -150px;
       height: 100%;
       width: 150px;
-      -webkit-animation: kudDcV 2s cubic-bezier(0.4,0,0.2,1) infinite;
-      animation: kudDcV 2s cubic-bezier(0.4,0,0.2,1) infinite;
+      -webkit-animation: bGJpRH 2s cubic-bezier(0.4,0,0.2,1) infinite;
+      animation: bGJpRH 2s cubic-bezier(0.4,0,0.2,1) infinite;
     }
 
     <div

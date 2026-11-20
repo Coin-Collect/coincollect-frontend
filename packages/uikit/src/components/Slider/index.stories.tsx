@@ -82,7 +82,7 @@ export const Balance: React.FC = () => {
             setBalance((percent / 100) * maxBalance);
           };
 
-          return <Button scale="sm" variant="secondary" onClick={handleClick}>{`${percent}%`}</Button>;
+          return <Button key={percent} scale="sm" variant="secondary" onClick={handleClick}>{`${percent}%`}</Button>;
         })}
         <Button scale="sm" variant="secondary" onClick={setMax}>
           Max

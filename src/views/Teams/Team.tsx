@@ -15,12 +15,10 @@ const Team = () => {
     <Page>
       <TeamHeader />
       <Flex mb="24px">
-        <Link href="/teams" passHref>
-          <Flex alignItems="center" as="a">
-            <ChevronLeftIcon color="primary" />
-            <Text color="primary">{t('Teams Overview')}</Text>
-          </Flex>
-        </Link>
+        <Flex as={Link} href="/teams" alignItems="center">
+          <ChevronLeftIcon color="primary" />
+          <Text color="primary">{t('Teams Overview')}</Text>
+        </Flex>
       </Flex>
       <TeamCard id={idStr} />
     </Page>

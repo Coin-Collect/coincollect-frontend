@@ -307,9 +307,7 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
     <V3Page>
       <V3Section aria-label="Universal Rewards pool">
         <header>
-          <Link href="/nftpools/v3" passHref legacyBehavior>
-            <V3Link>All V3 pools</V3Link>
-          </Link>
+          <V3Link as={Link} href="/nftpools/v3">All V3 pools</V3Link>
         </header>
         {!deployment && <V3Muted role="status">V3 is unavailable in this environment.</V3Muted>}
         {result.error && (

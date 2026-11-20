@@ -71,8 +71,8 @@ describe('transformPool', () => {
     const transformedPool = transformPool(pool)
 
     expect(transformedPool).toHaveProperty('sousId', sousId)
-    expect(transformedPool).toHaveProperty('contractAddress')
-    expect(transformedPool).toHaveProperty('contractAddress.56')
+    expect(transformedPool.contractAddress).toEqual(config.contractAddress)
+    expect(transformedPool.contractAddress[137]).toMatch(/^0x[0-9a-fA-F]{40}$/)
     expect(transformedPool).toHaveProperty('stakingToken.symbol')
     expect(transformedPool).toHaveProperty('stakingToken.projectLink')
     expect(transformedPool).toHaveProperty('earningToken.symbol')

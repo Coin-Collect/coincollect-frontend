@@ -38,7 +38,7 @@ const ExpandedWrapper = styled.div`
 const TopTradersGrid: React.FC<{ data?: LeaderboardDataItem[]; isExpanded: boolean }> = ({ data, isExpanded }) => {
   const topFive = data && data.slice(0, 5)
   const nextTwenty = data && data.slice(5, 20)
-  const teamImages = [<LeaderboardStorm />, <LeaderboardFlippers />, <LeaderboardCakers />]
+  const teamImages = [<LeaderboardStorm key="storm" />, <LeaderboardFlippers key="flippers" />, <LeaderboardCakers key="cakers" />]
 
   return (
     <Box>

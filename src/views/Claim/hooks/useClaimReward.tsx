@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import useToast from 'hooks/useToast'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
@@ -12,8 +11,9 @@ export const useClaimReward = (claimId, nftAddresses, nftIds, rewardToken, versi
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
   const { callWithGasPrice } = useCallWithGasPrice()
   const { t } = useTranslation()
-  const { account } = useWeb3React()
-  const claimRewardContract = version == 1 ? useCoinCollectClaimRewardContract() : useCoinCollectClaimRewardV2Contract()
+  const legacy = useCoinCollectClaimRewardContract()
+  const modern = useCoinCollectClaimRewardV2Contract()
+  const claimRewardContract = version == 1 ? legacy : modern
 
   const handleClaimReward = useCallback(async () => {
     const receipt = await fetchWithCatchTxError(() => {
@@ -30,7 +30,11 @@ export const useClaimReward = (claimId, nftAddresses, nftIds, rewardToken, versi
       refresh()
     }
   }, [
-    account,
+    claimRewardContract,
+    claimId,
+    nftAddresses,
+    nftIds,
+    refresh,
     rewardToken,
     t,
     toastSuccess,

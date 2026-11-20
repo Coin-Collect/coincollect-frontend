@@ -1,5 +1,5 @@
 import React from "react";
-import { capitalize } from "lodash";
+import capitalize from "lodash/capitalize";
 import Box from "../Box/Box";
 import Flex from "../Box/Flex";
 import { CommunityIcon, RemoveIcon } from "../Svg";
@@ -20,7 +20,7 @@ export const Default: React.FC = () => {
             <Flex alignItems="center">
               {Object.values(scales).map((scale) => {
                 return (
-                  <Tag scale={scale} variant={variant} mr="8px">
+                  <Tag key={scale} scale={scale} variant={variant} mr="8px">
                     {`${capitalize(variant)}: ${scale.toUpperCase()}`}
                   </Tag>
                 );

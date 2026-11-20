@@ -1,4 +1,4 @@
-const { withSentryConfig } = require('@sentry/nextjs')
+const { withSentryConfig } = require('@sentry/nextjs/config')
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
@@ -15,13 +15,8 @@ const sentryWebpackPluginOptions = {
 const config = {
   // Permit isolated build verification without overwriting a running dev cache.
   distDir: process.env.COINCOLLECT_NEXT_DIST_DIR || '.next',
-  experimental: { instrumentationHook: true },
-  eslint: { dirs: ['src/features/universalRewards', 'src/pages/api/v3', 'src/pages/nftpools/v3'] },
   compiler: {
     styledComponents: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
   reactStrictMode: true,
   images: {

@@ -33,6 +33,7 @@ const Title = styled(Heading)`
 const ClaimCardHeader: React.FC<{
   isFinished?: boolean
   isStaking?: boolean
+  children?: React.ReactNode
 }> = ({ isFinished: _isFinished = false, isStaking: _isStaking = false, children }) => {
   return (
       <Flex alignItems="center" justifyContent="space-center" p={15}>

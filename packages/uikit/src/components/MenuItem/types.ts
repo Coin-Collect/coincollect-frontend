@@ -3,6 +3,7 @@ import { Colors } from "../../theme";
 export type MenuItemVariant = "default" | "subMenu";
 
 export interface MenuItemProps {
+  children?: React.ReactNode;
   isActive?: boolean;
   href?: string;
   variant?: MenuItemVariant;

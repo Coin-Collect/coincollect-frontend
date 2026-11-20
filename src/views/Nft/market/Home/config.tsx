@@ -26,7 +26,7 @@ const config = (t: ContextApi['t']) => {
       description: [
         t('In Phase 2 of the NFT Marketplace, collections must be whitelisted before they may be listed.'),
         t('We are now accepting applications from NFT collection owners seeking to list their collections.'),
-        <LinkExternal href="https://docs.pancakeswap.finance/contact-us/nft-market-applications">
+        <LinkExternal key="market-application" href="https://docs.pancakeswap.finance/contact-us/nft-market-applications">
           {t('Please apply here')}
         </LinkExternal>,
       ],

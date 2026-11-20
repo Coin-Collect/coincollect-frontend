@@ -1,4 +1,4 @@
-// BNB
-export const DEFAULT_INPUT_CURRENCY = 'BNB'
-// BUSD
-export const DEFAULT_OUTPUT_CURRENCY = '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82'
+import tokens from 'config/constants/tokens'
+
+export const DEFAULT_INPUT_CURRENCY = 'POL'
+export const DEFAULT_OUTPUT_CURRENCY = tokens.collect.address

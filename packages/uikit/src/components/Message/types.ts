@@ -10,6 +10,7 @@ export const variants = {
 export type Variant = typeof variants[keyof typeof variants];
 
 export interface MessageProps extends SpaceProps {
+  children?: React.ReactNode;
   variant: Variant;
   icon?: React.ReactNode;
 }

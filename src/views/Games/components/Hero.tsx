@@ -134,7 +134,7 @@ const Hero: React.FC = () => {
         <HeroContent>
           <HeroTitle scale="xl">Unlock the Future of Play-to-Earn</HeroTitle>
           <HeroDescription fontSize="18px" lineHeight="150%">
-            Enter the QuestGalaxy × CoinCollect universe where NFTs aren't just collectibles — they're keys to new worlds. Power up your adventures, claim rewards, and thrive in the COLLECT economy as every quest fuels your journey through the metaverse.
+            Enter the QuestGalaxy × CoinCollect universe where NFTs aren&apos;t just collectibles — they&apos;re keys to new worlds. Power up your adventures, claim rewards, and thrive in the COLLECT economy as every quest fuels your journey through the metaverse.
           </HeroDescription>
           <ButtonRow>
             <Button as="a" href="https://ghostalien.questgalaxy.com/" target="_blank" rel="noreferrer" scale="md">

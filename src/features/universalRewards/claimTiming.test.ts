@@ -40,8 +40,8 @@ describe('V3 interpolated rewards', () => {
         totalWeight: BigInt(8),
         pageWeight: BigInt(2),
         rewards: [
-          { cap: BigInt(8_000), inventory: BigInt(10_000), liability: UNIT * BigInt(80) },
-          { cap: BigInt(8_000), inventory: BigInt(6), liability: UNIT * BigInt(2) },
+          { cap: BigInt(8_000), inventory: BigInt(10_000), liability: UNIT * BigInt(80), committed: BigInt(0) },
+          { cap: BigInt(8_000), inventory: BigInt(6), liability: UNIT * BigInt(2), committed: BigInt(0) },
         ],
       },
     }

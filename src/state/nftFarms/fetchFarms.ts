@@ -16,7 +16,7 @@ import { getViemClients } from 'utils/viem'
 import { ChainId } from '@coincollect/sdk'
 import { CHAIN_ID } from 'config/constants/networks'
 import { POLYGON_BLOCK_TIME } from 'config'
-import { fromPairs } from 'lodash'
+import fromPairs from 'lodash/fromPairs'
 
 const smartNftStakeFarms = farmsConfig.filter((f) => f.contractAddresses)
 const startEndBlockCalls = smartNftStakeFarms.flatMap((nftFarmConfig) => {

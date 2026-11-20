@@ -280,6 +280,7 @@ export const UserMenuWithVariants: React.FC = () => {
             <Flex mb="16px">
               {Object.keys(variants).map((variantKey) => (
                 <Button
+                  key={variantKey}
                   scale="sm"
                   variant={variant === variants[variantKey] ? "primary" : "text"}
                   ml="8px"

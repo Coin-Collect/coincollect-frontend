@@ -403,7 +403,7 @@ export const getDisplayApr = (cakeRewardsApr?: number) => {
   return formatRewardAmount(new BigNumber(cakeRewardsApr))
 }
 
-const Farms: React.FC = ({ children }) => {
+const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { pathname, query: routerQuery } = useRouter()
   const { t } = useTranslation()
   const {

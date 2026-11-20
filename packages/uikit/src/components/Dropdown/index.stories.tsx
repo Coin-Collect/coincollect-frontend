@@ -13,8 +13,8 @@ export const Default: React.FC = () => {
   return (
     <div>
       <Dropdown target={<Button>Hover</Button>}>
-        {[...Array(30)].map(() => (
-          <div>Content</div>
+        {[...Array(30).keys()].map((item) => (
+          <div key={item}>Content</div>
         ))}
       </Dropdown>
     </div>
@@ -25,13 +25,13 @@ export const Top: React.FC = () => {
   return (
     <Flex justifyContent="space-between" style={{ marginTop: "400px" }}>
       <Dropdown position="top-right" target={<Button>Top right</Button>}>
-        {[...Array(20)].map(() => (
-          <div>Content</div>
+        {[...Array(20).keys()].map((item) => (
+          <div key={item}>Content</div>
         ))}
       </Dropdown>
       <Dropdown position="top" target={<Button>Top</Button>}>
-        {[...Array(20)].map(() => (
-          <div>Content</div>
+        {[...Array(20).keys()].map((item) => (
+          <div key={item}>Content</div>
         ))}
       </Dropdown>
     </Flex>

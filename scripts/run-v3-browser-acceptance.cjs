@@ -3,7 +3,7 @@ const { once } = require('node:events')
 const { createServer } = require('node:net')
 const { setTimeout: delay } = require('node:timers/promises')
 const { randomBytes } = require('node:crypto')
-const { writeFileSync, mkdtempSync, openSync, closeSync } = require('node:fs')
+const { writeFileSync, mkdtempSync, openSync, closeSync, readFileSync, rmSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const path = require('node:path')
 
@@ -24,6 +24,7 @@ async function localPort() {
 async function run() {
   const fork = await startLocalAnvil()
   let server
+  let distDir
   try {
     const logs = mkdtempSync(path.join(tmpdir(), 'coincollect-v3-browser-'))
     console.log('Isolated browser logs:', logs)
@@ -39,6 +40,7 @@ async function run() {
     const port = await localPort()
     const app = 'http://127.0.0.1:' + port
     const secret = randomBytes(32).toString('hex')
+    distDir = '.next-verification/v351-browser-' + port
     const env = {
       ...process.env,
       NEXT_PUBLIC_LOCAL_FORK: '1',
@@ -49,17 +51,35 @@ async function run() {
       NEXT_PUBLIC_V3_LEDGER_ADDRESS: fixture.ledger,
       NEXT_PUBLIC_V3_LEDGER_CODE_HASH: fixture.runtimeHash,
       NEXT_TELEMETRY_DISABLED: '1',
-      COINCOLLECT_NEXT_DIST_DIR: '.next-verification/v3-browser-' + port,
+      SENTRY_AUTH_TOKEN: '',
+      SENTRY_DSN: '',
+      NEXT_PUBLIC_SENTRY_DSN: '',
+      COINCOLLECT_NEXT_DIST_DIR: distDir,
       COINCOLLECT_V3_AUTOMATION: 'isolated',
       COINCOLLECT_V3_AUTOMATION_FIRST_POOL: '1',
       COINCOLLECT_V3_ENABLE_POLYGON_EXECUTION: '0',
       CRON_SECRET: secret,
     }
+    const next = require.resolve('next/dist/bin/next')
+    const buildPath = path.join(logs, 'build.log')
+    const buildLog = openSync(buildPath, 'w')
+    try {
+      execFileSync(process.execPath, [next, 'build', '--webpack'], {
+        env,
+        stdio: ['ignore', buildLog, buildLog],
+        timeout: 360_000,
+      })
+    } catch {
+      console.error(readFileSync(buildPath, 'utf8').split('\n').slice(-35).join('\n'))
+      throw new Error('The isolated production build failed.')
+    } finally {
+      closeSync(buildLog)
+    }
     const log = openSync(path.join(logs, 'next.log'), 'w')
     try {
       server = spawn(
         process.execPath,
-        ['node_modules/next/dist/bin/next', 'dev', '-H', '127.0.0.1', '-p', String(port)],
+        [next, 'start', '-H', '127.0.0.1', '-p', String(port)],
         {
           env,
           stdio: ['ignore', log, log],
@@ -70,7 +90,7 @@ async function run() {
     }
     const deadline = Date.now() + 120_000
     for (;;) {
-      if (server.exitCode !== null || Date.now() >= deadline) throw new Error('Next dev did not become ready.')
+      if (server.exitCode !== null || Date.now() >= deadline) throw new Error('Next production server did not become ready.')
       const response = await fetch(app + '/api/v3/replenish?status=1', {
         signal: AbortSignal.timeout(4_000),
       }).catch(() => undefined)
@@ -84,8 +104,13 @@ async function run() {
     const [status] = await once(test, 'exit')
     process.exitCode = status ?? 1
   } finally {
-    server?.kill()
+    if (server && server.exitCode === null && server.signalCode === null) {
+      const stopped = once(server, 'exit')
+      server.kill()
+      await stopped
+    }
     fork.close()
+    if (distDir) rmSync(distDir, { recursive: true, force: true, maxRetries: 3 })
   }
 }
 

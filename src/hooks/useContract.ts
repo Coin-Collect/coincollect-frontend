@@ -184,6 +184,14 @@ export const useSousChef = (id) => {
 }
 
 // -----
+export function useNftFarmActionContract(id: number, smartPool: boolean) {
+  const { library } = useActiveWeb3React()
+  return useMemo(() => {
+    const signer = library.getSigner()
+    return smartPool ? getSmartNftStakeContract(id, signer) : getCoinCollectNftStakeContract(signer)
+  }, [library, id, smartPool])
+}
+
 export const useSmartNftStakeContract = (id) => {
   const { library } = useActiveWeb3React()
   return useMemo(() => getSmartNftStakeContract(id, library.getSigner()), [id, library])

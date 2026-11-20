@@ -25,9 +25,7 @@ const Hero = () => {
             <Heading as="h3" scale="lg" mb="16px">
               {t('Have your say in the future of the PancakeSwap Ecosystem')}
             </Heading>
-            <Link href="/voting/proposal/create" passHref>
-              <Button startIcon={<ProposalIcon color="currentColor" width="24px" />}>{t('Make a Proposal')}</Button>
-            </Link>
+            <Button as={Link} href="/voting/proposal/create" startIcon={<ProposalIcon color="currentColor" width="24px" />}>{t('Make a Proposal')}</Button>
           </Box>
           <DesktopImage src="/images/voting/voting-presents.png" width={361} height={214} />
         </Flex>

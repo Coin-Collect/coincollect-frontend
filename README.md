@@ -6,7 +6,7 @@
   **The Next Generation DeFi Platform**
   
   [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
+  [![Build Status](https://github.com/Coin-Collect/coincollect-frontend/actions/workflows/universalRewardsV3.yml/badge.svg?branch=pool-management)](https://github.com/Coin-Collect/coincollect-frontend/actions/workflows/universalRewardsV3.yml?query=branch%3Apool-management)
   [![Version](https://img.shields.io/badge/version-2.0.0-orange.svg)](#)
   [![React](https://img.shields.io/badge/React-18.0+-61DAFB.svg?logo=react)](https://reactjs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-3178C6.svg?logo=typescript)](https://www.typescriptlang.org/)
@@ -88,7 +88,7 @@ git clone https://github.com/your-username/coincollect-frontend.git
 cd coincollect-frontend
 
 # Install dependencies
-npm install
+yarn install --frozen-lockfile
 
 # Start development server
 npm run dev
@@ -246,4 +246,4 @@ node scripts/run-v3-browser-acceptance.cjs ../coincollect-smart-contracts/projec
 
 The harness starts its own loopback app and Anvil chain, uses disposable accounts, and checks Studio funding and economic preflight, NFT participation, token receipts, claim expiry and recovery. See the [contracts release evidence and runbook](https://github.com/Coin-Collect/coincollect-smart-contracts/blob/pool-management/projects/universal-rewards-v3/V3.5.md).
 
-The lockfile uses Next.js 14.2.35, the latest patch on the existing 14.x line. Next.js lists 14.x outside LTS. Review migration to a supported version before mainnet rollout. [Next.js support policy](https://nextjs.org/support-policy)
+See [V3.5.1 platform and release checks](docs/universal-rewards-v351-readiness.md) for the current approval status.
