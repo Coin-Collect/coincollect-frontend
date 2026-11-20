@@ -48,6 +48,18 @@ export async function describeManagedCollection(
           args: [adapter],
           blockNumber,
         })
+  const claimStatus =
+    stream && poolId !== undefined
+      ? {
+          claimsReady: await client.readContract({
+            address: journal,
+            abi: finalizedNftJournalAbi,
+            functionName: 'allowsClaims',
+            args: [adapter],
+            blockNumber,
+          }),
+        }
+      : {}
   return {
     adapter,
     sourceChainId,
@@ -59,6 +71,7 @@ export async function describeManagedCollection(
     journal: stream?.[0],
     paused: stream?.[6],
     nextObservation: stream?.[1],
+    ...claimStatus,
   }
 }
 

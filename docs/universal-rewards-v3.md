@@ -1,5 +1,11 @@
 # Universal Rewards V3
 
+## V3.4 verified collection compatibility
+
+Studio checks collection compatibility when the admin adds it and repeats the check when building the pool plan. A Polygon ERC-1155 needs a registered adapter and a matching transfer hook. An ordinary ERC-1155 cannot be enrolled. Base and Arbitrum stay isolated and require approved source journals. A released reward is temporarily unavailable while its source is paused, stale, or has an admitted backlog. V3.4 fixtures use `COINCOLLECT_V34_FIXTURE=1`.
+
+[Compatibility, transfer behavior and operating costs](https://github.com/Coin-Collect/coincollect-smart-contracts/blob/pool-management/projects/universal-rewards-v3/V3.4.md)
+
 ## V3.3 Studio and FarmCard
 
 Select the original collection address and its source network in Studio. The verified ledger resolves an approved adapter for each managed collection. Polygon ERC-721 remains eligible through its native interface. Polygon ERC-1155 requires a bound collection hook. Pool power is per ERC-1155 unit. Open the new pool in **Manage** before its start to set the per-token-ID and wallet quantity limit.

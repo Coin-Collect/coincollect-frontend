@@ -9,7 +9,12 @@ import { useV3Query } from 'features/universalRewards/hooks'
 import { safeArtwork } from 'features/universalRewards/metadata'
 import { shortAmount } from 'features/universalRewards/presentation'
 import { adjustRewardShare, equalRewardShares } from 'features/universalRewards/rewardShares'
-import { parseV3Amount, quoteV3RewardWindow, type V3StudioDraft } from 'features/universalRewards/studio'
+import {
+  inspectStudioCollection,
+  parseV3Amount,
+  quoteV3RewardWindow,
+  type V3StudioDraft,
+} from 'features/universalRewards/studio'
 import { V3Actions, V3Button, V3Error, V3Field, V3Fields, V3Muted } from 'features/universalRewards/styles'
 import type { V3StudioComposerProps } from 'features/universalRewards/V3Studio'
 import { Action, StyledActionButton } from '../FarmCard/CardActionsContainer'
@@ -105,6 +110,11 @@ export default function V3FarmCardStudio({
   const [collectionInput, setCollectionInput] = useState('')
   const [collectionChain, setCollectionChain] = useState('137')
   const [collectionError, setCollectionError] = useState('')
+  const [checkingCollection, setCheckingCollection] = useState(false)
+  const collectionCheck = useRef(false)
+  const collectionField = useRef<HTMLInputElement>(null)
+  const collectionErrorId = useId()
+  const [collectionLabels, setCollectionLabels] = useState<Record<string, string>>({})
   const [quote, setQuote] = useState<{ key: string; amounts: Record<string, string> }>()
   const [shareEntry, setShareEntry] = useState<{ address: string; text: string }>()
   const assets = studio.supported.filter(({ decimals }) => decimals !== null)
@@ -292,24 +302,42 @@ export default function V3FarmCardStudio({
 
   const collectionName = ({ address, sourceChain }: CollectionRule) =>
     collectionNames[`${sourceChain}:${address.toLowerCase()}`] || `${address.slice(0, 8)}…${address.slice(-4)}`
-  const addCollection = (value: string, sourceChain: string, power = '1') => {
+  const addCollection = async (value: string, sourceChain: string, power = '1') => {
+    if (collectionCheck.current || draft.collections.length >= 16) return
     const address = value.trim()
     if (!isAddress(address) || isAddressEqual(address, zeroAddress)) {
-      setCollectionError('Enter a valid ERC-721 contract address.')
+      setCollectionError('Enter an NFT contract address.')
+      collectionField.current?.focus()
       return
     }
-    if (
-      draft.collections.some(
-        (rule) => rule.sourceChain === sourceChain && rule.address.toLowerCase() === address.toLowerCase(),
-      )
-    ) {
+    const key = `${sourceChain}:${address.toLowerCase()}`
+    if (draft.collections.some((rule) => `${rule.sourceChain}:${rule.address.toLowerCase()}` === key)) {
       setCollectionError('This NFT collection is already included.')
       return
     }
-    if (draft.collections.length >= 16) return
-    onChange({ collections: [...draft.collections, { address: getAddress(address), sourceChain, power }] })
-    setCollectionInput('')
+
+    collectionCheck.current = true
+    setCheckingCollection(true)
     setCollectionError('')
+    try {
+      const checked = await inspectStudioCollection(
+        client,
+        deployment,
+        studio,
+        BigInt(sourceChain),
+        getAddress(address),
+      )
+      setCollectionLabels((current) => ({ ...current, [key]: checked.label }))
+      onChange({ collections: [...draft.collections, { address: getAddress(address), sourceChain, power }] })
+      setCollectionInput('')
+    } catch (error) {
+      setCollectionError(
+        error instanceof Error ? error.message.split('\n')[0] : 'Collection verification is unavailable.',
+      )
+    } finally {
+      collectionCheck.current = false
+      setCheckingCollection(false)
+    }
   }
 
   const beginName = () => {
@@ -402,8 +430,8 @@ export default function V3FarmCardStudio({
                     <Choice
                       type="button"
                       key={`${rule.sourceChain}:${rule.address}`}
-                      disabled={selected || draft.collections.length >= 16}
-                      onClick={() => addCollection(rule.address, rule.sourceChain, rule.power)}
+                      disabled={selected || checkingCollection || draft.collections.length >= 16}
+                      onClick={() => void addCollection(rule.address, rule.sourceChain, rule.power)}
                     >
                       <strong>{rule.name || collectionName(rule)}</strong>
                       <small>{selected ? 'Included' : `Power ${rule.power}`}</small>
@@ -415,7 +443,7 @@ export default function V3FarmCardStudio({
             <form
               onSubmit={(event) => {
                 event.preventDefault()
-                addCollection(collectionInput, collectionChain)
+                void addCollection(collectionInput, collectionChain)
               }}
             >
               <EditorGrid>
@@ -424,21 +452,35 @@ export default function V3FarmCardStudio({
                   <input
                     data-studio-focus
                     name="collection-address"
+                    ref={collectionField}
                     value={collectionInput}
-                    onChange={(event) => setCollectionInput(event.target.value)}
+                    readOnly={checkingCollection}
+                    aria-invalid={Boolean(collectionError)}
+                    aria-describedby={collectionError ? collectionErrorId : undefined}
+                    onChange={(event) => {
+                      setCollectionInput(event.target.value)
+                      setCollectionError('')
+                    }}
                     placeholder="0x…"
                   />
                 </V3Field>
                 <V3Field>
                   Source network
-                  <select value={collectionChain} onChange={(event) => setCollectionChain(event.target.value)}>
+                  <select
+                    value={collectionChain}
+                    disabled={checkingCollection}
+                    onChange={(event) => {
+                      setCollectionChain(event.target.value)
+                      setCollectionError('')
+                    }}
+                  >
                     <option value="137">Polygon</option>
                     {hasRemote && <option value="8453">Base</option>}
                     {hasRemote && <option value="42161">Arbitrum One</option>}
                   </select>
                 </V3Field>
               </EditorGrid>
-              <V3Button type="submit" $secondary disabled={draft.collections.length >= 16}>
+              <V3Button type="submit" $secondary disabled={checkingCollection || draft.collections.length >= 16}>
                 Add collection
               </V3Button>
             </form>
@@ -448,10 +490,16 @@ export default function V3FarmCardStudio({
                 before the pool starts.
               </V3Muted>
             )}
-            {collectionError && <V3Error role="alert">{collectionError}</V3Error>}
+            <div role="status">
+              {checkingCollection && <V3Muted>Checking collection compatibility…</V3Muted>}
+              {collectionError && <V3Error id={collectionErrorId}>{collectionError}</V3Error>}
+            </div>
             {draft.collections.map((rule, index) => (
               <V3Fields key={`${rule.sourceChain}:${rule.address}`}>
                 <legend>{collectionName(rule)}</legend>
+                {collectionLabels[`${rule.sourceChain}:${rule.address.toLowerCase()}`] && (
+                  <V3Muted>{collectionLabels[`${rule.sourceChain}:${rule.address.toLowerCase()}`]}</V3Muted>
+                )}
                 <EditorGrid>
                   <V3Field>
                     NFT power

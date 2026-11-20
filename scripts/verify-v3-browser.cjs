@@ -394,7 +394,7 @@ async function testBrowser() {
       poolPath,
     )
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
-    await has(['3.2', '3.3'].includes(fixture.version) ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
+    await has(['3.2', '3.3', '3.4'].includes(fixture.version) ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -486,8 +486,20 @@ async function testBrowser() {
       button.click()
       return true
     })
+    if (fixture.managed?.plainCollection) {
+      await field('collection-address', fixture.managed.plainCollection)
+      await click('dialog button', 'Add collection')
+      await has('This ERC-1155 collection needs a registered CoinCollect adapter and a bound transfer hook.')
+      assert.ok(await evalPage(() => document.querySelector('[name="collection-address"]').getAttribute('aria-invalid') === 'true'))
+      await field('collection-address', fixture.managed.collection)
+      await click('dialog button', 'Add collection')
+      await has('ERC-1155 · bound transfer hook')
+      await click('dialog button', 'Remove collection')
+      console.log('PASS Studio rejects plain ERC-1155 and verifies a bound adapter')
+    }
     await field('collection-address', fixture.nft)
     await click('dialog button', 'Add collection')
+    await has('Polygon ERC-721 · direct ownership check')
     await click('dialog button', 'Done')
     await wait('collections dialog closes', () => !document.querySelector('dialog'))
     await click('article button', 'Set funding budget')
@@ -824,6 +836,7 @@ async function testBrowser() {
       })
       await field('collection-address', fixture.nft)
       await click('dialog button', 'Add collection')
+      await has('Polygon ERC-721 · direct ownership check')
       await click('dialog button', 'Done')
       await wait('Treasury pool collections saved', () => !document.querySelector('dialog'))
       await click('article button', 'Set funding budget')
@@ -999,7 +1012,7 @@ async function testBrowser() {
       await click('article button', 'Harvest')
       await has('Confirmed on the settlement network.')
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
-      console.log('PASS V3.3 mobile ERC-1155 unit cap, quantity join, partial transfer, partial exit and Harvest')
+      console.log('PASS managed mobile ERC-1155 unit cap, quantity join, partial transfer, partial exit and Harvest')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

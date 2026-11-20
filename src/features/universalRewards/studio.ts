@@ -9,7 +9,7 @@ import {
   zeroAddress,
   type Address,
 } from 'viem'
-import { ownershipVerifierAbi, treasuryVaultAbi, universalRewardsAbi } from './abi'
+import { managedNftCollectionAbi, ownershipVerifierAbi, treasuryVaultAbi, universalRewardsAbi } from './abi'
 import { encodeV3Presentation, type V3Presentation } from './metadata'
 import { erc20Abi, readV3Pool, tokenDetails } from './reader'
 import { quoteV3Route } from './routes'
@@ -146,6 +146,109 @@ function integer(input: string, min: number, max: number, field: string) {
   return Number(input)
 }
 
+export async function inspectStudioCollection(
+  client: V3Client,
+  deployment: V3Deployment,
+  studio: Pick<V3StudioSnapshot, 'blockNumber' | 'verifier'>,
+  sourceChainId: bigint,
+  collection: Address,
+) {
+  const { blockNumber, verifier } = studio
+  const adapter = await readManagedAdapter(client, deployment, sourceChainId, collection, blockNumber)
+  const remote = sourceChainId !== SETTLEMENT_SOURCE
+  const supports = async (id: `0x${string}`) => {
+    try {
+      return await client.readContract({
+        address: collection,
+        abi: collectionAbi,
+        functionName: 'supportsInterface',
+        args: [id],
+        blockNumber,
+      })
+    } catch (error) {
+      if (isV3MissingSelector(error)) return false
+      throw error
+    }
+  }
+  if (adapter && adapter !== zeroAddress) {
+    const managed = await describeManagedCollection(client, adapter, undefined, blockNumber)
+    if (managed.sourceChainId !== sourceChainId || !isAddressEqual(managed.collection, collection)) {
+      throw new Error('The registered adapter does not match this collection and source network.')
+    }
+    if (remote) {
+      if (deployment.chainId !== 31337 || !managed.journal || managed.journal === zeroAddress || managed.paused) {
+        throw new Error('This collection needs an active source journal in an isolated test environment.')
+      }
+    } else {
+      let bound: boolean
+      try {
+        bound = await client.readContract({
+          address: adapter,
+          abi: managedNftCollectionAbi,
+          functionName: 'hasLocalHook',
+          blockNumber,
+        })
+      } catch (error) {
+        if (!isV3MissingSelector(error)) throw error
+        const hook = await client
+          .readContract({
+            address: collection,
+            abi: managed1155Abi,
+            functionName: 'rewardsHook',
+            blockNumber,
+          })
+          .catch((failure) => {
+            if (isV3MissingSelector(failure)) return zeroAddress
+            throw failure
+          })
+        bound = isAddressEqual(hook, adapter)
+      }
+      const [supports1155, invalidInterface] = await Promise.all([supports('0xd9b67a26'), supports('0xffffffff')])
+      if (!bound || managed.standard !== 1155 || !supports1155 || invalidInterface) {
+        throw new Error('ERC-1155 requires a reviewed collection with a bound transfer hook and matching adapter.')
+      }
+    }
+    return {
+      sourceChainId: SETTLEMENT_SOURCE,
+      collection: adapter,
+      maxUnits: managed.maxUnits,
+      label: `ERC-${managed.standard} · ${remote ? 'isolated journal' : 'bound transfer hook'}`,
+    }
+  }
+
+  if (remote) {
+    if (isAddressEqual(verifier, zeroAddress)) {
+      throw new Error(
+        'This source collection has no approved journal. Base and Arbitrum rewards are isolated testing only.',
+      )
+    }
+    const supported = await client.readContract({
+      address: verifier,
+      abi: ownershipVerifierAbi,
+      functionName: 'supportsSource',
+      args: [sourceChainId],
+      blockNumber,
+    })
+    if (!supported) throw new Error('This source chain has no isolated ownership verification policy.')
+    return { sourceChainId, collection, maxUnits: 1, label: 'ERC-721 · isolated ownership verification required' }
+  }
+
+  const code = await client.getCode({ address: collection, blockNumber })
+  if (!code || code === '0x') throw new Error('No NFT contract was found at this address on Polygon.')
+  const [supports721, supports1155, invalidInterface] = await Promise.all([
+    supports('0x80ac58cd'),
+    supports('0xd9b67a26'),
+    supports('0xffffffff'),
+  ])
+  if (!invalidInterface && supports721) {
+    return { sourceChainId, collection, maxUnits: 1, label: 'Polygon ERC-721 · direct ownership check' }
+  }
+  if (!invalidInterface && supports1155) {
+    throw new Error('This ERC-1155 collection needs a registered CoinCollect adapter and a bound transfer hook.')
+  }
+  throw new Error('This contract did not report a supported NFT interface on Polygon.')
+}
+
 export async function buildV3Preview(client: V3Client, deployment: V3Deployment, draft: V3StudioDraft) {
   const studio = await readV3Studio(client, deployment)
   const funding = studio.supported.find(({ address }) => address.toLowerCase() === draft.fundAsset.toLowerCase())
@@ -189,62 +292,12 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   }
 
   for (const rule of collections) {
-    const adapter = await readManagedAdapter(
-      client,
-      deployment,
-      rule.sourceChainId,
-      rule.collection,
-      studio.blockNumber,
-    )
-    if (adapter && adapter !== zeroAddress) {
-      const managed = await describeManagedCollection(client, adapter, undefined, studio.blockNumber)
-      if (BigInt(managed.maxUnits) * BigInt(rule.weight) > BigInt(4_294_967_295)) {
-        throw new Error('Unit power multiplied by the adapter quantity limit must fit within 4,294,967,295.')
-      }
-      if (managed.sourceChainId === SETTLEMENT_SOURCE) {
-        const hook = await client.readContract({
-          address: rule.collection,
-          abi: managed1155Abi,
-          functionName: 'rewardsHook',
-          blockNumber: studio.blockNumber,
-        })
-        if (!isAddressEqual(hook, adapter)) throw new Error('This ERC-1155 collection has no bound transfer hook.')
-      } else if (
-        deployment.chainId !== 31337 ||
-        !managed.journal ||
-        managed.journal === zeroAddress ||
-        managed.paused
-      ) {
-        throw new Error('This remote collection does not have an available verification journal.')
-      }
-      rule.sourceChainId = SETTLEMENT_SOURCE
-      rule.collection = adapter
-      continue
+    const compatibility = await inspectStudioCollection(client, deployment, studio, rule.sourceChainId, rule.collection)
+    if (BigInt(compatibility.maxUnits) * BigInt(rule.weight) > BigInt(4_294_967_295)) {
+      throw new Error('Unit power multiplied by the adapter quantity limit must fit within 4,294,967,295.')
     }
-    if (rule.sourceChainId === BigInt(137)) {
-      const supported = await client
-        .readContract({
-          address: rule.collection,
-          abi: collectionAbi,
-          functionName: 'supportsInterface',
-          args: ['0x80ac58cd'],
-          blockNumber: studio.blockNumber,
-        })
-        .catch(() => false)
-      if (!supported)
-        throw new Error('This Polygon collection must support ERC-721 or have an approved ERC-1155 transfer adapter.')
-    } else {
-      if (isAddressEqual(studio.verifier, zeroAddress))
-        throw new Error('Remote NFT collections are disabled in this deployment.')
-      const supported = await client.readContract({
-        address: studio.verifier,
-        abi: ownershipVerifierAbi,
-        functionName: 'supportsSource',
-        args: [rule.sourceChainId],
-        blockNumber: studio.blockNumber,
-      })
-      if (!supported) throw new Error('This source chain has no ownership verification policy.')
-    }
+    rule.sourceChainId = compatibility.sourceChainId
+    rule.collection = compatibility.collection
   }
 
   if (draft.rewards.length === 0 || draft.rewards.length > 4)

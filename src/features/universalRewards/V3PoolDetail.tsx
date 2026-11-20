@@ -130,8 +130,12 @@ function RewardRows({
         {nft.managed?.released ? 'Released rewards' : participation} · {nft.weight} power
         {nft.managed && !nft.managed.released && ` · ${nft.managed.active} participating units`}
       </V3Muted>
-      {nft.managed?.released && nft.managed.paused && (
-        <V3Muted role="status">Claims for this source are paused.</V3Muted>
+      {nft.managed?.released && nft.managed.claimsReady === false && (
+        <V3Muted role="status">
+          {nft.managed.paused
+            ? 'Claims for this source are paused.'
+            : 'Claims reopen when the source journal catches up.'}
+        </V3Muted>
       )}
       {nft.managed && !nft.managed.released && nft.managed.sourceChainId !== POLYGON && (
         <V3Muted>Request release on the source network before claiming on Polygon.</V3Muted>
