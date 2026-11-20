@@ -14,6 +14,7 @@ import {
   presentationRevision,
   validateV3Presentation,
   validateV3PresentationDocument,
+  type V3PresentationRecord,
 } from 'features/universalRewards/poolPresentation'
 import { createV3Client, getV3Deployment, validateV3Deployment } from 'features/universalRewards/runtime'
 
@@ -60,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'The presentation request is invalid or expired.' })
   }
 
-  let record
+  let record: V3PresentationRecord
   try {
     record = { poolId: id.toString(), ...validateV3Presentation(presentation) }
   } catch (error) {

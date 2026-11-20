@@ -8,6 +8,8 @@ on:
       - src/pages/admin/nft-pools/v3.tsx
       - src/views/NftFarms/**
       - tsconfig.v3.json
+      - package.json
+      - yarn.lock
       - .github/workflows/universalRewardsV3.yml
   push:
     branches: [pool-management]
@@ -17,6 +19,8 @@ on:
       - src/pages/admin/nft-pools/v3.tsx
       - src/views/NftFarms/**
       - tsconfig.v3.json
+      - package.json
+      - yarn.lock
       - .github/workflows/universalRewardsV3.yml
   workflow_dispatch:
 

@@ -33,7 +33,9 @@ async function tick() {
     lastError = ''
     for (const job of result.results) {
       if (job.status === 'confirmed' || job.status === 'pending') {
-        console.log(`Pool #${job.poolId}, reward window ${job.epoch} ${job.status} (${job.hash})`)
+        const action =
+          job.action === 'treasury-recovery' ? `treasury recovery for ${job.token}` : `reward window ${job.epoch}`
+        console.log(`Pool #${job.poolId}, ${action} ${job.status} (${job.hash})`)
       }
     }
   } catch (error) {

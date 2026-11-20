@@ -12,7 +12,7 @@ import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { encodeFunctionData, formatUnits, isAddressEqual, zeroAddress, type Address } from 'viem'
 import { universalRewardsAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
-import { shortAmount } from './presentation'
+import { isV3ClaimExpired, shortAmount } from './presentation'
 import { createV3Client, getV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import {
   buildV3Preview,
@@ -163,6 +163,7 @@ function FundingPanel({
   const locked = !writeAllowed || !getWallet || pending
   const remaining = view ? view.pool.funding.budget - view.pool.funding.deposited : ZERO
   const ended = view ? view.pool.timestamp >= view.pool.config.end : false
+  const claimsExpired = view ? isV3ClaimExpired(view.pool) : false
   const loadAutomation = useCallback(async () => {
     const response = await fetch('/api/v3/replenish?status=1', { cache: 'no-store' })
     if (!response.ok) throw new Error('Automatic funding status is unavailable.')
@@ -464,7 +465,8 @@ function FundingPanel({
                       {lane.reward.symbol} rewards · {lane.split.allocationBps / 100}%
                     </h3>
                     <V3Muted>
-                      Committed to NFTs · {shortAmount(lane.reward.committed / UNIT, lane.reward.decimals)}{' '}
+                      Committed to NFTs ·{' '}
+                      {shortAmount(claimsExpired ? ZERO : lane.reward.committed / UNIT, lane.reward.decimals)}{' '}
                       {lane.reward.symbol}
                     </V3Muted>
                     <V3Muted>
@@ -478,7 +480,7 @@ function FundingPanel({
                         {shortAmount(lane.quote[1], lane.reward.decimals)} {lane.reward.symbol}
                       </V3Muted>
                     )}
-                    {ended ? (
+                    {ended && !claimsExpired && (
                       <V3Button
                         type="button"
                         $secondary
@@ -495,7 +497,8 @@ function FundingPanel({
                       >
                         Return uncommitted {lane.reward.symbol}
                       </V3Button>
-                    ) : (
+                    )}
+                    {!ended && (
                       <V3Button
                         type="button"
                         $secondary

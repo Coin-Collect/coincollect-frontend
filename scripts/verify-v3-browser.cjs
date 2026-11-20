@@ -111,13 +111,13 @@ async function connect(url) {
     if (message.error) command.reject(new Error(message.error.message))
     else command.resolve(message.result)
   })
-  function command(method, params = {}) {
+  function command(method, params = {}, timeout = 8_000) {
     const id = ++serial
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         commands.delete(id)
         reject(new Error('Chrome did not answer ' + method))
-      }, 8_000)
+      }, timeout)
       commands.set(id, { resolve, reject, timer })
       socket.send(JSON.stringify({ method, params, id }))
     })
@@ -129,14 +129,14 @@ async function testBrowser() {
   assert.equal(await rpc('eth_chainId'), '0x7a69')
   assert.ok((await rpc('anvil_nodeInfo')).environment)
   const secret = process.env.V3_BROWSER_CRON_SECRET
+  const cronUrl = base + '/api/v3/replenish'
+  const tick = () =>
+    fetch(cronUrl, { headers: { Authorization: 'Bearer ' + secret } }).then((response) => {
+      assert.equal(response.status, 200)
+      return response.json()
+    })
   if (secret) {
-    const cronUrl = base + '/api/v3/replenish'
     assert.equal((await fetch(cronUrl)).status, 401)
-    const tick = () =>
-      fetch(cronUrl, { headers: { Authorization: 'Bearer ' + secret } }).then((response) => {
-        assert.equal(response.status, 200)
-        return response.json()
-      })
     const first = await tick()
     assert.ok(first.results.some((job) => job.poolId === String(fixture.poolId) && job.status === 'confirmed'))
     const repeated = await tick()
@@ -214,7 +214,7 @@ async function testBrowser() {
           '(' + injectedWallet.toString() + ')(...' + JSON.stringify([account, rpcUrl, announceProvider]) + ')'
         injection = (await command('Page.addScriptToEvaluateOnNewDocument', { source: expression })).identifier
       }
-      await command('Page.navigate', { url: base + route })
+      await command('Page.navigate', { url: base + route }, 45_000)
       await wait(route, (expected) => location.pathname === expected && document.readyState === 'complete', route)
     }
     const viewport = (width, height, mobile = false) =>
@@ -412,36 +412,39 @@ async function testBrowser() {
     assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
     console.log('PASS shared FarmCard modals, keyboard focus, detail link, non-custodial join and mobile exit')
 
-    await viewport(1280, 900)
-    await visit('/admin/nft-pools/v3', fixture.operator, true)
-    await has('Pool Studio V3')
-    await wait('Studio wallet connection', () => {
-      if (document.querySelector('[aria-label="V3 pool dashboard"]')) return true
-      const connect = [...document.querySelectorAll('section[aria-label="Pool Studio V3"] button')].find(
-        (button) => button.textContent.trim() === 'Connect Wallet',
-      )
-      if (!connect) return false
-      connect.click()
-      return 'modal'
-    }).then(async (connection) => {
-      if (connection !== 'modal') return
-      await wait('announced Studio wallet', () => {
-        function findWallet(root) {
-          for (const element of root.querySelectorAll('*')) {
-            if (element.localName === 'wui-list-wallet' && ['MetaMask', 'Browser Wallet'].includes(element.name))
-              return element
-            const nested = element.shadowRoot && findWallet(element.shadowRoot)
-            if (nested) return nested
+    const openStudio = async () => {
+      await visit('/admin/nft-pools/v3', fixture.operator, true)
+      await has('Pool Studio V3')
+      await wait('Studio wallet connection', () => {
+        if (document.querySelector('[aria-label="V3 pool dashboard"]')) return true
+        const connect = [...document.querySelectorAll('section[aria-label="Pool Studio V3"] button')].find(
+          (button) => button.textContent.trim() === 'Connect Wallet',
+        )
+        if (!connect) return false
+        connect.click()
+        return 'modal'
+      }).then(async (connection) => {
+        if (connection !== 'modal') return
+        await wait('announced Studio wallet', () => {
+          function findWallet(root) {
+            for (const element of root.querySelectorAll('*')) {
+              if (element.localName === 'wui-list-wallet' && ['MetaMask', 'Browser Wallet'].includes(element.name))
+                return element
+              const nested = element.shadowRoot && findWallet(element.shadowRoot)
+              if (nested) return nested
+            }
+            return null
           }
-          return null
-        }
-        const root = document.querySelector('w3m-modal')?.shadowRoot
-        const wallet = root && findWallet(root)
-        if (!wallet) return false
-        wallet.click()
-        return true
+          const root = document.querySelector('w3m-modal')?.shadowRoot
+          const wallet = root && findWallet(root)
+          if (!wallet) return false
+          wallet.click()
+          return true
+        })
       })
-    })
+    }
+    await viewport(1280, 900)
+    await openStudio()
     await wait('verified existing pool in Studio', () =>
       Boolean(document.querySelector('[aria-label="Manage V3 Browser Fixture"]')),
     )
@@ -626,6 +629,8 @@ async function testBrowser() {
       'function nftKey(uint256 sourceChainId,address collection,uint256 tokenId) view returns (bytes32)',
       'function walletsNftCount(uint256 poolId,address account) view returns (uint256)',
       'function positionState(uint256 poolId,bytes32 key) view returns ((uint256 sourceChainId,address collection,uint32 weight,uint256 tokenId,address seatOwner,uint64 seatExpiry))',
+      'function rewardState(uint256 poolId,address token) view returns ((uint128 cap,uint128 inventory,uint256 committed))',
+      'function rewardSettlement(uint256 poolId,address token) view returns (uint256 claimLiability,uint128 expiredRecovered)',
       'event Claimed(uint256 indexed poolId,bytes32 indexed nft,address indexed token,address owner,uint256 amount)',
     ])
     const sendFixture = async (to, functionName, args = [], value) => {
@@ -645,11 +650,12 @@ async function testBrowser() {
     await sendFixture(fixture.token, 'approve', [fixture.ledger, deposit])
     const block = await rpc('eth_getBlockByNumber', ['latest', false])
     const start = BigInt(block.timestamp) + 60n
+    const end = start + 3600n
     const uri =
       'data:application/json;base64,' +
       Buffer.from(JSON.stringify({ name: 'Harvest-all acceptance', description: '' })).toString('base64')
     await sendFixture(fixture.ledger, 'createPool', [
-      { start, end: start + 3600n, threshold: 1, maxWallets: 8, maxNftsPerWallet: 4, metadataURI: uri },
+      { start, end, threshold: 1, maxWallets: 8, maxNftsPerWallet: 4, metadataURI: uri },
       [{ sourceChainId: 137n, collection: fixture.nft, weight: 1 }],
       [{ token: fixture.token, cap: deposit }],
     ])
@@ -703,6 +709,54 @@ async function testBrowser() {
       assert.equal(result, '0x' + pad(fixture.participant).toLowerCase())
     }
     console.log('PASS Harvest claims all three NFTs, and selective Unstake pays and exits only two NFTs')
+    await rpc('evm_setNextBlockTimestamp', [Number(end + 12n * 86400n)])
+    await rpc('evm_mine')
+    await visit('/nftpools/v3/' + batchId, fixture.participant)
+    await has('18 days left to claim')
+    await wait('Harvest stays available during the claim window', () =>
+      [...document.querySelectorAll('article button')].some(
+        (button) => button.textContent.trim() === 'Harvest' && !button.disabled,
+      ),
+    )
+    const [liability] = await readBatchPool('rewardSettlement', [batchId, fixture.token])
+    assert.ok(liability > 0n)
+    if (secret) {
+      const early = await tick()
+      assert.ok(early.results.every((job) => job.poolId !== String(batchId) || job.action !== 'treasury-recovery'))
+    }
+    await rpc('evm_setNextBlockTimestamp', [Number(end + 30n * 86400n)])
+    await rpc('evm_mine')
+    await visit('/nftpools/v3/' + batchId, fixture.participant)
+    await has('Claim period ended')
+    await wait('expired harvest is disabled', () =>
+      [...document.querySelectorAll('article button')].some(
+        (button) => button.textContent.trim() === 'Harvest closed' && button.disabled,
+      ),
+    )
+    await openStudio()
+    await click('button[aria-label="Manage Harvest-all acceptance"]', 'Manage')
+    await has('Claims and treasury settlement')
+    await has('awaiting treasury recovery')
+    const { inventory } = await readBatchPool('rewardState', [batchId, fixture.token])
+    assert.ok(inventory > 0n)
+    if (secret) {
+      const settled = await tick()
+      assert.ok(
+        settled.results.some(
+          (job) => job.poolId === String(batchId) && job.action === 'treasury-recovery' && job.status === 'confirmed',
+        ),
+      )
+      const repeated = await tick()
+      assert.ok(repeated.results.every((job) => job.poolId !== String(batchId) || job.status !== 'confirmed'))
+      await openStudio()
+      await click('button[aria-label="Manage Harvest-all acceptance"]', 'Manage')
+    } else {
+      await click('button', 'Recover V3R to treasury')
+    }
+    await has('recovered to treasury')
+    assert.deepEqual(await readBatchPool('rewardSettlement', [batchId, fixture.token]), [0n, inventory])
+    assert.equal((await readBatchPool('rewardState', [batchId, fixture.token])).inventory, 0n)
+    console.log('PASS V3 claim countdown, disabled expired Harvest, Studio liabilities and treasury recovery')
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',
     )

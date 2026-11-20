@@ -6,6 +6,8 @@ import { isAddressEqual, type Address } from 'viem'
 import { useV3Action, useV3PresentationDocument, useV3Query, useV3Wallet } from './hooks'
 import {
   availableReward,
+  claimPeriodMessage,
+  isV3ClaimExpired,
   poolTiming,
   positionDailyEstimate,
   shortAmount,
@@ -104,14 +106,16 @@ function RewardRows({
   onManage: (action: 'claim' | 'exit' | 'leave', rewardToken?: Address) => void
   actionDisabled: boolean
 }) {
-  const hasClaimable = nft.claimable.some((amount) => amount > ZERO)
+  const claimsExpired = isV3ClaimExpired(pool)
+  const hasClaimable = !claimsExpired && nft.claimable.some((amount) => amount > ZERO)
   return (
     <V3Fields>
       <legend>
         {sourceName(nft.ref.sourceChainId)} NFT #{nft.ref.tokenId.toString()}
       </legend>
       <V3Muted>
-        {nft.seated ? 'Participating' : 'No active participation'} · {nft.weight} power
+        {poolTiming(pool) === 'Finished' ? 'Pool ended' : nft.seated ? 'Participating' : 'No active participation'} ·{' '}
+        {nft.weight} power
       </V3Muted>
       {nft.unavailable && <V3Error role="status">A fresh ownership proof is required for this position.</V3Error>}
       <V3Metrics>
@@ -120,10 +124,10 @@ function RewardRows({
             <dt>{reward.symbol} claimable</dt>
             <dd>
               <V3RewardValue key={nft.claimable[index].toString()}>
-                {shortAmount(nft.claimable[index], reward.decimals)}
+                {shortAmount(claimsExpired ? ZERO : nft.claimable[index], reward.decimals)}
               </V3RewardValue>
             </dd>
-            {pool.rewards.length > 1 && nft.claimable[index] > ZERO && (
+            {!claimsExpired && pool.rewards.length > 1 && nft.claimable[index] > ZERO && (
               <V3Button
                 type="button"
                 $secondary
@@ -149,7 +153,7 @@ function RewardRows({
             <V3Button
               type="button"
               $secondary
-              disabled={actionDisabled || !nft.eligible}
+              disabled={actionDisabled || !nft.eligible || claimsExpired}
               onClick={() => onManage('exit')}
             >
               Exit and claim
@@ -160,7 +164,7 @@ function RewardRows({
               disabled={actionDisabled || !nft.eligible}
               onClick={() => onManage('leave')}
             >
-              Leave and keep claims
+              {claimsExpired ? 'Leave pool' : 'Leave and keep claims'}
             </V3Button>
           </>
         )}
@@ -263,7 +267,7 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
   }
 
   const manage = async (nft: WalletNftSnapshot, action: 'claim' | 'exit' | 'leave', rewardToken?: Address) => {
-    if (!deployment || writeDisabled || !nft.eligible) return
+    if (!deployment || !pool || writeDisabled || !nft.eligible || (action !== 'leave' && isV3ClaimExpired(pool))) return
     if (await transaction.run(manageV3Position(deployment, poolId, nft.ref, action, rewardToken))) result.refresh()
   }
 
@@ -293,7 +297,9 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
                 <div>
                   <h2>Pool rewards</h2>
                   <V3Muted>
-                    Rewards are paid in these tokens. NFT ownership controls who can claim each balance.
+                    {pool.claimDeadline === undefined
+                      ? 'NFT ownership controls who can claim each balance.'
+                      : 'The current NFT owner can claim rewards until 30 days after the pool ends.'}
                   </V3Muted>
                   <V3Muted>Settlement contract · {deployment.address}</V3Muted>
                   <V3Metrics>
@@ -315,6 +321,7 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
             <V3Section id="eligible-nfts" aria-label="Your NFTs and rewards">
               <header>
                 <h2>Your NFTs and rewards</h2>
+                {claimPeriodMessage(pool) && <V3Muted>{claimPeriodMessage(pool)}</V3Muted>}
               </header>
               {wrongChain && deployment && (
                 <V3Actions>

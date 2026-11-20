@@ -27,6 +27,26 @@ export function poolTiming(pool: Pick<V3PoolSnapshot, 'timestamp' | 'config'>) {
   return 'Live'
 }
 
+type ClaimTiming = Pick<V3PoolSnapshot, 'timestamp' | 'config' | 'claimDeadline'>
+
+export function isV3ClaimExpired(pool: ClaimTiming, timestamp = pool.timestamp) {
+  return pool.claimDeadline !== undefined && timestamp >= pool.claimDeadline
+}
+
+export function claimPeriodMessage(pool: ClaimTiming, timestamp = pool.timestamp) {
+  if (pool.claimDeadline === undefined || timestamp < pool.config.end) return undefined
+  if (isV3ClaimExpired(pool, timestamp)) return 'Claim period ended'
+  const seconds = pool.claimDeadline - timestamp
+  const hour = BigInt(3600)
+  const minute = BigInt(60)
+  if (seconds < minute) return 'Less than 1 minute left to claim'
+  const [unit, size] = seconds >= DAY ? ['day', DAY] : seconds >= hour ? ['hour', hour] : ['minute', minute]
+  const duration = new Intl.NumberFormat('en', { style: 'unit', unit, unitDisplay: 'long' }).format(
+    Number(seconds / size),
+  )
+  return `${duration} left to claim`
+}
+
 export function dailyTarget(pool: V3PoolSnapshot, reward: RewardSnapshot) {
   return (reward.cap * DAY) / (pool.config.end - pool.config.start)
 }

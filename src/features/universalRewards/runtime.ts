@@ -1,4 +1,16 @@
-import { createPublicClient, getAddress, http, isAddress, isHex, keccak256, type Address, type Hex } from 'viem'
+import {
+  BaseError,
+  ContractFunctionRevertedError,
+  ContractFunctionZeroDataError,
+  createPublicClient,
+  getAddress,
+  http,
+  isAddress,
+  isHex,
+  keccak256,
+  type Address,
+  type Hex,
+} from 'viem'
 import { getLocalForkRpcUrl, getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
 import { universalRewardsAbi } from './abi'
 
@@ -24,6 +36,33 @@ export function createV3Client() {
 }
 
 export type V3Client = ReturnType<typeof createV3Client>
+
+export async function readV3ClaimPeriod(client: V3Client, deployment: V3Deployment, blockNumber?: bigint) {
+  try {
+    return await client.readContract({
+      address: deployment.address,
+      abi: universalRewardsAbi,
+      functionName: 'CLAIM_PERIOD',
+      blockNumber,
+    })
+  } catch (error) {
+    // Older, already deployed ledgers do not implement this selector.
+    if (
+      error instanceof BaseError &&
+      error.walk(
+        (cause) =>
+          cause instanceof ContractFunctionZeroDataError ||
+          (cause instanceof ContractFunctionRevertedError &&
+            !cause.data &&
+            !cause.signature &&
+            (!cause.reason || /^execution reverted(?: for an unknown reason\.)?$/i.test(cause.reason))),
+      )
+    ) {
+      return undefined
+    }
+    throw error
+  }
+}
 
 export async function validateV3Deployment(client: V3Client, deployment: V3Deployment, blockNumber?: bigint) {
   const [actualChain, code] = await Promise.all([

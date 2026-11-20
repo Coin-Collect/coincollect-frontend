@@ -1,5 +1,5 @@
 import type { WalletClient } from 'viem'
-import { executeReplenishmentJob, pickV3Batch } from './automation'
+import { executeReplenishmentJob, executeTreasuryRecovery, pickV3Batch } from './automation'
 import type { V3Client, V3Deployment } from './runtime'
 
 const address = '0x0000000000000000000000000000000000000001'
@@ -34,7 +34,8 @@ function worker() {
   const writeContract = jest.fn().mockResolvedValue(hash)
   const executor = { writeContract } as unknown as WalletClient
   const run = () => executeReplenishmentJob(client, executor, deployment, address, job)
-  return { run, readContract, writeContract, simulateContract, waitForTransactionReceipt, getContractEvents }
+  const recover = () => executeTreasuryRecovery(client, executor, deployment, address, job.poolId, job.token)
+  return { run, recover, readContract, writeContract, simulateContract, waitForTransactionReceipt, getContractEvents }
 }
 
 describe('V3 automation', () => {
@@ -82,5 +83,30 @@ describe('V3 automation', () => {
     test.waitForTransactionReceipt.mockRejectedValueOnce(new Error('receipt unavailable'))
     await expect(test.run()).resolves.toMatchObject({ status: 'pending', hash })
     expect(test.writeContract).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips settled inventory and independently retries a token that cannot be recovered', async () => {
+    const test = worker()
+    test.readContract.mockResolvedValueOnce({ inventory: BigInt(0) }).mockResolvedValueOnce({ inventory: BigInt(75) })
+    test.simulateContract.mockRejectedValueOnce(new Error('transfers blocked'))
+    await expect(test.recover()).resolves.toBeUndefined()
+    await expect(test.recover()).resolves.toMatchObject({ action: 'treasury-recovery', status: 'deferred' })
+    expect(test.writeContract).not.toHaveBeenCalled()
+  })
+
+  it('requires the expiry settlement event from the submitted transaction', async () => {
+    const test = worker()
+    test.readContract.mockResolvedValueOnce({ inventory: BigInt(75) })
+    test.simulateContract.mockResolvedValueOnce({ request: {}, result: BigInt(75) })
+    test.waitForTransactionReceipt.mockResolvedValueOnce({
+      status: 'success',
+      transactionHash: hash,
+      blockNumber: BigInt(72),
+    })
+    test.getContractEvents.mockResolvedValueOnce([{ transactionHash: hash }])
+    await expect(test.recover()).resolves.toMatchObject({ action: 'treasury-recovery', status: 'confirmed', hash })
+    expect(test.getContractEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ eventName: 'ExpiredRewardsRecovered', args: { poolId: job.poolId, token: job.token } }),
+    )
   })
 })

@@ -9,7 +9,7 @@ import {
   type WalletClient,
 } from 'viem'
 import { rewardSwapAbi, universalRewardsAbi } from './abi'
-import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import { withV3GasHeadroom } from './transactions'
 
 const ZERO = BigInt(0)
@@ -28,6 +28,7 @@ interface JobResult {
   poolId: string
   token?: Address
   epoch?: number
+  action?: 'treasury-recovery'
   status: 'confirmed' | 'already-executed' | 'pending' | 'deferred' | 'failed'
   hash?: Hex
   reason?: string
@@ -97,7 +98,7 @@ export async function executeReplenishmentJob(
     })
     const gas = withV3GasHeadroom(await client.estimateContractGas(request))
     hash = await executor.writeContract({ ...request, chain: executor.chain ?? null, gas })
-    const receipt = await client.waitForTransactionReceipt({ hash, timeout: 8_000, checkReplacement: false })
+    const receipt = await client.waitForTransactionReceipt({ hash, timeout: 8_000 })
     const event = await client.getContractEvents({
       ...ledger,
       eventName: 'Replenished',
@@ -141,8 +142,52 @@ async function observeRouteIfDue(
     account,
   })
   const tx = await executor.writeContract({ ...request, chain: executor.chain ?? null })
-  const receipt = await client.waitForTransactionReceipt({ hash: tx, timeout: 5_000, checkReplacement: false })
-  return receipt.status === 'success'
+  const receipt = await client.waitForTransactionReceipt({ hash: tx, timeout: 5_000 })
+  return receipt.status === 'success' && receipt.transactionHash === tx
+}
+
+export async function executeTreasuryRecovery(
+  client: V3Client,
+  executor: WalletClient,
+  deployment: V3Deployment,
+  account: Address,
+  poolId: bigint,
+  token: Address,
+): Promise<JobResult | undefined> {
+  const context = { poolId: poolId.toString(), token, action: 'treasury-recovery' } as const
+  const ledger = { address: deployment.address, abi: universalRewardsAbi } as const
+  let hash: Hex | undefined
+  try {
+    const reward = await client.readContract({ ...ledger, functionName: 'rewardState', args: [poolId, token] })
+    if (reward.inventory === ZERO) return undefined
+    const { request, result } = await client.simulateContract({
+      ...ledger,
+      functionName: 'recoverExpiredRewards',
+      args: [poolId, token],
+      account,
+    })
+    if (result === ZERO) return { ...context, status: 'already-executed' }
+    const gas = withV3GasHeadroom(await client.estimateContractGas(request))
+    hash = await executor.writeContract({ ...request, chain: executor.chain ?? null, gas })
+    const receipt = await client.waitForTransactionReceipt({ hash, timeout: 8_000 })
+    if (receipt.status === 'success' && receipt.transactionHash === hash) {
+      const logs = await client.getContractEvents({
+        ...ledger,
+        eventName: 'ExpiredRewardsRecovered',
+        args: { poolId, token },
+        fromBlock: receipt.blockNumber,
+        toBlock: receipt.blockNumber,
+        strict: true,
+      })
+      if (logs.some((log) => log.transactionHash === hash)) return { ...context, hash, status: 'confirmed' }
+      const remaining = await client.readContract({ ...ledger, functionName: 'rewardState', args: [poolId, token] })
+      if (remaining.inventory === ZERO) return { ...context, hash, status: 'already-executed' }
+    }
+    return { ...context, hash, status: 'failed', reason: 'Treasury recovery was not confirmed.' }
+  } catch {
+    if (hash) return { ...context, hash, status: 'pending' }
+    return { ...context, status: 'deferred', reason: 'This token could not be transferred to the treasury yet.' }
+  }
 }
 
 export async function runV3Automation(
@@ -157,17 +202,37 @@ export async function runV3Automation(
   const account = accounts.at(-1)
   if (!account) throw new Error('Anvil has no unlocked test executor.')
   const ledger = { address: deployment.address, abi: universalRewardsAbi } as const
-  const [total, swap] = await Promise.all([
+  const [total, swap, period, snapshot] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'poolCount' }),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
+    readV3ClaimPeriod(client, deployment),
+    client.getBlock(),
   ])
   const results: JobResult[] = []
   const checkedRoutes = new Set<string>()
   let observationAttempts = 0
+  let replenishmentJobs = 0
   if (firstPoolId > total) return results
   for (const offset of pickV3Batch(total - firstPoolId + BigInt(1), tick)) {
     const poolId = offset + firstPoolId - BigInt(1)
     try {
+      const [config] = await client.readContract({
+        ...ledger,
+        blockNumber: snapshot.number,
+        functionName: 'poolState',
+        args: [poolId],
+      })
+      if (snapshot.timestamp >= config.end) {
+        if (period !== undefined && snapshot.timestamp >= config.end + period) {
+          const tokens = await client.readContract({ ...ledger, functionName: 'rewardsOf', args: [poolId] })
+          for (const token of tokens) {
+            const result = await executeTreasuryRecovery(client, executor, deployment, account, poolId, token)
+            if (result) results.push(result)
+          }
+        }
+        continue
+      }
+      if (replenishmentJobs >= V3_AUTOMATION_WINDOW) continue
       const [plan, tokens] = await Promise.all([
         client.readContract({ ...ledger, functionName: 'fundingState', args: [poolId] }),
         client.readContract({ ...ledger, functionName: 'rewardsOf', args: [poolId] }),
@@ -175,7 +240,7 @@ export async function runV3Automation(
       if (isAddressEqual(plan.asset, zeroAddress) || plan.paused || plan.deposited === plan.spent + plan.recovered)
         continue
       for (const token of tokens) {
-        if (results.length >= V3_AUTOMATION_WINDOW) return results
+        if (replenishmentJobs >= V3_AUTOMATION_WINDOW) break
         let block = await client.getBlock()
         const crossAsset = !isAddressEqual(plan.asset, token)
         const routeKey = `${plan.asset}:${token}`.toLowerCase()
@@ -215,6 +280,7 @@ export async function runV3Automation(
             })
             minimum = quote[1]
           } catch {
+            replenishmentJobs++
             results.push({
               poolId: poolId.toString(),
               token,
@@ -226,6 +292,7 @@ export async function runV3Automation(
           }
         }
         const job = { poolId, token, epoch, amount, minimum, deadline: block.timestamp + BigInt(90) }
+        replenishmentJobs++
         results.push(await executeReplenishmentJob(client, executor, deployment, account, job))
       }
     } catch {

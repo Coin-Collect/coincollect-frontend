@@ -1,7 +1,18 @@
-import { encodeFunctionData, isAddressEqual, parseEventLogs, type Address, type Hex, type WalletClient } from 'viem'
+import {
+  encodeFunctionData,
+  isAddressEqual,
+  parseEventLogs,
+  toFunctionSelector,
+  type Address,
+  type Hex,
+  type WalletClient,
+} from 'viem'
 import { universalRewardsAbi } from './abi'
 import { erc20Abi, type NftRef } from './reader'
 import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+
+const expiredClaimError = toFunctionSelector('ClaimPeriodEnded()')
+const openClaimError = toFunctionSelector('ClaimPeriodOpen()')
 
 export interface V3Call {
   to: Address
@@ -95,6 +106,17 @@ export function approveV3Funding(deployment: V3Deployment, token: Address, amoun
   }
 }
 
+export function recoverV3ExpiredRewards(deployment: V3Deployment, poolId: bigint, token: Address): V3Call {
+  return {
+    to: deployment.address,
+    data: encodeFunctionData({
+      abi: universalRewardsAbi,
+      functionName: 'recoverExpiredRewards',
+      args: [poolId, token],
+    }),
+  }
+}
+
 export function describeV3Error(error: unknown): string {
   if (typeof error !== 'object' || error === null) return 'The V3 request failed.'
   const message =
@@ -106,5 +128,8 @@ export function describeV3Error(error: unknown): string {
   if (/\b(?:0xe450d38c|ERC20InsufficientBalance)\b/i.test(message)) {
     return 'Your wallet does not have enough of the selected token. Check the balance before trying again.'
   }
+  if (message.includes('ClaimPeriodEnded') || message.includes(expiredClaimError)) return 'Claim period ended.'
+  if (message.includes('ClaimPeriodOpen') || message.includes(openClaimError))
+    return 'Treasury recovery opens when the claim period ends.'
   return message
 }

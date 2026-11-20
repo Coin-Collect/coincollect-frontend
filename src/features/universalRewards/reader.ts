@@ -2,7 +2,7 @@ import { isAddressEqual, parseAbi, parseAbiItem, zeroAddress, type Address, type
 import { getLocalForkBaseBlock } from 'config/localFork'
 import { ownershipVerifierAbi, universalRewardsAbi } from './abi'
 import { decodeV3Presentation } from './metadata'
-import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
 const erc721Abi = parseAbi([
   'function ownerOf(uint256 tokenId) view returns (address)',
@@ -37,6 +37,7 @@ export interface RewardSnapshot {
   cap: bigint
   inventory: bigint
   committed: bigint
+  settlement?: { claimLiability: bigint; expiredRecovered: bigint }
 }
 
 function ledgerAt(deployment: V3Deployment, blockNumber: bigint) {
@@ -60,24 +61,36 @@ export async function tokenDetails(client: V3Client, address: Address, blockNumb
 
 type SnapshotBlock = Awaited<ReturnType<V3Client['getBlock']>>
 
-export async function readV3Pool(client: V3Client, deployment: V3Deployment, poolId: bigint, snapshot: SnapshotBlock) {
+export async function readV3Pool(
+  client: V3Client,
+  deployment: V3Deployment,
+  poolId: bigint,
+  snapshot: SnapshotBlock,
+  options: { includeSettlement?: boolean; claimPeriod?: ReturnType<typeof readV3ClaimPeriod> } = {},
+) {
   if (snapshot.number === null) throw new Error('A mined block reference is required for the pool view.')
   const ledger = ledgerAt(deployment, snapshot.number)
-  const [[config, checkedUntil, activeWallets, totalWeight, activeNfts], collections, rewardTokens, funding] =
+  const [[config, checkedUntil, activeWallets, totalWeight, activeNfts], collections, rewardTokens, funding, period] =
     await Promise.all([
       client.readContract({ ...ledger, functionName: 'poolState', args: [poolId] }),
       client.readContract({ ...ledger, functionName: 'collectionRules', args: [poolId] }),
       client.readContract({ ...ledger, functionName: 'rewardsOf', args: [poolId] }),
       client.readContract({ ...ledger, functionName: 'fundingState', args: [poolId] }),
+      options.claimPeriod ?? readV3ClaimPeriod(client, deployment, ledger.blockNumber),
     ])
   const rewards: RewardSnapshot[] = await Promise.all(
     rewardTokens.map(async (token) => {
       const number = ledger.blockNumber
-      const [reward, details] = await Promise.all([
+      const [reward, details, settlement] = await Promise.all([
         client.readContract({ ...ledger, functionName: 'rewardState', args: [poolId, token] }),
         tokenDetails(client, token, number),
+        period !== undefined && options.includeSettlement
+          ? client
+              .readContract({ ...ledger, functionName: 'rewardSettlement', args: [poolId, token] })
+              .then(([claimLiability, expiredRecovered]) => ({ claimLiability, expiredRecovered }))
+          : undefined,
       ])
-      return { token, ...reward, ...details }
+      return { token, ...reward, ...details, settlement }
     }),
   )
   return {
@@ -90,6 +103,7 @@ export async function readV3Pool(client: V3Client, deployment: V3Deployment, poo
     collections,
     rewards,
     funding,
+    claimDeadline: period === undefined ? undefined : config.end + period,
     timestamp: snapshot.timestamp,
     blockNumber: ledger.blockNumber,
     presentation: decodeV3Presentation(config.metadataURI, poolId),
@@ -111,9 +125,14 @@ async function v3PoolPage(client: V3Client, deployment: V3Deployment, offset: nu
 export async function readV3Catalogue(client: V3Client, deployment: V3Deployment, offset = 0) {
   const { snapshot, total, ids } = await v3PoolPage(client, deployment, offset)
   const pools: V3PoolSnapshot[] = []
+  if (!ids.length) return { total, pools }
+  const claimPeriod = readV3ClaimPeriod(client, deployment, snapshot.number)
   // Four pool groups at a time limits the read pressure on the shared RPC.
   for (let i = 0; i < ids.length; i += 4) {
-    pools.push(...(await Promise.all(ids.slice(i, i + 4).map((id) => readV3Pool(client, deployment, id, snapshot)))))
+    const batch = await Promise.all(
+      ids.slice(i, i + 4).map((id) => readV3Pool(client, deployment, id, snapshot, { claimPeriod })),
+    )
+    pools.push(...batch)
   }
   return { total, pools }
 }
@@ -265,11 +284,22 @@ export async function readV3CardPosition(
   account: Address,
 ) {
   const block = await client.getBlock()
+  const amounts = pool.rewards.map(() => NIL)
+  if (pool.claimDeadline !== undefined && block.timestamp >= pool.claimDeadline) {
+    return {
+      count: 0,
+      power: 0,
+      amounts,
+      claimableNfts: [] as NftRef[],
+      seatedNfts: [] as NftRef[],
+      blockNumber: block.number,
+      timestamp: block.timestamp,
+    }
+  }
   const ledger = ledgerAt(deployment, block.number)
   const verifier = pool.collections.some(({ sourceChainId }) => sourceChainId !== BigInt(137))
     ? await verifierAt(client, deployment, block.number)
     : zeroAddress
-  const amounts = pool.rewards.map(() => NIL)
   const claimableNfts: NftRef[] = []
   const seatedNfts: NftRef[] = []
   let power = 0

@@ -9,7 +9,9 @@ import FlexLayout from 'components/Layout/Flex'
 import useNearViewport from 'hooks/useNearViewport'
 import { useTranslation } from 'contexts/Localization'
 import {
+  claimPeriodMessage,
   dailyTarget,
+  isV3ClaimExpired,
   poolTiming,
   shortAmount,
   sourceName,
@@ -104,6 +106,10 @@ export default function V3FarmCard({
   const position = useV3Query(!preview && (detail || isNearViewport) ? positionKey : '', loadPosition, 30_000)
   const action = useV3Action(client, deployment, getWallet, address)
   const walletPosition = position.data
+  const timestamp =
+    walletPosition && walletPosition.timestamp > pool.timestamp ? walletPosition.timestamp : pool.timestamp
+  const claimMessage = claimPeriodMessage(pool, timestamp)
+  const claimsExpired = isV3ClaimExpired(pool, timestamp)
   const count = walletPosition?.count ?? 0
   const claimableNfts = walletPosition?.claimableNfts ?? []
   const hasPosition = count > 0 || claimableNfts.length > 0
@@ -122,9 +128,11 @@ export default function V3FarmCard({
     onPositionChange?.()
   }
   const harvest = async () => {
+    if (claimsExpired) return
     await action.runMany(async () => {
       if (chainId !== deployment.chainId) await switchChainAsync({ chainId: deployment.chainId })
       const fresh = await loadPosition()
+      if (isV3ClaimExpired(pool, fresh.timestamp)) throw new Error(t('Claim period ended'))
       if (!fresh.claimableNfts.length) throw new Error(t('No rewards are currently available to harvest.'))
       return fresh.claimableNfts.map((ref) => manageV3Position(deployment, pool.poolId, ref, 'claim'))
     })
@@ -186,10 +194,19 @@ export default function V3FarmCard({
       }}
     >
       <Action>
+        {claimMessage && (
+          <Text bold color={claimsExpired ? 'textSubtle' : 'primary'} mb="12px">
+            {claimMessage}
+          </Text>
+        )}
         {preview ? (
           <V3Button as="a" $secondary href={poolUrl}>
             {t('Open pool page')}
           </V3Button>
+        ) : claimsExpired ? (
+          <StyledActionButton width="100%" disabled>
+            {t('Harvest closed')}
+          </StyledActionButton>
         ) : !address ? (
           <Flex>
             <ConnectWalletButton mt="8px" width="100%" />
@@ -241,6 +258,10 @@ export default function V3FarmCard({
                 onUnstake={openUnstaking}
                 onStakeMore={openStaking}
               />
+            ) : finished ? (
+              <Text small color="textSubtle">
+                {t(claimableNfts.length ? 'Pool ended · harvest above' : 'Pool ended · no rewards to harvest')}
+              </Text>
             ) : (
               <StyledActionButton mt="-4px" width="100%" variant="primary" disabled={!canStake} onClick={openStaking}>
                 {status === 'UPCOMING' ? t('Upcoming · staking opens when active') : t('Click to Stake Now')}
@@ -270,7 +291,7 @@ export default function V3FarmCard({
           </Flex>
         )}
       </Action>
-      {address && modal && address === modal.account && (
+      {!claimsExpired && address && modal && address === modal.account && (
         <V3NftActionModal
           mode={modal.mode}
           client={client}
