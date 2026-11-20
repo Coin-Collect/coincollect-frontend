@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useRouter } from 'next/router'
+import { isAddressEqual } from 'viem'
 import { NextLinkFromReactRouter } from 'components/NextLink'
 import { Menu as UikitMenu } from '@pancakeswap/uikit'
 import { languageList } from 'config/localization/languages'
@@ -13,6 +14,8 @@ import { usePoolManagerAuthority } from 'features/poolManager/hooks'
 import { hasAdminWalletAccess } from 'features/poolManager/adminNavigation'
 import { POOL_MANAGER_CHAIN_ID } from 'features/poolManager/constants'
 import { getNftSmartChefFactoryAddress } from 'utils/addressHelpers'
+import { useV3Query } from 'features/universalRewards/hooks'
+import { createV3Client, getV3Deployment, readV3Operator } from 'features/universalRewards/runtime'
 import UserMenu from './UserMenu'
 import GlobalSettings from './GlobalSettings'
 import FooterControls from './FooterControls'
@@ -60,7 +63,14 @@ const Menu = (props) => {
     ? '/admin'
     : undefined
 
-  const navItems = useMemo(() => getNavConfig(t, account, adminHref), [account, adminHref, t])
+  const v3Deployment = useMemo(getV3Deployment, [])
+  const loadV3Operator = useCallback(() => {
+    if (!v3Deployment) throw new Error('V3 deployment is unavailable.')
+    return readV3Operator(createV3Client(), v3Deployment)
+  }, [v3Deployment])
+  const v3Operator = useV3Query(account && v3Deployment ? v3Deployment.address : '', loadV3Operator)
+  const showV3Studio = Boolean(account && v3Operator.data && !v3Operator.error && isAddressEqual(account, v3Operator.data))
+  const navItems = useMemo(() => getNavConfig(t, account, adminHref, showV3Studio), [account, adminHref, showV3Studio, t])
   const drawerLinks = useMemo(() => getDrawerLinks(navItems), [navItems])
   const topLinks = useMemo(() => getTopLinks(navItems), [navItems])
 

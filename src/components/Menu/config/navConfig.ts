@@ -17,7 +17,12 @@ export type NavItem = {
   initialOpenState?: boolean
 }
 
-export const getNavConfig = (t: ContextApi['t'], account?: string | null, adminHref?: string): NavItem[] => {
+export const getNavConfig = (
+  t: ContextApi['t'],
+  account?: string | null,
+  adminHref?: string,
+  showV3Studio = false,
+): NavItem[] => {
   const items: NavItem[] = [
     {
       id: 'collections',
@@ -33,6 +38,17 @@ export const getNavConfig = (t: ContextApi['t'], account?: string | null, adminH
       icon: 'Pool',
       activeMatch: 'prefix',
     },
+    ...(showV3Studio
+      ? [
+          {
+            id: 'pool-studio-v3',
+            label: t('Pool Studio V3'),
+            href: '/admin/nft-pools/v3',
+            icon: 'Pencil',
+            showInTopNav: false,
+          },
+        ]
+      : []),
     {
       id: 'claim-rewards',
       label: t('Claim Rewards'),

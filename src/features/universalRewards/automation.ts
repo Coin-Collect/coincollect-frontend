@@ -150,6 +150,7 @@ export async function runV3Automation(
   executor: WalletClient,
   deployment: V3Deployment,
   tick: bigint,
+  firstPoolId = BigInt(1),
 ) {
   await proveLocalExecutor(client, executor, deployment)
   const accounts = await executor.getAddresses()
@@ -163,13 +164,16 @@ export async function runV3Automation(
   const results: JobResult[] = []
   const checkedRoutes = new Set<string>()
   let observationAttempts = 0
-  for (const poolId of pickV3Batch(total, tick)) {
+  if (firstPoolId > total) return results
+  for (const offset of pickV3Batch(total - firstPoolId + BigInt(1), tick)) {
+    const poolId = offset + firstPoolId - BigInt(1)
     try {
       const [plan, tokens] = await Promise.all([
         client.readContract({ ...ledger, functionName: 'fundingState', args: [poolId] }),
         client.readContract({ ...ledger, functionName: 'rewardsOf', args: [poolId] }),
       ])
-      if (isAddressEqual(plan.asset, zeroAddress) || plan.paused) continue
+      if (isAddressEqual(plan.asset, zeroAddress) || plan.paused || plan.deposited === plan.spent + plan.recovered)
+        continue
       for (const token of tokens) {
         if (results.length >= V3_AUTOMATION_WINDOW) return results
         let block = await client.getBlock()

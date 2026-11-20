@@ -1,5 +1,6 @@
 import { createPublicClient, getAddress, http, isAddress, isHex, keccak256, type Address, type Hex } from 'viem'
 import { getLocalForkRpcUrl, getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
+import { universalRewardsAbi } from './abi'
 
 export interface V3Deployment {
   readonly address: Address
@@ -36,4 +37,15 @@ export async function validateV3Deployment(client: V3Client, deployment: V3Deplo
   ) {
     throw new Error('The V3 deployment could not be verified on the selected chain.')
   }
+}
+
+export async function readV3Operator(client: V3Client, deployment: V3Deployment) {
+  const blockNumber = await client.getBlockNumber()
+  await validateV3Deployment(client, deployment, blockNumber)
+  return client.readContract({
+    address: deployment.address,
+    abi: universalRewardsAbi,
+    functionName: 'admin',
+    blockNumber,
+  })
 }
