@@ -1,5 +1,5 @@
 import { useCallback, useId, useState, type ComponentType, type ReactNode } from 'react'
-import { type Address } from 'viem'
+import { zeroAddress, type Address } from 'viem'
 import { poolArtworkRegistry } from 'features/nftPoolManager/studio/artworkRegistry'
 import { useV3Query, useV3Wallet } from './hooks'
 import { safeArtwork, type V3Presentation } from './metadata'
@@ -153,6 +153,11 @@ export default function V3StudioPool({
           .join(', ')}
       </V3Muted>
       <WorkspaceActions>
+        {pool.funding.asset !== zeroAddress && (
+          <V3Button as="a" $secondary href="#v3-reward-budget">
+            Reward budget
+          </V3Button>
+        )}
         <V3Button
           type="button"
           $secondary

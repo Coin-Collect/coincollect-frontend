@@ -3,10 +3,17 @@
 const target = new URL(process.env.V3_LOCAL_PREVIEW || 'http://127.0.0.1:3015')
 const secret = process.env.CRON_SECRET
 if (
-  target.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(target.hostname)
-  || target.username || target.password || target.pathname !== '/' || target.search || target.hash
-  || !secret || secret.length < 16
-) throw new Error('The local V3 worker requires a loopback preview URL and its configured CRON_SECRET.')
+  target.protocol !== 'http:' ||
+  !['localhost', '127.0.0.1', '[::1]'].includes(target.hostname) ||
+  target.username ||
+  target.password ||
+  target.pathname !== '/' ||
+  target.search ||
+  target.hash ||
+  !secret ||
+  secret.length < 16
+)
+  throw new Error('The local V3 worker requires a loopback preview URL and its configured CRON_SECRET.')
 
 let timer
 let active = true

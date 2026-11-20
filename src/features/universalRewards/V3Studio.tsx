@@ -8,9 +8,8 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react'
-import Link from 'next/link'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
-import { encodeFunctionData, isAddressEqual, zeroAddress, type Address } from 'viem'
+import { encodeFunctionData, formatUnits, isAddressEqual, zeroAddress, type Address } from 'viem'
 import { universalRewardsAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
 import { shortAmount } from './presentation'
@@ -31,7 +30,14 @@ import { UNIT } from './units'
 import { loadV3PresentationDocument, type V3PresentationDocument } from './poolPresentation'
 import V3StudioDashboard from './V3StudioDashboard'
 import V3StudioPool, { type V3StudioPreviewProps } from './V3StudioPool'
-import { StudioBar, WorkspaceBack, WorkspaceHeading } from './studioDashboardStyles'
+import {
+  FundingDisclosure,
+  FundingSplit,
+  RewardBudgetSection,
+  StudioBar,
+  WorkspaceBack,
+  WorkspaceHeading,
+} from './studioDashboardStyles'
 import {
   V3Actions,
   V3Badge,
@@ -69,14 +75,18 @@ function TransactionFeedback({
   transaction,
   deployment,
   onReceipt,
+  purpose,
 }: {
   transaction: ReturnType<typeof useV3Action>
   deployment?: V3Deployment
+  purpose?: string
   onReceipt: (receipt: NonNullable<Awaited<ReturnType<typeof transaction.recheck>>>) => void
 }) {
   return (
     <V3Actions>
-      <V3Muted role="status">{transaction.message}</V3Muted>
+      <V3Muted role="status">
+        {transaction.message && (purpose ? `${purpose} · ${transaction.message}` : transaction.message)}
+      </V3Muted>
       {transaction.error && <V3Error role="alert">{transaction.error}</V3Error>}
       {transaction.unconfirmed && (
         <V3Button
@@ -119,7 +129,10 @@ function FundingPanel({
   setPending: (pending: boolean) => void
 }) {
   const getWallet = useV3Wallet(deployment?.chainId)
-  const [deposit, setDeposit] = useState('')
+  const [deposit, setDeposit] = useState<string>()
+  const [purpose, setPurpose] = useState<string>()
+  const [funding, setFunding] = useState(false)
+  const fundingLock = useRef(false)
   const [native, setNative] = useState(false)
   const [error, setError] = useState('')
   const load = useCallback(
@@ -129,7 +142,7 @@ function FundingPanel({
   const result = useV3Query(`${deployment.address}:${poolId}:${account ?? ''}`, load, 20_000)
   const view = result.data
   const transaction = useV3Action(client, deployment, getWallet, account)
-  const pending = transaction.busy || transaction.unconfirmed
+  const pending = funding || transaction.busy || transaction.unconfirmed
   useEffect(() => {
     setPending(pending)
     return () => setPending(false)
@@ -137,45 +150,71 @@ function FundingPanel({
   const locked = !writeAllowed || !getWallet || pending
   const remaining = view ? view.pool.funding.budget - view.pool.funding.deposited : ZERO
   const ended = view ? view.pool.timestamp >= view.pool.config.end : false
+  const loadAutomation = useCallback(async () => {
+    const response = await fetch('/api/v3/replenish?status=1', { cache: 'no-store' })
+    if (!response.ok) throw new Error('Automatic funding status is unavailable.')
+    return response.json() as Promise<{ mode: 'disabled' | 'starting' | 'running'; firstPool?: string }>
+  }, [])
+  const automation = useV3Query(deployment.chainId === 31337 ? 'v3-funding-automation' : '', loadAutomation, 15_000)
+  const automationMode =
+    automation.data?.firstPool && BigInt(automation.data.firstPool) <= poolId ? automation.data.mode : 'disabled'
+  const amountText = deposit ?? (view?.token.decimals != null ? formatUnits(remaining, view.token.decimals) : '')
+  const payNative = Boolean(view && native && isAddressEqual(view.token.address, view.wrappedNative))
+  const fundingSymbol = payNative ? 'POL' : view?.token.symbol
   const value = () => {
     if (!view || view.token.decimals === null) throw new Error('The funding asset decimals could not be verified.')
-    const amount = parseV3Amount(deposit, view.token.decimals, 'deposit amount')
+    const amount = parseV3Amount(amountText, view.token.decimals, 'deposit amount')
     if (amount > remaining) throw new Error('The deposit exceeds the remaining funding budget.')
     return amount
   }
-  const depositOrApprove = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!view || locked || ended) return
-    try {
-      setError('')
+  let buttonAmount = ''
+  let requiresApproval = false
+  try {
+    if (view && view.token.decimals !== null) {
       const amount = value()
-      const payNative = native && isAddressEqual(view.token.address, view.wrappedNative)
-      const approval = !payNative && view.allowance < amount
-      const request = approval
-        ? approveV3Funding(deployment, view.token.address, amount)
-        : fundV3Budget(deployment, poolId, amount, payNative)
-      if (await transaction.run(request)) {
-        if (!approval) setDeposit('')
-        result.refresh()
+      buttonAmount = formatUnits(amount, view.token.decimals)
+      requiresApproval = !payNative && view.allowance < amount
+    }
+  } catch {
+    // Invalid custom amounts are announced on submit.
+  }
+  const depositBudget = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!view || view.token.decimals === null || locked || fundingLock.current || ended) return
+    const form = event.currentTarget
+    fundingLock.current = true
+    setFunding(true)
+    setError('')
+    try {
+      const amount = value()
+      const fresh = await load()
+      if (
+        fresh.pool.funding.budget - fresh.pool.funding.deposited < amount ||
+        fresh.pool.timestamp >= fresh.pool.config.end
+      ) {
+        throw new Error('The available budget changed. Review the updated amount before funding.')
       }
+      if (!payNative && fresh.allowance < amount) {
+        setPurpose(`Approve ${view.token.symbol} spending`)
+        if (!(await transaction.run(approveV3Funding(deployment, view.token.address, amount)))) return
+      }
+      setPurpose(`Deposit ${formatUnits(amount, view.token.decimals)} ${fundingSymbol}`)
+      if (await transaction.run(fundV3Budget(deployment, poolId, amount, payNative))) setDeposit(undefined)
     } catch (failure) {
       setError(describeV3Error(failure))
-      event.currentTarget?.querySelector('input')?.focus()
-    }
-  }
-  let needsApproval = false
-  if (view && !native && deposit) {
-    try {
-      needsApproval = view.allowance < value()
-    } catch {
-      // The form reports invalid amounts when submitted.
+      const input = form.querySelector<HTMLInputElement>('[name="deposit-amount"]')
+      if (input && input.getClientRects().length) input.focus()
+    } finally {
+      result.refresh()
+      setFunding(false)
+      fundingLock.current = false
     }
   }
 
   return (
-    <V3Section aria-label="Funding and treasury">
+    <RewardBudgetSection id="v3-reward-budget" aria-label="Funding and treasury">
       <header>
-        <h2>Fund and manage pool #{poolId.toString()}</h2>
+        <h2>Reward budget · Pool #{poolId.toString()}</h2>
       </header>
       {result.loading && !view && <V3Muted role="status">Reading the funding plan…</V3Muted>}
       {result.error && (
@@ -191,7 +230,13 @@ function FundingPanel({
           <V3Card>
             <div>
               <V3Badge>
-                {ended ? 'Finished' : view.pool.funding.paused ? 'Replenishment paused' : 'Funding plan ready'}
+                {ended
+                  ? 'Finished'
+                  : view.pool.funding.deposited === ZERO
+                  ? 'Awaiting deposit'
+                  : remaining === ZERO
+                  ? 'Budget fully deposited'
+                  : 'Budget partially deposited'}
               </V3Badge>
               <V3Metrics>
                 <div>
@@ -213,24 +258,36 @@ function FundingPanel({
                   </dd>
                 </div>
                 <div>
-                  <dt>Returned to treasury</dt>
+                  <dt>{ended ? 'Returned to treasury' : 'Available for future purchases'}</dt>
                   <dd>
-                    {shortAmount(view.pool.funding.recovered, view.token.decimals)} {view.token.symbol}
+                    {shortAmount(
+                      ended
+                        ? view.pool.funding.recovered
+                        : view.pool.funding.deposited - view.pool.funding.spent - view.pool.funding.recovered,
+                      view.token.decimals,
+                    )}{' '}
+                    {view.token.symbol}
                   </dd>
                 </div>
               </V3Metrics>
               {!ended && remaining > ZERO && (
-                <form method="post" aria-label="Deposit pool funding" onSubmit={depositOrApprove}>
-                  <V3Actions>
+                <form method="post" aria-label="Deposit reward budget" onSubmit={depositBudget}>
+                  <V3Muted id="v3-deposit-help">
+                    {requiresApproval
+                      ? `Your wallet may ask for two confirmations: permission to spend ${view.token.symbol}, then the deposit.`
+                      : 'Confirm the deposit in your wallet.'}
+                  </V3Muted>
+                  <FundingDisclosure>
+                    <summary>Change deposit amount</summary>
                     <V3Field>
-                      Amount to deposit · {view.token.symbol}
+                      Amount to deposit · {fundingSymbol}
                       <input
                         name="deposit-amount"
-                        required
                         inputMode="decimal"
-                        value={deposit}
+                        value={amountText}
+                        disabled={locked}
                         aria-invalid={Boolean(error)}
-                        aria-describedby={error ? 'v3-deposit-error' : undefined}
+                        aria-describedby={error ? 'v3-deposit-error' : 'v3-deposit-help'}
                         onChange={(event) => {
                           setDeposit(event.target.value)
                           setError('')
@@ -244,23 +301,62 @@ function FundingPanel({
                             type="checkbox"
                             name="native-pol"
                             checked={native}
+                            disabled={locked}
                             onChange={(event) => setNative(event.target.checked)}
                           />
-                          Deposit native POL
+                          Pay with native POL
                         </V3Actions>
                       </V3Field>
                     )}
-                    <V3Button type="submit" disabled={locked}>
-                      {needsApproval ? 'Approve exact amount' : 'Deposit budget'}
-                    </V3Button>
-                  </V3Actions>
+                  </FundingDisclosure>
+                  <V3Button type="submit" disabled={locked || view.token.decimals === null}>
+                    {funding
+                      ? 'Funding in progress…'
+                      : buttonAmount
+                      ? `Fund ${buttonAmount} ${fundingSymbol}`
+                      : 'Fund budget'}
+                  </V3Button>
                   {error && (
-                    <V3Error role="status" id="v3-deposit-error">
+                    <V3Error role="alert" id="v3-deposit-error">
                       {error}
                     </V3Error>
                   )}
                 </form>
               )}
+              <div>
+                <h3>Reward allocation</h3>
+                {!ended && (
+                  <V3Muted role="status">
+                    {view.pool.funding.paused
+                      ? 'Automatic reward purchases are paused.'
+                      : automation.error
+                      ? 'Automatic funding status is unavailable.'
+                      : automationMode === 'running'
+                      ? `The worker fills these reserves on schedule using your deposited ${view.token.symbol}.`
+                      : automationMode === 'starting'
+                      ? 'Waiting for the reward worker to check in.'
+                      : 'Automatic reward purchases are offline here. Manual controls are available below.'}
+                  </V3Muted>
+                )}
+                <FundingSplit>
+                  {view.lanes.map((lane) => (
+                    <li key={lane.reward.token}>
+                      <strong>
+                        {lane.reward.symbol} · {lane.split.allocationBps / 100}%
+                      </strong>
+                      <span>
+                        {shortAmount(lane.reward.inventory, lane.reward.decimals)} {lane.reward.symbol} in reserve
+                      </span>
+                      {lane.blocked && <small>Swap route awaiting a safe quote</small>}
+                    </li>
+                  ))}
+                </FundingSplit>
+              </div>
+            </div>
+          </V3Card>
+          <FundingDisclosure>
+            <summary>Advanced funding controls</summary>
+            <V3Actions>
               {ended ? (
                 <V3Button
                   type="button"
@@ -269,6 +365,7 @@ function FundingPanel({
                     locked || view.pool.funding.deposited === view.pool.funding.spent + view.pool.funding.recovered
                   }
                   onClick={async () => {
+                    setPurpose('Return unused funding')
                     const data = encodeFunctionData({
                       abi: universalRewardsAbi,
                       functionName: 'recoverBudget',
@@ -285,6 +382,7 @@ function FundingPanel({
                   $secondary
                   disabled={locked}
                   onClick={async () => {
+                    setPurpose(view.pool.funding.paused ? 'Resume reward purchases' : 'Pause reward purchases')
                     const data = encodeFunctionData({
                       abi: universalRewardsAbi,
                       functionName: 'setFundingPaused',
@@ -296,80 +394,85 @@ function FundingPanel({
                   {view.pool.funding.paused ? 'Resume replenishment' : 'Pause replenishment'}
                 </V3Button>
               )}
-              <Link href={`/nftpools/v3/${poolId}`} passHref legacyBehavior>
-                <V3Link>View public pool</V3Link>
-              </Link>
-            </div>
-          </V3Card>
-          <V3Grid>
-            {view.lanes.map((lane) => (
-              <V3Card key={lane.reward.token}>
-                <div>
-                  <h3>
-                    {lane.reward.symbol} rewards · {lane.split.allocationBps / 100}%
-                  </h3>
-                  <V3Muted>
-                    Committed to NFTs · {shortAmount(lane.reward.committed / UNIT, lane.reward.decimals)}{' '}
-                    {lane.reward.symbol}
-                  </V3Muted>
-                  <V3Muted>
-                    Purchased reserve · {shortAmount(lane.reward.inventory, lane.reward.decimals)} {lane.reward.symbol}
-                  </V3Muted>
-                  {lane.blocked && <V3Error role="status">Swap blocked by route safety checks.</V3Error>}
-                  {!ended && lane.quote && (
+            </V3Actions>
+            <V3Grid>
+              {view.lanes.map((lane) => (
+                <V3Card key={lane.reward.token}>
+                  <div>
+                    <h3>
+                      {lane.reward.symbol} rewards · {lane.split.allocationBps / 100}%
+                    </h3>
                     <V3Muted>
-                      Next tranche · {shortAmount(lane.amount, view.token.decimals)} {view.token.symbol} · minimum{' '}
-                      {shortAmount(lane.quote[1], lane.reward.decimals)} {lane.reward.symbol}
+                      Committed to NFTs · {shortAmount(lane.reward.committed / UNIT, lane.reward.decimals)}{' '}
+                      {lane.reward.symbol}
                     </V3Muted>
-                  )}
-                  {ended ? (
-                    <V3Button
-                      type="button"
-                      $secondary
-                      disabled={locked}
-                      onClick={async () => {
-                        const data = encodeFunctionData({
-                          abi: universalRewardsAbi,
-                          functionName: 'recoverSurplus',
-                          args: [poolId, lane.reward.token],
-                        })
-                        if (await transaction.run({ to: deployment.address, data })) result.refresh()
-                      }}
-                    >
-                      Return uncommitted {lane.reward.symbol}
-                    </V3Button>
-                  ) : (
-                    <V3Button
-                      type="button"
-                      $secondary
-                      disabled={locked || !lane.quote || view.pool.funding.paused}
-                      onClick={async () => {
-                        if (!lane.quote) return
-                        const data = encodeFunctionData({
-                          abi: universalRewardsAbi,
-                          functionName: 'replenish',
-                          args: [
-                            poolId,
-                            lane.reward.token,
-                            lane.epoch,
-                            lane.quote[1],
-                            view.pool.timestamp + BigInt(120),
-                          ],
-                        })
-                        if (await transaction.run({ to: deployment.address, data })) result.refresh()
-                      }}
-                    >
-                      Replenish {lane.reward.symbol}
-                    </V3Button>
-                  )}
-                </div>
-              </V3Card>
-            ))}
-          </V3Grid>
+                    <V3Muted>
+                      Purchased reserve · {shortAmount(lane.reward.inventory, lane.reward.decimals)}{' '}
+                      {lane.reward.symbol}
+                    </V3Muted>
+                    {lane.blocked && <V3Error role="status">Swap blocked by route safety checks.</V3Error>}
+                    {!ended && lane.quote && (
+                      <V3Muted>
+                        Next tranche · {shortAmount(lane.amount, view.token.decimals)} {view.token.symbol} · minimum{' '}
+                        {shortAmount(lane.quote[1], lane.reward.decimals)} {lane.reward.symbol}
+                      </V3Muted>
+                    )}
+                    {ended ? (
+                      <V3Button
+                        type="button"
+                        $secondary
+                        disabled={locked}
+                        onClick={async () => {
+                          setPurpose(`Return uncommitted ${lane.reward.symbol}`)
+                          const data = encodeFunctionData({
+                            abi: universalRewardsAbi,
+                            functionName: 'recoverSurplus',
+                            args: [poolId, lane.reward.token],
+                          })
+                          if (await transaction.run({ to: deployment.address, data })) result.refresh()
+                        }}
+                      >
+                        Return uncommitted {lane.reward.symbol}
+                      </V3Button>
+                    ) : (
+                      <V3Button
+                        type="button"
+                        $secondary
+                        disabled={locked || !lane.quote || view.pool.funding.paused}
+                        onClick={async () => {
+                          if (!lane.quote) return
+                          setPurpose(`Replenish ${lane.reward.symbol}`)
+                          const data = encodeFunctionData({
+                            abi: universalRewardsAbi,
+                            functionName: 'replenish',
+                            args: [
+                              poolId,
+                              lane.reward.token,
+                              lane.epoch,
+                              lane.quote[1],
+                              view.pool.timestamp + BigInt(120),
+                            ],
+                          })
+                          if (await transaction.run({ to: deployment.address, data })) result.refresh()
+                        }}
+                      >
+                        Replenish {lane.reward.symbol}
+                      </V3Button>
+                    )}
+                  </div>
+                </V3Card>
+              ))}
+            </V3Grid>
+          </FundingDisclosure>
         </>
       )}
-      <TransactionFeedback transaction={transaction} deployment={deployment} onReceipt={result.refresh} />
-    </V3Section>
+      <TransactionFeedback
+        transaction={transaction}
+        deployment={deployment}
+        purpose={purpose}
+        onReceipt={result.refresh}
+      />
+    </RewardBudgetSection>
   )
 }
 

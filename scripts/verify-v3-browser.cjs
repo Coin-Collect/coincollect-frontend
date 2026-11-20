@@ -4,6 +4,7 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const { setTimeout: delay } = require('node:timers/promises')
+const { parseAbi, encodeFunctionData, decodeFunctionResult } = require('viem')
 
 const fixtureFile = process.argv[2]
 if (!fixtureFile) throw new Error('Usage: node scripts/verify-v3-browser.cjs <deployed fixture JSON>')
@@ -157,6 +158,7 @@ async function testBrowser() {
     ],
     { stdio: 'ignore' },
   )
+  let worker
   let browserError
   browser.on('error', (error) => {
     browserError = error
@@ -498,20 +500,59 @@ async function testBrowser() {
     await click('button', 'Review pool plan')
     await has('Review funding and rewards')
     await click('button', 'Create V3 pool')
-    await has('Fund and manage pool #')
-    await field('deposit-amount', '12')
-    await wait('native POL option', () => {
-      const option = document.querySelector('input[name="native-pol"]')
-      if (!option) return false
-      option.click()
-      return true
-    })
-    await click('button', 'Deposit budget')
-    await wait('confirmed 12-token deposit', () =>
-      Array.from(document.querySelectorAll('dt')).some(
-        (term) => term.textContent === 'Deposited' && term.parentElement.textContent.includes('12'),
-      ),
-    )
+    await has('Reward budget · Pool #')
+    const tokenAbi = parseAbi([
+      'function deposit() payable',
+      'function allowance(address owner, address spender) view returns (uint256)',
+    ])
+    const wrap = await rpc('eth_sendTransaction', [
+      {
+        from: fixture.operator,
+        to: fixture.token,
+        data: encodeFunctionData({ abi: tokenAbi, functionName: 'deposit' }),
+        value: '0xa688906bd8b00000',
+      },
+    ])
+    assert.equal((await rpc('eth_getTransactionReceipt', [wrap])).status, '0x1')
+    await has('Your wallet may ask for two confirmations')
+    await click('button', 'Fund 12 V3R')
+    await has('Budget fully deposited')
+    const allowance = await rpc('eth_call', [
+      {
+        to: fixture.token,
+        data: encodeFunctionData({
+          abi: tokenAbi,
+          functionName: 'allowance',
+          args: [fixture.operator, fixture.ledger],
+        }),
+      },
+      'latest',
+    ])
+    assert.equal(BigInt(allowance), BigInt(0), 'The exact allowance must be spent by the single deposit')
+    if (secret) {
+      worker = spawn(process.execPath, [path.join(__dirname, 'run-v3-local-automation.cjs')], {
+        env: { ...process.env, CRON_SECRET: secret, V3_LOCAL_PREVIEW: base },
+        stdio: 'ignore',
+      })
+      const abi = parseAbi([
+        'function rewardState(uint256,address) view returns (uint128 cap,uint128 inventory,uint256 committed)',
+      ])
+      const calldata = encodeFunctionData({
+        abi,
+        functionName: 'rewardState',
+        args: [BigInt(fixture.poolId + 1), fixture.token],
+      })
+      let inventory = BigInt(0)
+      for (let tries = 0; tries < 100 && inventory === BigInt(0); tries++) {
+        const data = await rpc('eth_call', [{ to: fixture.ledger, data: calldata }, 'latest'])
+        const [, reserve] = decodeFunctionResult({ abi, functionName: 'rewardState', data })
+        inventory = reserve
+        if (inventory === BigInt(0)) await delay(150)
+      }
+      assert.ok(inventory > BigInt(0), 'Worker must fund reward inventory without a manual replenish action')
+      worker.kill()
+      console.log('PASS single budget action with approval and deposit, followed by automatic reserve funding')
+    }
     const blockBeforeEdit = await rpc('eth_blockNumber')
     await click('button', 'Edit presentation')
     await field('presentation-name', 'Studio acceptance pool updated')
@@ -544,6 +585,7 @@ async function testBrowser() {
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',
     )
   } finally {
+    worker?.kill()
     cdp?.close()
     browser.kill()
     await new Promise((resolve) => {

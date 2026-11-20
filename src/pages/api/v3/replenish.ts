@@ -22,8 +22,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const firstPool = parseV3PoolId(process.env.COINCOLLECT_V3_AUTOMATION_FIRST_POOL ?? '1')
   const deployment = getV3Deployment()
   const enabled = Boolean(
-    isLocalForkMode && localHost && process.env.COINCOLLECT_V3_AUTOMATION === 'isolated' &&
-    process.env.VERCEL !== '1' && firstPool && deployment?.chainId === 31337,
+    isLocalForkMode &&
+      localHost &&
+      process.env.COINCOLLECT_V3_AUTOMATION === 'isolated' &&
+      process.env.VERCEL !== '1' &&
+      firstPool &&
+      deployment?.chainId === 31337,
   )
 
   if (req.method === 'GET' && req.query.status === '1') {

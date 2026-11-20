@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { V3Button } from './styles'
+import { V3Button, V3Section } from './styles'
 
 export const StudioBar = styled.div`
   display: flex;
@@ -231,4 +231,51 @@ export const PresentationWorkspace = styled.div<{ $editing: boolean; $preview: b
   @media (max-width: 850px) {
     grid-template-columns: minmax(0, 1fr);
   }
+`
+
+export const FundingDisclosure = styled.details`
+  margin-block: 8px;
+
+  > summary {
+    width: fit-content;
+    min-height: 44px;
+    padding-block: 11px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  > summary:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 3px;
+  }
+
+  > div + div {
+    margin-top: 12px;
+  }
+`
+
+export const FundingSplit = styled.ul`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px 20px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  span,
+  small {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+`
+
+export const RewardBudgetSection = styled(V3Section)`
+  scroll-margin-top: 90px;
 `
