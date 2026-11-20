@@ -1,0 +1,594 @@
+import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import Link from 'next/link'
+import { useAccount, useSwitchChain } from 'wagmi'
+import { isAddressEqual, type Address } from 'viem'
+import { useV3Action, useV3Query, useV3Wallet } from './hooks'
+import { V3_FALLBACK_ART } from './metadata'
+import { availableReward, poolTiming, positionDailyEstimate, shortAmount, sourceName } from './presentation'
+import {
+  discoverV3Nfts,
+  MAX_V3_PAGE,
+  nftRefKey,
+  readV3Nft,
+  readV3Pool,
+  readV3PositionPage,
+  readV3WalletSeats,
+  type NftRef,
+  type V3PoolSnapshot,
+  type WalletNftSnapshot,
+} from './reader'
+import { createV3Client, getV3Deployment, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { joinV3, manageV3Position } from './transactions'
+import { UINT256_MAX } from './units'
+import {
+  V3Actions,
+  V3Badge,
+  V3Button,
+  V3Card,
+  V3Error,
+  V3Field,
+  V3Fields,
+  V3Grid,
+  V3Link,
+  V3Metrics,
+  V3Muted,
+  V3Page,
+  V3RewardValue,
+  V3Section,
+} from './styles'
+
+const ZERO = BigInt(0)
+const POLYGON = BigInt(137)
+
+async function loadNfts(
+  client: V3Client,
+  deployment: V3Deployment,
+  pool: V3PoolSnapshot,
+  account: Address,
+  collectionIndex: number,
+  collectionOffset: bigint,
+  historyOffset: bigint,
+  manual: readonly NftRef[],
+) {
+  const rule = pool.collections[collectionIndex] ?? pool.collections[0]
+  const [collection, history, seats] = await Promise.all([
+    rule.sourceChainId === POLYGON
+      ? discoverV3Nfts(client, pool, account, rule.collection, collectionOffset)
+      : Promise.resolve({ enumerable: false, total: ZERO, tokenIds: [] }),
+    readV3PositionPage(client, deployment, pool, account, historyOffset),
+    readV3WalletSeats(client, deployment, pool, account),
+  ])
+  const refs = new Map<string, NftRef>()
+  for (const tokenId of collection.tokenIds) {
+    const ref = { sourceChainId: rule.sourceChainId, collection: rule.collection, tokenId }
+    refs.set(nftRefKey(ref), ref)
+  }
+  manual.forEach((ref) => refs.set(nftRefKey(ref), ref))
+  const historyByRef = new Map(history.positions.map((position) => [nftRefKey(position.ref), position]))
+  const choices = await Promise.all(
+    Array.from(
+      refs.values(),
+      async (ref) => historyByRef.get(nftRefKey(ref)) ?? readV3Nft(client, deployment, pool, account, ref),
+    ),
+  )
+  const positions = [...history.positions]
+  for (const entry of choices) {
+    if (entry.tracked && !historyByRef.has(nftRefKey(entry.ref))) positions.push(entry)
+  }
+  return {
+    choices,
+    enumerable: collection.enumerable,
+    collectionTotal: collection.total,
+    positionTotal: history.total,
+    positions: positions.filter(
+      (position) => position.eligible || (position.unavailable && isAddressEqual(position.previousOwner, account)),
+    ),
+    seats,
+  }
+}
+
+function RewardRows({
+  pool,
+  nft,
+  onManage,
+  actionDisabled,
+}: {
+  pool: V3PoolSnapshot
+  nft: WalletNftSnapshot
+  onManage: (action: 'claim' | 'exit' | 'leave', rewardToken?: Address) => void
+  actionDisabled: boolean
+}) {
+  const hasClaimable = nft.claimable.some((amount) => amount > ZERO)
+  return (
+    <V3Fields>
+      <legend>
+        {sourceName(nft.ref.sourceChainId)} NFT #{nft.ref.tokenId.toString()}
+      </legend>
+      <V3Muted>
+        {nft.seated ? 'Participating' : 'No active participation'} · {nft.weight} power
+      </V3Muted>
+      {nft.unavailable && <V3Error role="status">A fresh ownership proof is required for this position.</V3Error>}
+      <V3Metrics>
+        {pool.rewards.map((reward, index) => (
+          <div key={reward.token}>
+            <dt>{reward.symbol} claimable</dt>
+            <dd>
+              <V3RewardValue key={nft.claimable[index].toString()}>
+                {shortAmount(nft.claimable[index], reward.decimals)}
+              </V3RewardValue>
+            </dd>
+            {pool.rewards.length > 1 && nft.claimable[index] > ZERO && (
+              <V3Button
+                type="button"
+                $secondary
+                disabled={actionDisabled || !nft.eligible}
+                onClick={() => onManage('claim', reward.token)}
+              >
+                Claim {reward.symbol}
+              </V3Button>
+            )}
+          </div>
+        ))}
+      </V3Metrics>
+      <V3Actions>
+        <V3Button
+          type="button"
+          disabled={actionDisabled || !nft.eligible || !hasClaimable}
+          onClick={() => onManage('claim')}
+        >
+          Claim rewards
+        </V3Button>
+        {nft.seated && (
+          <>
+            <V3Button
+              type="button"
+              $secondary
+              disabled={actionDisabled || !nft.eligible}
+              onClick={() => onManage('exit')}
+            >
+              Exit and claim
+            </V3Button>
+            <V3Button
+              type="button"
+              $secondary
+              disabled={actionDisabled || !nft.eligible}
+              onClick={() => onManage('leave')}
+            >
+              Leave and keep claims
+            </V3Button>
+          </>
+        )}
+      </V3Actions>
+    </V3Fields>
+  )
+}
+
+export default function V3PoolDetail({ poolId, connect }: { poolId: bigint; connect: ReactNode }) {
+  const { address: account, chainId } = useAccount()
+  const { switchChain, isPending: switching } = useSwitchChain()
+  const client = useMemo(createV3Client, [])
+  const deployment = useMemo(getV3Deployment, [])
+  const getWallet = useV3Wallet(deployment?.chainId)
+  const [collectionIndex, setCollectionIndex] = useState(0)
+  const [collectionOffset, setCollectionOffset] = useState(ZERO)
+  const [historyOffset, setHistoryOffset] = useState(ZERO)
+  const [manualIds, setManualIds] = useState<Record<string, NftRef[]>>({})
+  const [selectedKeys, setSelectedKeys] = useState<Record<string, string[]>>({})
+  const [typedId, setTypedId] = useState('')
+  const [inputError, setInputError] = useState('')
+  const accountKey = `${poolId}:${account ?? ''}`
+  const manual = useMemo(() => manualIds[accountKey] ?? [], [manualIds, accountKey])
+  const selection = selectedKeys[accountKey] ?? []
+
+  const readPool = useCallback(async () => {
+    if (!deployment) throw new Error('V3 is unavailable in this environment.')
+    const block = await client.getBlock()
+    await validateV3Deployment(client, deployment, block.number)
+    return readV3Pool(client, deployment, poolId, block)
+  }, [client, deployment, poolId])
+  const result = useV3Query(deployment ? `${deployment.address}:${poolId}` : '', readPool, 20_000)
+  const pool = result.data
+  const readNfts = useCallback(async () => {
+    if (!pool || !deployment || !account) throw new Error('Connect your wallet to read eligible NFTs.')
+    return loadNfts(client, deployment, pool, account, collectionIndex, collectionOffset, historyOffset, manual)
+  }, [pool, deployment, account, client, collectionIndex, collectionOffset, historyOffset, manual])
+  const walletData = useV3Query(
+    pool && account ? `${accountKey}:${collectionIndex}:${collectionOffset}:${historyOffset}` : '',
+    readNfts,
+  )
+  const transaction = useV3Action(client, deployment, getWallet, account)
+  const wrongChain = Boolean(account && deployment && chainId !== deployment.chainId)
+  const writeDisabled = transaction.busy || transaction.unconfirmed || !getWallet || wrongChain
+  const rule = pool?.collections[collectionIndex]
+  const candidates = walletData.data?.choices ?? []
+  const selected = candidates.filter((nft) => selection.includes(nftRefKey(nft.ref)) && nft.eligible && !nft.seated)
+  const selectedPower = selected.reduce((sum, item) => sum + item.weight, 0)
+  const availableSeats = pool ? BigInt(pool.config.maxNftsPerWallet) - (walletData.data?.seats ?? ZERO) : ZERO
+  const eligibleToJoin = Boolean(
+    pool &&
+      poolTiming(pool) === 'Live' &&
+      !writeDisabled &&
+      selected.length > 0 &&
+      BigInt(selected.length) <= availableSeats &&
+      !result.error &&
+      !walletData.error,
+  )
+
+  const addId = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!rule || !account) return
+    if (!/^\d{1,78}$/.test(typedId) || BigInt(typedId) > UINT256_MAX) {
+      setInputError('Enter the numeric token ID shown in your NFT wallet.')
+      event.currentTarget.querySelector('input')?.focus()
+      return
+    }
+    const next = { sourceChainId: rule.sourceChainId, collection: rule.collection, tokenId: BigInt(typedId) }
+    if (manual.some((item) => nftRefKey(item) === nftRefKey(next))) return
+    if (manual.length >= MAX_V3_PAGE) {
+      setInputError('Clear checked IDs before looking up more NFTs.')
+      return
+    }
+    setManualIds((previous) => ({ ...previous, [accountKey]: [...manual, next] }))
+    setTypedId('')
+    setInputError('')
+  }
+
+  const confirmJoin = async () => {
+    if (!deployment || !eligibleToJoin) return
+    if (
+      await transaction.run(
+        joinV3(
+          deployment,
+          poolId,
+          selected.map(({ ref }) => ref),
+        ),
+      )
+    ) {
+      setSelectedKeys((previous) => ({ ...previous, [accountKey]: [] }))
+      result.refresh()
+    }
+  }
+
+  const manage = async (nft: WalletNftSnapshot, action: 'claim' | 'exit' | 'leave', rewardToken?: Address) => {
+    if (!deployment || writeDisabled || !nft.eligible) return
+    if (await transaction.run(manageV3Position(deployment, poolId, nft.ref, action, rewardToken))) result.refresh()
+  }
+
+  return (
+    <V3Page>
+      <V3Section aria-label="Universal Rewards pool">
+        <header>
+          <Link href="/nftpools/v3" passHref legacyBehavior>
+            <V3Link>All V3 pools</V3Link>
+          </Link>
+        </header>
+        {!deployment && <V3Muted role="status">V3 is unavailable in this environment.</V3Muted>}
+        {result.error && (
+          <V3Actions>
+            <V3Error role="status">{result.error}</V3Error>
+            <V3Button type="button" $secondary onClick={result.refresh}>
+              Retry
+            </V3Button>
+          </V3Actions>
+        )}
+        {result.loading && !pool && <V3Muted role="status">Reading pool and reward reserves…</V3Muted>}
+        {pool && (
+          <>
+            <V3Grid>
+              <V3Card>
+                <img
+                  src={pool.presentation.artwork || V3_FALLBACK_ART}
+                  referrerPolicy="no-referrer"
+                  alt=""
+                  onError={(event) => {
+                    if (event.currentTarget.getAttribute('src') !== V3_FALLBACK_ART)
+                      event.currentTarget.src = V3_FALLBACK_ART
+                  }}
+                />
+                <div>
+                  <V3Badge>{poolTiming(pool)} · Polygon settlement</V3Badge>
+                  <h1>{pool.presentation.name}</h1>
+                  {pool.presentation.description && <V3Muted>{pool.presentation.description}</V3Muted>}
+                  <V3Metrics>
+                    <div>
+                      <dt>Active participant wallets</dt>
+                      <dd>
+                        {pool.activeWallets} / {pool.config.maxWallets}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>NFTs per wallet</dt>
+                      <dd>{pool.config.maxNftsPerWallet}</dd>
+                    </div>
+                    <div>
+                      <dt>Full reward rate at</dt>
+                      <dd>{pool.config.threshold || 1} wallet(s)</dd>
+                    </div>
+                    <div>
+                      <dt>Registered power</dt>
+                      <dd>{pool.totalWeight.toString()}</dd>
+                    </div>
+                  </V3Metrics>
+                </div>
+              </V3Card>
+              <V3Card>
+                <div>
+                  <h2>Pool rewards</h2>
+                  <V3Muted>
+                    Rewards are paid in these tokens. NFT ownership controls who can claim each balance.
+                  </V3Muted>
+                  <V3Metrics>
+                    {pool.rewards.map((reward) => (
+                      <div key={reward.token}>
+                        <dt>{reward.symbol} uncommitted reserve</dt>
+                        <dd>{shortAmount(availableReward(reward), reward.decimals)}</dd>
+                      </div>
+                    ))}
+                  </V3Metrics>
+                  {pool.funding.paused && <V3Muted role="status">Funding replenishment is paused.</V3Muted>}
+                  {poolTiming(pool) === 'Live' && pool.rewards.some((reward) => availableReward(reward) === ZERO) && (
+                    <V3Muted role="status">At least one reward asset is awaiting replenishment.</V3Muted>
+                  )}
+                </div>
+              </V3Card>
+            </V3Grid>
+
+            <V3Section aria-label="Your NFTs and rewards">
+              <header>
+                <h2>Your NFTs and rewards</h2>
+              </header>
+              {!account && <V3Actions>{connect}</V3Actions>}
+              {wrongChain && deployment && (
+                <V3Actions>
+                  <V3Muted role="status">Switch to the settlement network to send transactions.</V3Muted>
+                  <V3Button
+                    type="button"
+                    $secondary
+                    disabled={switching}
+                    onClick={() => switchChain({ chainId: deployment.chainId })}
+                  >
+                    Switch network
+                  </V3Button>
+                </V3Actions>
+              )}
+              {account && (
+                <>
+                  <V3Card>
+                    <div>
+                      <h3>Eligible collections</h3>
+                      <V3Field>
+                        Collection
+                        <select
+                          name="collection"
+                          value={collectionIndex}
+                          onChange={(event) => {
+                            setCollectionIndex(Number(event.target.value))
+                            setCollectionOffset(ZERO)
+                            setInputError('')
+                          }}
+                        >
+                          {pool.collections.map((item, index) => (
+                            <option key={`${item.sourceChainId}:${item.collection}`} value={index}>
+                              {sourceName(item.sourceChainId)} · {item.collection.slice(0, 10)}… · {item.weight} power
+                            </option>
+                          ))}
+                        </select>
+                      </V3Field>
+                      {rule && rule.sourceChainId !== POLYGON && (
+                        <V3Muted>
+                          Base and Arbitrum participation requires a fresh quorum observation in the isolated
+                          environment.
+                        </V3Muted>
+                      )}
+                      <form onSubmit={addId} method="post" aria-label="Check NFT token ID">
+                        <V3Actions>
+                          <V3Field>
+                            NFT token ID
+                            <input
+                              name="token-id"
+                              value={typedId}
+                              inputMode="numeric"
+                              required
+                              maxLength={78}
+                              autoComplete="off"
+                              aria-invalid={Boolean(inputError)}
+                              aria-describedby={inputError ? 'v3-id-error' : undefined}
+                              onChange={(event) => {
+                                setTypedId(event.target.value)
+                                setInputError('')
+                              }}
+                            />
+                          </V3Field>
+                          <V3Button type="submit" $secondary>
+                            Check NFT
+                          </V3Button>
+                          {manual.length > 0 && (
+                            <V3Button
+                              type="button"
+                              $secondary
+                              onClick={() => setManualIds((previous) => ({ ...previous, [accountKey]: [] }))}
+                            >
+                              Clear checked IDs
+                            </V3Button>
+                          )}
+                        </V3Actions>
+                        {inputError && (
+                          <V3Error id="v3-id-error" role="status">
+                            {inputError}
+                          </V3Error>
+                        )}
+                      </form>
+                      {walletData.loading && !walletData.data && (
+                        <V3Muted role="status">Checking wallet ownership…</V3Muted>
+                      )}
+                      {walletData.error && (
+                        <V3Actions>
+                          <V3Error role="status">{walletData.error}</V3Error>
+                          <V3Button type="button" $secondary onClick={walletData.refresh}>
+                            Retry wallet check
+                          </V3Button>
+                        </V3Actions>
+                      )}
+                      {!!walletData.data && !walletData.data.enumerable && candidates.length === 0 && (
+                        <V3Muted>Enter a token ID to check ownership for this collection.</V3Muted>
+                      )}
+                      {candidates.length > 0 && (
+                        <V3Fields>
+                          <legend>Select NFTs to join</legend>
+                          {candidates.map((nft) => {
+                            const key = nftRefKey(nft.ref)
+                            const checked = selection.includes(key)
+                            return (
+                              <V3Field key={key}>
+                                <V3Actions>
+                                  <input
+                                    name={`nft-${key}`}
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={
+                                      !nft.eligible ||
+                                      nft.seated ||
+                                      (!checked && BigInt(selected.length) >= availableSeats)
+                                    }
+                                    onChange={() =>
+                                      setSelectedKeys((previous) => ({
+                                        ...previous,
+                                        [accountKey]: checked
+                                          ? selection.filter((id) => id !== key)
+                                          : [...selection, key],
+                                      }))
+                                    }
+                                  />
+                                  #{nft.ref.tokenId.toString()} · {nft.weight} power
+                                  {nft.seated && nft.eligible
+                                    ? ' · Participating'
+                                    : nft.unavailable
+                                    ? ' · Ownership unavailable'
+                                    : !nft.eligible
+                                    ? ' · Owned by another wallet'
+                                    : ''}
+                                </V3Actions>
+                              </V3Field>
+                            )
+                          })}
+                        </V3Fields>
+                      )}
+                      {walletData.data &&
+                        (collectionOffset > ZERO || walletData.data.collectionTotal > BigInt(MAX_V3_PAGE)) && (
+                          <V3Actions>
+                            <V3Button
+                              type="button"
+                              $secondary
+                              disabled={collectionOffset === ZERO}
+                              onClick={() => setCollectionOffset(collectionOffset - BigInt(MAX_V3_PAGE))}
+                            >
+                              Previous NFTs
+                            </V3Button>
+                            <V3Button
+                              type="button"
+                              $secondary
+                              disabled={collectionOffset + BigInt(MAX_V3_PAGE) >= walletData.data.collectionTotal}
+                              onClick={() => setCollectionOffset(collectionOffset + BigInt(MAX_V3_PAGE))}
+                            >
+                              More NFTs
+                            </V3Button>
+                          </V3Actions>
+                        )}
+                      {selected.length > 0 && (
+                        <V3Metrics>
+                          {pool.rewards.map((reward) => (
+                            <div key={reward.token}>
+                              <dt>Estimated next 24 hours · {reward.symbol}</dt>
+                              <dd>
+                                {shortAmount(
+                                  positionDailyEstimate(
+                                    pool,
+                                    reward,
+                                    selectedPower,
+                                    (walletData.data?.seats ?? ZERO) > ZERO,
+                                  ),
+                                  reward.decimals,
+                                )}
+                              </dd>
+                            </div>
+                          ))}
+                        </V3Metrics>
+                      )}
+                      <V3Muted>Joining keeps your NFTs in your wallet and needs no NFT approval.</V3Muted>
+                      <V3Button type="button" disabled={!eligibleToJoin} onClick={() => void confirmJoin()}>
+                        {poolTiming(pool) === 'Live' ? 'Join with selected NFTs' : 'Joining is closed'}
+                      </V3Button>
+                    </div>
+                  </V3Card>
+                  {walletData.data && (
+                    <V3Section aria-label="Your V3 positions">
+                      <header>
+                        <h3>Your positions</h3>
+                      </header>
+                      {walletData.data.positions.length === 0 && (
+                        <V3Muted>No wallet positions in the records on this page.</V3Muted>
+                      )}
+                      <V3Grid>
+                        {walletData.data.positions.map((nft) => (
+                          <RewardRows
+                            key={nft.key}
+                            pool={pool}
+                            nft={nft}
+                            actionDisabled={writeDisabled}
+                            onManage={(action, token) => void manage(nft, action, token)}
+                          />
+                        ))}
+                      </V3Grid>
+                      {(historyOffset > ZERO || walletData.data.positionTotal > BigInt(MAX_V3_PAGE)) && (
+                        <V3Actions>
+                          <V3Button
+                            type="button"
+                            $secondary
+                            disabled={historyOffset === ZERO}
+                            onClick={() => setHistoryOffset(historyOffset - BigInt(MAX_V3_PAGE))}
+                          >
+                            Previous position records
+                          </V3Button>
+                          <V3Button
+                            type="button"
+                            $secondary
+                            disabled={historyOffset + BigInt(MAX_V3_PAGE) >= walletData.data.positionTotal}
+                            onClick={() => setHistoryOffset(historyOffset + BigInt(MAX_V3_PAGE))}
+                          >
+                            More position records
+                          </V3Button>
+                        </V3Actions>
+                      )}
+                    </V3Section>
+                  )}
+                  <V3Muted role="status">{transaction.message}</V3Muted>
+                  {transaction.error && <V3Error role="alert">{transaction.error}</V3Error>}
+                  {transaction.unconfirmed && (
+                    <V3Button
+                      type="button"
+                      $secondary
+                      disabled={transaction.busy}
+                      onClick={async () => {
+                        if (await transaction.recheck()) result.refresh()
+                      }}
+                    >
+                      Check confirmation
+                    </V3Button>
+                  )}
+                  {transaction.hash &&
+                    (deployment?.chainId === 137 ? (
+                      <V3Link href={`https://polygonscan.com/tx/${transaction.hash}`} target="_blank" rel="noreferrer">
+                        View settlement transaction
+                      </V3Link>
+                    ) : (
+                      <V3Muted>Local transaction · {transaction.hash}</V3Muted>
+                    ))}
+                </>
+              )}
+            </V3Section>
+          </>
+        )}
+      </V3Section>
+    </V3Page>
+  )
+}

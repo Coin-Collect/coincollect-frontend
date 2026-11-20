@@ -13,6 +13,7 @@ import {
 } from '../adminNavigation'
 import { usePoolManagerAuthority } from '../hooks'
 import { getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
+import { getV3Deployment } from 'features/universalRewards/runtime'
 import {
   AccessCard,
   AccessMark,
@@ -192,6 +193,11 @@ export default function AdminShell({
             </NavLink>
           </Link>
         ))}
+        {getV3Deployment() && (
+          <Link href="/admin/nft-pools/v3" passHref legacyBehavior>
+            <NavLink $active={activePath === '/admin/nft-pools/v3'}>Pool Studio V3</NavLink>
+          </Link>
+        )}
       </AdminNav>
 
       {children}

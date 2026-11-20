@@ -40,6 +40,8 @@ import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPoo
 import { useVerifiedV2UserPositions } from 'features/nftPoolManager/user/hooks'
 import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
 import VerifiedPoolRecoveryCard from 'features/nftPoolManager/user/components/VerifiedPoolRecoveryCard'
+import V3Catalogue from 'features/universalRewards/V3Catalogue'
+import { getV3Deployment } from 'features/universalRewards/runtime'
 import StakedPoolsEmpty from './components/StakedPoolsEmpty'
 
 const ControlContainer = styled.div`
@@ -439,6 +441,9 @@ const Farms: React.FC = ({ children }) => {
 
   const [stakedOnly, setStakedOnly] = useUserFarmStakedOnly(isActive, false)
   const stakedView = stakedOnly && !isArchived
+  const [hasVisibleV3, setHasVisibleV3] = useState(false)
+  const v3Configured = Boolean(getV3Deployment())
+  const showV3Catalogue = v3Configured && !stakedView && !isArchived && !isPartner && !isCommunity
   const hasWallet = Boolean(account)
   const walletConnecting = isConnecting || isReconnecting
   const walletNeedsNetwork = Boolean(account && walletChainId && walletChainId !== getPolygonRuntimeChainId())
@@ -812,7 +817,8 @@ const Farms: React.FC = ({ children }) => {
       !catalogueLoading &&
       !catalogueError &&
       !query.trim() &&
-      !stakedOnly
+      !stakedOnly &&
+      !(showV3Catalogue && hasVisibleV3)
     )
       return <LivePoolsEmpty label="Waiting for the next pool" />
 
@@ -1017,6 +1023,14 @@ const Farms: React.FC = ({ children }) => {
             </FlexLayout>
           </section>
         ) : null}
+        {showV3Catalogue && (
+          <V3Catalogue embedded history={isInactive} query={query} onVisibility={setHasVisibleV3} />
+        )}
+        {v3Configured && stakedView && (
+          <Button as={NextLinkFromReactRouter} to="/nftpools/v3" scale="sm" variant="secondary" mb="16px">
+            {t('Manage Universal Rewards V3 positions')}
+          </Button>
+        )}
         {renderContent()}
         {checkingStakedPositions && (
           <Flex justifyContent="center" alignItems="center" py="28px" style={{ gap: 10 }}>

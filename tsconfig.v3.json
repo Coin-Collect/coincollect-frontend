@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "incremental": false,
+    "noImplicitAny": true,
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/features/universalRewards/**/*.ts",
+    "src/features/universalRewards/**/*.tsx",
+    "src/pages/api/v3/**/*.ts"
+  ],
+  "exclude": ["node_modules", "cypress", "**/*.test.*"]
+}

@@ -1,0 +1,40 @@
+name: Universal Rewards V3 frontend
+
+on:
+  pull_request:
+    paths:
+      - src/features/universalRewards/**
+      - src/pages/*/v3/**
+      - src/pages/admin/nft-pools/v3.tsx
+      - src/views/NftFarms/**
+      - tsconfig.v3.json
+      - .github/workflows/universalRewardsV3.yml
+  push:
+    branches: [pool-management]
+    paths:
+      - src/features/universalRewards/**
+      - src/pages/*/v3/**
+      - src/pages/admin/nft-pools/v3.tsx
+      - src/views/NftFarms/**
+      - tsconfig.v3.json
+      - .github/workflows/universalRewardsV3.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v3-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn typecheck:v3
+      - run: yarn test --runInBand --silent src/features/universalRewards src/features/nftPoolManager src/state/nftFarms
+      - run: yarn build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
