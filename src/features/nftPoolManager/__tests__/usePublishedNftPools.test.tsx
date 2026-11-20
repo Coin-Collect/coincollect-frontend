@@ -94,8 +94,8 @@ function render(element: ReactElement) {
   return { unmount }
 }
 
-function Reader() {
-  const value = usePublishedNftPools()
+function Reader({ liveOnly = false }: { liveOnly?: boolean }) {
+  const value = usePublishedNftPools(liveOnly)
   return <output data-testid="read-model">{JSON.stringify(value)}</output>
 }
 
@@ -187,6 +187,16 @@ it('treats an empty catalogue with historical discovery warnings as a successful
 
   expect(readValue()).toMatchObject({ loading: false, pools: [], connectionError: false })
   expect(screen.getByTestId('read-model').textContent).not.toContain(warning)
+})
+
+it('shows an empty live catalogue without waiting for presentation metadata', async () => {
+  ;(getNftPoolRegistry as jest.Mock).mockResolvedValueOnce({ pools: [] })
+  ;(loadNftPoolPresentations as jest.Mock).mockImplementationOnce(() => new Promise(() => {}))
+  render(<Reader liveOnly />)
+  await flush()
+
+  expect(getNftPoolRegistry).toHaveBeenCalledWith({}, false, 'live-catalogue')
+  expect(readValue()).toMatchObject({ loading: false, refreshing: false, pools: [], connectionError: false })
 })
 
 it.each([{ recentScanFailed: true }, { recentScanFailed: false, stale: true }])(

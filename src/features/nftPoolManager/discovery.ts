@@ -34,6 +34,7 @@ import {
 } from './registry'
 import { readIndexedArrayUntilRevert } from './chainReads'
 import { readDeploymentProvenance } from './provenance'
+import { readNftPoolSchedules } from './schedules'
 import {
   NftCollection,
   NftPool,
@@ -1142,6 +1143,7 @@ export async function discoverNftFactoryPoolAddresses(
   factoryAddress = getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID),
   fromBlock = getNftSmartChefFactoryDeploymentBlock(NFT_POOL_MANAGER_CHAIN_ID) || NFT_FACTORY_DEPLOYMENT_FALLBACK,
   toBlock?: number,
+  filterLiveCandidates?: (candidates: FactoryEvent[]) => Promise<FactoryEvent[]>,
 ): Promise<{
   events: FactoryEvent[]
   warning?: string
@@ -1167,9 +1169,9 @@ export async function discoverNftFactoryPoolAddresses(
     ? configuredStart
     : Math.max(configuredStart, latest - NFT_FACTORY_RECENT_TAIL_BLOCKS + 1)
 
-  // Blockscout supplies historical candidates only. Every candidate is later
-  // checked against the factory log on the connected RPC before it is verified.
-  if (!isLocalForkMode) {
+  // Blockscout supplies historical candidates only. Run it alongside the RPC log scans.
+  const readIndexer = async () => {
+    if (isLocalForkMode) return
     try {
       let nextPageParams: Record<string, string> | undefined
       let pages = 0
@@ -1205,7 +1207,9 @@ export async function discoverNftFactoryPoolAddresses(
     }
   }
 
-  const checkpointKey = getLocalForkStorageKey(`coincollect.nft-factory-backfill.v1:${factoryAddress.toLowerCase()}`)
+  const checkpointKey = getLocalForkStorageKey(
+    `coincollect.nft-factory-backfill.v1:${factoryAddress.toLowerCase()}${filterLiveCandidates ? ':live' : ''}`,
+  )
   let backfillCursor = configuredStart
   try {
     if (!isLocalForkMode && typeof window !== 'undefined') {
@@ -1266,10 +1270,20 @@ export async function discoverNftFactoryPoolAddresses(
     }
     return true
   }
-  // Check current deployments even if the historical RPC scan stalls.
-  const backfillFailed = !(await scanRanges(history.ranges))
-  const recentScanFailed = !(await scanRanges(recent.ranges))
+  const [recentScanned, historyScanned] = await Promise.all([
+    scanRanges(recent.ranges),
+    scanRanges(history.ranges),
+    readIndexer(),
+  ])
+  const recentScanFailed = !recentScanned
+  const backfillFailed = !historyScanned
   const scanFailed = backfillFailed || recentScanFailed
+
+  if (filterLiveCandidates) {
+    const liveCandidates = await filterLiveCandidates(Array.from(events.values()))
+    events.clear()
+    liveCandidates.forEach(mergeEvent)
+  }
 
   // Verify indexer-only event claims at their exact block with RPC logs.
   const unverifiedByBlock = new Map<number, FactoryEvent[]>()
@@ -1384,7 +1398,7 @@ async function sampleBlockTime(provider: Provider, currentBlock: number): Promis
   return POLYGON_BLOCK_TIME
 }
 
-type RegistryMode = 'catalogue' | 'admin-summary'
+type RegistryMode = 'catalogue' | 'live-catalogue' | 'admin-summary'
 const registryCache = new Map<string, { cachedAt: number; value: NftPoolRegistryResult }>()
 const registryLoadPromises = new Map<string, Promise<NftPoolRegistryResult>>()
 
@@ -1554,11 +1568,6 @@ export async function getNftPoolRegistry(
     if (network.chainId !== getPolygonRuntimeChainId())
       throw new Error(`Expected Polygon or its isolated fork (chain ${getPolygonRuntimeChainId()}).`)
     const currentBlock = await provider.getBlockNumber()
-    const currentBlockData: Block = await provider.getBlock(currentBlock)
-    const [secondsPerBlock, discovery] = await Promise.all([
-      sampleBlockTime(provider, currentBlock),
-      discoverNftFactoryPoolAddresses(provider, undefined, undefined, currentBlock),
-    ])
     const factoryAddress = getNftSmartChefFactoryAddress(NFT_POOL_MANAGER_CHAIN_ID) || undefined
     const configuredFarms = (nftFarmsConfig as any[]).filter(
       (farm) => farm.nftAddresses?.[NFT_POOL_MANAGER_CHAIN_ID],
@@ -1568,11 +1577,44 @@ export async function getNftPoolRegistry(
       const address = getConfiguredPoolAddress(farm as any, NFT_POOL_MANAGER_CHAIN_ID)
       if (address) configByAddress.set(address.toLowerCase(), farm)
     })
+    const excludedFromLive = new Set<string>()
+    const filterLiveCandidates = async (candidates: FactoryEvent[]) => {
+      // Configured pools are rendered by their PID cards. The factory projection fills the rest.
+      const addresses = new Set([
+        ...candidates.map((event) => event.address),
+        ...(previous?.pools.map((pool) => pool.address) || []),
+      ])
+      configByAddress.forEach((_, address) => excludedFromLive.add(address))
+      const schedules = await readNftPoolSchedules(
+        provider,
+        Array.from(addresses).filter((address) => !excludedFromLive.has(address.toLowerCase())),
+        currentBlock,
+      )
+      for (const [address, schedule] of schedules) {
+        if (schedule.endBlock !== undefined && schedule.endBlock <= currentBlock) excludedFromLive.add(address)
+      }
+      return candidates.filter((event) => !excludedFromLive.has(event.address.toLowerCase()))
+    }
+    const [currentBlockData, secondsPerBlock, discovery] = await Promise.all([
+      provider.getBlock(currentBlock),
+      sampleBlockTime(provider, currentBlock),
+      discoverNftFactoryPoolAddresses(
+        provider,
+        undefined,
+        undefined,
+        currentBlock,
+        mode === 'live-catalogue' ? filterLiveCandidates : undefined,
+      ),
+    ])
     const events = new Map<string, FactoryEvent>()
-    discovery.events.forEach((event) => events.set(event.address.toLowerCase(), event))
-    configByAddress.forEach((farm, address) => {
-      if (!events.has(address)) events.set(address, { address })
+    discovery.events.forEach((event) => {
+      if (mode !== 'live-catalogue' || event.rpcProvenanceVerified) events.set(event.address.toLowerCase(), event)
     })
+    if (mode !== 'live-catalogue') {
+      configByAddress.forEach((farm, address) => {
+        if (!events.has(address)) events.set(address, { address })
+      })
+    }
     const collections = normalizeNftCollectionRegistry(configuredFarms as any, NFT_POOL_MANAGER_CHAIN_ID)
     const factoryEventsByAddress = new Map(discovery.events.map((event) => [event.address.toLowerCase(), event]))
     const adminCores =
@@ -1627,12 +1669,13 @@ export async function getNftPoolRegistry(
         return pool
       },
     )
-    const legacyFarms = configuredFarms.filter((farm) => !farm.contractAddresses && farm.pid > 0)
+    const legacyFarms =
+      mode === 'live-catalogue' ? [] : configuredFarms.filter((farm) => !farm.contractAddresses && farm.pid > 0)
     const legacyPools = await mapWithConcurrency(legacyFarms, NFT_POOL_INTROSPECTION_CONCURRENCY, (farm) =>
       readLegacyPoolWithTimeout(provider, farm, collections, currentBlock),
     )
     let factoryOwner: string | undefined
-    if (factoryAddress) {
+    if (factoryAddress && mode !== 'live-catalogue') {
       try {
         factoryOwner = normalizeOrFallback(await new Contract(factoryAddress, nftFactoryAbi, provider).owner())
       } catch {
@@ -1656,7 +1699,12 @@ export async function getNftPoolRegistry(
     }
     if (incompleteDiscovery && previous) {
       previous.pools
-        .filter((pool) => pool.verified && !currentByAddress.has(pool.address.toLowerCase()))
+        .filter(
+          (pool) =>
+            pool.verified &&
+            !currentByAddress.has(pool.address.toLowerCase()) &&
+            !excludedFromLive.has(pool.address.toLowerCase()),
+        )
         .forEach((pool) => currentByAddress.set(pool.address.toLowerCase(), pool))
     }
     const value: NftPoolRegistryResult = {

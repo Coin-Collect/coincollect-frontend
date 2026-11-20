@@ -11,6 +11,12 @@ import { getBalanceAmount } from 'utils/formatBalance'
 import { fetchFarmsPublicDataAsync, fetchFarmUserDataAsync, fetchNftPoolsStakingLimitsAsync, nonArchivedFarms } from '.'
 import { DeserializedNftFarm, DeserializedNftFarmsState, DeserializedNftFarmUserData, SerializedNftFarm, State } from '../types'
 import { useActiveChainId } from 'hooks/useActiveChainId'
+import useSWR from 'swr'
+import { getLocalForkStorageKey, isLocalForkMode } from 'config/localFork'
+import { POLYGON_BLOCK_TIME } from 'config'
+import { readNftPoolSchedules } from 'features/nftPoolManager/schedules'
+import { nftPoolRegistryRpcProvider } from 'utils/providers'
+import isArchivedPid from 'utils/farmHelpers'
 
 const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFarmUserData => {
   return {
@@ -70,12 +76,13 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
   }
 }
 
-export const usePollFarmsWithUserData = (includeArchive = false) => {
+export const usePollFarmsWithUserData = (includeArchive = false, enabled = true) => {
   const dispatch = useAppDispatch()
   const { account } = useWeb3React()
   const { chainId } = useActiveChainId()
 
   useSlowRefreshEffect((currentBlock) => {
+    if (!enabled) return
     const farmsToFetch = includeArchive ? nftFarmsConfig : nonArchivedFarms
     const pids = farmsToFetch.map((farmToFetch) => farmToFetch.pid)
 
@@ -87,7 +94,7 @@ export const usePollFarmsWithUserData = (includeArchive = false) => {
     if (account) {
       dispatch(fetchFarmUserDataAsync({ account, pids }))
     }
-  }, [includeArchive, dispatch, account])
+  }, [enabled, includeArchive, dispatch, account, chainId])
 }
 
 /**
@@ -112,6 +119,53 @@ export const useFarms = (): DeserializedNftFarmsState => {
     userDataLoaded,
     data: deserializedFarmsData,
     poolLength,
+  }
+}
+
+const configuredSmartFarms = nonArchivedFarms.filter((farm) => farm.contractAddresses?.[137])
+const configuredPoolAddresses = configuredSmartFarms.map((farm) => farm.contractAddresses[137].toLowerCase())
+
+async function fetchConfiguredPoolSchedules() {
+  // The legacy configured contracts are not part of the isolated fork catalogue.
+  if (isLocalForkMode) return { byPid: {}, incomplete: false }
+  const provider = nftPoolRegistryRpcProvider
+  const block = await provider.getBlock('latest')
+  const schedules = await readNftPoolSchedules(provider, configuredPoolAddresses, block.number)
+  const byPid: Record<number, Pick<DeserializedNftFarm, 'startTimestamp' | 'endTimestamp' | 'isFinished'>> = {}
+  const timestampAt = (height: number) => block.timestamp + (height - block.number) * POLYGON_BLOCK_TIME
+  configuredSmartFarms.forEach((farm, index) => {
+    const schedule = schedules.get(configuredPoolAddresses[index])
+    if (schedule?.endBlock === undefined) return
+    const isFinished = block.number >= schedule.endBlock
+    if (!isFinished && (schedule.startBlock === undefined || schedule.startBlock >= schedule.endBlock)) return
+    byPid[farm.pid] = {
+      isFinished,
+      startTimestamp: schedule.startBlock === undefined ? undefined : timestampAt(schedule.startBlock),
+      endTimestamp: timestampAt(schedule.endBlock),
+    }
+  })
+  if (configuredSmartFarms.length && !Object.keys(byPid).length) throw new Error('NFT pool schedules could not be read.')
+  return { byPid, incomplete: Object.keys(byPid).length !== configuredSmartFarms.length }
+}
+
+export function useScheduledNftFarms() {
+  const farms = useFarms()
+  const { data, error, isValidating, mutate } = useSWR(
+    getLocalForkStorageKey('nft-farm-schedules'),
+    fetchConfiguredPoolSchedules,
+    { refreshInterval: 30_000 },
+  )
+  return {
+    ...farms,
+    data: farms.data.map((farm) =>
+      farm.contractAddresses && !isArchivedPid(farm.pid)
+        ? { ...farm, isFinished: undefined, ...data?.byPid[farm.pid] }
+        : farm,
+    ),
+    scheduleLoading: !data && !error,
+    scheduleError: Boolean(error || data?.incomplete),
+    scheduleRefreshing: isValidating,
+    refreshSchedules: mutate,
   }
 }
 

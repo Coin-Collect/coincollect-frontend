@@ -35,12 +35,15 @@ function metadataForPool(pool: NftPool, remote?: RemoteNftPoolPresentation): Nft
   }
 }
 
-async function readRegistry(force: boolean) {
-  const registry = await getNftPoolRegistry(nftPoolRegistryRpcProvider, force)
-  const presentationDocument = await loadNftPoolPresentations(force).catch(() => undefined)
+async function readRegistry(force: boolean, liveOnly: boolean, cacheKey: string) {
+  const metadataRequest = loadNftPoolPresentations(force).catch(() => undefined)
+  const registry = liveOnly
+    ? await getNftPoolRegistry(nftPoolRegistryRpcProvider, force, 'live-catalogue')
+    : await getNftPoolRegistry(nftPoolRegistryRpcProvider, force)
+  const verified = registry.pools.filter((pool) => pool.protocolVersion === 'NftStakeV2' && pool.verified === true)
+  const presentationDocument = verified.length ? await metadataRequest : undefined
   const remoteById = new Map(presentationDocument?.pools.map((item) => [item.id, item]) || [])
-  const verifiedPools = registry.pools
-    .filter((pool) => pool.protocolVersion === 'NftStakeV2' && pool.verified === true)
+  const verifiedPools = verified
     .map((pool) => {
       const withMetadata = { ...pool, metadata: metadataForPool(pool, remoteById.get(pool.canonicalId)) }
       return toVerifiedNftPool(withMetadata)
@@ -61,53 +64,58 @@ async function readRegistry(force: boolean) {
     }
   })
   const result = { pools, verifiedPools }
-  const cacheKey = getLocalForkStorageKey('coincollect:nft-pool-catalogue:v1')
   registryCache.set(cacheKey, result)
   return { ...result, registry }
 }
 
-export function usePublishedNftPools() {
+export function usePublishedNftPools(liveOnly = false, enabled = true) {
+  const cacheKey = getLocalForkStorageKey(
+    liveOnly ? 'coincollect:nft-pool-catalogue:live' : 'coincollect:nft-pool-catalogue:v1',
+  )
   const [pools, setPools] = useState<PublicV2Pool[]>([])
   const [verifiedPools, setVerifiedPools] = useState<VerifiedNftPool[]>([])
   const [connectionError, setConnectionError] = useState(false)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  const refresh = useCallback(async (force = false, shouldUpdate: () => boolean = () => true) => {
-    const cacheKey = getLocalForkStorageKey('coincollect:nft-pool-catalogue:v1')
-    const previous = registryCache.get(cacheKey)
-    if (previous && shouldUpdate()) {
-      setPools(previous.pools)
-      setVerifiedPools(previous.verifiedPools)
-    }
-    if (shouldUpdate()) setRefreshing(true)
-    try {
-      const result = await readRegistry(force)
-      if (shouldUpdate()) {
-        setPools(result.pools)
-        setVerifiedPools(result.verifiedPools)
-        setConnectionError(
-          Boolean(result.registry.coverage?.recentScanFailed || result.registry.coverage?.stale) ||
-            result.verifiedPools.some((pool) => pool.readinessStale),
-        )
+  const refresh = useCallback(
+    async (force = false, shouldUpdate: () => boolean = () => true) => {
+      const previous = registryCache.get(cacheKey)
+      if (previous && shouldUpdate()) {
+        setPools(previous.pools)
+        setVerifiedPools(previous.verifiedPools)
       }
-    } catch {
-      if (shouldUpdate()) {
-        setConnectionError(true)
-        if (!previous) {
-          setPools([])
-          setVerifiedPools([])
+      if (shouldUpdate()) setRefreshing(true)
+      try {
+        const result = await readRegistry(force, liveOnly, cacheKey)
+        if (shouldUpdate()) {
+          setPools(result.pools)
+          setVerifiedPools(result.verifiedPools)
+          setConnectionError(
+            Boolean(result.registry.coverage?.recentScanFailed || result.registry.coverage?.stale) ||
+              result.verifiedPools.some((pool) => pool.readinessStale),
+          )
+        }
+      } catch {
+        if (shouldUpdate()) {
+          setConnectionError(true)
+          if (!previous) {
+            setPools([])
+            setVerifiedPools([])
+          }
+        }
+      } finally {
+        if (shouldUpdate()) {
+          setLoading(false)
+          setRefreshing(false)
         }
       }
-    } finally {
-      if (shouldUpdate()) {
-        setLoading(false)
-        setRefreshing(false)
-      }
-    }
-  }, [])
+    },
+    [cacheKey, liveOnly],
+  )
 
   useEffect(() => {
+    if (!enabled) return undefined
     let active = true
     let pendingRefresh = false
     let busy = false
@@ -140,7 +148,7 @@ export function usePublishedNftPools() {
       window.removeEventListener('focus', visible)
       document.removeEventListener('visibilitychange', visible)
     }
-  }, [refresh])
+  }, [enabled, refresh])
 
   return {
     pools,

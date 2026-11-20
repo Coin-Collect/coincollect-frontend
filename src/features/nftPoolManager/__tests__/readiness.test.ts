@@ -64,6 +64,43 @@ beforeEach(() => {
 
 afterEach(() => mockContract.mockReset())
 
+it('skips historical proof in the live catalogue only for candidates excluded by chain schedule', async () => {
+  const originalFetch = globalThis.fetch
+  const finished = '0x5555555555555555555555555555555555555555'
+  const hash = `0x${'a'.repeat(64)}`
+  globalThis.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      items: [
+        {
+          decoded: { parameters: [{ name: 'smartChef', value: finished }] },
+          block_number: 37_000,
+          transaction_hash: hash,
+        },
+        { decoded: { parameters: [{ name: 'smartChef', value: POOL }] }, block_number: 45_000, transaction_hash: hash },
+      ],
+    }),
+  })
+  const getLogs = jest.fn(async ({ fromBlock, toBlock }: { fromBlock: number; toBlock: number }) =>
+    fromBlock === 45_000 && toBlock === fromBlock
+      ? [{ topics: [null, `0x${'0'.repeat(24)}${POOL.slice(2)}`], transactionHash: hash }]
+      : [],
+  )
+  try {
+    const result = await discoverNftFactoryPoolAddresses(
+      { getLogs } as unknown as Provider,
+      FACTORY,
+      1,
+      100_000,
+      async (candidates) => candidates.filter(({ address }) => address !== finished),
+    )
+    expect(result.events).toEqual([expect.objectContaining({ address: POOL, rpcProvenanceVerified: true })])
+    expect(getLogs).not.toHaveBeenCalledWith(expect.objectContaining({ fromBlock: 37_000, toBlock: 37_000 }))
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 it.each([
   { historicalFails: true, recentFails: false },
   { historicalFails: false, recentFails: true },

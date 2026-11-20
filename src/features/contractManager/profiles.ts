@@ -6,12 +6,22 @@ import legacyNftStakeAbi from 'config/abi/coinCollectNftStake.json'
 import addresses from 'config/constants/contracts'
 
 export const NITRO_ADDRESS = addresses.nitroNft[137]
-export const ZIDANOGO_ADDRESS = addresses.zidanogoNft[137]
 export const WPOL_ADDRESS = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'
-export const NITRO_RUNTIME = '0xe7953ee386dea09f17c1019d35e7bb3a24eb022a0735bc08b20a951f966c9511'
-const ZIDANOGO_RUNTIME = '0xff65802850837c5f1cbb6336404ba0d6fe680c5ee274e18302b4b3a39ce1f4e0'
-export const RECEIPTS_RUNTIME = '0xeeb80f16c3b42688be43d06d4abb6f23b2dffc2365357aba55135adbcf85f9ca'
+const RECEIPTS_RUNTIME = '0xeeb80f16c3b42688be43d06d4abb6f23b2dffc2365357aba55135adbcf85f9ca'
 const WPOL_RUNTIME = '0xae820ea59b005f58a45eea35b374afbd5dc503d4f219a6b670cd3453f1142ed5'
+
+// For these Solidity builds, preserve the executable bytes, compiler version and trailer layout.
+// Only mask the 32-byte IPFS digest in the fixed metadata footer after the INVALID separator.
+const SOLIDITY_IPFS_FOOTER = /(fea2646970667358221220)[0-9a-f]{64}(64736f6c6343[0-9a-f]{6}0033)$/
+const NFT_OWNER_WITHDRAWAL_RUNTIMES = [
+  '0x14cb2a70cc2ad2a9b8e36c23cabf7b1fb4cadb6fdae08be4d6365cc2441ddca6', // CoinCollect Starter
+  '0xce8bc3efcd915566bbbd1a3813d512ef276ea1f70e51385a9d959d55b97a39b1', // Bronze, Silver, Gold
+  '0xc4a406bb70dfbb4a8130f0af1ba7e2c1862a97a173f770bf82d7eeab25bf7b21', // LotShare, PlaceDJ
+  '0x86048a576ede6f69d4bbc9d35b076a3a476f8103b9ed860b32c27682c156c146', // NitroClash, BlitzBrawler
+  '0x45b00ca0ad0524a05b0575625cc47a01e9e4eeb807e4c707353156712710dbff', // AvatarsAI, BeastHunter
+  '0x8571bcd0c95a70663ea9b8f4d6f07d24d5e2f28dafb84608fb7fd4f4d13bbb32', // SapienX
+  '0x61b8a9ef1ecad85a496e28768faa5c16817eff3f703aeb38e4e09e446e670fed', // Zidanogo
+]
 
 // Standalone OpenZeppelin PaymentSplitter v4.9.6, solc 0.8.30, metadata.bytecodeHash none.
 // The runtime is independent of the constructor's payee and share configuration.
@@ -23,7 +33,11 @@ const SPLITTER_RUNTIMES = [
 ]
 
 const nft = new Interface(coinCollectNftAbi)
-const zidanogo = new Interface(['function owner() view returns (address)', 'function withdraw()'])
+const nftWithdrawal = new Interface([
+  'function name() view returns (string)',
+  'function owner() view returns (address)',
+  'function withdraw()',
+])
 const receipts = new Interface(['function owner() view returns (address)', 'function withdrawFunds()'])
 const splitter = new Interface([
   'function shares(address account) view returns (uint256)',
@@ -41,7 +55,7 @@ const splitter = new Interface([
 
 export type WithdrawalProfile =
   | {
-      id: 'nitro' | 'zidanogo' | 'receipts'
+      id: 'nft' | 'receipts'
       name: string
       abi: Interface
       signature: 'withdraw()' | 'withdrawFunds()'
@@ -49,16 +63,15 @@ export type WithdrawalProfile =
     }
   | { id: 'splitter'; name: string; abi: Interface }
 
-export function getWithdrawalProfile(address: string, runtimeHash: string): WithdrawalProfile | undefined {
-  if (address.toLowerCase() === NITRO_ADDRESS.toLowerCase() && runtimeHash === NITRO_RUNTIME) {
-    return { id: 'nitro', name: 'NitroClash', abi: nft, signature: 'withdraw()', requiresNativeTransferTrace: true }
-  }
-  // Sourcify exact match: ZIDANOGO.withdraw is onlyOwner and sends the entire native balance to msg.sender.
-  if (address.toLowerCase() === ZIDANOGO_ADDRESS.toLowerCase() && runtimeHash === ZIDANOGO_RUNTIME) {
+export function getWithdrawalProfile(code: string): WithdrawalProfile | undefined {
+  const normalized = code.replace(SOLIDITY_IPFS_FOOTER, '$1' + '0'.repeat(64) + '$2')
+  const runtimeHash = keccak256(code as Hex)
+  const normalizedHash = normalized === code ? runtimeHash : keccak256(normalized as Hex)
+  if (NFT_OWNER_WITHDRAWAL_RUNTIMES.includes(normalizedHash)) {
     return {
-      id: 'zidanogo',
-      name: 'Zidanogo GentleMals',
-      abi: zidanogo,
+      id: 'nft',
+      name: 'NFT owner withdrawal',
+      abi: nftWithdrawal,
       signature: 'withdraw()',
       requiresNativeTransferTrace: true,
     }

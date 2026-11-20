@@ -6,7 +6,7 @@ import { ChainId } from '@coincollect/sdk'
 import styled, { keyframes } from 'styled-components'
 import FlexLayout from 'components/Layout/Flex'
 import Page from 'components/Layout/Page'
-import { useFarms, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
+import { useScheduledNftFarms, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
 import useIntersectionObserver from 'hooks/useIntersectionObserver'
 import { DeserializedNftFarm } from 'state/types'
 import { useTranslation } from 'contexts/Localization'
@@ -401,7 +401,14 @@ export const getDisplayApr = (cakeRewardsApr?: number) => {
 const Farms: React.FC = ({ children }) => {
   const { pathname, query: routerQuery } = useRouter()
   const { t } = useTranslation()
-  const { data: farmsLP, userDataLoaded } = useFarms()
+  const {
+    data: farmsLP,
+    userDataLoaded,
+    scheduleLoading,
+    scheduleError,
+    scheduleRefreshing,
+    refreshSchedules,
+  } = useScheduledNftFarms()
   const cakePrice = usePriceCakeBusd()
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useUserFarmsViewMode()
@@ -421,14 +428,18 @@ const Farms: React.FC = ({ children }) => {
   const matchesCollection = (farm: DeserializedNftFarm) =>
     (!isCommunity && !isPartner) || farm.isCommunity === isCommunity
 
-  usePollFarmsWithUserData(isArchived)
-
   // Users with no wallet connected should see 0 as Earned amount
   // Connected users should see loading indicator until first userData has loaded
   const userDataReady = !account || (!!account && userDataLoaded)
 
   const [stakedOnly, setStakedOnly] = useUserFarmStakedOnly(isActive, false)
-  const published = usePublishedNftPools()
+  const showLiveCatalogue = isActive && !stakedOnly
+  const liveCatalogue = usePublishedNftPools(true, showLiveCatalogue)
+  const verifiedCatalogue = usePublishedNftPools(
+    false,
+    !showLiveCatalogue || (Boolean(account) && !liveCatalogue.loading),
+  )
+  const published = showLiveCatalogue ? liveCatalogue : verifiedCatalogue
   const poolFilters = {
     archived: isArchived,
     query,
@@ -444,7 +455,7 @@ const Farms: React.FC = ({ children }) => {
       : []),
   ].filter((pool, index, pools) => pools.findIndex((candidate) => candidate.id === pool.id) === index)
   const publishedUserPositions = useVerifiedV2UserPositions(
-    published.verifiedPools,
+    verifiedCatalogue.verifiedPools,
     account,
     chainId,
     library,
@@ -453,7 +464,7 @@ const Farms: React.FC = ({ children }) => {
   const stakedPublishedAddresses = Object.values(publishedUserPositions.positions)
     .filter((position) => position.state === 'positive')
     .map((position) => position.poolAddress)
-  const recoveryPools = published.verifiedPools.filter((pool) => {
+  const recoveryPools = verifiedCatalogue.verifiedPools.filter((pool) => {
     const summary = publishedUserPositions.positions[pool.address.toLowerCase()]
     return !pool.publicReady && summary?.state === 'positive'
   })
@@ -463,7 +474,7 @@ const Farms: React.FC = ({ children }) => {
     stakedOnly,
     stakedPoolAddresses: stakedPublishedAddresses,
   })
-  const publishedFinishedStakeCount = selectPublishedNftPools(published.pools, {
+  const publishedFinishedStakeCount = selectPublishedNftPools(verifiedCatalogue.pools, {
     ...poolFilters,
     history: true,
     stakedOnly: true,
@@ -476,14 +487,15 @@ const Farms: React.FC = ({ children }) => {
       farm.pid !== 0 &&
       (farm.tokenPerBlock || farm.multiplier !== '0X') &&
       !isArchivedPid(farm.pid) &&
-      !farm.isFinished &&
+      (farm.contractAddresses ? farm.isFinished === false : !farm.isFinished) &&
       matchesCollection(farm),
   )
+  usePollFarmsWithUserData(isArchived, !isActive || Boolean(account) || activeFarms.length > 0)
 
   const inactiveFarms = farmsLP.filter(
     (farm) =>
       farm.pid !== 0 &&
-      ((!farm.tokenPerBlock && farm.multiplier === '0X') || farm.isFinished) &&
+      (farm.isFinished || (!farm.contractAddresses && !farm.tokenPerBlock && farm.multiplier === '0X')) &&
       !isArchivedPid(farm.pid) &&
       matchesCollection(farm),
   )
@@ -503,6 +515,15 @@ const Farms: React.FC = ({ children }) => {
   const stakedArchivedFarms = archivedFarms.filter(
     (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
   )
+
+  const catalogueError = published.connectionError || (!isArchived && scheduleError)
+  const catalogueLoading = published.loading || (!isArchived && scheduleLoading)
+  const catalogueRefreshing = published.refreshing || (!isArchived && scheduleRefreshing)
+  const refreshCatalogue = () => {
+    void published.refresh()
+    if (!isArchived) void refreshSchedules().catch(() => undefined)
+    if (showLiveCatalogue && account) void verifiedCatalogue.refresh()
+  }
 
   const farmsList = useCallback(
     (farmsToDisplay: DeserializedNftFarm[]): NftFarmWithStakedValue[] => {
@@ -737,8 +758,8 @@ const Farms: React.FC = ({ children }) => {
       isActive &&
       activeFarms.length === 0 &&
       publishedPools.length === 0 &&
-      !published.loading &&
-      !published.connectionError &&
+      !catalogueLoading &&
+      !catalogueError &&
       !query.trim() &&
       !stakedOnly
     )
@@ -835,35 +856,30 @@ const Farms: React.FC = ({ children }) => {
               mt="20px"
               scale="sm"
               variant="secondary"
-              onClick={() => void published.refresh()}
-              disabled={published.refreshing}
+              onClick={refreshCatalogue}
+              disabled={catalogueRefreshing}
               aria-label={t('Refresh pool discovery and presentation metadata')}
             >
-              {published.refreshing ? t('Refreshing') : t('Refresh pools')}
+              {catalogueRefreshing ? t('Refreshing') : t('Refresh pools')}
             </Button>
           </FilterContainer>
         </ControlContainer>
         <Flex
           alignItems="center"
           justifyContent="space-between"
-          mb={published.connectionError ? '20px' : undefined}
+          mb={catalogueError ? '20px' : undefined}
           style={
-            published.connectionError
+            catalogueError
               ? { gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255, 178, 55, 0.1)' }
               : undefined
           }
         >
           <Text small color="warning" role="status">
-            {published.connectionError ? t('Could not reach the network to check NFT pools.') : null}
+            {catalogueError ? t('Could not reach the network to check NFT pools.') : null}
           </Text>
-          {published.connectionError ? (
-            <Button
-              scale="sm"
-              variant="secondary"
-              disabled={published.refreshing}
-              onClick={() => void published.refresh()}
-            >
-              {published.refreshing ? t('Refreshing') : t('Try again')}
+          {catalogueError ? (
+            <Button scale="sm" variant="secondary" disabled={catalogueRefreshing} onClick={refreshCatalogue}>
+              {catalogueRefreshing ? t('Refreshing') : t('Try again')}
             </Button>
           ) : null}
         </Flex>

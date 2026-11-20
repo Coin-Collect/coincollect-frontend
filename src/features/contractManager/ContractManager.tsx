@@ -225,7 +225,7 @@ const Actions = styled.div`
   margin-top: 14px;
 `
 
-type TxStatus = { hash: string; phase: 'pending' | 'confirmed' | 'failed' | 'replaced' }
+type TxStatus = { hash: string; phase: 'pending' | 'notVisible' | 'confirmed' | 'failed' | 'replaced' }
 
 function amount(value: BigNumber, decimals: number, symbol: string, compact = false): string {
   const exact = formatUnits(value, decimals)
@@ -280,7 +280,8 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
     readyWallet
       ? review
       : undefined
-  const locked = Boolean(busy || txStatus?.phase === 'pending')
+  const awaitingReceipt = txStatus?.phase === 'pending' || txStatus?.phase === 'notVisible'
+  const locked = Boolean(busy || awaitingReceipt)
 
   useEffect(() => {
     if (!review) return undefined
@@ -416,9 +417,20 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
 
   async function checkTransaction() {
     if (!txStatus) return
+    const { hash } = txStatus
+    setActionError('')
     try {
-      const receipt = await rpc.getTransactionReceipt(txStatus.hash)
-      if (receipt) showReceipt(txStatus.hash, receipt)
+      const receipt = await rpc.getTransactionReceipt(hash)
+      if (receipt) {
+        showReceipt(hash, receipt)
+        return
+      }
+      const transaction = await rpc.getTransaction(hash)
+      setTxStatus((previous) =>
+        previous?.hash === hash && (previous.phase === 'pending' || previous.phase === 'notVisible')
+          ? { hash, phase: transaction ? 'pending' : 'notVisible' }
+          : previous,
+      )
     } catch {
       setActionError('Could not check the transaction yet. You can also use the explorer.')
     }
@@ -655,7 +667,9 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
                       {txStatus.phase === 'confirmed'
                         ? 'Withdrawal confirmed.'
                         : txStatus.phase === 'pending'
-                        ? 'Transaction submitted. Waiting for confirmation.'
+                        ? 'Transaction hash received. Waiting for confirmation.'
+                        : txStatus.phase === 'notVisible'
+                        ? 'The network has no record of this transaction yet. Check its status in your wallet before trying again.'
                         : txStatus.phase === 'replaced'
                         ? 'This transaction was replaced or cancelled in your wallet.'
                         : 'The withdrawal transaction failed.'}
@@ -670,7 +684,7 @@ export default function ContractManager({ embedded = false }: { embedded?: boole
                   </>
                 ) : null}
               </div>
-              {txStatus?.phase === 'pending' ? (
+              {awaitingReceipt ? (
                 <TextButton type="button" onClick={() => void checkTransaction()}>
                   Check status
                 </TextButton>

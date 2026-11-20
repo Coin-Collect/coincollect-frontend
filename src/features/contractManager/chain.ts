@@ -3,9 +3,8 @@ import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { JsonRpcProvider, TransactionRequest, TransactionResponse } from '@ethersproject/providers'
 import type { Signer } from 'ethers'
-import { keccak256, type Hex } from 'viem'
 import { mainnetTokens } from 'config/constants/tokens'
-import { isLocalForkMode } from 'config/localFork'
+import { isLocalForkMode, POLYGON_CHAIN_ID } from 'config/localFork'
 import {
   getCoinCollectAbi,
   getWithdrawalProfile,
@@ -31,6 +30,7 @@ const TRACKED_TOKENS = [
 ]
 export const REVIEW_TTL_MS = 90_000
 const REVIEW_FEE_HEADROOM_PERCENT = 20
+const POLYGON_PRIORITY_FEE_FLOOR = BigNumber.from(25_000_000_000)
 
 export type AssetBalance = {
   address: string
@@ -227,19 +227,17 @@ export async function inspectContract(
     provider.getBalance(address, block),
   ])
   if (code === '0x') throw new Error('No contract was found at this address on the selected network.')
-  const profile = getWithdrawalProfile(address, keccak256(code as Hex))
+  const profile = getWithdrawalProfile(code)
   const verified =
-    !isLocalForkMode && (!profile || profile.id === 'zidanogo')
-      ? await loadVerifiedAbi(chainId, address, code)
-      : undefined
-  const reference = !profile && !verified ? getCoinCollectAbi(address) : undefined
-  const abi = verified || profile?.abi || reference
+    !isLocalForkMode && (!profile || profile.id === 'nft') ? await loadVerifiedAbi(chainId, address, code) : undefined
+  const reference = (!profile || profile.id === 'nft') && !verified ? getCoinCollectAbi(address) : undefined
+  const abi = verified || reference || profile?.abi
   const abiSource = verified
     ? 'Sourcify'
-    : profile
-    ? 'Reviewed runtime'
     : reference
     ? 'CoinCollect reference'
+    : profile
+    ? 'Reviewed runtime'
     : undefined
   const functions = abi
     ? Object.values(abi.functions)
@@ -294,8 +292,8 @@ export async function inspectContract(
   let withdrawalReason: string | undefined
   if (!profile)
     withdrawalReason = abi
-      ? 'This contract has no reviewed withdrawal configuration. Function names alone do not identify a safe transfer.'
-      : 'A verified ABI or reviewed runtime could not be found for this address.'
+      ? 'The deployed code does not match a supported withdrawal implementation.'
+      : 'A verified ABI or supported withdrawal implementation could not be found for this address.'
   else if (!account) withdrawalReason = 'Connect your wallet to check whether you can withdraw.'
   else {
     try {
@@ -326,7 +324,7 @@ export async function inspectContract(
     block,
     nativeBalance,
     tokens,
-    name: profile?.name || (typeof name === 'string' ? name.slice(0, 96) : undefined),
+    name: (typeof name === 'string' && name.trim() ? name.slice(0, 96) : undefined) || profile?.name,
     owner: authority.owner,
     roles: authority.roles,
     functions,
@@ -417,6 +415,38 @@ async function verifyNativeTransfer(
     throw new Error('The simulation could not verify the recipient and exact amount.')
 }
 
+async function readWithdrawalFees(provider: JsonRpcProvider, chainId: number) {
+  const polygonMainnet = chainId === POLYGON_CHAIN_ID && !isLocalForkMode
+  const [feeData, polygonTip] = await Promise.all([
+    provider.getFeeData(),
+    polygonMainnet
+      ? optional(async () => BigNumber.from(await provider.send('eth_maxPriorityFeePerGas', [])))
+      : undefined,
+  ])
+  const { gasPrice, lastBaseFeePerGas, maxFeePerGas, maxPriorityFeePerGas } = feeData
+
+  if (polygonMainnet && lastBaseFeePerGas) {
+    // ethers v5 uses a fixed 1.5 Gwei tip. Use Polygon's quote, with its Gas Station floor as a fallback.
+    const priorityFee = polygonTip?.gt(POLYGON_PRIORITY_FEE_FLOOR) ? polygonTip : POLYGON_PRIORITY_FEE_FLOOR
+    const maxFee = lastBaseFeePerGas.mul(2).add(priorityFee)
+    return {
+      fee: { maxFeePerGas: maxFee, maxPriorityFeePerGas: priorityFee },
+      maxFee,
+      typicalFee: lastBaseFeePerGas.add(priorityFee),
+    }
+  }
+
+  if (maxFeePerGas && maxPriorityFeePerGas && maxFeePerGas.gt(0)) {
+    return {
+      fee: { maxFeePerGas, maxPriorityFeePerGas },
+      maxFee: maxFeePerGas,
+      typicalFee: gasPrice?.lt(maxFeePerGas) ? gasPrice : maxFeePerGas,
+    }
+  }
+  if (gasPrice?.gt(0)) return { fee: { gasPrice }, maxFee: gasPrice, typicalFee: gasPrice }
+  throw new Error('The network did not provide a usable gas quote.')
+}
+
 export async function prepareWithdrawal(
   provider: JsonRpcProvider,
   chainId: number,
@@ -430,7 +460,7 @@ export async function prepareWithdrawal(
   await assertChain(provider, chainId)
   const block = await provider.getBlockNumber()
   const [code, receiverCode] = await Promise.all([provider.getCode(contract, block), provider.getCode(account, block)])
-  const profile = getWithdrawalProfile(contract, keccak256(code as Hex))
+  const profile = getWithdrawalProfile(code)
   if (!profile) throw new Error('This contract has no reviewed withdrawal configuration.')
   if (receiverCode !== '0x' || sameAddress(account, contract))
     throw new Error('Withdrawals require a wallet that can receive funds directly.')
@@ -449,25 +479,18 @@ export async function prepareWithdrawal(
   await provider.call(request, block)
   if (profile.id !== 'splitter' && profile.requiresNativeTransferTrace)
     await verifyNativeTransfer(provider, contract, account, data, block, amount)
-  const [estimate, feeData, walletBalance] = await Promise.all([
+  const [estimate, { fee, maxFee, typicalFee }, walletBalance] = await Promise.all([
     provider.estimateGas(request),
-    provider.getFeeData(),
+    readWithdrawalFees(provider, chainId),
     provider.getBalance(account),
   ])
   if (estimate.lte(0)) throw new Error('The network did not provide a usable gas quote.')
-  const maxFee = feeData.maxFeePerGas && feeData.maxPriorityFeePerGas ? feeData.maxFeePerGas : feeData.gasPrice
-  if (!maxFee || maxFee.lte(0)) throw new Error('The network did not provide a usable gas quote.')
   const gasLimit = estimate.mul(120).add(99).div(100)
   const transactionFeeLimit = gasLimit.mul(maxFee)
   if (walletBalance.lt(transactionFeeLimit))
     throw new Error('Your wallet does not have enough POL for the estimated gas.')
   const bufferedFeeLimit = transactionFeeLimit.mul(100 + REVIEW_FEE_HEADROOM_PERCENT).div(100)
   const feeLimit = walletBalance.lt(bufferedFeeLimit) ? walletBalance : bufferedFeeLimit
-  const fee =
-    feeData.maxFeePerGas && feeData.maxPriorityFeePerGas
-      ? { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas: feeData.maxPriorityFeePerGas }
-      : { gasPrice: maxFee }
-  const typicalFee = feeData.gasPrice && feeData.gasPrice.lt(maxFee) ? feeData.gasPrice : maxFee
   return {
     contract,
     account,
