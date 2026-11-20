@@ -1,5 +1,15 @@
 # Universal Rewards V3
 
+## V3.3 Studio and FarmCard
+
+Select the original collection address and its source network in Studio. The verified ledger resolves an approved adapter for each managed collection. Polygon ERC-721 remains eligible through its native interface. Polygon ERC-1155 requires a bound collection hook. Pool power is per ERC-1155 unit. Open the new pool in **Manage** before its start to set the per-token-ID and wallet quantity limit.
+
+Mixed pools open eligible collections from the existing FarmCard. Users can select a recently received NFT found in the bounded source scan, or enter a token ID directly. The app verifies the selected balance on its source network. It shows the source, standard, active quantity, power, artwork when metadata is accessible, and Polygon claimable amounts. Local increases and partial exits use the same wallet without NFT approvals.
+
+On an isolated Base or Arbitrum source, request Join, Exit or Reward release on the source network. A confirmed source receipt is pending until the ordered journal reaches it on Polygon. After successful release, use Harvest or the released reward row on Polygon. Set `NEXT_PUBLIC_V33_BASE_RPC` and `NEXT_PUBLIC_V33_ARBITRUM_RPC` to local HTTP Anvil endpoints with chain IDs 8453 and 42161 in a V3.3 preview. The wallet configuration accepts these sources only in local fork mode. No production journal transactions are enabled.
+
+Use `COINCOLLECT_V33_FIXTURE=1` with the existing contracts fixture script to test Polygon ERC-1155 in Chrome. Use the default fixture for V3.2 regression. Point the frontend at the versioned ledger using the manifest address and runtime hash. The frontend selects one ledger per environment. [V3.3 policy and integration evidence](https://github.com/Coin-Collect/coincollect-smart-contracts/blob/pool-management/projects/universal-rewards-v3/V3.3.md)
+
 ## Architecture decision
 
 V3 runs alongside V2 on Polygon (137). `UniversalRewards` owns the pool ledger and creates numbered pools without a per-pool deployment. It never transfers or approves an ERC-721. `RewardSwapAdapter` supplies price observation and restricted router execution. `FinalizedOwnershipVerifier` is an isolated-test contract that adds Base and Arbitrum identity verification to the same ledger. Treasury Vault holds available deposits and Reward Route Planner chooses approved swap paths. Polygon pools share a single ledger deployment.

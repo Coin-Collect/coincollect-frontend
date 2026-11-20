@@ -2,6 +2,7 @@ import { defaultWagmiConfig } from '@web3modal/wagmi/react/config'
 import memoize from 'lodash/memoize'
 import { defineChain } from 'viem'
 import { polygon } from 'wagmi/chains'
+import { managedSourceChains } from 'features/universalRewards/managedChains'
 import { getLocalForkRpcUrl, isLocalForkMode, LOCAL_FORK_CHAIN_ID } from 'config/localFork'
 
 // Get projectId from https://cloud.walletconnect.com
@@ -26,7 +27,7 @@ const localForkChain = isLocalForkMode
     })
   : undefined
 
-const chains = localForkChain ? ([localForkChain] as const) : ([polygon] as const)
+const chains = localForkChain ? ([localForkChain, ...managedSourceChains] as const) : ([polygon] as const)
 export const defaultChain = chains[0]
 export const config = defaultWagmiConfig({
   chains,
@@ -37,8 +38,8 @@ export const config = defaultWagmiConfig({
     email: true, // default to true
     socials: undefined,
     showWallets: false, // default to true
-    walletFeatures: false // default to true
-  }
+    walletFeatures: false, // default to true
+  },
 })
 
 export const CHAIN_IDS = chains.map((c) => c.id)

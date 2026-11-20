@@ -1,0 +1,439 @@
+import { readNftMetadataFromUri } from 'features/nftPoolManager/user/nftDiscovery'
+import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import {
+  createPublicClient,
+  encodeFunctionData,
+  getAbiItem,
+  http,
+  isAddressEqual,
+  keccak256,
+  parseEventLogs,
+  zeroAddress,
+  type Address,
+} from 'viem'
+import { useSwitchChain } from 'wagmi'
+import { finalizedNftJournalAbi, managedNftCollectionAbi, nftSourceJournalAbi } from './abi'
+import { useV3Action, useV3Query, useV3Wallet } from './hooks'
+import { managedSourceChains } from './managedChains'
+import {
+  discoverManagedIds,
+  managed1155Abi,
+  managed721Abi,
+  SETTLEMENT_SOURCE,
+  type ManagedCollection,
+} from './managedNfts'
+import { poolTiming, shortAmount, sourceName, positionDailyEstimate } from './presentation'
+import type { V3PoolSnapshot } from './reader'
+import type { V3Client, V3Deployment } from './runtime'
+import { V3Actions, V3Button, V3Error, V3Field, V3Fields, V3Muted } from './styles'
+import { UINT256_MAX } from './units'
+
+const ZERO = BigInt(0)
+
+type Props = {
+  rule: ManagedCollection
+  baseWeight: number
+  client: V3Client
+  deployment: V3Deployment
+  pool: V3PoolSnapshot
+  account: Address
+  chainId?: number
+  refresh: () => void
+}
+
+export default function V33CollectionActions({
+  rule,
+  baseWeight,
+  client,
+  deployment,
+  pool,
+  account,
+  chainId,
+  refresh,
+}: Props) {
+  const local = rule.sourceChainId === SETTLEMENT_SOURCE
+  const [enteredId, setEnteredId] = useState('')
+  const [tokenId, setTokenId] = useState<bigint>()
+  const [quantity, setQuantity] = useState('1')
+  const [error, setError] = useState('')
+  const [request, setRequest] = useState<bigint>()
+  const chain = managedSourceChains.find(({ id }) => BigInt(id) === rule.sourceChainId)
+  const sourceClient = useMemo(
+    () =>
+      chain &&
+      createPublicClient({
+        transport: http(chain.rpcUrls.default.http[0], { timeout: 8_000 }),
+        pollingInterval: 2_000,
+      }),
+    [chain],
+  )
+  const targetChain = local ? deployment.chainId : chain?.id
+  const wallet = useV3Wallet(targetChain)
+  const { switchChain, isPending: switching } = useSwitchChain()
+
+  const readOwnership = useCallback(async () => {
+    if (tokenId === undefined) throw Error('Check a token ID first.')
+    const source = local ? client : sourceClient
+    if (!source) throw Error('This preview has no isolated source network configured.')
+    if ((await source.getChainId()) !== targetChain) throw Error('The source RPC is on a different chain.')
+    const position = { address: rule.adapter, abi: managedNftCollectionAbi }
+    const id = await client.readContract({
+      ...position,
+      functionName: 'positionId',
+      args: [pool.poolId, tokenId, account, false],
+    })
+    const [[entitled, active], owned] = await Promise.all([
+      client.readContract({ ...position, functionName: 'positions', args: [id] }),
+      rule.standard === 1155
+        ? source.readContract({
+            address: rule.collection,
+            abi: managed1155Abi,
+            functionName: 'balanceOf',
+            args: [account, tokenId],
+          })
+        : source
+            .readContract({ address: rule.collection, abi: managed721Abi, functionName: 'ownerOf', args: [tokenId] })
+            .then((owner) => (isAddressEqual(owner, account) ? BigInt(1) : ZERO)),
+    ])
+    let sourceDeployment: V3Deployment | undefined
+    if (!local && rule.journal && rule.journal !== zeroAddress && chain) {
+      const target = { address: rule.journal, abi: nftSourceJournalAbi }
+      const [code, collection, ledger, standard] = await Promise.all([
+        source.getCode({ address: rule.journal }),
+        source.readContract({ ...target, functionName: 'collection' }),
+        source.readContract({ ...target, functionName: 'settlementLedger' }),
+        source.readContract({ ...target, functionName: 'standard' }),
+      ])
+      if (
+        !code ||
+        !isAddressEqual(collection, rule.collection) ||
+        !isAddressEqual(ledger, deployment.address) ||
+        standard !== rule.standard
+      )
+        throw Error('The source journal does not match the verified pool.')
+      sourceDeployment = { address: rule.journal, chainId: chain.id, runtimeHash: keccak256(code) }
+    }
+    return { id, owned, entitled, active, sourceDeployment }
+  }, [tokenId, client, rule, pool.poolId, account, local, sourceClient, chain, deployment.address, targetChain])
+  const loadInventory = useCallback(async () => {
+    const source = local ? client : sourceClient
+    if (!source || (await source.getChainId()) !== targetChain) return []
+    return discoverManagedIds(source, rule, account)
+  }, [local, client, sourceClient, rule, account, targetChain])
+  const inventory = useV3Query(`${account}:${rule.adapter}`, loadInventory)
+  const loadArtwork = useCallback(async () => {
+    const source = local ? client : sourceClient
+    if (!source || tokenId === undefined || (await source.getChainId()) !== targetChain) return undefined
+    const uri =
+      rule.standard === 1155
+        ? (
+            await source.readContract({
+              address: rule.collection,
+              abi: managed1155Abi,
+              functionName: 'uri',
+              args: [tokenId],
+            })
+          ).replace(/\{id\}/g, tokenId.toString(16).padStart(64, '0'))
+        : await source.readContract({
+            address: rule.collection,
+            abi: managed721Abi,
+            functionName: 'tokenURI',
+            args: [tokenId],
+          })
+    return readNftMetadataFromUri(uri)
+  }, [local, client, sourceClient, tokenId, targetChain, rule])
+  const artwork = useV3Query(tokenId === undefined ? '' : `${rule.collection}:${tokenId}`, loadArtwork)
+  const ownership = useV3Query(
+    tokenId === undefined ? '' : `${account}:${rule.adapter}:${tokenId}`,
+    readOwnership,
+    15_000,
+  )
+  const action = useV3Action(
+    local ? client : sourceClient ?? client,
+    local ? deployment : ownership.data?.sourceDeployment,
+    wallet,
+    account,
+  )
+  const readProgress = useCallback(async () => {
+    if (!rule.journal || local || request === undefined) return 'pending'
+    const verifier = await client.readContract({
+      address: rule.adapter,
+      abi: managedNftCollectionAbi,
+      functionName: 'journal',
+    })
+    const [, next] = await client.readContract({
+      address: verifier,
+      abi: finalizedNftJournalAbi,
+      functionName: 'streams',
+      args: [rule.adapter],
+    })
+    if (next <= request) return 'pending'
+    const block = await client.getBlockNumber()
+    const lookback = BigInt(3_000)
+    const skipped = await client.getLogs({
+      address: verifier,
+      event: getAbiItem({ abi: finalizedNftJournalAbi, name: 'IntentSkipped' }),
+      args: { adapter: rule.adapter, sequence: request },
+      fromBlock: block > lookback ? block - lookback : ZERO,
+      toBlock: block,
+    })
+    ownership.refresh()
+    return skipped.length > 0 ? 'skipped' : 'processed'
+  }, [client, rule, local, request, ownership.refresh])
+  const progress = useV3Query(request === undefined ? '' : request.toString(), readProgress, 10_000)
+
+  const check = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!/^\d{1,78}$/.test(enteredId) || BigInt(enteredId) > UINT256_MAX) {
+      setError('Enter a valid NFT token ID.')
+      event.currentTarget.querySelector('input')?.focus()
+      return
+    }
+    setError('')
+    const id = BigInt(enteredId)
+    if (id === tokenId) ownership.refresh()
+    setTokenId(id)
+  }
+
+  const submit = async (operation: 'join' | 'exit' | 'release') => {
+    if (tokenId === undefined || !ownership.data || !wallet || targetChain !== chainId || rule.paused) return
+    const amount = rule.standard === 721 ? 1 : /^\d{1,10}$/.test(quantity) ? Number(quantity) : NaN
+    if (operation !== 'release' && (!Number.isSafeInteger(amount) || amount < 1 || amount > 4_294_967_295)) {
+      setError('Enter a positive whole quantity.')
+      return
+    }
+    if (
+      operation === 'join' &&
+      (amount + ownership.data.active > rule.limit || BigInt(amount + ownership.data.active) > ownership.data.owned)
+    ) {
+      setError('Choose a quantity within your verified balance and the participating unit limit.')
+      return
+    }
+    if (operation === 'exit' && BigInt(amount) > ownership.data.entitled) {
+      setError('Choose at most your current entitled quantity.')
+      return
+    }
+    setError('')
+    const receipt = local
+      ? await action.run({
+          to: rule.adapter,
+          data:
+            operation === 'join'
+              ? encodeFunctionData({
+                  abi: managedNftCollectionAbi,
+                  functionName: 'join',
+                  args: [pool.poolId, tokenId, amount],
+                })
+              : encodeFunctionData({
+                  abi: managedNftCollectionAbi,
+                  functionName: 'exit',
+                  args: [pool.poolId, tokenId, BigInt(amount)],
+                }),
+        })
+      : ownership.data.sourceDeployment &&
+        (await action.run({
+          to: ownership.data.sourceDeployment.address,
+          data: encodeFunctionData({
+            abi: nftSourceJournalAbi,
+            functionName: 'request',
+            args: [
+              operation === 'join' ? 1 : operation === 'exit' ? 2 : 3,
+              pool.poolId,
+              tokenId,
+              operation === 'release' ? 0 : amount,
+            ],
+          }),
+        }))
+    recordReceipt(receipt || undefined)
+  }
+
+  const recordReceipt = (receipt: Awaited<ReturnType<typeof action.recheck>>) => {
+    if (!receipt) return
+    if (!local && ownership.data?.sourceDeployment) {
+      const address = ownership.data?.sourceDeployment.address
+      const [intent] = parseEventLogs({
+        abi: nftSourceJournalAbi,
+        eventName: 'Observation',
+        logs: receipt.logs.filter((log) => isAddressEqual(log.address, address)),
+      })
+      if (intent) setRequest(intent.args.sequence)
+    }
+    ownership.refresh()
+    refresh()
+  }
+
+  const data = ownership.data
+  const ended = pool.claimDeadline !== undefined && pool.timestamp >= pool.claimDeadline
+  const ready = Boolean(data && wallet && !action.busy && !action.unconfirmed && !ended && !rule.paused)
+  const additional = /^\d{1,9}$/.test(quantity) ? Number(quantity) : 0
+  const estimate =
+    data &&
+    additional > 0 &&
+    additional + data.active <= rule.limit &&
+    BigInt(additional + data.active) <= data.owned &&
+    poolTiming(pool) === 'Live'
+  return (
+    <V3Fields>
+      <legend>
+        {sourceName(rule.sourceChainId)} · ERC-{rule.standard}
+      </legend>
+      <V3Muted>
+        {rule.collection} · {baseWeight} power per unit · Up to {rule.limit} active per token ID and wallet
+      </V3Muted>
+      {!local && (
+        <V3Muted>
+          Request on {sourceName(rule.sourceChainId)} and claim released rewards on Polygon after verification.
+        </V3Muted>
+      )}
+      {!local && (!sourceClient || rule.paused) && (
+        <V3Muted role="status">
+          {rule.paused ? 'Source verification is paused.' : 'This preview has no isolated source network configured.'}
+        </V3Muted>
+      )}
+      {!!inventory.data?.length && (
+        <V3Actions aria-label="Recently received NFTs">
+          {inventory.data.map((id) => (
+            <V3Button
+              key={id.toString()}
+              type="button"
+              $secondary
+              onClick={() => {
+                setEnteredId(id.toString())
+                setTokenId(id)
+              }}
+            >
+              NFT #{id.toString()}
+            </V3Button>
+          ))}
+        </V3Actions>
+      )}
+      <form method="post" onSubmit={check} aria-label="Check managed NFT ownership">
+        <V3Actions>
+          <V3Field>
+            NFT token ID
+            <input
+              name="managed-token-id"
+              inputMode="numeric"
+              required
+              maxLength={78}
+              value={enteredId}
+              onChange={(event) => {
+                setEnteredId(event.target.value)
+                setError('')
+              }}
+            />
+          </V3Field>
+          <V3Button type="submit" $secondary>
+            Check NFT
+          </V3Button>
+        </V3Actions>
+      </form>
+      {ownership.loading && !data && <V3Muted role="status">Checking source ownership…</V3Muted>}
+      {ownership.error && <V3Error role="status">{ownership.error}</V3Error>}
+      {data && (
+        <>
+          {artwork.data?.image && /^(https:\/\/|\/(?!\/))/.test(artwork.data.image) && (
+            <img
+              src={artwork.data.image}
+              alt={artwork.data.name ?? ''}
+              width={64}
+              height={64}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          )}
+          <V3Muted>
+            #{tokenId?.toString()} · {data.owned.toString()} owned · {data.active} participating ·{' '}
+            {data.active * baseWeight} power
+          </V3Muted>
+          {rule.standard === 1155 && (
+            <V3Field>
+              Participating quantity
+              <input
+                name="managed-quantity"
+                inputMode="numeric"
+                maxLength={10}
+                value={quantity}
+                onChange={(event) => {
+                  setQuantity(event.target.value)
+                  setError('')
+                }}
+              />
+            </V3Field>
+          )}
+          {estimate && (
+            <V3Muted>
+              Estimated next 24 hours ·{' '}
+              {pool.rewards
+                .map(
+                  (reward) =>
+                    `${shortAmount(
+                      positionDailyEstimate(pool, reward, additional * baseWeight, data.active > 0),
+                      reward.decimals,
+                    )} ${reward.symbol}`,
+                )
+                .join(' · ')}
+            </V3Muted>
+          )}
+          {targetChain && chainId !== targetChain ? (
+            <V3Button type="button" disabled={switching} onClick={() => switchChain({ chainId: targetChain })}>
+              Switch to {sourceName(rule.sourceChainId)}
+            </V3Button>
+          ) : (
+            <V3Actions>
+              <V3Button
+                type="button"
+                disabled={!ready || poolTiming(pool) !== 'Live'}
+                onClick={() => void submit('join')}
+              >
+                Join with quantity
+              </V3Button>
+              <V3Button
+                type="button"
+                $secondary
+                disabled={!ready || data.entitled === ZERO}
+                onClick={() => void submit('exit')}
+              >
+                Exit quantity and release rewards
+              </V3Button>
+              {!local && (
+                <V3Button
+                  type="button"
+                  $secondary
+                  disabled={!ready || data.entitled === ZERO}
+                  onClick={() => void submit('release')}
+                >
+                  Request reward release
+                </V3Button>
+              )}
+            </V3Actions>
+          )}
+        </>
+      )}
+      {(error || action.error || progress.error) && (
+        <V3Error role="status">{error || action.error || progress.error}</V3Error>
+      )}
+      {request !== undefined ? (
+        <V3Muted role="status">
+          {progress.data === 'skipped' &&
+            'The request could not be applied. Check your balance and pool status, then try again.'}
+          {progress.data === 'processed' && 'Source request processed. Check your Polygon position for the result.'}
+          {(!progress.data || progress.data === 'pending') &&
+            'Source request confirmed. Waiting for finalized verification on Polygon.'}
+        </V3Muted>
+      ) : (
+        action.message && <V3Muted role="status">{action.message}</V3Muted>
+      )}
+      {action.unconfirmed && (
+        <V3Button
+          type="button"
+          $secondary
+          disabled={action.busy}
+          onClick={async () => recordReceipt(await action.recheck())}
+        >
+          Check transaction again
+        </V3Button>
+      )}
+    </V3Fields>
+  )
+}

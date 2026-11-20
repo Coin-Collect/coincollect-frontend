@@ -1,7 +1,8 @@
 import { isAddressEqual, parseAbi, parseAbiItem, zeroAddress, type Address, type Hex } from 'viem'
 import { getLocalForkBaseBlock } from 'config/localFork'
-import { ownershipVerifierAbi, universalRewardsAbi } from './abi'
+import { managedNftCollectionAbi, ownershipVerifierAbi, universalRewardsAbi } from './abi'
 import { decodeV3Presentation } from './metadata'
+import { readManagedCollection, SETTLEMENT_SOURCE } from './managedNfts'
 import { readV3Capacity, readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
 const erc721Abi = parseAbi([
@@ -76,7 +77,7 @@ export async function readV3Pool(
   const ledger = ledgerAt(deployment, snapshot.number)
   const [
     [config, checkedUntil, activeWallets, totalWeight, activeNfts],
-    collections,
+    rawCollections,
     rewardTokens,
     funding,
     period,
@@ -89,6 +90,15 @@ export async function readV3Pool(
     options.claimPeriod ?? readV3ClaimPeriod(client, deployment, ledger.blockNumber),
     options.capacity ?? readV3Capacity(client, deployment, ledger.blockNumber),
   ])
+  const collections = await Promise.all(
+    rawCollections.map(async (rule) => ({
+      ...rule,
+      managed:
+        rule.sourceChainId === SETTLEMENT_SOURCE
+          ? await readManagedCollection(client, deployment, rule.collection, poolId, ledger.blockNumber)
+          : undefined,
+    })),
+  )
   const rewards: RewardSnapshot[] = await Promise.all(
     rewardTokens.map(async (token) => {
       const number = ledger.blockNumber
@@ -231,15 +241,16 @@ export async function readV3Nft(
   ref: NftRef,
 ) {
   const ledger = ledgerAt(deployment, pool.blockNumber)
-  const weight = pool.collections.find(
+  const rule = pool.collections.find(
     (rule) => rule.sourceChainId === ref.sourceChainId && isAddressEqual(rule.collection, ref.collection),
-  )?.weight
-  if (!weight) throw new Error('This NFT collection is outside the pool rules.')
+  )
+  if (!rule) throw new Error('This NFT collection is outside the pool rules.')
   const [key, verifier] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'nftKey', args: [ref.sourceChainId, ref.collection, ref.tokenId] }),
     ref.sourceChainId !== BigInt(137) ? verifierAt(client, deployment, pool.blockNumber) : Promise.resolve(zeroAddress),
   ])
-  const [ownership, position, claimable] = await Promise.all([
+  const adapter = { address: ref.collection, abi: managedNftCollectionAbi, blockNumber: pool.blockNumber }
+  const [ownership, position, claimable, quantity, info] = await Promise.all([
     ownershipAt(client, ref, verifier, pool.blockNumber),
     client.readContract({ ...ledger, functionName: 'positionState', args: [pool.poolId, key] }),
     Promise.all(
@@ -247,10 +258,23 @@ export async function readV3Nft(
         client.readContract({ ...ledger, functionName: 'claimable', args: [pool.poolId, key, token] }),
       ),
     ),
+    rule.managed ? client.readContract({ ...adapter, functionName: 'positions', args: [ref.tokenId] }) : undefined,
+    rule.managed ? client.readContract({ ...adapter, functionName: 'positionInfo', args: [ref.tokenId] }) : undefined,
   ])
   return {
     ref,
-    weight,
+    weight: rule.managed ? position.weight : rule.weight,
+    managed:
+      rule.managed && info && quantity
+        ? {
+            ...rule.managed,
+            underlyingId: info[0],
+            holder: info[2],
+            released: info[3],
+            entitled: quantity[0],
+            active: quantity[1],
+          }
+        : undefined,
     key,
     ...ownership,
     eligible: isAddressEqual(account, ownership.owner),
@@ -354,7 +378,7 @@ export async function readV3CardPosition(
     // Look at one bounded collection page. The detail view supports other collections and manual token IDs.
     const collection =
       indexed && offset === NIL && keys.length === 0
-        ? pool.collections.find(({ sourceChainId }) => sourceChainId === BigInt(137))
+        ? pool.collections.find(({ sourceChainId, managed }) => sourceChainId === BigInt(137) && !managed)
         : undefined
     if (collection) {
       const inventory = await discoverV3Nfts(
@@ -424,7 +448,9 @@ export async function readV3CardPosition(
     power > 0 &&
     block.timestamp >= pool.config.start &&
     block.timestamp < pool.config.end &&
-    pool.collections.every(({ sourceChainId }) => sourceChainId === BigInt(137))
+    pool.collections.every(
+      ({ sourceChainId, managed }) => (managed?.sourceChainId ?? sourceChainId) === SETTLEMENT_SOURCE,
+    )
       ? await readRewardProjection(client, deployment, pool, block.number, power)
       : undefined
 

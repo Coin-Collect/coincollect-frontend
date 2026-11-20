@@ -1,3 +1,4 @@
+import { readManagedCollection } from 'features/universalRewards/managedNfts'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import BigNumber from 'bignumber.js'
 import { AddIcon, ChevronRightIcon, CloseIcon, Flex } from '@pancakeswap/uikit'
@@ -110,7 +111,8 @@ export default function V3FarmCardStudio({
   const assetFor = (address: string) => assets.find((asset) => asset.address.toLowerCase() === address.toLowerCase())
   const funding = assetFor(draft.fundAsset)
   const hasSwap = !isAddressEqual(studio.swap, zeroAddress)
-  const hasRemote = !isAddressEqual(studio.verifier, zeroAddress)
+  const hasRemote =
+    (studio.managedCollections && deployment.chainId === 31337) || !isAddressEqual(studio.verifier, zeroAddress)
   const shares = draft.rewards.map(({ sharePercent }) => Math.round(Number(sharePercent) * 100))
   const start = new Date(draft.startLocal)
   const scheduleText = Number.isFinite(start.getTime())
@@ -158,16 +160,22 @@ export default function V3FarmCardStudio({
     ]
     return Promise.all(
       entries.slice(0, 16).map(async (rule) => {
+        const managed = await readManagedCollection(client, deployment, rule.collection, undefined, studio.blockNumber)
         const name =
-          rule.sourceChainId === BigInt(137)
+          !managed && rule.sourceChainId === BigInt(137)
             ? await client
                 .readContract({ address: rule.collection, abi: collectionNameAbi, functionName: 'name' })
                 .catch(() => '')
             : ''
-        return { address: rule.collection, sourceChain: String(rule.sourceChainId), power: String(rule.weight), name }
+        return {
+          address: managed?.collection ?? rule.collection,
+          sourceChain: String(managed?.sourceChainId ?? rule.sourceChainId),
+          power: String(rule.weight),
+          name: managed ? `ERC-${managed.standard} · ${managed.collection.slice(0, 8)}…` : name,
+        }
       }),
     )
-  }, [client, deployment.address])
+  }, [client, deployment, studio.blockNumber])
   const knownCollections = useV3Query(panel === 'collections' ? deployment.address : '', readCollections)
   const [collectionNames, setCollectionNames] = useState<Record<string, string>>({})
   useEffect(() => {
@@ -434,6 +442,12 @@ export default function V3FarmCardStudio({
                 Add collection
               </V3Button>
             </form>
+            {studio.managedCollections && (
+              <V3Muted>
+                ERC-1155 and remote collections require a registered transfer adapter. Set quantity limits in Manage
+                before the pool starts.
+              </V3Muted>
+            )}
             {collectionError && <V3Error role="alert">{collectionError}</V3Error>}
             {draft.collections.map((rule, index) => (
               <V3Fields key={`${rule.sourceChain}:${rule.address}`}>

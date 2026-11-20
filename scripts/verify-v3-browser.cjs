@@ -394,7 +394,7 @@ async function testBrowser() {
       poolPath,
     )
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
-    await has(fixture.version === '3.2' ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
+    await has(['3.2', '3.3'].includes(fixture.version) ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -635,6 +635,9 @@ async function testBrowser() {
       'function positionState(uint256 poolId,bytes32 key) view returns ((uint256 sourceChainId,address collection,uint32 weight,uint256 tokenId,address seatOwner,uint64 seatExpiry))',
       'function rewardState(uint256 poolId,address token) view returns ((uint128 cap,uint128 inventory,uint256 committed))',
       'function rewardSettlement(uint256 poolId,address token) view returns (uint256 claimLiability,uint128 expiredRecovered)',
+      'function safeTransferFrom(address from,address to,uint256 id,uint256 amount,bytes data)',
+      'function positionId(uint256 poolId,uint256 id,address account,bool released) view returns (uint256)',
+      'function positions(uint256 id) view returns (uint128 entitled,uint32 active)',
       'function populate(address ledger,uint256 pool,address collection,uint256 first,uint256 wallets,uint256 perWallet)',
       'function join(uint256 poolId,uint256 sourceChainId,address collection,uint256 tokenId)',
       'event Claimed(uint256 indexed poolId,bytes32 indexed nft,address indexed token,address owner,uint256 amount)',
@@ -946,6 +949,57 @@ async function testBrowser() {
       await click('article button', 'Harvest')
       await has('Confirmed on the settlement network.')
       console.log('PASS above 1,024 NFTs · verified reward receipt, live estimate and pause control')
+    }
+    if (fixture.managed) {
+      const reserve = parseEther('10')
+      const start = BigInt((await rpc('eth_getBlockByNumber', ['latest', false])).timestamp) + 180n
+      const end = start + 3600n
+      await sendFixture(fixture.token, 'deposit', [], toHex(reserve))
+      await sendFixture(fixture.token, 'approve', [fixture.ledger, reserve])
+      const uri = 'data:application/json;base64,' + Buffer.from(JSON.stringify({ name: 'Mixed NFT Rewards' })).toString('base64')
+      await sendFixture(fixture.ledger, 'createPool', [
+        { start, end, threshold: 1, maxWallets: 10, maxNftsPerWallet: 4, metadataURI: uri },
+        [{ sourceChainId: 137n, collection: fixture.managed.adapter, weight: 3 }],
+        [{ token: fixture.token, cap: reserve }],
+      ])
+      const poolId = await readBatchPool('poolCount')
+      await sendFixture(fixture.ledger, 'fundReward', [poolId, fixture.token, reserve])
+      await viewport(390, 844, true)
+      await openStudio()
+      await click('section[aria-label="V3 pool dashboard"] button', 'Upcoming')
+      await click('button[aria-label="Manage Mixed NFT Rewards"]', 'Manage')
+      await has('ERC-1155 quantity limits')
+      await field('limit', '8')
+      await click('button', 'Save limit')
+      await has('Confirmed on the settlement network.')
+      await rpc('evm_setNextBlockTimestamp', [Number(start)])
+      await rpc('evm_mine')
+      const route = '/nftpools/v3/' + poolId
+      await visit(route, fixture.participant)
+      await has('Polygon · ERC-1155')
+      await field('managed-token-id', '25')
+      await click('button', 'Check NFT')
+      await has('10 owned · 0 participating')
+      await has('Up to 8 active')
+      await field('managed-quantity', '6')
+      await click('button', 'Join with quantity')
+      await has('10 owned · 6 participating · 18 power')
+      await rpc('evm_increaseTime', [120])
+      await rpc('evm_mine')
+      await sendFixture(fixture.managed.collection, 'safeTransferFrom',
+        [fixture.participant, fixture.operator, 25n, 2n, '0x'], undefined, fixture.participant)
+      await visit(route, fixture.operator)
+      await field('managed-token-id', '25')
+      await click('button', 'Check NFT')
+      await has('2 owned · 2 participating · 6 power')
+      await field('managed-quantity', '1')
+      await click('button', 'Exit quantity and release rewards')
+      await has('2 owned · 1 participating · 3 power')
+      await has('Released rewards')
+      await click('article button', 'Harvest')
+      await has('Confirmed on the settlement network.')
+      assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
+      console.log('PASS V3.3 mobile ERC-1155 unit cap, quantity join, partial transfer, partial exit and Harvest')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

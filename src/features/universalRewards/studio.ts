@@ -1,3 +1,4 @@
+import { describeManagedCollection, managed1155Abi, readManagedAdapter, SETTLEMENT_SOURCE } from './managedNfts'
 import {
   encodeFunctionData,
   getAddress,
@@ -69,7 +70,7 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
   const block = await client.getBlock()
   await validateV3Deployment(client, deployment, block.number)
   const ledger = { abi: universalRewardsAbi, address: deployment.address, blockNumber: block.number }
-  const [admin, wrappedNative, swap, verifier, assets, treasury, capacity] = await Promise.all([
+  const [admin, wrappedNative, swap, verifier, assets, treasury, capacity, registry] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'admin' }),
     client.readContract({ ...ledger, functionName: 'wrappedNative' }),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
@@ -77,6 +78,7 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
     client.readContract({ ...ledger, functionName: 'supportedAssets' }),
     readV3Treasury(client, deployment, block.number),
     readV3Capacity(client, deployment, block.number),
+    readManagedAdapter(client, deployment, SETTLEMENT_SOURCE, zeroAddress, block.number),
   ])
   const supported = await Promise.all(
     assets.map(async (address) => {
@@ -99,6 +101,7 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
     wrappedNative,
     swap,
     verifier,
+    managedCollections: registry !== undefined,
     treasury,
     supported,
     capacity,
@@ -186,6 +189,38 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   }
 
   for (const rule of collections) {
+    const adapter = await readManagedAdapter(
+      client,
+      deployment,
+      rule.sourceChainId,
+      rule.collection,
+      studio.blockNumber,
+    )
+    if (adapter && adapter !== zeroAddress) {
+      const managed = await describeManagedCollection(client, adapter, undefined, studio.blockNumber)
+      if (BigInt(managed.maxUnits) * BigInt(rule.weight) > BigInt(4_294_967_295)) {
+        throw new Error('Unit power multiplied by the adapter quantity limit must fit within 4,294,967,295.')
+      }
+      if (managed.sourceChainId === SETTLEMENT_SOURCE) {
+        const hook = await client.readContract({
+          address: rule.collection,
+          abi: managed1155Abi,
+          functionName: 'rewardsHook',
+          blockNumber: studio.blockNumber,
+        })
+        if (!isAddressEqual(hook, adapter)) throw new Error('This ERC-1155 collection has no bound transfer hook.')
+      } else if (
+        deployment.chainId !== 31337 ||
+        !managed.journal ||
+        managed.journal === zeroAddress ||
+        managed.paused
+      ) {
+        throw new Error('This remote collection does not have an available verification journal.')
+      }
+      rule.sourceChainId = SETTLEMENT_SOURCE
+      rule.collection = adapter
+      continue
+    }
     if (rule.sourceChainId === BigInt(137)) {
       const supported = await client
         .readContract({
@@ -196,7 +231,8 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
           blockNumber: studio.blockNumber,
         })
         .catch(() => false)
-      if (!supported) throw new Error('A Polygon collection did not confirm ERC-721 support.')
+      if (!supported)
+        throw new Error('This Polygon collection must support ERC-721 or have an approved ERC-1155 transfer adapter.')
     } else {
       if (isAddressEqual(studio.verifier, zeroAddress))
         throw new Error('Remote NFT collections are disabled in this deployment.')

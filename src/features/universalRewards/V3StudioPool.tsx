@@ -1,6 +1,7 @@
 import { useCallback, useId, useState, type ComponentType, type ReactNode } from 'react'
-import { zeroAddress, type Address } from 'viem'
+import { encodeFunctionData, zeroAddress, type Address } from 'viem'
 import { poolArtworkRegistry } from 'features/nftPoolManager/studio/artworkRegistry'
+import { managedNftCollectionAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
 import { safeArtwork, type V3Presentation } from './metadata'
 import {
@@ -297,6 +298,76 @@ export default function V3StudioPool({
           </V3Card>
         )}
       </PresentationWorkspace>
+      {pool.collections.some(({ managed }) => managed?.standard === 1155) && (
+        <V3Card>
+          <div>
+            <h3>ERC-1155 quantity limits</h3>
+            {pool.collections.map(
+              ({ managed, weight }) =>
+                managed?.standard === 1155 && (
+                  <form
+                    key={managed.adapter}
+                    method="post"
+                    aria-label={`Quantity limit for ${managed.collection}`}
+                    onSubmit={async (event) => {
+                      event.preventDefault()
+                      const limit = Number(new FormData(event.currentTarget).get('limit'))
+                      if (!Number.isSafeInteger(limit) || limit < 1 || limit > managed.maxUnits) return
+                      if (
+                        await settlementAction.run({
+                          to: managed.adapter,
+                          data: encodeFunctionData({
+                            abi: managedNftCollectionAbi,
+                            functionName: 'setUnitLimit',
+                            args: [poolId, limit],
+                          }),
+                        })
+                      )
+                        result.refresh()
+                    }}
+                  >
+                    <V3Muted>
+                      {managed.collection} · {weight} power per unit
+                    </V3Muted>
+                    <V3Actions>
+                      <V3Field>
+                        Active units per token ID and wallet
+                        <input
+                          key={managed.limit}
+                          name="limit"
+                          type="number"
+                          min={1}
+                          max={managed.maxUnits}
+                          step={1}
+                          defaultValue={managed.limit}
+                          disabled={
+                            !writeAllowed ||
+                            settlementAction.busy ||
+                            settlementAction.unconfirmed ||
+                            pool.timestamp >= pool.config.start
+                          }
+                          required
+                        />
+                      </V3Field>
+                      <V3Button
+                        type="submit"
+                        $secondary
+                        disabled={
+                          !writeAllowed ||
+                          settlementAction.busy ||
+                          settlementAction.unconfirmed ||
+                          pool.timestamp >= pool.config.start
+                        }
+                      >
+                        Save limit
+                      </V3Button>
+                    </V3Actions>
+                  </form>
+                ),
+            )}
+          </div>
+        </V3Card>
+      )}
       {pool.claimDeadline !== undefined && (
         <V3Card>
           <div>

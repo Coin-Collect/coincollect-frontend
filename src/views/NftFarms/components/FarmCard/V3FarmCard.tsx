@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AutoRenewIcon, Button, Flex, Text } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
@@ -69,11 +70,14 @@ export default function V3FarmCard({
   const contractLink =
     deployment.chainId === 137 ? `https://polygonscan.com/address/${deployment.address}` : `${poolUrl}#contract`
 
+  const router = useRouter()
   const collections = useMemo(
     () =>
       pool.collections.map((rule) => {
-        const polygon = rule.sourceChainId === BigInt(137)
-        const collectionAddress = rule.collection.toLowerCase()
+        const source = rule.managed?.sourceChainId ?? rule.sourceChainId
+        const collection = rule.managed?.collection ?? rule.collection
+        const polygon = source === BigInt(137)
+        const collectionAddress = collection.toLowerCase()
         const farm = polygon
           ? nftFarmsConfig.find((item) => item.nftAddresses?.[137]?.toLowerCase() === collectionAddress)
           : undefined
@@ -81,9 +85,9 @@ export default function V3FarmCard({
           ? mintingConfig.find((item) => item.address?.toLowerCase() === collectionAddress)
           : undefined
         const link =
-          polygon && deployment.chainId === 137 ? `/nfts/collections/${rule.collection}` : `${poolUrl}#eligible-nfts`
+          polygon && deployment.chainId === 137 ? `/nfts/collections/${collection}` : `${poolUrl}#eligible-nfts`
         return {
-          name: farm?.lpSymbol || `${sourceName(rule.sourceChainId)} · ${rule.collection.slice(0, 8)}…`,
+          name: farm?.lpSymbol || `${sourceName(source)} · ${collection.slice(0, 8)}…`,
           image: minting?.avatar || farm?.avatar,
           weight: String(rule.weight),
           link,
@@ -148,8 +152,15 @@ export default function V3FarmCard({
     pool.activeNfts < BigInt(pool.capacity) &&
     !actionPending
 
-  const openStaking = () => setModal({ mode: 'stake', account: address })
-  const openUnstaking = () => setModal({ mode: 'unstake', account: address })
+  const usesManagedCollections = pool.collections.some(({ managed }) => Boolean(managed))
+  const openStaking = () =>
+    usesManagedCollections
+      ? void router.push(`${poolUrl}#eligible-nfts`)
+      : setModal({ mode: 'stake', account: address })
+  const openUnstaking = () =>
+    usesManagedCollections
+      ? void router.push(`${poolUrl}#eligible-nfts`)
+      : setModal({ mode: 'unstake', account: address })
   const refreshPosition = () => {
     position.refresh()
     onPositionChange?.()
