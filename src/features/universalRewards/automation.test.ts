@@ -2,8 +2,8 @@ import type { WalletClient } from 'viem'
 import { executeReplenishmentJob, executeTreasuryRecovery, pickV3Batch } from './automation'
 import type { V3Client, V3Deployment } from './runtime'
 
-const address = '0x0000000000000000000000000000000000000001'
-const hash = '0x0123456789abcdef'
+const address = '0x0000000000000000000000000000000000000001' as const
+const hash = '0x0123456789abcdef' as const
 const deployment: V3Deployment = { address, runtimeHash: hash, chainId: 31337 }
 const job = {
   poolId: BigInt(2),

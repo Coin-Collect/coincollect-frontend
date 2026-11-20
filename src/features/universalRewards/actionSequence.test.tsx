@@ -20,8 +20,8 @@ const account = '0x0000000000000000000000000000000000000001' as Address
 const deployment = { address: account, chainId: 31337, runtimeHash: '0x1234' } as V3Deployment
 const client = {} as V3Client
 const getWallet = async () => ({} as WalletClient)
-const send = jest.mocked(sendV3Call)
-const verify = jest.mocked(readV3Receipt)
+const send = sendV3Call as jest.MockedFunction<typeof sendV3Call>
+const verify = readV3Receipt as jest.MockedFunction<typeof readV3Receipt>
 const receipt = {} as Awaited<ReturnType<typeof readV3Receipt>>
 
 function setup() {
