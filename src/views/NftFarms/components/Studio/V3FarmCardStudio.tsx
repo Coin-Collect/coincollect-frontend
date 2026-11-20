@@ -702,7 +702,7 @@ export default function V3FarmCardStudio({
                 <input
                   type="number"
                   min={1}
-                  max={32}
+                  max={studio.capacity}
                   name="max-wallets"
                   value={draft.maxWallets}
                   onChange={(event) => onChange({ maxWallets: event.target.value })}
@@ -713,14 +713,16 @@ export default function V3FarmCardStudio({
                 <input
                   type="number"
                   min={1}
-                  max={32}
+                  max={studio.capacity}
                   name="max-nfts"
                   value={draft.maxNfts}
                   onChange={(event) => onChange({ maxNfts: event.target.value })}
                 />
               </V3Field>
             </EditorGrid>
-            <V3Muted>The pool can hold up to 32 active NFT positions.</V3Muted>
+            <V3Muted>
+              The ledger supports up to {studio.capacity.toLocaleString()} active NFT positions per pool.
+            </V3Muted>
           </>
         )
       default:

@@ -394,7 +394,7 @@ async function testBrowser() {
       poolPath,
     )
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
-    await has('No wallet positions in the records on this page.')
+    await has(fixture.version === '3.2' ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -628,19 +628,29 @@ async function testBrowser() {
       'function deposit() payable',
       'function approve(address spender, uint256 amount) returns (bool)',
       'function poolCount() view returns (uint256)',
-      'function createPool((uint64 start,uint64 end,uint8 threshold,uint8 maxWallets,uint8 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
+      'function createPool((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
       'function fundReward(uint256 poolId,address token,uint128 amount)',
       'function nftKey(uint256 sourceChainId,address collection,uint256 tokenId) view returns (bytes32)',
       'function walletsNftCount(uint256 poolId,address account) view returns (uint256)',
       'function positionState(uint256 poolId,bytes32 key) view returns ((uint256 sourceChainId,address collection,uint32 weight,uint256 tokenId,address seatOwner,uint64 seatExpiry))',
       'function rewardState(uint256 poolId,address token) view returns ((uint128 cap,uint128 inventory,uint256 committed))',
       'function rewardSettlement(uint256 poolId,address token) view returns (uint256 claimLiability,uint128 expiredRecovered)',
+      'function populate(address ledger,uint256 pool,address collection,uint256 first,uint256 wallets,uint256 perWallet)',
+      'function join(uint256 poolId,uint256 sourceChainId,address collection,uint256 tokenId)',
       'event Claimed(uint256 indexed poolId,bytes32 indexed nft,address indexed token,address owner,uint256 amount)',
     ])
-    const sendFixture = async (to, functionName, args = [], value) => {
+    const sendFixture = async (to, functionName, args = [], value, from = fixture.operator) => {
       const data = encodeFunctionData({ abi: batchAbi, functionName, args })
-      const hash = await rpc('eth_sendTransaction', [{ from: fixture.operator, to, data, value }])
-      assert.equal((await rpc('eth_getTransactionReceipt', [hash])).status, '0x1', functionName)
+      const hash = await rpc('eth_sendTransaction', [{ from, to, data, value, gas: '0x7a1200' }])
+      for (let attempt = 0; attempt < 200; attempt++) {
+        const receipt = await rpc('eth_getTransactionReceipt', [hash])
+        if (receipt) {
+          assert.equal(receipt.status, '0x1', functionName)
+          return
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+      throw Error(`${functionName} did not produce a mined receipt: ${hash}`)
     }
     const readBatchPool = async (functionName, args = []) => {
       const calldata = encodeFunctionData({ abi: batchAbi, functionName, args })
@@ -864,6 +874,78 @@ async function testBrowser() {
       console.log(
         'PASS V3.1 Treasury deposit, 365-day pool allocation, available withdrawal, automatic purchase and responsive dashboard',
       )
+    }
+    if (fixture.scaleFixture) {
+      const scaleStart = BigInt((await rpc('eth_getBlockByNumber', ['latest', false])).timestamp) + 30n
+      const scaleEnd = scaleStart + 86400n
+      const reserve = parseEther('20')
+      await sendFixture(fixture.token, 'deposit', [], toHex(reserve))
+      await sendFixture(fixture.token, 'approve', [fixture.ledger, reserve])
+      const scaleUri =
+        'data:application/json;base64,' + Buffer.from(JSON.stringify({ name: 'Scalable NFT pool' })).toString('base64')
+      await sendFixture(fixture.ledger, 'createPool', [
+        {
+          start: scaleStart,
+          end: scaleEnd,
+          threshold: 64,
+          maxWallets: 1024,
+          maxNftsPerWallet: 8,
+          metadataURI: scaleUri,
+        },
+        [{ sourceChainId: 137n, collection: fixture.nft, weight: 2 }],
+        [{ token: fixture.token, cap: reserve }],
+      ])
+      const scaleId = await readBatchPool('poolCount')
+      await sendFixture(fixture.ledger, 'fundReward', [scaleId, fixture.token, reserve])
+      await rpc('evm_setNextBlockTimestamp', [Number(scaleStart)])
+      await rpc('evm_mine')
+      let inserted = 0
+      for (const size of [32, 128, 512, 1024]) {
+        while (inserted < size) {
+          await sendFixture(fixture.scaleFixture, 'populate', [
+            fixture.ledger,
+            scaleId,
+            fixture.nft,
+            BigInt(1000 + inserted),
+            2n,
+            8n,
+          ])
+          inserted += 16
+        }
+        const before = Date.now()
+        await visit('/nftpools/v3/' + scaleId, fixture.participant)
+        await wait(
+          'render participants, NFT count and power at scale',
+          (members) => {
+            const stats = document.querySelector('[aria-label="Recorded pool participation"]')
+            const values = [...(stats?.querySelectorAll('dd') ?? [])].map((value) => value.textContent.trim())
+            return (
+              values.join('|') ===
+              [members / 8, members, members * 2].map((value) => value.toLocaleString('en-US')).join('|')
+            )
+          },
+          size,
+        )
+        await click('article button', 'Click to Stake Now')
+        await wait(
+          'bounded NFT selection above the original pool limit',
+          () => !!document.querySelector('dialog[open]'),
+        )
+        await click('dialog button', 'Cancel')
+        assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
+        console.log(`PASS browser at ${size} active NFTs · counted and opened picker in ${Date.now() - before} ms`)
+      }
+      await sendFixture(fixture.nft, 'mint', [fixture.participant, 9_999n])
+      await sendFixture(fixture.ledger, 'join', [scaleId, 137n, fixture.nft, 9_999n], undefined, fixture.participant)
+      await rpc('evm_increaseTime', [120])
+      await rpc('evm_mine')
+      await visit('/nftpools/v3/' + scaleId, fixture.participant)
+      await has('Estimated live earnings')
+      await click('article button', 'Pause live estimate')
+      await has('Last verified earnings')
+      await click('article button', 'Harvest')
+      await has('Confirmed on the settlement network.')
+      console.log('PASS above 1,024 NFTs · verified reward receipt, live estimate and pause control')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

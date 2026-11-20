@@ -713,16 +713,16 @@ export default function V3Studio({
           </V3Actions>
         )}
         {account && studio.data && !allowed && mode !== 'treasury' && (
-          <V3Card aria-label="V3 operator account required">
+          <V3Card aria-label="CoinCollect admin wallet required">
             <div>
-              <h2>Switch to the V3 operator account</h2>
+              <h2>Connect the CoinCollect admin wallet</h2>
               <V3Muted role="status">
                 Connected account · <code>{account}</code>
                 <br />
-                V3 operator · <code>{studio.data.admin}</code>
+                CoinCollect admin · <code>{studio.data.admin}</code>
               </V3Muted>
               <V3Muted>
-                Select the operator account in {wallet.connector?.name || 'your wallet'}. To use a different wallet
+                Select the admin account in {wallet.connector?.name || 'your wallet'}. To use a different wallet
                 extension, disconnect here, then connect with that wallet.
               </V3Muted>
               <V3Actions>

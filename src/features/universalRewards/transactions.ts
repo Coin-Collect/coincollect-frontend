@@ -99,6 +99,13 @@ export function manageV3Position(
   }
 }
 
+export function reconcileV3Position(deployment: V3Deployment, poolId: bigint, key: Hex): V3Call {
+  return {
+    to: deployment.address,
+    data: encodeFunctionData({ abi: universalRewardsAbi, functionName: 'reconcile', args: [poolId, [key]] }),
+  }
+}
+
 export function approveV3Funding(deployment: V3Deployment, token: Address, amount: bigint): V3Call {
   return {
     to: token,

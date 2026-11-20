@@ -126,12 +126,19 @@ export default function V3NftActionModal({
   }, [])
 
   const loadChoices = useCallback(async () => {
-    const wallet = await readV3CardPosition(client, deployment, pool, account)
+    const indexed = pool.capacity > 32
+    const wallet = await readV3CardPosition(
+      client,
+      deployment,
+      pool,
+      account,
+      indexed && mode === 'unstake' ? offset : ZERO,
+    )
     const snapshot = { ...pool, blockNumber: wallet.blockNumber, timestamp: wallet.timestamp }
     const positions = wallet.seatedNfts
-    let total = BigInt(positions.length)
+    let total = indexed ? wallet.total : BigInt(positions.length)
     let needsId = false
-    let refs = positions.slice(Number(offset), Number(offset + PAGE))
+    let refs = indexed ? positions : positions.slice(Number(offset), Number(offset + PAGE))
     if (mode === 'stake' && rule) {
       const inventory =
         rule.sourceChainId === POLYGON
@@ -196,7 +203,7 @@ export default function V3NftActionModal({
   const options = useV3Query(`${mode}:${account}:${collectionIndex}:${offset}`, loadChoices)
   const max = pool.config.maxNftsPerWallet
   const currentCount = options.data?.count ?? 0
-  const overLimit = mode === 'stake' && currentCount + selectedNfts.length > max
+  const overLimit = selectedNfts.length > 32 || (mode === 'stake' && currentCount + selectedNfts.length > max)
   const addToken = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!/^\d{1,78}$/.test(typedId) || BigInt(typedId) > UINT256_MAX) {
@@ -245,9 +252,12 @@ export default function V3NftActionModal({
       return
     }
     const receipt = await action.runMany(async () => {
-      const wallet = await readV3CardPosition(client, deployment, pool, account)
-      const seated = new Set(wallet.seatedNfts.map(nftRefKey))
-      if (selectedNfts.some(({ ref }) => !seated.has(nftRefKey(ref)))) {
+      const block = await client.getBlock()
+      const snapshot = { ...pool, blockNumber: block.number, timestamp: block.timestamp }
+      const checks = await Promise.all(
+        selectedNfts.map(({ ref }) => readV3Nft(client, deployment, snapshot, account, ref)),
+      )
+      if (checks.some(({ eligible, seated }) => !eligible || !seated)) {
         throw new Error(t('One or more selected NFTs are no longer in your pool position. Review your selection.'))
       }
       return selectedNfts.map(({ ref }) => ({
@@ -440,6 +450,11 @@ export default function V3NftActionModal({
             )}
             {mode === 'unstake' && (
               <>
+                {selectedNfts.length > 32 && (
+                  <Text small color="failure" role="alert">
+                    {t('Select up to 32 NFTs per batch.')}
+                  </Text>
+                )}
                 <Text id={unstakeDescription} small color="textSubtle">
                   {t(
                     'You receive the available rewards for the NFTs you select. These NFTs stop earning in this pool.',

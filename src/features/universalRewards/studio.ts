@@ -12,13 +12,21 @@ import { ownershipVerifierAbi, treasuryVaultAbi, universalRewardsAbi } from './a
 import { encodeV3Presentation, type V3Presentation } from './metadata'
 import { erc20Abi, readV3Pool, tokenDetails } from './reader'
 import { quoteV3Route } from './routes'
-import { isV3MissingSelector, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { isV3MissingSelector, readV3Capacity, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import type { V3Call } from './transactions'
 import { tokenScale, UINT128_MAX } from './units'
 
 const ZERO = BigInt(0)
 const BPS = BigInt(10_000)
 const collectionAbi = parseAbi(['function supportsInterface(bytes4 interfaceId) view returns (bool)'])
+const legacyCreateAbi = parseAbi([
+  'struct LegacyPoolConfig { uint64 start; uint64 end; uint8 threshold; uint8 maxWallets; uint8 maxNftsPerWallet; string metadataURI; }',
+  'struct CollectionRule { uint256 sourceChainId; address collection; uint32 weight; }',
+  'struct RewardConfig { address token; uint128 cap; }',
+  'struct FundingConfig { address asset; uint128 budget; uint32 interval; uint16[] allocations; }',
+  'function createFundedPool(LegacyPoolConfig config, CollectionRule[] collections, RewardConfig[] rewards, FundingConfig funding) returns (uint256)',
+  'function createTreasuryFundedPool(LegacyPoolConfig config, CollectionRule[] collections, RewardConfig[] rewards, FundingConfig funding, uint128 initialAllocation, bool consolidated) returns (uint256)',
+])
 
 export interface V3StudioDraft extends V3Presentation {
   startLocal: string
@@ -61,13 +69,14 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
   const block = await client.getBlock()
   await validateV3Deployment(client, deployment, block.number)
   const ledger = { abi: universalRewardsAbi, address: deployment.address, blockNumber: block.number }
-  const [admin, wrappedNative, swap, verifier, assets, treasury] = await Promise.all([
+  const [admin, wrappedNative, swap, verifier, assets, treasury, capacity] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'admin' }),
     client.readContract({ ...ledger, functionName: 'wrappedNative' }),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
     client.readContract({ ...ledger, functionName: 'remoteVerifier' }),
     client.readContract({ ...ledger, functionName: 'supportedAssets' }),
     readV3Treasury(client, deployment, block.number),
+    readV3Capacity(client, deployment, block.number),
   ])
   const supported = await Promise.all(
     assets.map(async (address) => {
@@ -92,6 +101,7 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
     verifier,
     treasury,
     supported,
+    capacity,
     timestamp: block.timestamp,
     blockNumber: block.number,
   }
@@ -143,8 +153,8 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     throw new Error('Treasury is paused or has insufficient available balance for this lifetime budget.')
   }
   const days = integer(draft.durationDays, 1, 1460, 'duration in days')
-  const maximumWallets = integer(draft.maxWallets, 1, 32, 'maximum participant wallets')
-  const maxNftsPerWallet = integer(draft.maxNfts, 1, 32, 'maximum NFTs per wallet')
+  const maximumWallets = integer(draft.maxWallets, 1, studio.capacity, 'maximum participant wallets')
+  const maxNftsPerWallet = integer(draft.maxNfts, 1, studio.capacity, 'maximum NFTs per wallet')
   const threshold = integer(draft.threshold, 0, maximumWallets, 'participant threshold')
   const startTime = Math.floor(new Date(draft.startLocal).getTime() / 1000)
   if (!Number.isSafeInteger(startTime) || BigInt(startTime) < studio.timestamp + BigInt(60)) {
@@ -263,6 +273,7 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   const gasPrice = await client.getGasPrice().catch(() => undefined)
   return {
     admin: studio.admin,
+    capacity: studio.capacity,
     config: { start, end: start + duration, threshold, maxWallets: maximumWallets, maxNftsPerWallet, metadataURI },
     collections,
     rewards,
@@ -279,11 +290,12 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
 export type V3Preview = Awaited<ReturnType<typeof buildV3Preview>>
 
 export function createV3FundedPool(deployment: V3Deployment, preview: V3Preview): V3Call {
+  const abi = preview.capacity <= 32 ? legacyCreateAbi : universalRewardsAbi
   if (preview.treasuryFunded) {
     return {
       to: deployment.address,
       data: encodeFunctionData({
-        abi: universalRewardsAbi,
+        abi,
         functionName: 'createTreasuryFundedPool',
         args: [
           preview.config,
@@ -299,7 +311,7 @@ export function createV3FundedPool(deployment: V3Deployment, preview: V3Preview)
   return {
     to: deployment.address,
     data: encodeFunctionData({
-      abi: universalRewardsAbi,
+      abi,
       functionName: 'createFundedPool',
       args: [preview.config, preview.collections, preview.rewards, preview.funding],
     }),

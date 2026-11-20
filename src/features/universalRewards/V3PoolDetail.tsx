@@ -27,7 +27,7 @@ import {
   type WalletNftSnapshot,
 } from './reader'
 import { createV3Client, getV3Deployment, type V3Client, type V3Deployment } from './runtime'
-import { joinV3, manageV3Position } from './transactions'
+import { joinV3, manageV3Position, reconcileV3Position } from './transactions'
 import { UINT256_MAX } from './units'
 import {
   V3Actions,
@@ -89,7 +89,10 @@ async function loadNfts(
     collectionTotal: collection.total,
     positionTotal: history.total,
     positions: positions.filter(
-      (position) => position.eligible || (position.unavailable && isAddressEqual(position.previousOwner, account)),
+      (position) =>
+        position.eligible ||
+        (pool.capacity > 32 && isAddressEqual(position.seatOwner, account)) ||
+        (position.unavailable && isAddressEqual(position.previousOwner, account)),
     ),
     seats,
   }
@@ -100,22 +103,27 @@ function RewardRows({
   nft,
   onManage,
   actionDisabled,
+  onReconcile,
 }: {
   pool: V3PoolSnapshot
   nft: WalletNftSnapshot
   onManage: (action: 'claim' | 'exit' | 'leave', rewardToken?: Address) => void
   actionDisabled: boolean
+  onReconcile?: () => void
 }) {
   const claimsExpired = isV3ClaimExpired(pool)
   const hasClaimable = !claimsExpired && nft.claimable.some((amount) => amount > ZERO)
+  let participation = 'No active participation'
+  if (poolTiming(pool) === 'Finished') participation = 'Pool ended'
+  else if (onReconcile) participation = 'Recorded participation · owner changed'
+  else if (nft.seated) participation = 'Participating'
   return (
     <V3Fields>
       <legend>
         {sourceName(nft.ref.sourceChainId)} NFT #{nft.ref.tokenId.toString()}
       </legend>
       <V3Muted>
-        {poolTiming(pool) === 'Finished' ? 'Pool ended' : nft.seated ? 'Participating' : 'No active participation'} ·{' '}
-        {nft.weight} power
+        {participation} · {nft.weight} power
       </V3Muted>
       {nft.unavailable && <V3Error role="status">A fresh ownership proof is required for this position.</V3Error>}
       <V3Metrics>
@@ -124,7 +132,7 @@ function RewardRows({
             <dt>{reward.symbol} claimable</dt>
             <dd>
               <V3RewardValue key={nft.claimable[index].toString()}>
-                {shortAmount(claimsExpired ? ZERO : nft.claimable[index], reward.decimals)}
+                {shortAmount(claimsExpired || !nft.eligible ? ZERO : nft.claimable[index], reward.decimals)}
               </V3RewardValue>
             </dd>
             {!claimsExpired && pool.rewards.length > 1 && nft.claimable[index] > ZERO && (
@@ -141,6 +149,11 @@ function RewardRows({
         ))}
       </V3Metrics>
       <V3Actions>
+        {onReconcile && (
+          <V3Button type="button" $secondary disabled={actionDisabled} onClick={onReconcile}>
+            Reconcile recorded owner
+          </V3Button>
+        )}
         <V3Button
           type="button"
           disabled={actionDisabled || !nft.eligible || !hasClaimable}
@@ -226,6 +239,7 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
       poolTiming(pool) === 'Live' &&
       !writeDisabled &&
       selected.length > 0 &&
+      selected.length <= 32 &&
       BigInt(selected.length) <= availableSeats &&
       !result.error &&
       !walletData.error,
@@ -296,6 +310,25 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
               <V3Card id="contract">
                 <div>
                   <h2>Pool rewards</h2>
+                  <V3Metrics aria-label="Recorded pool participation">
+                    <div>
+                      <dt>Participant wallets</dt>
+                      <dd>{pool.activeWallets.toLocaleString('en-US')}</dd>
+                    </div>
+                    <div>
+                      <dt>Active NFTs</dt>
+                      <dd>{pool.activeNfts.toLocaleString('en-US')}</dd>
+                    </div>
+                    <div>
+                      <dt>Total NFT power</dt>
+                      <dd>{pool.totalWeight.toLocaleString('en-US')}</dd>
+                    </div>
+                  </V3Metrics>
+                  {pool.capacity > 32 && (
+                    <V3Muted>
+                      Counts reflect verified seats. Reconcile an NFT after transfer to update its seat.
+                    </V3Muted>
+                  )}
                   <V3Muted>
                     {pool.claimDeadline === undefined
                       ? 'NFT ownership controls who can claim each balance.'
@@ -521,6 +554,17 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
                             pool={pool}
                             nft={nft}
                             actionDisabled={writeDisabled}
+                            onReconcile={
+                              pool.capacity > 32 && nft.seated && !isAddressEqual(nft.seatOwner, nft.owner)
+                                ? async () => {
+                                    if (
+                                      !writeDisabled &&
+                                      (await transaction.run(reconcileV3Position(deployment, poolId, nft.key)))
+                                    )
+                                      result.refresh()
+                                  }
+                                : undefined
+                            }
                             onManage={(action, token) => void manage(nft, action, token)}
                           />
                         ))}

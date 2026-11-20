@@ -1,4 +1,5 @@
-import { claimPeriodMessage, isV3ClaimExpired } from './presentation'
+import { claimPeriodMessage, interpolateV3Rewards, isV3ClaimExpired } from './presentation'
+import { UNIT } from './units'
 
 const day = BigInt(86_400)
 const end = day * BigInt(100)
@@ -25,5 +26,29 @@ describe('V3 claim timing', () => {
     const legacy = { ...poolAt(deadline), claimDeadline: undefined }
     expect(isV3ClaimExpired(legacy)).toBe(false)
     expect(claimPeriodMessage(legacy)).toBeUndefined()
+  })
+})
+
+describe('V3 interpolated rewards', () => {
+  it('bounds the last verified snapshot by the participant threshold, reserves, pool end and refresh horizon', () => {
+    const pool = { config: { ...config, start: BigInt(0), end: BigInt(100), threshold: 8 } }
+    const snapshot = {
+      timestamp: BigInt(20),
+      amounts: [BigInt(80), BigInt(2)],
+      projection: {
+        wallets: 4,
+        totalWeight: BigInt(8),
+        pageWeight: BigInt(2),
+        rewards: [
+          { cap: BigInt(8_000), inventory: BigInt(10_000), liability: UNIT * BigInt(80) },
+          { cap: BigInt(8_000), inventory: BigInt(6), liability: UNIT * BigInt(2) },
+        ],
+      },
+    }
+
+    expect(interpolateV3Rewards(pool, snapshot, 0)).toEqual(snapshot.amounts)
+    expect(interpolateV3Rewards(pool, snapshot, 5)).toEqual([BigInt(130), BigInt(3)])
+    expect(interpolateV3Rewards(pool, snapshot, 100)).toEqual([BigInt(380), BigInt(3)])
+    expect(interpolateV3Rewards(pool, { ...snapshot, timestamp: BigInt(99) }, 5)).toEqual([BigInt(90), BigInt(3)])
   })
 })

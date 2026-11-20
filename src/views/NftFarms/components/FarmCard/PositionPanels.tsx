@@ -34,11 +34,13 @@ export function FarmCardEarned({
   canHarvest,
   harvesting,
   onHarvest,
+  harvestLabel,
 }: {
   rewards: PositionReward[]
   canHarvest: boolean
   harvesting?: boolean
   onHarvest: () => void
+  harvestLabel?: string
 }) {
   const { t } = useTranslation()
 
@@ -79,7 +81,7 @@ export function FarmCardEarned({
           ))}
         </RewardsGrid>
         <HarvestButton disabled={!canHarvest} onClick={onHarvest}>
-          {harvesting ? t('Harvesting') : t('Harvest')}
+          {harvesting ? t('Harvesting') : harvestLabel ?? t('Harvest')}
         </HarvestButton>
       </RewardsPanel>
     </Flex>

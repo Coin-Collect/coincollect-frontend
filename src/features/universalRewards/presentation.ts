@@ -1,5 +1,5 @@
 import { formatUnits } from 'viem'
-import type { RewardSnapshot, V3PoolSnapshot } from './reader'
+import type { readV3CardPosition, RewardSnapshot, V3PoolSnapshot } from './reader'
 import type { V3Deployment } from './runtime'
 import { UNIT } from './units'
 
@@ -53,6 +53,36 @@ export function dailyTarget(pool: V3PoolSnapshot, reward: RewardSnapshot) {
 
 export function availableReward(reward: RewardSnapshot) {
   return (reward.inventory * UNIT - reward.committed) / UNIT
+}
+
+export function interpolateV3Rewards(
+  pool: Pick<V3PoolSnapshot, 'config'>,
+  snapshot: Pick<Awaited<ReturnType<typeof readV3CardPosition>>, 'projection' | 'timestamp' | 'amounts'>,
+  elapsedSeconds: number,
+) {
+  const { projection, timestamp, amounts } = snapshot
+  if (
+    !projection ||
+    projection.totalWeight === ZERO ||
+    elapsedSeconds <= 0 ||
+    timestamp < pool.config.start ||
+    timestamp >= pool.config.end
+  )
+    return amounts
+  const seconds = BigInt(Math.min(30, Math.floor(elapsedSeconds)))
+  const remaining = pool.config.end - timestamp
+  const elapsed = seconds < remaining ? seconds : remaining
+  const duration = pool.config.end - pool.config.start
+  const sinceStart = timestamp - pool.config.start
+  const { wallets, totalWeight, pageWeight, rewards } = projection
+  return rewards.map(({ cap, inventory, liability }, index) => {
+    const scaledCap = cap * UNIT
+    let emission = (scaledCap * (sinceStart + elapsed)) / duration - (scaledCap * sinceStart) / duration
+    if (wallets < pool.config.threshold) emission = (emission * BigInt(wallets)) / BigInt(pool.config.threshold)
+    const available = inventory * UNIT > liability ? inventory * UNIT - liability : ZERO
+    if (emission > available) emission = available
+    return amounts[index] + ((emission / totalWeight) * pageWeight) / UNIT
+  })
 }
 
 export function positionDailyEstimate(

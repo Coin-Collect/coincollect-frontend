@@ -37,6 +37,17 @@ export function createV3Client() {
 
 export type V3Client = ReturnType<typeof createV3Client>
 
+export async function readV3Capacity(client: V3Client, deployment: V3Deployment, blockNumber?: bigint) {
+  return Number(
+    await client.readContract({
+      address: deployment.address,
+      abi: universalRewardsAbi,
+      functionName: 'MAX_POSITIONS',
+      blockNumber,
+    }),
+  )
+}
+
 export function isV3MissingSelector(error: unknown) {
   return (
     error instanceof BaseError &&

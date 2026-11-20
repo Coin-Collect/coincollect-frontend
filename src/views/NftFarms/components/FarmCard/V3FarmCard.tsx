@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AutoRenewIcon, Button, Flex, Text } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
 import { useAccount, useSwitchChain } from 'wagmi'
@@ -11,6 +11,7 @@ import { useTranslation } from 'contexts/Localization'
 import {
   claimPeriodMessage,
   dailyTarget,
+  interpolateV3Rewards,
   isV3ClaimExpired,
   poolTiming,
   shortAmount,
@@ -23,7 +24,7 @@ import { NftFarmCardLayout } from './FarmCard'
 import { Action, StyledActionButton } from './CardActionsContainer'
 import { FarmCardEarned, FarmCardStakedPosition } from './PositionPanels'
 import { useV3Action, useV3Query, useV3Wallet } from 'features/universalRewards/hooks'
-import { readV3CardPosition } from 'features/universalRewards/reader'
+import { MAX_V3_PAGE, readV3CardPosition } from 'features/universalRewards/reader'
 import { createV3Client } from 'features/universalRewards/runtime'
 import { manageV3Position } from 'features/universalRewards/transactions'
 import { V3Button } from 'features/universalRewards/styles'
@@ -55,6 +56,9 @@ export default function V3FarmCard({
   const { switchChainAsync } = useSwitchChain()
   const { t } = useTranslation()
   const [modal, setModal] = useState<{ mode: V3NftActionMode; account: typeof address }>()
+  const [page, setPage] = useState(0)
+  const [elapsed, setElapsed] = useState(0)
+  const [paused, setPaused] = useState(false)
   const client = useMemo(createV3Client, [])
   const getWallet = useV3Wallet(deployment.chainId)
   const { ref: cardRef, isNearViewport } = useNearViewport<HTMLDivElement>()
@@ -100,17 +104,40 @@ export default function V3FarmCard({
 
   const loadPosition = useCallback(() => {
     if (!address) throw new Error('Connect your wallet to read your position.')
-    return readV3CardPosition(client, deployment, pool, address)
-  }, [client, deployment, pool, address])
-  const positionKey = address ? `${deployment.chainId}:${deployment.address}:${pool.poolId}:${address}` : ''
+    return readV3CardPosition(client, deployment, pool, address, BigInt(page * MAX_V3_PAGE), true)
+  }, [client, deployment, pool, address, page])
+  const positionKey = address ? `${deployment.chainId}:${deployment.address}:${pool.poolId}:${address}:${page}` : ''
   const position = useV3Query(!preview && (detail || isNearViewport) ? positionKey : '', loadPosition, 30_000)
   const action = useV3Action(client, deployment, getWallet, address)
   const walletPosition = position.data
+  const canProject = !!walletPosition?.projection
+  useEffect(() => setPage(0), [address, pool.poolId])
+  useEffect(() => {
+    setElapsed(0)
+    if (!canProject || paused || !(detail || isNearViewport) || !window.matchMedia) return undefined
+    const motion = window.matchMedia('(prefers-reduced-motion: no-preference)')
+    const start = performance.now()
+    const update = () => {
+      if (!motion.matches || document.visibilityState !== 'visible') return
+      setElapsed(Math.min(30, (performance.now() - start) / 1000))
+    }
+    const interval = window.setInterval(update, 1000)
+    const preferenceChanged = () => {
+      if (!motion.matches) setElapsed(0)
+    }
+    motion.addEventListener?.('change', preferenceChanged)
+    return () => {
+      window.clearInterval(interval)
+      motion.removeEventListener?.('change', preferenceChanged)
+    }
+  }, [walletPosition, canProject, detail, isNearViewport, paused])
   const timestamp =
     walletPosition && walletPosition.timestamp > pool.timestamp ? walletPosition.timestamp : pool.timestamp
   const claimMessage = claimPeriodMessage(pool, timestamp)
   const claimsExpired = isV3ClaimExpired(pool, timestamp)
   const count = walletPosition?.count ?? 0
+  const amounts = walletPosition ? interpolateV3Rewards(pool, walletPosition, elapsed) : []
+  const paged = pool.capacity > 32 && (walletPosition?.total ?? BigInt(0)) > BigInt(MAX_V3_PAGE)
   const claimableNfts = walletPosition?.claimableNfts ?? []
   const hasPosition = count > 0 || claimableNfts.length > 0
   const actionPending = action.busy || action.unconfirmed
@@ -118,7 +145,7 @@ export default function V3FarmCard({
     status === 'ACTIVE' &&
     count < pool.config.maxNftsPerWallet &&
     (count > 0 || pool.activeWallets < pool.config.maxWallets) &&
-    pool.activeNfts < BigInt(32) &&
+    pool.activeNfts < BigInt(pool.capacity) &&
     !actionPending
 
   const openStaking = () => setModal({ mode: 'stake', account: address })
@@ -235,14 +262,45 @@ export default function V3FarmCard({
                   address: reward.token,
                   symbol: reward.symbol,
                   decimals: reward.decimals,
-                  amount: walletPosition.amounts[index].toString(),
+                  amount: amounts[index].toString(),
                 }))}
                 canHarvest={claimableNfts.length > 0 && !actionPending}
                 harvesting={action.busy}
                 onHarvest={() => void harvest()}
+                harvestLabel={paged ? t('Harvest page') : undefined}
               />
             )}
-            {claimableNfts.length > 1 && (
+            {canProject && (
+              <Flex alignItems="center" flexWrap="wrap">
+                <Text small color="textSubtle">
+                  {elapsed > 0 ? t('Estimated live earnings') : t('Last verified earnings')}
+                </Text>
+                <Button scale="sm" variant="text" onClick={() => setPaused((value) => !value)}>
+                  {paused ? t('Resume live estimate') : t('Pause live estimate')}
+                </Button>
+              </Flex>
+            )}
+            {paged && (
+              <Flex justifyContent="space-between" style={{ gap: 4 }}>
+                <Button
+                  scale="sm"
+                  variant="secondary"
+                  disabled={page === 0 || actionPending}
+                  onClick={() => setPage(page - 1)}
+                >
+                  {t('Previous positions')}
+                </Button>
+                <Button
+                  scale="sm"
+                  variant="secondary"
+                  disabled={BigInt((page + 1) * MAX_V3_PAGE) >= walletPosition.total || actionPending}
+                  onClick={() => setPage(page + 1)}
+                >
+                  {t('More positions')}
+                </Button>
+              </Flex>
+            )}
+            {!paged && claimableNfts.length > 1 && (
               <Text small color="textSubtle" mt="8px" mb="8px">
                 {t(
                   'Harvest claims all available rewards in this pool. Your wallet may ask for multiple confirmations.',
