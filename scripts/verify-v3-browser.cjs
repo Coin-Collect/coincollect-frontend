@@ -1,5 +1,7 @@
 const assert = require('node:assert/strict')
 const { spawn } = require('node:child_process')
+const { once } = require('node:events')
+const { createServer } = require('node:net')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
@@ -143,6 +145,10 @@ async function testBrowser() {
     assert.ok(repeated.results.every((job) => job.status !== 'confirmed'))
     console.log('PASS local cron authorization, receipt verification and duplicate delivery')
   }
+  const listener = createServer().listen(0, '127.0.0.1')
+  await once(listener, 'listening')
+  const { port } = listener.address()
+  await new Promise((resolve, reject) => listener.close((error) => (error ? reject(error) : resolve())))
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'coincollect-v3-chrome-'))
   const browser = spawn(
     chrome,
@@ -151,13 +157,19 @@ async function testBrowser() {
       '--disable-gpu',
       '--no-first-run',
       '--disable-background-networking',
-      '--remote-debugging-port=0',
+      '--disable-dev-shm-usage',
+      '--remote-debugging-address=127.0.0.1',
+      '--remote-debugging-port=' + port,
       '--user-data-dir=' + profile,
       '--no-sandbox',
       'about:blank',
     ],
-    { stdio: 'ignore' },
+    { stdio: ['ignore', 'ignore', 'pipe'] },
   )
+  let chromeLog = ''
+  browser.stderr.setEncoding('utf8').on('data', (chunk) => {
+    chromeLog = (chromeLog + chunk).slice(-3000)
+  })
   let worker
   let browserError
   browser.on('error', (error) => {
@@ -165,15 +177,20 @@ async function testBrowser() {
   })
   let cdp
   try {
-    const portFile = path.join(profile, 'DevToolsActivePort')
-    for (let i = 0; i < 200 && !fs.existsSync(portFile); i++) {
+    const deadline = Date.now() + 45_000
+    let target
+    while (!target) {
       if (browserError) throw browserError
-      if (browser.exitCode !== null) throw new Error('Chrome stopped before starting the acceptance browser.')
-      await delay(50)
+      if (browser.exitCode !== null || browser.signalCode !== null || Date.now() >= deadline) {
+        throw new Error('Chrome did not expose a DevTools page.\n' + chromeLog)
+      }
+      const pages = await fetch('http://127.0.0.1:' + port + '/json/list', {
+        signal: AbortSignal.timeout(1_000),
+      }).then((response) => response.json()).catch(() => [])
+      target = Array.isArray(pages) && pages.find(({ type }) => type === 'page')
+      if (!target) await delay(100)
     }
-    const [port] = fs.readFileSync(portFile, 'utf8').split('\n')
-    const pages = await fetch('http://127.0.0.1:' + port + '/json/list').then((response) => response.json())
-    cdp = await connect(pages.find(({ type }) => type === 'page').webSocketDebuggerUrl)
+    cdp = await connect(target.webSocketDebuggerUrl)
     const { command } = cdp
     await command('Page.enable')
     await command('Runtime.enable')
