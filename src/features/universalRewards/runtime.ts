@@ -37,6 +37,22 @@ export function createV3Client() {
 
 export type V3Client = ReturnType<typeof createV3Client>
 
+export function isV3MissingSelector(error: unknown) {
+  return (
+    error instanceof BaseError &&
+    Boolean(
+      error.walk(
+        (cause) =>
+          cause instanceof ContractFunctionZeroDataError ||
+          (cause instanceof ContractFunctionRevertedError &&
+            !cause.data &&
+            !cause.signature &&
+            (!cause.reason || /^execution reverted(?: for an unknown reason\.)?$/i.test(cause.reason))),
+      ),
+    )
+  )
+}
+
 export async function readV3ClaimPeriod(client: V3Client, deployment: V3Deployment, blockNumber?: bigint) {
   try {
     return await client.readContract({
@@ -47,19 +63,7 @@ export async function readV3ClaimPeriod(client: V3Client, deployment: V3Deployme
     })
   } catch (error) {
     // Older, already deployed ledgers do not implement this selector.
-    if (
-      error instanceof BaseError &&
-      error.walk(
-        (cause) =>
-          cause instanceof ContractFunctionZeroDataError ||
-          (cause instanceof ContractFunctionRevertedError &&
-            !cause.data &&
-            !cause.signature &&
-            (!cause.reason || /^execution reverted(?: for an unknown reason\.)?$/i.test(cause.reason))),
-      )
-    ) {
-      return undefined
-    }
+    if (isV3MissingSelector(error)) return undefined
     throw error
   }
 }

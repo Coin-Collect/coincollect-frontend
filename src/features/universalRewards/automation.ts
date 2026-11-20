@@ -9,10 +9,13 @@ import {
   type WalletClient,
 } from 'viem'
 import { rewardSwapAbi, universalRewardsAbi } from './abi'
+import { quoteV3Route, readV3RouteOptions, v3SwapLegs } from './routes'
 import { readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { readV3Treasury } from './studio'
 import { withV3GasHeadroom } from './transactions'
 
 const ZERO = BigInt(0)
+const MAX_PURCHASE_FEE = BigInt('250000000000000000')
 export const V3_AUTOMATION_WINDOW = 4
 
 export interface ReplenishmentJob {
@@ -22,16 +25,18 @@ export interface ReplenishmentJob {
   amount: bigint
   minimum: bigint
   deadline: bigint
+  maxFee?: bigint
 }
 
 interface JobResult {
   poolId: string
   token?: Address
   epoch?: number
-  action?: 'treasury-recovery'
+  action?: 'treasury-recovery' | 'budget-recovery'
   status: 'confirmed' | 'already-executed' | 'pending' | 'deferred' | 'failed'
   hash?: Hex
   reason?: string
+  feeWei?: string
 }
 
 type JobWithContext = Omit<JobResult, 'status'>
@@ -39,7 +44,7 @@ type JobWithContext = Omit<JobResult, 'status'>
 export function pickV3Batch(total: bigint, tick: bigint) {
   if (total === ZERO) return []
   const size = total < BigInt(V3_AUTOMATION_WINDOW) ? Number(total) : V3_AUTOMATION_WINDOW
-  const offset = (tick * BigInt(size)) % total
+  const offset = tick % total
   return Array.from({ length: size }, (_, i) => ((offset + BigInt(i)) % total) + BigInt(1))
 }
 
@@ -97,7 +102,28 @@ export async function executeReplenishmentJob(
       account,
     })
     const gas = withV3GasHeadroom(await client.estimateContractGas(request))
-    hash = await executor.writeContract({ ...request, chain: executor.chain ?? null, gas })
+    if (job.maxFee !== undefined) {
+      const gasPrice = await client.getGasPrice()
+      if (gas * gasPrice > job.maxFee) {
+        return { ...context, status: 'deferred', reason: 'Estimated POL fee exceeds the approved purchase limit.' }
+      }
+      hash = await executor.writeContract({
+        ...ledger,
+        functionName: 'replenish',
+        args: request.args,
+        account: executor.account ?? account,
+        chain: executor.chain ?? null,
+        gas,
+        gasPrice,
+      })
+    } else {
+      hash = await executor.writeContract({
+        ...request,
+        account: executor.account ?? account,
+        chain: executor.chain ?? null,
+        gas,
+      })
+    }
     const receipt = await client.waitForTransactionReceipt({ hash, timeout: 8_000 })
     const event = await client.getContractEvents({
       ...ledger,
@@ -108,7 +134,13 @@ export async function executeReplenishmentJob(
       strict: true,
     })
     const matched = event.find((log) => log.transactionHash === hash)
-    if (receipt.status === 'success' && matched) return { ...context, status: 'confirmed', hash }
+    if (receipt.status === 'success' && matched)
+      return {
+        ...context,
+        status: 'confirmed',
+        hash,
+        feeWei: receipt.gasUsed === undefined ? undefined : (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+      }
     if (await wasExecuted()) return { ...context, status: 'already-executed', hash }
     return {
       ...context,
@@ -141,7 +173,18 @@ async function observeRouteIfDue(
     args: [input, output],
     account,
   })
-  const tx = await executor.writeContract({ ...request, chain: executor.chain ?? null })
+  const gas = withV3GasHeadroom(await client.estimateContractGas(request))
+  const gasPrice = await client.getGasPrice()
+  if (gas * gasPrice > MAX_PURCHASE_FEE) return false
+  const tx = await executor.writeContract({
+    ...adapter,
+    functionName: 'observe',
+    args: request.args,
+    account: executor.account ?? account,
+    chain: executor.chain ?? null,
+    gas,
+    gasPrice,
+  })
   const receipt = await client.waitForTransactionReceipt({ hash: tx, timeout: 5_000 })
   return receipt.status === 'success' && receipt.transactionHash === tx
 }
@@ -168,7 +211,18 @@ export async function executeTreasuryRecovery(
     })
     if (result === ZERO) return { ...context, status: 'already-executed' }
     const gas = withV3GasHeadroom(await client.estimateContractGas(request))
-    hash = await executor.writeContract({ ...request, chain: executor.chain ?? null, gas })
+    const gasPrice = await client.getGasPrice()
+    if (gas * gasPrice > MAX_PURCHASE_FEE)
+      return { ...context, status: 'deferred', reason: 'Recovery gas price is above policy.' }
+    hash = await executor.writeContract({
+      ...ledger,
+      functionName: 'recoverExpiredRewards',
+      args: request.args,
+      account: executor.account ?? account,
+      chain: executor.chain ?? null,
+      gas,
+      gasPrice,
+    })
     const receipt = await client.waitForTransactionReceipt({ hash, timeout: 8_000 })
     if (receipt.status === 'success' && receipt.transactionHash === hash) {
       const logs = await client.getContractEvents({
@@ -179,7 +233,13 @@ export async function executeTreasuryRecovery(
         toBlock: receipt.blockNumber,
         strict: true,
       })
-      if (logs.some((log) => log.transactionHash === hash)) return { ...context, hash, status: 'confirmed' }
+      if (logs.some((log) => log.transactionHash === hash))
+        return {
+          ...context,
+          hash,
+          status: 'confirmed',
+          feeWei: receipt.gasUsed === undefined ? undefined : (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+        }
       const remaining = await client.readContract({ ...ledger, functionName: 'rewardState', args: [poolId, token] })
       if (remaining.inventory === ZERO) return { ...context, hash, status: 'already-executed' }
     }
@@ -190,30 +250,118 @@ export async function executeTreasuryRecovery(
   }
 }
 
+async function executeBudgetRecovery(
+  client: V3Client,
+  executor: WalletClient,
+  deployment: V3Deployment,
+  account: Address,
+  poolId: bigint,
+): Promise<JobResult | undefined> {
+  const context = { poolId: poolId.toString(), action: 'budget-recovery' } as const
+  const ledger = { address: deployment.address, abi: universalRewardsAbi } as const
+  let hash: Hex | undefined
+  try {
+    const plan = await client.readContract({ ...ledger, functionName: 'fundingState', args: [poolId] })
+    if (plan.deposited === plan.spent + plan.recovered) return undefined
+    const { request, result } = await client.simulateContract({
+      ...ledger,
+      functionName: 'recoverBudget',
+      args: [poolId],
+      account,
+    })
+    if (result === ZERO) return undefined
+    const gas = withV3GasHeadroom(await client.estimateContractGas(request))
+    const gasPrice = await client.getGasPrice()
+    if (gas * gasPrice > MAX_PURCHASE_FEE)
+      return { ...context, status: 'deferred', reason: 'Recovery gas price is above policy.' }
+    hash = await executor.writeContract({
+      ...ledger,
+      functionName: 'recoverBudget',
+      args: request.args,
+      account: executor.account ?? account,
+      chain: executor.chain ?? null,
+      gas,
+      gasPrice,
+    })
+    const receipt = await client.waitForTransactionReceipt({ hash, timeout: 8_000 })
+    const events = await client.getContractEvents({
+      ...ledger,
+      eventName: 'BudgetRecovered',
+      args: { poolId, asset: plan.asset },
+      fromBlock: receipt.blockNumber,
+      toBlock: receipt.blockNumber,
+      strict: true,
+    })
+    if (receipt.status === 'success' && events.some((event) => event.transactionHash === hash)) {
+      return {
+        ...context,
+        token: plan.asset,
+        hash,
+        status: 'confirmed',
+        feeWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+      }
+    }
+    const updated = await client.readContract({ ...ledger, functionName: 'fundingState', args: [poolId] })
+    if (updated.deposited === updated.spent + updated.recovered) return { ...context, hash, status: 'already-executed' }
+    return { ...context, hash, status: 'failed', reason: 'Budget recovery was not confirmed.' }
+  } catch {
+    return hash
+      ? { ...context, hash, status: 'pending' }
+      : { ...context, status: 'deferred', reason: 'Budget recovery could not be simulated.' }
+  }
+}
+
 export async function runV3Automation(
   client: V3Client,
   executor: WalletClient,
   deployment: V3Deployment,
   tick: bigint,
   firstPoolId = BigInt(1),
+  mode: 'isolated' | 'polygon' = 'isolated',
 ) {
-  await proveLocalExecutor(client, executor, deployment)
+  if (mode === 'isolated') await proveLocalExecutor(client, executor, deployment)
+  else {
+    if (
+      deployment.chainId !== 137 ||
+      (await executor.getChainId()) !== 137 ||
+      !executor.account ||
+      executor.account.type !== 'local'
+    ) {
+      throw new Error('A locally signing Polygon gas executor is required.')
+    }
+    await validateV3Deployment(client, deployment)
+  }
   const accounts = await executor.getAddresses()
   const account = accounts.at(-1)
   if (!account) throw new Error('Anvil has no unlocked test executor.')
   const ledger = { address: deployment.address, abi: universalRewardsAbi } as const
-  const [total, swap, period, snapshot] = await Promise.all([
+  const [total, swap, period, snapshot, treasury, wrapped, admin, treasuryAuthority] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'poolCount' }),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
     readV3ClaimPeriod(client, deployment),
     client.getBlock(),
+    readV3Treasury(client, deployment),
+    client.readContract({ ...ledger, functionName: 'wrappedNative' }),
+    client.readContract({ ...ledger, functionName: 'admin' }),
+    client.readContract({ ...ledger, functionName: 'treasury' }),
   ])
+  if (mode === 'polygon') {
+    if (!treasury || isAddressEqual(account, admin) || isAddressEqual(account, treasuryAuthority)) {
+      throw new Error('The Polygon executor must be separate from operator and treasury roles.')
+    }
+    if (swap !== zeroAddress) {
+      const routeAdmin = await client.readContract({ address: swap, abi: rewardSwapAbi, functionName: 'admin' })
+      if (isAddressEqual(account, routeAdmin)) throw new Error('The Polygon executor cannot administer routes.')
+    }
+  }
   const results: JobResult[] = []
   const checkedRoutes = new Set<string>()
+  const stopAt = Date.now() + 40_000
   let observationAttempts = 0
   let replenishmentJobs = 0
   if (firstPoolId > total) return results
   for (const offset of pickV3Batch(total - firstPoolId + BigInt(1), tick)) {
+    if (Date.now() >= stopAt) return results
     const poolId = offset + firstPoolId - BigInt(1)
     try {
       const [config] = await client.readContract({
@@ -222,10 +370,18 @@ export async function runV3Automation(
         functionName: 'poolState',
         args: [poolId],
       })
+      const [treasuryBacked] = treasury
+        ? await client.readContract({ ...ledger, functionName: 'treasuryFunding', args: [poolId] })
+        : [false]
       if (snapshot.timestamp >= config.end) {
+        if (treasuryBacked) {
+          const recovered = await executeBudgetRecovery(client, executor, deployment, account, poolId)
+          if (recovered) results.push(recovered)
+        }
         if (period !== undefined && snapshot.timestamp >= config.end + period) {
           const tokens = await client.readContract({ ...ledger, functionName: 'rewardsOf', args: [poolId] })
           for (const token of tokens) {
+            if (Date.now() >= stopAt) return results
             const result = await executeTreasuryRecovery(client, executor, deployment, account, poolId, token)
             if (result) results.push(result)
           }
@@ -240,25 +396,47 @@ export async function runV3Automation(
       if (isAddressEqual(plan.asset, zeroAddress) || plan.paused || plan.deposited === plan.spent + plan.recovered)
         continue
       for (const token of tokens) {
+        if (Date.now() >= stopAt) return results
         if (replenishmentJobs >= V3_AUTOMATION_WINDOW) break
         let block = await client.getBlock()
         const crossAsset = !isAddressEqual(plan.asset, token)
-        const routeKey = `${plan.asset}:${token}`.toLowerCase()
-        if (
-          crossAsset &&
-          swap !== zeroAddress &&
-          plan.deposited > plan.spent &&
-          observationAttempts < 2 &&
-          !checkedRoutes.has(routeKey)
-        ) {
-          checkedRoutes.add(routeKey)
-          observationAttempts++
+        if (swap !== zeroAddress && observationAttempts < 2) {
+          const outputs = crossAsset ? [token] : []
           if (
-            await observeRouteIfDue(client, executor, account, swap, plan.asset, token, block.timestamp).catch(
-              () => false,
-            )
+            treasuryBacked &&
+            wrapped !== zeroAddress &&
+            !isAddressEqual(plan.asset, wrapped) &&
+            !isAddressEqual(token, wrapped)
           ) {
-            block = await client.getBlock()
+            outputs.push(wrapped)
+          }
+          const observed = await Promise.all(
+            outputs.map(async (output) => {
+              const options = await readV3RouteOptions(client, swap, plan.asset, output, block.number)
+              return options
+                ? options.filter(({ enabled }) => enabled).flatMap((path) => v3SwapLegs(path, plan.asset, output))
+                : [{ adapter: swap, input: plan.asset, output }]
+            }),
+          )
+          for (const leg of observed.flat()) {
+            if (observationAttempts >= 2) break
+            const key = `${leg.adapter}:${leg.input}:${leg.output}`.toLowerCase()
+            if (checkedRoutes.has(key)) continue
+            checkedRoutes.add(key)
+            if (
+              await observeRouteIfDue(
+                client,
+                executor,
+                account,
+                leg.adapter,
+                leg.input,
+                leg.output,
+                block.timestamp,
+              ).catch(() => false)
+            ) {
+              observationAttempts++
+              block = await client.getBlock()
+            }
           }
         }
         const input = { ...ledger, blockNumber: block.number }
@@ -269,29 +447,34 @@ export async function runV3Automation(
         })
         if (amount === ZERO) continue
         let minimum = amount
-        if (crossAsset) {
-          try {
-            const quote = await client.readContract({
-              address: swap,
-              abi: rewardSwapAbi,
-              functionName: 'preview',
-              args: [plan.asset, token, amount, ZERO],
-              blockNumber: block.number,
-            })
-            minimum = quote[1]
-          } catch {
-            replenishmentJobs++
-            results.push({
-              poolId: poolId.toString(),
-              token,
-              epoch,
-              status: 'deferred',
-              reason: 'Route safety validation did not pass.',
-            })
-            continue
+        let maxFee = treasuryBacked || mode === 'polygon' ? MAX_PURCHASE_FEE : undefined
+        try {
+          if (crossAsset) {
+            minimum = (await quoteV3Route(client, swap, plan.asset, token, amount, block.number)).minimum
           }
+          if (treasuryBacked) {
+            const protectedPol = await quoteV3Route(client, swap, plan.asset, wrapped, amount, block.number).catch(
+              (error: unknown) => {
+                throw new Error(
+                  `POL fee valuation unavailable · ${error instanceof Error ? error.message : 'unverified route'}`,
+                )
+              },
+            )
+            const fraction = protectedPol.minimum / BigInt(20)
+            maxFee = fraction < MAX_PURCHASE_FEE ? fraction : MAX_PURCHASE_FEE
+          }
+        } catch (error) {
+          replenishmentJobs++
+          results.push({
+            poolId: poolId.toString(),
+            token,
+            epoch,
+            status: 'deferred',
+            reason: error instanceof Error ? error.message : 'Route safety validation did not pass.',
+          })
+          continue
         }
-        const job = { poolId, token, epoch, amount, minimum, deadline: block.timestamp + BigInt(90) }
+        const job = { poolId, token, epoch, amount, minimum, deadline: block.timestamp + BigInt(90), maxFee }
         replenishmentJobs++
         results.push(await executeReplenishmentJob(client, executor, deployment, account, job))
       }

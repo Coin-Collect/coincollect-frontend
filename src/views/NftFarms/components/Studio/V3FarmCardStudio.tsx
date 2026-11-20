@@ -216,7 +216,7 @@ export default function V3FarmCardStudio({
           const tranche = (total * BigInt(interval) + hours - BigInt(1)) / hours
           if (tranche === ZERO) return undefined
           try {
-            const [, floor] = await quoteV3RewardWindow(client, studio, funding, reward, tranche, block.number)
+            const { minimum: floor } = await quoteV3RewardWindow(client, studio, funding, reward, tranche, block.number)
             return [address, shortAmount((total * floor) / tranche / BigInt(duration), reward.decimals)] as const
           } catch {
             return undefined

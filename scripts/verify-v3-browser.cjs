@@ -412,11 +412,15 @@ async function testBrowser() {
     assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
     console.log('PASS shared FarmCard modals, keyboard focus, detail link, non-custodial join and mobile exit')
 
-    const openStudio = async () => {
-      await visit('/admin/nft-pools/v3', fixture.operator, true)
+    const openStudio = async (wallet = fixture.operator) => {
+      await visit('/admin/nft-pools/v3', wallet, true)
       await has('Pool Studio V3')
       await wait('Studio wallet connection', () => {
-        if (document.querySelector('[aria-label="V3 pool dashboard"]')) return true
+        if (
+          document.querySelector('[aria-label="V3 pool dashboard"]') ||
+          [...document.querySelectorAll('button')].some((button) => button.textContent.trim() === 'Treasury')
+        )
+          return true
         const connect = [...document.querySelectorAll('section[aria-label="Pool Studio V3"] button')].find(
           (button) => button.textContent.trim() === 'Connect Wallet',
         )
@@ -757,6 +761,110 @@ async function testBrowser() {
     assert.deepEqual(await readBatchPool('rewardSettlement', [batchId, fixture.token]), [0n, inventory])
     assert.equal((await readBatchPool('rewardState', [batchId, fixture.token])).inventory, 0n)
     console.log('PASS V3 claim countdown, disabled expired Harvest, Studio liabilities and treasury recovery')
+    if (fixture.treasuryVault) {
+      const vaultAbi = parseAbi([
+        'function balance(address token) view returns ((uint256 available,uint256 deposited,uint256 allocated,uint256 spent,uint256 fundingReturned,uint256 rewardsReturned,uint256 withdrawn))',
+      ])
+      const available = async () => {
+        const data = await rpc('eth_call', [
+          {
+            to: fixture.treasuryVault,
+            data: encodeFunctionData({ abi: vaultAbi, functionName: 'balance', args: [fixture.token] }),
+          },
+          'latest',
+        ])
+        return decodeFunctionResult({ abi: vaultAbi, functionName: 'balance', data })
+      }
+      await openStudio(fixture.treasury)
+      await click('button', 'Treasury')
+      await has('Central Treasury')
+      await field('treasury-amount', '100')
+      assert.ok(
+        await evalPage(() => {
+          const input = document.querySelector('[name="treasury-native"]')
+          if (!input) return false
+          input.click()
+          return input.checked
+        }),
+      )
+      await click('button', 'Deposit')
+      await has('Confirmed on the settlement network.')
+      assert.equal((await available()).available, parseEther('100'))
+      await openStudio()
+      await click('button', 'New pool')
+      await wait('Treasury pool name editor', () => {
+        const entry = document.querySelector('article button[aria-label="Edit pool name"]')
+        if (!entry) return false
+        entry.click()
+        return true
+      })
+      await field('pool-name', 'Treasury lifetime pool')
+      await evalPage(() => {
+        const title = document.querySelector('[name="pool-name"]')
+        title.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+      })
+      await wait('Treasury pool collection editor', () => {
+        const entry = document.querySelector('article button[aria-label="Edit NFT collections"]')
+        if (!entry) return false
+        entry.click()
+        return true
+      })
+      await field('collection-address', fixture.nft)
+      await click('dialog button', 'Add collection')
+      await click('dialog button', 'Done')
+      await wait('Treasury pool collections saved', () => !document.querySelector('dialog'))
+      await click('article button', 'Set funding budget')
+      await click('dialog button', 'V3R')
+      await field('funding-budget', '10')
+      await click('dialog button', 'Done')
+      await wait('Treasury pool budget saved', () => !document.querySelector('dialog'))
+      await wait('Treasury schedule editor', () => {
+        const entry = document.querySelector('article button[aria-label="Edit reward schedule"]')
+        if (!entry) return false
+        entry.click()
+        return true
+      })
+      await click('dialog button', 'In 1 hour')
+      await field('duration-days', '365')
+      await click('dialog button', 'Done')
+      await wait('Treasury schedule saved', () => !document.querySelector('dialog'))
+      await field('funding-source', 'treasury')
+      await click('button', 'Review pool plan')
+      await has('Lifetime purchase minimum')
+      await click('button', 'Create pool and reserve treasury budget')
+      await has('Treasury budget fully reserved')
+      const reserved = await available()
+      assert.equal(reserved.available, parseEther('90'))
+      assert.equal(reserved.allocated, parseEther('10'))
+      await openStudio(fixture.treasury)
+      await click('button', 'Treasury')
+      await field('treasury-amount', '20')
+      await click('button', 'Withdraw available')
+      await has('Confirmed on the settlement network.')
+      assert.equal((await available()).available, parseEther('70'))
+      if (secret) {
+        const createdV31 = await readBatchPool('poolCount')
+        let funding = await tick()
+        for (
+          let attempt = 0;
+          attempt < 2 &&
+          !funding.results.some((job) => job.poolId === String(createdV31) && job.status === 'confirmed');
+          attempt++
+        ) {
+          await delay(1000)
+          funding = await tick()
+        }
+        assert.ok(funding.results.some((job) => job.poolId === String(createdV31) && job.status === 'confirmed'))
+        assert.equal((await available()).spent, parseEther('10'))
+        assert.equal((await readBatchPool('rewardState', [createdV31, fixture.token])).inventory, parseEther('10'))
+      }
+      await viewport(390, 844, true)
+      await has('Reserved NFT claims')
+      assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
+      console.log(
+        'PASS V3.1 Treasury deposit, 365-day pool allocation, available withdrawal, automatic purchase and responsive dashboard',
+      )
+    }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',
     )

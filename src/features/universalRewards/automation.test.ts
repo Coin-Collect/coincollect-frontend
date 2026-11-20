@@ -24,12 +24,14 @@ function worker() {
   const waitForTransactionReceipt = jest.fn()
   const getContractEvents = jest.fn()
   const estimateContractGas = jest.fn().mockResolvedValue(BigInt(57_000))
+  const getGasPrice = jest.fn().mockResolvedValue(BigInt(1_000_000_000))
   const client = {
     readContract,
     simulateContract,
     waitForTransactionReceipt,
     getContractEvents,
     estimateContractGas,
+    getGasPrice,
   } as unknown as V3Client
   const writeContract = jest.fn().mockResolvedValue(hash)
   const executor = { writeContract } as unknown as WalletClient

@@ -30,6 +30,7 @@ import { UNIT } from './units'
 import { loadV3PresentationDocument, type V3PresentationDocument } from './poolPresentation'
 import V3StudioDashboard from './V3StudioDashboard'
 import V3StudioPool, { type V3StudioPreviewProps } from './V3StudioPool'
+import V3Treasury from './V3Treasury'
 import {
   FundingDisclosure,
   FundingMethod,
@@ -169,7 +170,7 @@ function FundingPanel({
     if (!response.ok) throw new Error('Automatic funding status is unavailable.')
     return response.json() as Promise<{ mode: 'disabled' | 'starting' | 'running'; firstPool?: string }>
   }, [])
-  const automation = useV3Query(deployment.chainId === 31337 ? 'v3-funding-automation' : '', loadAutomation, 15_000)
+  const automation = useV3Query(`${deployment.address}:v3-funding-automation`, loadAutomation, 15_000)
   const automationMode =
     automation.data?.firstPool && BigInt(automation.data.firstPool) <= poolId ? automation.data.mode : 'disabled'
   const amountText = deposit ?? (view?.token.decimals != null ? formatUnits(remaining, view.token.decimals) : '')
@@ -185,7 +186,9 @@ function FundingPanel({
   } catch {
     // Custom amount errors are reported when the form is submitted.
   }
-  const hasNativeOption = Boolean(view && isAddressEqual(view.token.address, view.wrappedNative))
+  const hasNativeOption = Boolean(
+    view && !view.treasuryBacked && isAddressEqual(view.token.address, view.wrappedNative),
+  )
   const comparableAmount = selectedAmount ?? remaining
   const payNative = Boolean(
     view &&
@@ -197,10 +200,12 @@ function FundingPanel({
   const buttonAmount =
     selectedAmount !== undefined && view?.token.decimals != null ? formatUnits(selectedAmount, view.token.decimals) : ''
   const requiresApproval = Boolean(
-    view && selectedAmount !== undefined && !payNative && view.allowance < selectedAmount,
+    view && !view.treasuryBacked && selectedAmount !== undefined && !payNative && view.allowance < selectedAmount,
   )
   const balanceIssue =
-    view && selectedAmount !== undefined ? fundingBalanceIssue(view, selectedAmount, payNative) : undefined
+    view && !view.treasuryBacked && selectedAmount !== undefined
+      ? fundingBalanceIssue(view, selectedAmount, payNative)
+      : undefined
   const depositBudget = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!view || view.token.decimals === null || locked || fundingLock.current || ended) return
@@ -216,6 +221,16 @@ function FundingPanel({
         fresh.pool.timestamp >= fresh.pool.config.end
       ) {
         throw new Error('The available budget changed. Review the updated amount before funding.')
+      }
+      if (fresh.treasuryBacked) {
+        setPurpose('Reserve additional funding from treasury')
+        const data = encodeFunctionData({
+          abi: universalRewardsAbi,
+          functionName: 'allocateTreasuryBudget',
+          args: [poolId, amount],
+        })
+        if (await transaction.run({ to: deployment.address, data })) setDeposit(undefined)
+        return
       }
       const issue = fundingBalanceIssue(fresh, amount, payNative)
       if (issue) throw new Error(issue)
@@ -257,6 +272,10 @@ function FundingPanel({
               <V3Badge>
                 {ended
                   ? 'Finished'
+                  : view.treasuryBacked
+                  ? remaining === ZERO
+                    ? 'Treasury budget fully reserved'
+                    : 'Treasury budget partly reserved'
                   : view.pool.funding.deposited === ZERO
                   ? 'Awaiting deposit'
                   : remaining === ZERO
@@ -265,13 +284,13 @@ function FundingPanel({
               </V3Badge>
               <V3Metrics>
                 <div>
-                  <dt>Funding budget</dt>
+                  <dt>Total lifetime budget</dt>
                   <dd>
                     {shortAmount(view.pool.funding.budget, view.token.decimals)} {view.token.symbol}
                   </dd>
                 </div>
                 <div>
-                  <dt>Deposited</dt>
+                  <dt>{view.treasuryBacked ? 'Reserved from treasury' : 'Deposited'}</dt>
                   <dd>
                     {shortAmount(view.pool.funding.deposited, view.token.decimals)} {view.token.symbol}
                   </dd>
@@ -342,7 +361,9 @@ function FundingPanel({
                     </V3Error>
                   ) : (
                     <V3Muted id="v3-deposit-help">
-                      {payNative
+                      {view.treasuryBacked
+                        ? 'Confirm an internal allocation from the available treasury balance.'
+                        : payNative
                         ? `The contract wraps your POL into ${view.token.symbol} during the deposit. One wallet confirmation.`
                         : requiresApproval
                         ? `Confirm ${view.token.symbol} spending permission first, then confirm the deposit.`
@@ -375,7 +396,7 @@ function FundingPanel({
                     {funding
                       ? 'Funding in progress…'
                       : buttonAmount
-                      ? `Fund ${buttonAmount} ${fundingSymbol}`
+                      ? `${view.treasuryBacked ? 'Reserve' : 'Fund'} ${buttonAmount} ${fundingSymbol}`
                       : 'Fund budget'}
                   </V3Button>
                   {error && (
@@ -409,7 +430,7 @@ function FundingPanel({
                       <span>
                         {shortAmount(lane.reward.inventory, lane.reward.decimals)} {lane.reward.symbol} in reserve
                       </span>
-                      {lane.blocked && <small>Swap route awaiting a safe quote</small>}
+                      {lane.blocker && <small>{lane.blocker}</small>}
                     </li>
                   ))}
                 </FundingSplit>
@@ -473,7 +494,7 @@ function FundingPanel({
                       Purchased reserve · {shortAmount(lane.reward.inventory, lane.reward.decimals)}{' '}
                       {lane.reward.symbol}
                     </V3Muted>
-                    {lane.blocked && <V3Error role="status">Swap blocked by route safety checks.</V3Error>}
+                    {lane.blocker && <V3Error role="status">Swap blocked · {lane.blocker}</V3Error>}
                     {!ended && lane.quote && (
                       <V3Muted>
                         Next tranche · {shortAmount(lane.amount, view.token.decimals)} {view.token.symbol} · minimum{' '}
@@ -569,7 +590,7 @@ export default function V3Studio({
   const { switchChain } = useSwitchChain()
   const [draft, setDraft] = useState<V3StudioDraft>(defaultDraft)
   const [preview, setPreview] = useState<V3Preview>()
-  const [mode, setMode] = useState<'dashboard' | 'create' | bigint>('dashboard')
+  const [mode, setMode] = useState<'dashboard' | 'create' | 'treasury' | bigint>('dashboard')
   const [savedPresentations, setSavedPresentations] = useState<{
     document: V3PresentationDocument
     checkedAt: number
@@ -584,8 +605,9 @@ export default function V3Studio({
     if (!deployment) throw new Error('This environment has no V3 deployment.')
     return readV3Studio(client, deployment)
   }, [client, deployment])
-  const studio = useV3Query(deployment?.address ?? '', loadStudio)
+  const studio = useV3Query(deployment?.address ?? '', loadStudio, 30_000)
   const allowed = Boolean(account && studio.data && isAddressEqual(account, studio.data.admin))
+  const treasuryOwner = Boolean(account && studio.data?.treasury && isAddressEqual(account, studio.data.treasury.owner))
   const writeAllowed = Boolean(allowed && deployment && chainId === deployment.chainId)
   const transaction = useV3Action(client, deployment, getWallet, account)
   const locked = transaction.busy || transaction.unconfirmed || reviewing
@@ -666,11 +688,18 @@ export default function V3Studio({
             </h1>
             <V3Muted>Create and manage your NFT reward pools.</V3Muted>
           </div>
-          {allowed && mode === 'dashboard' && (
-            <V3Button type="button" disabled={locked} onClick={() => navigate('create')}>
-              New pool
-            </V3Button>
-          )}
+          <V3Actions>
+            {mode === 'dashboard' && studio.data?.treasury && (allowed || treasuryOwner) && (
+              <V3Button type="button" $secondary onClick={() => navigate('treasury')}>
+                Treasury
+              </V3Button>
+            )}
+            {allowed && mode === 'dashboard' && (
+              <V3Button type="button" disabled={locked} onClick={() => navigate('create')}>
+                New pool
+              </V3Button>
+            )}
+          </V3Actions>
         </StudioBar>
         {!deployment && <V3Muted role="status">V3 Studio has no active deployment in this environment.</V3Muted>}
         {deployment && !account && connect}
@@ -683,7 +712,7 @@ export default function V3Studio({
             </V3Button>
           </V3Actions>
         )}
-        {account && studio.data && !allowed && (
+        {account && studio.data && !allowed && mode !== 'treasury' && (
           <V3Card aria-label="V3 operator account required">
             <div>
               <h2>Switch to the V3 operator account</h2>
@@ -713,7 +742,23 @@ export default function V3Studio({
             </V3Button>
           </V3Actions>
         )}
-        {allowed && deployment && studio.data && (
+        {mode === 'treasury' && studio.data?.treasury && deployment && (allowed || treasuryOwner) && (
+          <>
+            <WorkspaceBack type="button" $secondary onClick={() => navigate('dashboard')}>
+              Back to pools
+            </WorkspaceBack>
+            <V3Treasury
+              client={client}
+              deployment={deployment}
+              studio={studio.data}
+              account={account}
+              onChange={studio.refresh}
+              getWallet={getWallet}
+              rightNetwork={chainId === deployment.chainId}
+            />
+          </>
+        )}
+        {allowed && deployment && studio.data && mode !== 'treasury' && (
           <>
             <div hidden={mode !== 'dashboard'}>
               <V3StudioDashboard
@@ -749,6 +794,48 @@ export default function V3Studio({
                   onChange={update}
                   launch={
                     <>
+                      {studio.data.treasury && (
+                        <>
+                          <V3Field>
+                            Funding source
+                            <select
+                              name="funding-source"
+                              value={draft.fundingSource ?? 'wallet'}
+                              onChange={(event) =>
+                                update({ fundingSource: event.target.value as V3StudioDraft['fundingSource'] })
+                              }
+                            >
+                              <option value="wallet">Wallet deposit</option>
+                              <option value="treasury">Available central Treasury balance</option>
+                            </select>
+                          </V3Field>
+                          {draft.fundingSource === 'treasury' && (
+                            <>
+                              <V3Field>
+                                Purchase strategy
+                                <select
+                                  name="purchase-strategy"
+                                  value={draft.purchaseMode ?? 'automatic'}
+                                  onChange={(event) =>
+                                    update({ purchaseMode: event.target.value as V3StudioDraft['purchaseMode'] })
+                                  }
+                                >
+                                  <option value="automatic">
+                                    Automatic · consolidate when safe, otherwise use bounded windows
+                                  </option>
+                                  <option value="consolidated">
+                                    Consolidated · buy the lifetime allocation when safe
+                                  </option>
+                                  <option value="adaptive">Adaptive · replenish when inventory is low</option>
+                                </select>
+                              </V3Field>
+                              <V3Muted>
+                                Pool creation reserves the total lifetime budget in the same transaction.
+                              </V3Muted>
+                            </>
+                          )}
+                        </>
+                      )}
                       <V3Button type="button" disabled={locked} onClick={() => void review()}>
                         {reviewing ? 'Checking on-chain routes…' : 'Review pool plan'}
                       </V3Button>
@@ -781,18 +868,46 @@ export default function V3Studio({
                               {shortAmount(reward.allocation, preview.fundingAsset.decimals)}{' '}
                               {preview.fundingAsset.symbol}
                             </dd>
-                            <dt>Next tranche minimum</dt>
+                            <dt>{preview.consolidated ? 'Lifetime purchase minimum' : 'Next tranche minimum'}</dt>
                             <dd>
                               {shortAmount(reward.minimum, reward.decimals)} {reward.symbol}
                             </dd>
+                            <dt>Approved route</dt>
+                            <dd>
+                              {reward.hops
+                                ? `${reward.hops} hop${reward.hops === 1 ? '' : 's'}`
+                                : 'Same asset · no swap'}
+                            </dd>
+                            {reward.legs?.map((leg) => (
+                              <dd key={leg.adapter + leg.input}>
+                                <code>
+                                  {leg.input.slice(0, 8)} → {leg.output.slice(0, 8)}
+                                </code>{' '}
+                                via <code>{leg.adapter.slice(0, 8)}…</code>
+                              </dd>
+                            ))}
+                            {preview.gasPrice !== undefined && (
+                              <>
+                                <dt>Indicative purchase fee</dt>
+                                <dd>
+                                  {shortAmount(
+                                    BigInt(reward.hops === 2 ? 850_000 : reward.hops === 1 ? 550_000 : 180_000) *
+                                      preview.gasPrice,
+                                    18,
+                                  )}{' '}
+                                  POL
+                                </dd>
+                              </>
+                            )}
                           </div>
                         ))}
                       </V3Metrics>
                       <V3Muted>
                         Spending is bounded by the funded balance, each allocation and each replenishment window.
                       </V3Muted>
+                      {preview.strategyNote && <V3Muted>Adaptive purchases selected · {preview.strategyNote}</V3Muted>}
                       <V3Button type="button" disabled={locked || !writeAllowed} onClick={() => void create()}>
-                        Create V3 pool
+                        {preview.treasuryFunded ? 'Create pool and reserve treasury budget' : 'Create V3 pool'}
                       </V3Button>
                     </div>
                   </V3Card>

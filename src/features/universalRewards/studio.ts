@@ -8,10 +8,11 @@ import {
   zeroAddress,
   type Address,
 } from 'viem'
-import { ownershipVerifierAbi, rewardSwapAbi, universalRewardsAbi } from './abi'
+import { ownershipVerifierAbi, treasuryVaultAbi, universalRewardsAbi } from './abi'
 import { encodeV3Presentation, type V3Presentation } from './metadata'
 import { erc20Abi, readV3Pool, tokenDetails } from './reader'
-import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { quoteV3Route } from './routes'
+import { isV3MissingSelector, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import type { V3Call } from './transactions'
 import { tokenScale, UINT128_MAX } from './units'
 
@@ -29,25 +30,71 @@ export interface V3StudioDraft extends V3Presentation {
   budget: string
   intervalHours: string
   usdPerFundingUnit: string
+  fundingSource?: 'wallet' | 'treasury'
+  purchaseMode?: 'automatic' | 'consolidated' | 'adaptive'
   collections: { address: string; sourceChain: string; power: string }[]
   rewards: { address: string; sharePercent: string }[]
+}
+
+export async function readV3Treasury(client: V3Client, deployment: V3Deployment, blockNumber?: bigint) {
+  try {
+    const address = await client.readContract({
+      address: deployment.address,
+      abi: universalRewardsAbi,
+      functionName: 'treasuryVault',
+      blockNumber,
+    })
+    if (address === zeroAddress) return undefined
+    const vault = { address, abi: treasuryVaultAbi, blockNumber } as const
+    const [owner, paused] = await Promise.all([
+      client.readContract({ ...vault, functionName: 'owner' }),
+      client.readContract({ ...vault, functionName: 'paused' }),
+    ])
+    return { address, owner, paused }
+  } catch (error) {
+    if (isV3MissingSelector(error)) return undefined
+    throw error
+  }
 }
 
 export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
   const block = await client.getBlock()
   await validateV3Deployment(client, deployment, block.number)
   const ledger = { abi: universalRewardsAbi, address: deployment.address, blockNumber: block.number }
-  const [admin, wrappedNative, swap, verifier, assets] = await Promise.all([
+  const [admin, wrappedNative, swap, verifier, assets, treasury] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'admin' }),
     client.readContract({ ...ledger, functionName: 'wrappedNative' }),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
     client.readContract({ ...ledger, functionName: 'remoteVerifier' }),
     client.readContract({ ...ledger, functionName: 'supportedAssets' }),
+    readV3Treasury(client, deployment, block.number),
   ])
   const supported = await Promise.all(
-    assets.map(async (address) => ({ address, ...(await tokenDetails(client, address, block.number)) })),
+    assets.map(async (address) => {
+      const [details, balance] = await Promise.all([
+        tokenDetails(client, address, block.number),
+        treasury &&
+          client.readContract({
+            address: treasury.address,
+            abi: treasuryVaultAbi,
+            functionName: 'balance',
+            args: [address],
+            blockNumber: block.number,
+          }),
+      ])
+      return { address, ...details, balance }
+    }),
   )
-  return { admin, wrappedNative, swap, verifier, supported, timestamp: block.timestamp, blockNumber: block.number }
+  return {
+    admin,
+    wrappedNative,
+    swap,
+    verifier,
+    treasury,
+    supported,
+    timestamp: block.timestamp,
+    blockNumber: block.number,
+  }
 }
 
 export type V3StudioSnapshot = Awaited<ReturnType<typeof readV3Studio>>
@@ -61,20 +108,11 @@ export async function quoteV3RewardWindow(
   amount: bigint,
   blockNumber = studio.blockNumber,
 ) {
-  if (isAddressEqual(funding.address, reward.address)) return [amount, amount] as const
-  if (isAddressEqual(studio.swap, zeroAddress)) throw new Error('This deployment has no approved swap adapter.')
   try {
-    return await client.readContract({
-      address: studio.swap,
-      abi: rewardSwapAbi,
-      functionName: 'preview',
-      args: [funding.address, reward.address, amount, ZERO],
-      blockNumber,
-    })
-  } catch {
-    throw new Error(
-      `The ${funding.symbol} to ${reward.symbol} route could not confirm liquidity and a fresh safe price for this tranche.`,
-    )
+    return await quoteV3Route(client, studio.swap, funding.address, reward.address, amount, blockNumber)
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'quote verification failed'
+    throw new Error(`${funding.symbol} to ${reward.symbol}: ${reason}`)
   }
 }
 
@@ -100,6 +138,10 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   const funding = studio.supported.find(({ address }) => address.toLowerCase() === draft.fundAsset.toLowerCase())
   if (!funding || funding.decimals === null) throw new Error('Choose a supported funding asset with readable decimals.')
   const budget = parseV3Amount(draft.budget, funding.decimals, 'funding budget')
+  const treasuryFunded = draft.fundingSource === 'treasury'
+  if (treasuryFunded && (!studio.treasury || studio.treasury.paused || (funding.balance?.available ?? ZERO) < budget)) {
+    throw new Error('Treasury is paused or has insufficient available balance for this lifetime budget.')
+  }
   const days = integer(draft.durationDays, 1, 1460, 'duration in days')
   const maximumWallets = integer(draft.maxWallets, 1, 32, 'maximum participant wallets')
   const maxNftsPerWallet = integer(draft.maxNfts, 1, 32, 'maximum NFTs per wallet')
@@ -110,7 +152,8 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   }
   const start = BigInt(startTime)
   const duration = BigInt(days * 86_400)
-  const interval = integer(draft.intervalHours, 1, Math.min(720, days * 24), 'replenishment interval in hours') * 3600
+  const maxIntervalHours = Math.min(720, days * 24)
+  const selectedInterval = integer(draft.intervalHours, 1, maxIntervalHours, 'replenishment interval in hours') * 3600
   const metadataURI = encodeV3Presentation(draft)
 
   if (draft.collections.length === 0 || draft.collections.length > 16)
@@ -165,24 +208,59 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     throw new Error('Reward shares must add to 100%.')
   const assetKeys = draft.rewards.map(({ address }) => address.toLowerCase())
   if (new Set(assetKeys).size !== assetKeys.length) throw new Error('Each reward asset can be selected once.')
-  const rewards = await Promise.all(
-    draft.rewards.map(async ({ address }, index) => {
-      const asset = studio.supported.find((candidate) => candidate.address.toLowerCase() === address.toLowerCase())
-      if (!asset || asset.decimals === null) throw new Error('Choose a supported reward asset with readable decimals.')
-      const allocation = (budget * BigInt(allocations[index])) / BPS
-      if (allocation <= ZERO) throw new Error('A reward share is smaller than the funding asset base unit.')
-      const sampleInput = (allocation * BigInt(interval) + duration - BigInt(1)) / duration
-      const [quoted, minimum] = await quoteV3RewardWindow(client, studio, funding, asset, sampleInput)
-      const cap = (allocation * minimum) / sampleInput
-      if (cap <= ZERO || cap > UINT128_MAX) throw new Error('A reward projection is outside the supported range.')
-      return { ...asset, token: asset.address, cap, allocation, sampleInput, quoted, minimum }
-    }),
-  )
+  const lanes = draft.rewards.map(({ address }, index) => {
+    const asset = studio.supported.find((candidate) => candidate.address.toLowerCase() === address.toLowerCase())
+    if (!asset || asset.decimals === null) throw new Error('Choose a supported reward asset with readable decimals.')
+    const allocation = (budget * BigInt(allocations[index])) / BPS
+    if (allocation <= ZERO) throw new Error('A reward share is smaller than the funding asset base unit.')
+    return { asset, allocation }
+  })
+  const quoteLanes = (consolidated: boolean, interval: number) =>
+    Promise.all(
+      lanes.map(async ({ asset, allocation }) => {
+        const sampleInput = consolidated
+          ? allocation
+          : (allocation * BigInt(interval) + duration - BigInt(1)) / duration
+        const { quoted, minimum, hops, intermediate, legs } = await quoteV3RewardWindow(
+          client,
+          studio,
+          funding,
+          asset,
+          sampleInput,
+        )
+        const cap = (allocation * minimum) / sampleInput
+        if (cap <= ZERO || cap > UINT128_MAX) throw new Error('A reward projection is outside the supported range.')
+        return {
+          ...asset,
+          token: asset.address,
+          cap,
+          allocation,
+          sampleInput,
+          quoted,
+          minimum,
+          hops,
+          intermediate,
+          legs,
+        }
+      }),
+    )
+  const automatic = treasuryFunded && (draft.purchaseMode === undefined || draft.purchaseMode === 'automatic')
+  let interval = selectedInterval
+  let consolidated = treasuryFunded && draft.purchaseMode !== 'adaptive'
+  let strategyNote: string | undefined
+  const rewards = await quoteLanes(consolidated, interval).catch((error: unknown) => {
+    if (!automatic) throw error
+    consolidated = false
+    interval = maxIntervalHours * 3600
+    strategyNote = error instanceof Error ? error.message : 'A protected lifetime purchase could not be verified.'
+    return quoteLanes(false, interval)
+  })
 
   const usdPerFundingUnit = draft.usdPerFundingUnit.trim()
     ? parseV3Amount(draft.usdPerFundingUnit, 6, 'USD reference price')
     : undefined
   const usdPerDay = usdPerFundingUnit && (budget * usdPerFundingUnit) / (tokenScale(funding.decimals) * BigInt(days))
+  const gasPrice = await client.getGasPrice().catch(() => undefined)
   return {
     admin: studio.admin,
     config: { start, end: start + duration, threshold, maxWallets: maximumWallets, maxNftsPerWallet, metadataURI },
@@ -191,12 +269,33 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     fundingAsset: funding,
     funding: { asset: funding.address, budget, interval, allocations },
     usdPerDay,
+    treasuryFunded,
+    consolidated,
+    gasPrice,
+    strategyNote,
   }
 }
 
 export type V3Preview = Awaited<ReturnType<typeof buildV3Preview>>
 
 export function createV3FundedPool(deployment: V3Deployment, preview: V3Preview): V3Call {
+  if (preview.treasuryFunded) {
+    return {
+      to: deployment.address,
+      data: encodeFunctionData({
+        abi: universalRewardsAbi,
+        functionName: 'createTreasuryFundedPool',
+        args: [
+          preview.config,
+          preview.collections,
+          preview.rewards,
+          preview.funding,
+          preview.funding.budget,
+          preview.consolidated,
+        ],
+      }),
+    }
+  }
   return {
     to: deployment.address,
     data: encodeFunctionData({
@@ -214,7 +313,7 @@ export async function readV3Funding(client: V3Client, deployment: V3Deployment, 
   const ledger = { abi: universalRewardsAbi, address: deployment.address, blockNumber: block.number }
   const asset = pool.funding.asset
   if (isAddressEqual(asset, zeroAddress)) throw new Error('This pool uses direct reward deposits.')
-  const [details, allowance, tokenBalance, nativeBalance, swap, wrappedNative] = await Promise.all([
+  const [details, allowance, tokenBalance, nativeBalance, swap, wrappedNative, treasury] = await Promise.all([
     tokenDetails(client, asset, block.number),
     account
       ? client.readContract({
@@ -237,7 +336,11 @@ export async function readV3Funding(client: V3Client, deployment: V3Deployment, 
     account ? client.getBalance({ address: account, blockNumber: block.number }) : Promise.resolve(ZERO),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
     client.readContract({ ...ledger, functionName: 'wrappedNative' }),
+    readV3Treasury(client, deployment, block.number),
   ])
+  const [treasuryBacked, consolidated] = treasury
+    ? await client.readContract({ ...ledger, functionName: 'treasuryFunding', args: [poolId] })
+    : [false, false]
   const lanes = await Promise.all(
     pool.rewards.map(async (reward) => {
       const [split, [epoch, amount, target]] = await Promise.all([
@@ -245,23 +348,30 @@ export async function readV3Funding(client: V3Client, deployment: V3Deployment, 
         client.readContract({ ...ledger, functionName: 'nextReplenishment', args: [poolId, reward.token] }),
       ])
       let quote: readonly [bigint, bigint] | undefined = amount > ZERO ? [amount, amount] : undefined
-      let blocked = false
+      let blocker: string | undefined
       if (amount > ZERO && !isAddressEqual(asset, reward.token)) {
-        quote = await client
-          .readContract({
-            address: swap,
-            abi: rewardSwapAbi,
-            functionName: 'preview',
-            args: [asset, reward.token, amount, ZERO],
-            blockNumber: block.number,
-          })
-          .catch(() => undefined)
-        blocked = quote === undefined
+        try {
+          const route = await quoteV3Route(client, swap, asset, reward.token, amount, block.number)
+          quote = [route.quoted, route.minimum]
+        } catch (error) {
+          quote = undefined
+          blocker = error instanceof Error ? error.message : 'The route could not be verified.'
+        }
       }
-      return { reward, split, epoch, amount, target, quote, blocked }
+      return { reward, split, epoch, amount, target, quote, blocked: Boolean(blocker), blocker }
     }),
   )
-  return { pool, lanes, token: { address: asset, ...details }, allowance, tokenBalance, nativeBalance, wrappedNative }
+  return {
+    pool,
+    lanes,
+    token: { address: asset, ...details },
+    allowance,
+    tokenBalance,
+    nativeBalance,
+    wrappedNative,
+    treasuryBacked,
+    consolidated,
+  }
 }
 
 export type V3FundingSnapshot = Awaited<ReturnType<typeof readV3Funding>>

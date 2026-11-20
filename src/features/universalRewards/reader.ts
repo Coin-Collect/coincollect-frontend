@@ -122,7 +122,12 @@ async function v3PoolPage(client: V3Client, deployment: V3Deployment, offset: nu
   return { snapshot, ledger, total, ids }
 }
 
-export async function readV3Catalogue(client: V3Client, deployment: V3Deployment, offset = 0) {
+export async function readV3Catalogue(
+  client: V3Client,
+  deployment: V3Deployment,
+  offset = 0,
+  includeSettlement = false,
+) {
   const { snapshot, total, ids } = await v3PoolPage(client, deployment, offset)
   const pools: V3PoolSnapshot[] = []
   if (!ids.length) return { total, pools }
@@ -130,7 +135,7 @@ export async function readV3Catalogue(client: V3Client, deployment: V3Deployment
   // Four pool groups at a time limits the read pressure on the shared RPC.
   for (let i = 0; i < ids.length; i += 4) {
     const batch = await Promise.all(
-      ids.slice(i, i + 4).map((id) => readV3Pool(client, deployment, id, snapshot, { claimPeriod })),
+      ids.slice(i, i + 4).map((id) => readV3Pool(client, deployment, id, snapshot, { claimPeriod, includeSettlement })),
     )
     pools.push(...batch)
   }
