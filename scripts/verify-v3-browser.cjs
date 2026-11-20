@@ -4,7 +4,7 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const { setTimeout: delay } = require('node:timers/promises')
-const { parseAbi, encodeFunctionData, decodeFunctionResult } = require('viem')
+const { parseAbi, encodeFunctionData, decodeFunctionResult, encodeEventTopics, parseEther, toHex } = require('viem')
 
 const fixtureFile = process.argv[2]
 if (!fixtureFile) throw new Error('Usage: node scripts/verify-v3-browser.cjs <deployed fixture JSON>')
@@ -345,7 +345,7 @@ async function testBrowser() {
           option.click()
           return true
         },
-        id,
+        String(id),
       )
     await selectNft(fixture.tokenId)
     await has('Estimated next 24 hours')
@@ -404,7 +404,7 @@ async function testBrowser() {
       () => document.querySelector('dialog[open]')?.getAttribute('aria-label') === 'Select NFTs to UnStake',
     )
     await selectNft(fixture.tokenId)
-    await click('dialog button', 'Confirm')
+    await click('dialog button', 'Unstake & Harvest')
     await has('Confirmed on the settlement network.')
     await has('No active participation')
     assert.equal(await ownerOf(), '0x' + pad(fixture.operator).toLowerCase())
@@ -501,34 +501,69 @@ async function testBrowser() {
     await has('Review funding and rewards')
     await click('button', 'Create V3 pool')
     await has('Reward budget · Pool #')
+    await has('Fund 12 POL')
+    const payment = (method) =>
+      wait(
+        'payment method ' + method,
+        (value) => {
+          const option = document.querySelector('input[name="funding-method"][value="' + value + '"]')
+          if (!option || option.disabled) return false
+          option.click()
+          return true
+        },
+        method,
+      )
+    await wait(
+      'native POL is preselected',
+      () => document.querySelector('input[name="funding-method"][value="native"]')?.checked,
+    )
+    await payment('token')
+    await has('Your V3R balance is too low. Choose POL above to fund this pool.')
+    await wait('insufficient wrapped balance prevents a deposit and approval', () =>
+      [...document.querySelectorAll('form[aria-label="Deposit reward budget"] button')].some(
+        (button) => button.textContent.trim() === 'Fund 12 V3R' && button.disabled,
+      ),
+    )
+    await payment('native')
+    await click('form[aria-label="Deposit reward budget"] summary', 'Change deposit amount')
+    await field('deposit-amount', '4')
+    await click('button', 'Fund 4 POL')
+    await has('Budget partially deposited')
     const tokenAbi = parseAbi([
       'function deposit() payable',
       'function allowance(address owner, address spender) view returns (uint256)',
     ])
+    const readAllowance = async () =>
+      BigInt(
+        await rpc('eth_call', [
+          {
+            to: fixture.token,
+            data: encodeFunctionData({
+              abi: tokenAbi,
+              functionName: 'allowance',
+              args: [fixture.operator, fixture.ledger],
+            }),
+          },
+          'latest',
+        ]),
+      )
+    assert.equal(await readAllowance(), 0n, 'Native POL funding must not request an ERC-20 allowance')
     const wrap = await rpc('eth_sendTransaction', [
       {
         from: fixture.operator,
         to: fixture.token,
         data: encodeFunctionData({ abi: tokenAbi, functionName: 'deposit' }),
-        value: '0xa688906bd8b00000',
+        value: toHex(parseEther('8')),
       },
     ])
     assert.equal((await rpc('eth_getTransactionReceipt', [wrap])).status, '0x1')
-    await has('Your wallet may ask for two confirmations')
-    await click('button', 'Fund 12 V3R')
+    await evalPage(() => document.dispatchEvent(new Event('visibilitychange')))
+    await payment('token')
+    await has('Confirm V3R spending permission first, then confirm the deposit.')
+    await click('button', 'Fund 8 V3R')
     await has('Budget fully deposited')
-    const allowance = await rpc('eth_call', [
-      {
-        to: fixture.token,
-        data: encodeFunctionData({
-          abi: tokenAbi,
-          functionName: 'allowance',
-          args: [fixture.operator, fixture.ledger],
-        }),
-      },
-      'latest',
-    ])
-    assert.equal(BigInt(allowance), BigInt(0), 'The exact allowance must be spent by the single deposit')
+    assert.equal(await readAllowance(), 0n, 'The exact allowance must be spent by the token deposit')
+    console.log('PASS visible POL/WPOL choice, zero WPOL guard, and native plus approved ERC-20 deposits')
     if (secret) {
       worker = spawn(process.execPath, [path.join(__dirname, 'run-v3-local-automation.cjs')], {
         env: { ...process.env, CRON_SECRET: secret, V3_LOCAL_PREVIEW: base },
@@ -581,6 +616,93 @@ async function testBrowser() {
         ),
       ),
     )
+    const batchAbi = parseAbi([
+      'function mint(address owner, uint256 tokenId)',
+      'function deposit() payable',
+      'function approve(address spender, uint256 amount) returns (bool)',
+      'function poolCount() view returns (uint256)',
+      'function createPool((uint64 start,uint64 end,uint8 threshold,uint8 maxWallets,uint8 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
+      'function fundReward(uint256 poolId,address token,uint128 amount)',
+      'function nftKey(uint256 sourceChainId,address collection,uint256 tokenId) view returns (bytes32)',
+      'function walletsNftCount(uint256 poolId,address account) view returns (uint256)',
+      'function positionState(uint256 poolId,bytes32 key) view returns ((uint256 sourceChainId,address collection,uint32 weight,uint256 tokenId,address seatOwner,uint64 seatExpiry))',
+      'event Claimed(uint256 indexed poolId,bytes32 indexed nft,address indexed token,address owner,uint256 amount)',
+    ])
+    const sendFixture = async (to, functionName, args = [], value) => {
+      const data = encodeFunctionData({ abi: batchAbi, functionName, args })
+      const hash = await rpc('eth_sendTransaction', [{ from: fixture.operator, to, data, value }])
+      assert.equal((await rpc('eth_getTransactionReceipt', [hash])).status, '0x1', functionName)
+    }
+    const readBatchPool = async (functionName, args = []) => {
+      const calldata = encodeFunctionData({ abi: batchAbi, functionName, args })
+      const data = await rpc('eth_call', [{ to: fixture.ledger, data: calldata }, 'latest'])
+      return decodeFunctionResult({ abi: batchAbi, functionName, data })
+    }
+    const batchIds = [41n, 42n, 43n]
+    for (const id of batchIds) await sendFixture(fixture.nft, 'mint', [fixture.participant, id])
+    const deposit = parseEther('12')
+    await sendFixture(fixture.token, 'deposit', [], toHex(deposit))
+    await sendFixture(fixture.token, 'approve', [fixture.ledger, deposit])
+    const block = await rpc('eth_getBlockByNumber', ['latest', false])
+    const start = BigInt(block.timestamp) + 60n
+    const uri =
+      'data:application/json;base64,' +
+      Buffer.from(JSON.stringify({ name: 'Harvest-all acceptance', description: '' })).toString('base64')
+    await sendFixture(fixture.ledger, 'createPool', [
+      { start, end: start + 3600n, threshold: 1, maxWallets: 8, maxNftsPerWallet: 4, metadataURI: uri },
+      [{ sourceChainId: 137n, collection: fixture.nft, weight: 1 }],
+      [{ token: fixture.token, cap: deposit }],
+    ])
+    const batchId = await readBatchPool('poolCount')
+    await sendFixture(fixture.ledger, 'fundReward', [batchId, fixture.token, deposit])
+    await rpc('evm_setNextBlockTimestamp', [Number(start)])
+    await rpc('evm_mine')
+    await visit('/nftpools/v3/' + batchId, fixture.participant)
+    await click('article button', 'Click to Stake Now')
+    for (const id of batchIds) await selectNft(id)
+    await click('dialog button', 'Confirm')
+    await has('Confirmed on the settlement network.')
+    assert.equal(await readBatchPool('walletsNftCount', [batchId, fixture.participant]), 3n)
+    await rpc('evm_increaseTime', [180])
+    await rpc('evm_mine')
+    await visit('/nftpools/v3/' + batchId, fixture.participant)
+    const keys = await Promise.all(batchIds.map((id) => readBatchPool('nftKey', [137n, fixture.nft, id])))
+    const claimTopics = encodeEventTopics({ abi: batchAbi, eventName: 'Claimed', args: { poolId: batchId } })
+    const claimsSince = (before) =>
+      rpc('eth_getLogs', [
+        {
+          address: fixture.ledger,
+          topics: claimTopics,
+          fromBlock: toHex(BigInt(before) + 1n),
+          toBlock: 'latest',
+        },
+      ])
+    const beforeHarvest = await rpc('eth_blockNumber')
+    await click('article button', 'Harvest')
+    await has('3 of 3 transactions confirmed on the settlement network.')
+    assert.equal(await evalPage(() => document.querySelector('dialog[open]') === null), true)
+    assert.deepEqual((await claimsSince(beforeHarvest)).map(({ topics }) => topics[2]).sort(), [...keys].sort())
+    assert.equal(await readBatchPool('walletsNftCount', [batchId, fixture.participant]), 3n)
+    await rpc('evm_increaseTime', [180])
+    await rpc('evm_mine')
+    const beforeExit = await rpc('eth_blockNumber')
+    await click('article button', 'Unstake')
+    await selectNft(batchIds[0])
+    await selectNft(batchIds[2])
+    await has('2 NFTs selected')
+    await click('dialog button', 'Unstake & Harvest')
+    await has('2 of 2 transactions confirmed on the settlement network.')
+    await wait('selective Unstake dialog closes', () => document.querySelector('dialog[open]') === null)
+    assert.deepEqual((await claimsSince(beforeExit)).map(({ topics }) => topics[2]).sort(), [keys[0], keys[2]].sort())
+    const seats = await Promise.all(keys.map((key) => readBatchPool('positionState', [batchId, key])))
+    assert.equal(seats[0].seatOwner, '0x' + '0'.repeat(40))
+    assert.equal(seats[1].seatOwner.toLowerCase(), fixture.participant.toLowerCase())
+    assert.equal(seats[2].seatOwner, '0x' + '0'.repeat(40))
+    for (const id of batchIds) {
+      const result = await rpc('eth_call', [{ to: fixture.nft, data: '0x6352211e' + pad(toHex(id)) }, 'latest'])
+      assert.equal(result, '0x' + pad(fixture.participant).toLowerCase())
+    }
+    console.log('PASS Harvest claims all three NFTs, and selective Unstake pays and exits only two NFTs')
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',
     )

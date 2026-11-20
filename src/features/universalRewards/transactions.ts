@@ -97,7 +97,14 @@ export function approveV3Funding(deployment: V3Deployment, token: Address, amoun
 
 export function describeV3Error(error: unknown): string {
   if (typeof error !== 'object' || error === null) return 'The V3 request failed.'
-  if ('shortMessage' in error && typeof error.shortMessage === 'string') return error.shortMessage
-  if (error instanceof Error) return error.message
-  return 'The V3 request failed.'
+  const message =
+    'shortMessage' in error && typeof error.shortMessage === 'string'
+      ? error.shortMessage
+      : error instanceof Error
+      ? error.message
+      : 'The V3 request failed.'
+  if (/\b(?:0xe450d38c|ERC20InsufficientBalance)\b/i.test(message)) {
+    return 'Your wallet does not have enough of the selected token. Check the balance before trying again.'
+  }
+  return message
 }

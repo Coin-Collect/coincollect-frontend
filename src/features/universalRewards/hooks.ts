@@ -67,6 +67,8 @@ export function useV3Wallet(chainId?: number) {
   return address && connector ? connect : undefined
 }
 
+type V3ActionStep = V3Call & { onConfirmed?: () => void }
+
 export function useV3Action(
   client: V3Client,
   deployment: V3Deployment | undefined,
@@ -74,20 +76,20 @@ export function useV3Action(
   account: Address | undefined,
 ) {
   const pendingRef = useRef(false)
+  const pendingStep = useRef<{ complete: () => void }>()
   const [busy, setBusy] = useState(false)
   const [hash, setHash] = useState<Hex>()
   const [error, setError] = useState<string>()
   const [message, setMessage] = useState('')
   const [unconfirmed, setUnconfirmed] = useState(false)
+
   const verify = async (transaction: Hex) => {
+    let receipt: Awaited<ReturnType<typeof readV3Receipt>>
     try {
-      const receipt = await readV3Receipt(client, transaction)
-      setMessage('Confirmed on the settlement network.')
-      setError(undefined)
-      setUnconfirmed(false)
-      return receipt
+      receipt = await readV3Receipt(client, transaction)
     } catch (failure) {
       if (failure instanceof V3TransactionRejected) {
+        pendingStep.current = undefined
         setUnconfirmed(false)
         setMessage('')
         setError(failure.message)
@@ -97,22 +99,57 @@ export function useV3Action(
       }
       return undefined
     }
+    const step = pendingStep.current
+    pendingStep.current = undefined
+    setError(undefined)
+    setUnconfirmed(false)
+    step?.complete()
+    return receipt
   }
-  const run = async (call: V3Call) => {
-    if (!deployment || !getWallet || !account || pendingRef.current || unconfirmed) return undefined
+
+  const runMany = async (prepare: () => Promise<readonly V3ActionStep[]>) => {
+    if (!deployment || !getWallet || !account || pendingRef.current || pendingStep.current) return undefined
     pendingRef.current = true
     setBusy(true)
     setHash(undefined)
     setError(undefined)
     setMessage('Checking the transaction…')
+    let completed = 0
+    let total = 0
     try {
-      const wallet = await getWallet()
-      const transaction = await sendV3Call(client, deployment, wallet, account, call)
-      setHash(transaction)
-      setMessage('Waiting for confirmation…')
-      return await verify(transaction)
+      const calls = await prepare()
+      total = calls.length
+      if (!total) {
+        setMessage('No eligible transactions remain.')
+        return undefined
+      }
+      let lastReceipt: Awaited<ReturnType<typeof readV3Receipt>> | undefined
+      for (const { onConfirmed, ...call } of calls) {
+        const progress = total > 1 ? `Transaction ${completed + 1} of ${total}. ` : ''
+        setMessage(`${progress}Confirm in your wallet.`)
+        const wallet = await getWallet()
+        const transaction = await sendV3Call(client, deployment, wallet, account, call)
+        setHash(transaction)
+        pendingStep.current = {
+          complete: () => {
+            completed++
+            onConfirmed?.()
+            setMessage(
+              total === 1
+                ? 'Confirmed on the settlement network.'
+                : `${completed} of ${total} transactions confirmed on the settlement network.`,
+            )
+          },
+        }
+        setMessage(`${progress}Waiting for confirmation…`)
+        lastReceipt = await verify(transaction)
+        if (!lastReceipt) return undefined
+      }
+      return lastReceipt
     } catch (failure) {
-      setMessage('')
+      setMessage(
+        completed ? `${completed} of ${total} transactions confirmed. The remaining transactions were stopped.` : '',
+      )
       setError(describeV3Error(failure))
       return undefined
     } finally {
@@ -121,8 +158,10 @@ export function useV3Action(
     }
   }
 
+  const run = (call: V3Call) => runMany(async () => [call])
+
   const recheck = async () => {
-    if (!hash || pendingRef.current || !unconfirmed) return undefined
+    if (!hash || pendingRef.current || !pendingStep.current) return undefined
     pendingRef.current = true
     setBusy(true)
     try {
@@ -132,5 +171,5 @@ export function useV3Action(
       setBusy(false)
     }
   }
-  return { run, recheck, busy, unconfirmed, hash, error, message }
+  return { run, runMany, recheck, busy, unconfirmed, hash, error, message }
 }

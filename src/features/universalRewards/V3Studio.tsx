@@ -32,6 +32,7 @@ import V3StudioDashboard from './V3StudioDashboard'
 import V3StudioPool, { type V3StudioPreviewProps } from './V3StudioPool'
 import {
   FundingDisclosure,
+  FundingMethod,
   FundingSplit,
   RewardBudgetSection,
   StudioBar,
@@ -113,6 +114,18 @@ function TransactionFeedback({
   )
 }
 
+function fundingBalanceIssue(view: Awaited<ReturnType<typeof readV3Funding>>, amount: bigint, native: boolean) {
+  if (native && view.nativeBalance <= amount) return 'Leave some POL in your wallet to cover the network fee.'
+  if (!native && view.tokenBalance < amount) {
+    const choosePol = isAddressEqual(view.token.address, view.wrappedNative) && view.nativeBalance > amount
+    return choosePol
+      ? `Your ${view.token.symbol} balance is too low. Choose POL above to fund this pool.`
+      : `You have ${shortAmount(view.tokenBalance, view.token.decimals)} ${
+          view.token.symbol
+        }. Lower the deposit amount or add funds to your wallet.`
+  }
+}
+
 function FundingPanel({
   client,
   deployment,
@@ -133,7 +146,7 @@ function FundingPanel({
   const [purpose, setPurpose] = useState<string>()
   const [funding, setFunding] = useState(false)
   const fundingLock = useRef(false)
-  const [native, setNative] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<'native' | 'token'>()
   const [error, setError] = useState('')
   const load = useCallback(
     () => readV3Funding(client, deployment, poolId, account),
@@ -159,25 +172,34 @@ function FundingPanel({
   const automationMode =
     automation.data?.firstPool && BigInt(automation.data.firstPool) <= poolId ? automation.data.mode : 'disabled'
   const amountText = deposit ?? (view?.token.decimals != null ? formatUnits(remaining, view.token.decimals) : '')
-  const payNative = Boolean(view && native && isAddressEqual(view.token.address, view.wrappedNative))
-  const fundingSymbol = payNative ? 'POL' : view?.token.symbol
   const value = () => {
     if (!view || view.token.decimals === null) throw new Error('The funding asset decimals could not be verified.')
     const amount = parseV3Amount(amountText, view.token.decimals, 'deposit amount')
     if (amount > remaining) throw new Error('The deposit exceeds the remaining funding budget.')
     return amount
   }
-  let buttonAmount = ''
-  let requiresApproval = false
+  let selectedAmount: bigint | undefined
   try {
-    if (view && view.token.decimals !== null) {
-      const amount = value()
-      buttonAmount = formatUnits(amount, view.token.decimals)
-      requiresApproval = !payNative && view.allowance < amount
-    }
+    if (view && remaining > ZERO) selectedAmount = value()
   } catch {
-    // Invalid custom amounts are announced on submit.
+    // Custom amount errors are reported when the form is submitted.
   }
+  const hasNativeOption = Boolean(view && isAddressEqual(view.token.address, view.wrappedNative))
+  const comparableAmount = selectedAmount ?? remaining
+  const payNative = Boolean(
+    view &&
+      hasNativeOption &&
+      (paymentMethod === 'native' ||
+        (!paymentMethod && (view.nativeBalance > comparableAmount || view.tokenBalance < comparableAmount))),
+  )
+  const fundingSymbol = payNative ? 'POL' : view?.token.symbol
+  const buttonAmount =
+    selectedAmount !== undefined && view?.token.decimals != null ? formatUnits(selectedAmount, view.token.decimals) : ''
+  const requiresApproval = Boolean(
+    view && selectedAmount !== undefined && !payNative && view.allowance < selectedAmount,
+  )
+  const balanceIssue =
+    view && selectedAmount !== undefined ? fundingBalanceIssue(view, selectedAmount, payNative) : undefined
   const depositBudget = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!view || view.token.decimals === null || locked || fundingLock.current || ended) return
@@ -194,6 +216,8 @@ function FundingPanel({
       ) {
         throw new Error('The available budget changed. Review the updated amount before funding.')
       }
+      const issue = fundingBalanceIssue(fresh, amount, payNative)
+      if (issue) throw new Error(issue)
       if (!payNative && fresh.allowance < amount) {
         setPurpose(`Approve ${view.token.symbol} spending`)
         if (!(await transaction.run(approveV3Funding(deployment, view.token.address, amount)))) return
@@ -272,11 +296,58 @@ function FundingPanel({
               </V3Metrics>
               {!ended && remaining > ZERO && (
                 <form method="post" aria-label="Deposit reward budget" onSubmit={depositBudget}>
-                  <V3Muted id="v3-deposit-help">
-                    {requiresApproval
-                      ? `Your wallet may ask for two confirmations: permission to spend ${view.token.symbol}, then the deposit.`
-                      : 'Confirm the deposit in your wallet.'}
-                  </V3Muted>
+                  {hasNativeOption && (
+                    <FundingMethod disabled={locked} aria-describedby="v3-deposit-help">
+                      <legend>Pay with</legend>
+                      <label data-selected={payNative}>
+                        <input
+                          type="radio"
+                          name="funding-method"
+                          value="native"
+                          checked={payNative}
+                          onChange={() => {
+                            setPaymentMethod('native')
+                            setError('')
+                          }}
+                        />
+                        <span>
+                          <strong>POL</strong>
+                          <small>{shortAmount(view.nativeBalance, 18)} POL available</small>
+                        </span>
+                      </label>
+                      <label data-selected={!payNative}>
+                        <input
+                          type="radio"
+                          name="funding-method"
+                          value="token"
+                          checked={!payNative}
+                          onChange={() => {
+                            setPaymentMethod('token')
+                            setError('')
+                          }}
+                        />
+                        <span>
+                          <strong>{view.token.symbol}</strong>
+                          <small>
+                            {shortAmount(view.tokenBalance, view.token.decimals)} {view.token.symbol} available
+                          </small>
+                        </span>
+                      </label>
+                    </FundingMethod>
+                  )}
+                  {balanceIssue ? (
+                    <V3Error role="status" id="v3-deposit-help">
+                      {balanceIssue}
+                    </V3Error>
+                  ) : (
+                    <V3Muted id="v3-deposit-help">
+                      {payNative
+                        ? `The contract wraps your POL into ${view.token.symbol} during the deposit. One wallet confirmation.`
+                        : requiresApproval
+                        ? `Confirm ${view.token.symbol} spending permission first, then confirm the deposit.`
+                        : `Confirm the ${view.token.symbol} deposit in your wallet.`}
+                    </V3Muted>
+                  )}
                   <FundingDisclosure>
                     <summary>Change deposit amount</summary>
                     <V3Field>
@@ -294,22 +365,12 @@ function FundingPanel({
                         }}
                       />
                     </V3Field>
-                    {isAddressEqual(view.token.address, view.wrappedNative) && (
-                      <V3Field>
-                        <V3Actions>
-                          <input
-                            type="checkbox"
-                            name="native-pol"
-                            checked={native}
-                            disabled={locked}
-                            onChange={(event) => setNative(event.target.checked)}
-                          />
-                          Pay with native POL
-                        </V3Actions>
-                      </V3Field>
-                    )}
                   </FundingDisclosure>
-                  <V3Button type="submit" disabled={locked || view.token.decimals === null}>
+                  <V3Button
+                    type="submit"
+                    disabled={locked || view.token.decimals === null || Boolean(balanceIssue)}
+                    aria-describedby="v3-deposit-help"
+                  >
                     {funding
                       ? 'Funding in progress…'
                       : buttonAmount

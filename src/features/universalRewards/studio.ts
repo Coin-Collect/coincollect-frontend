@@ -214,7 +214,7 @@ export async function readV3Funding(client: V3Client, deployment: V3Deployment, 
   const ledger = { abi: universalRewardsAbi, address: deployment.address, blockNumber: block.number }
   const asset = pool.funding.asset
   if (isAddressEqual(asset, zeroAddress)) throw new Error('This pool uses direct reward deposits.')
-  const [details, allowance, swap, wrappedNative] = await Promise.all([
+  const [details, allowance, tokenBalance, nativeBalance, swap, wrappedNative] = await Promise.all([
     tokenDetails(client, asset, block.number),
     account
       ? client.readContract({
@@ -225,6 +225,16 @@ export async function readV3Funding(client: V3Client, deployment: V3Deployment, 
           blockNumber: block.number,
         })
       : Promise.resolve(ZERO),
+    account
+      ? client.readContract({
+          address: asset,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [account],
+          blockNumber: block.number,
+        })
+      : Promise.resolve(ZERO),
+    account ? client.getBalance({ address: account, blockNumber: block.number }) : Promise.resolve(ZERO),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
     client.readContract({ ...ledger, functionName: 'wrappedNative' }),
   ])
@@ -251,7 +261,7 @@ export async function readV3Funding(client: V3Client, deployment: V3Deployment, 
       return { reward, split, epoch, amount, target, quote, blocked }
     }),
   )
-  return { pool, lanes, token: { address: asset, ...details }, allowance, wrappedNative }
+  return { pool, lanes, token: { address: asset, ...details }, allowance, tokenBalance, nativeBalance, wrappedNative }
 }
 
 export type V3FundingSnapshot = Awaited<ReturnType<typeof readV3Funding>>

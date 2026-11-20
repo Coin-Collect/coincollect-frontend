@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import { Button, Flex, Text } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { useAccount, useSwitchChain } from 'wagmi'
@@ -65,10 +65,10 @@ const Field = styled.label`
   }
 `
 
-export type V3NftActionMode = 'stake' | 'unstake' | 'harvest'
+export type V3NftActionMode = 'stake' | 'unstake'
 
 type Collection = { name: string; image?: string }
-type Choice = { ref: NftRef; name: string; image?: string; weight: number }
+type Choice = { ref: NftRef; name: string; image?: string; weight: number; claimable: readonly bigint[] }
 
 function isBackdrop(event: PointerEvent<HTMLDialogElement>) {
   if (event.target !== event.currentTarget) return false
@@ -105,9 +105,8 @@ export default function V3NftActionModal({
   const { t } = useTranslation()
   const { chainId } = useAccount()
   const { switchChain, isPending: switching, error: switchError } = useSwitchChain()
-  const title = t(
-    mode === 'stake' ? 'Select NFTs to Stake' : mode === 'unstake' ? 'Select NFTs to UnStake' : 'Select NFT to Harvest',
-  )
+  const title = t(mode === 'stake' ? 'Select NFTs to Stake' : 'Select NFTs to UnStake')
+  const unstakeDescription = useId()
   const dialog = useRef<HTMLDialogElement>(null)
   const pressedBackdrop = useRef(false)
   const [collectionIndex, setCollectionIndex] = useState(0)
@@ -129,7 +128,7 @@ export default function V3NftActionModal({
   const loadChoices = useCallback(async () => {
     const wallet = await readV3CardPosition(client, deployment, pool, account)
     const snapshot = { ...pool, blockNumber: wallet.blockNumber, timestamp: wallet.timestamp }
-    const positions = mode === 'unstake' ? wallet.seatedNfts : wallet.claimableNfts
+    const positions = wallet.seatedNfts
     let total = BigInt(positions.length)
     let needsId = false
     let refs = positions.slice(Number(offset), Number(offset + PAGE))
@@ -180,6 +179,7 @@ export default function V3NftActionModal({
         return {
           ref,
           weight: position.weight,
+          claimable: position.claimable,
           name: metadata.name || collection?.name || sourceName(ref.sourceChainId),
           image: metadata.image || collection?.image,
         }
@@ -231,26 +231,47 @@ export default function V3NftActionModal({
     if (pending || options.loading || options.error || !selectedNfts.length || overLimit || action.unconfirmed) return
     if (mode === 'stake' && poolTiming(pool) !== 'Live') return
     setAttempted(true)
-    const call =
-      mode === 'stake'
-        ? joinV3(
+    if (mode === 'stake') {
+      if (
+        await action.run(
+          joinV3(
             deployment,
             pool.poolId,
             selectedNfts.map(({ ref }) => ref),
-          )
-        : manageV3Position(
-            deployment,
-            pool.poolId,
-            selectedNfts[0].ref,
-            mode === 'harvest' ? 'claim' : leave ? 'leave' : 'exit',
-          )
-    if (await action.run(call)) done()
+          ),
+        )
+      )
+        done()
+      return
+    }
+    const receipt = await action.runMany(async () => {
+      const wallet = await readV3CardPosition(client, deployment, pool, account)
+      const seated = new Set(wallet.seatedNfts.map(nftRefKey))
+      if (selectedNfts.some(({ ref }) => !seated.has(nftRefKey(ref)))) {
+        throw new Error(t('One or more selected NFTs are no longer in your pool position. Review your selection.'))
+      }
+      return selectedNfts.map(({ ref }) => ({
+        ...manageV3Position(deployment, pool.poolId, ref, leave ? 'leave' : 'exit'),
+        onConfirmed: () =>
+          setSelected((previous) => {
+            const next = { ...previous }
+            delete next[nftRefKey(ref)]
+            return next
+          }),
+      }))
+    })
+    if (receipt) done()
+    else {
+      onSuccess()
+      options.refresh()
+    }
   }
 
   return (
     <Dialog
       ref={dialog}
       aria-label={title}
+      aria-describedby={mode === 'unstake' ? unstakeDescription : undefined}
       onClose={onDismiss}
       onCancel={(event) => {
         if (pending) event.preventDefault()
@@ -274,7 +295,8 @@ export default function V3NftActionModal({
           const label = `${choice.name} #${choice.ref.tokenId}`
           return {
             key,
-            label,
+            label: mode === 'unstake' ? `#${choice.ref.tokenId} · ${choice.name}` : label,
+            accessibleLabel: label,
             image: choice.image,
             selected: Boolean(selected[key]),
             onSelect: () =>
@@ -284,7 +306,7 @@ export default function V3NftActionModal({
                   delete next[key]
                   return next
                 }
-                return mode === 'stake' ? { ...previous, [key]: choice } : { [key]: choice }
+                return { ...previous, [key]: choice }
               }),
           }
         })}
@@ -303,7 +325,7 @@ export default function V3NftActionModal({
             action.unconfirmed ||
             (mode === 'stake' && poolTiming(pool) !== 'Live'))
         }
-        confirmLabel={wrongChain ? t('Switch network') : undefined}
+        confirmLabel={wrongChain ? t('Switch network') : mode === 'unstake' ? t('Unstake & Harvest') : undefined}
         before={
           mode === 'stake' && (
             <>
@@ -416,6 +438,31 @@ export default function V3NftActionModal({
                 </Text>
               </>
             )}
+            {mode === 'unstake' && (
+              <>
+                <Text id={unstakeDescription} small color="textSubtle">
+                  {t(
+                    'You receive the available rewards for the NFTs you select. These NFTs stop earning in this pool.',
+                  )}
+                </Text>
+                {selectedNfts.length > 0 && (
+                  <Text small role="status">
+                    {t('%count% NFTs selected', { count: selectedNfts.length })} ·{' '}
+                    {pool.rewards
+                      .map((reward, index) => {
+                        const amount = selectedNfts.reduce((sum, choice) => sum + choice.claimable[index], ZERO)
+                        return `${shortAmount(amount, reward.decimals)} ${reward.symbol}`
+                      })
+                      .join(' · ')}
+                  </Text>
+                )}
+                {selectedNfts.length > 1 && (
+                  <Text small color="textSubtle">
+                    {t('Your wallet may ask you to confirm each NFT separately.')}
+                  </Text>
+                )}
+              </>
+            )}
             {wrongChain && switchError && (
               <Text small color="failure" role="alert">
                 {t('Switch to the settlement network in your wallet and try again.')}
@@ -446,7 +493,13 @@ export default function V3NftActionModal({
                 variant="secondary"
                 disabled={pending}
                 onClick={async () => {
-                  if (await action.recheck()) done()
+                  if (await action.recheck()) {
+                    if (mode === 'stake' || selectedNfts.length <= 1) done()
+                    else {
+                      onSuccess()
+                      options.refresh()
+                    }
+                  }
                 }}
               >
                 {t('Retry on-chain verification')}

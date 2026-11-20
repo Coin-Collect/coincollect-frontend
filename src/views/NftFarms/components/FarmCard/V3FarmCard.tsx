@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { AutoRenewIcon, Button, Flex, Text } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
-import { useAccount } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import ConnectWalletButton from 'components/ConnectWalletButton'
@@ -50,6 +50,7 @@ export default function V3FarmCard({
   onPositionChange,
 }: V3PoolCardProps & { preview?: boolean }) {
   const { address, chainId } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
   const { t } = useTranslation()
   const [modal, setModal] = useState<{ mode: V3NftActionMode; account: typeof address }>()
   const client = useMemo(createV3Client, [])
@@ -121,11 +122,13 @@ export default function V3FarmCard({
     onPositionChange?.()
   }
   const harvest = async () => {
-    if (claimableNfts.length !== 1 || chainId !== deployment.chainId || !getWallet) {
-      setModal({ mode: 'harvest', account: address })
-      return
-    }
-    if (await action.run(manageV3Position(deployment, pool.poolId, claimableNfts[0], 'claim'))) refreshPosition()
+    await action.runMany(async () => {
+      if (chainId !== deployment.chainId) await switchChainAsync({ chainId: deployment.chainId })
+      const fresh = await loadPosition()
+      if (!fresh.claimableNfts.length) throw new Error(t('No rewards are currently available to harvest.'))
+      return fresh.claimableNfts.map((ref) => manageV3Position(deployment, pool.poolId, ref, 'claim'))
+    })
+    refreshPosition()
   }
 
   return (
@@ -221,6 +224,13 @@ export default function V3FarmCard({
                 harvesting={action.busy}
                 onHarvest={() => void harvest()}
               />
+            )}
+            {claimableNfts.length > 1 && (
+              <Text small color="textSubtle" mt="8px" mb="8px">
+                {t(
+                  'Harvest claims all available rewards in this pool. Your wallet may ask for multiple confirmations.',
+                )}
+              </Text>
             )}
             {count > 0 ? (
               <FarmCardStakedPosition

@@ -279,3 +279,56 @@ export const FundingSplit = styled.ul`
 export const RewardBudgetSection = styled(V3Section)`
   scroll-margin-top: 90px;
 `
+
+export const FundingMethod = styled.fieldset`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 52px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 10px;
+    border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+    background: ${({ theme }) => theme.colors.background};
+  }
+
+  label[data-selected='true'] {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  label:focus-within {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+  }
+
+  input {
+    appearance: auto;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin: 0;
+    accent-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+`
