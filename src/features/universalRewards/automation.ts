@@ -32,7 +32,7 @@ interface JobResult {
   poolId: string
   token?: Address
   epoch?: number
-  action?: 'treasury-recovery' | 'budget-recovery'
+  action?: 'treasury-recovery' | 'budget-recovery' | 'observation'
   status: 'confirmed' | 'already-executed' | 'pending' | 'deferred' | 'failed'
   hash?: Hex
   reason?: string
@@ -165,8 +165,12 @@ async function observeRouteIfDue(
   timestamp: bigint,
 ) {
   const adapter = { address: swap, abi: rewardSwapAbi } as const
-  const route = await client.readContract({ ...adapter, functionName: 'routeState', args: [input, output] })
-  if (isAddressEqual(route.pair, zeroAddress) || timestamp - route.sampleAt < BigInt(1800)) return false
+  const [route, paused] = await Promise.all([
+    client.readContract({ ...adapter, functionName: 'routeState', args: [input, output] }),
+    client.readContract({ ...adapter, functionName: 'paused' }),
+  ])
+  if (paused || isAddressEqual(route.pair, zeroAddress) || timestamp - route.sampleAt < BigInt(1800)) return undefined
+  if (route.averagePrice > ZERO && timestamp - route.averageAt <= BigInt(7200)) return undefined
   const { request } = await client.simulateContract({
     ...adapter,
     functionName: 'observe',
@@ -175,7 +179,7 @@ async function observeRouteIfDue(
   })
   const gas = withV3GasHeadroom(await client.estimateContractGas(request))
   const gasPrice = await client.getGasPrice()
-  if (gas * gasPrice > MAX_PURCHASE_FEE) return false
+  if (gas * gasPrice > MAX_PURCHASE_FEE) return undefined
   const tx = await executor.writeContract({
     ...adapter,
     functionName: 'observe',
@@ -185,8 +189,13 @@ async function observeRouteIfDue(
     gas,
     gasPrice,
   })
-  const receipt = await client.waitForTransactionReceipt({ hash: tx, timeout: 5_000 })
-  return receipt.status === 'success' && receipt.transactionHash === tx
+  const receipt = await client.waitForTransactionReceipt({ hash: tx, timeout: 5_000 }).catch(() => undefined)
+  const status = !receipt
+    ? 'pending'
+    : receipt.status === 'success' && receipt.transactionHash === tx
+    ? 'confirmed'
+    : 'failed'
+  return { status, hash: tx } as const
 }
 
 export async function executeTreasuryRecovery(
@@ -346,6 +355,13 @@ export async function runV3Automation(
     client.readContract({ ...ledger, functionName: 'treasury' }),
   ])
   if (mode === 'polygon') {
+    const [confirmedNonce, pendingNonce, balance] = await Promise.all([
+      client.getTransactionCount({ address: account, blockTag: 'latest' }),
+      client.getTransactionCount({ address: account, blockTag: 'pending' }),
+      client.getBalance({ address: account }),
+    ])
+    if (pendingNonce > confirmedNonce) throw new Error('The gas executor has an unconfirmed transaction.')
+    if (balance === ZERO) throw new Error('The gas executor needs POL for network fees.')
     if (!treasury || isAddressEqual(account, admin) || isAddressEqual(account, treasuryAuthority)) {
       throw new Error('The Polygon executor must be separate from operator and treasury roles.')
     }
@@ -377,6 +393,7 @@ export async function runV3Automation(
         if (treasuryBacked) {
           const recovered = await executeBudgetRecovery(client, executor, deployment, account, poolId)
           if (recovered) results.push(recovered)
+          if (recovered?.status === 'pending') return results
         }
         if (period !== undefined && snapshot.timestamp >= config.end + period) {
           const tokens = await client.readContract({ ...ledger, functionName: 'rewardsOf', args: [poolId] })
@@ -384,6 +401,7 @@ export async function runV3Automation(
             if (Date.now() >= stopAt) return results
             const result = await executeTreasuryRecovery(client, executor, deployment, account, poolId, token)
             if (result) results.push(result)
+            if (result?.status === 'pending') return results
           }
         }
         continue
@@ -399,6 +417,16 @@ export async function runV3Automation(
         if (Date.now() >= stopAt) return results
         if (replenishmentJobs >= V3_AUTOMATION_WINDOW) break
         let block = await client.getBlock()
+        const currentTranche = () =>
+          client.readContract({
+            ...ledger,
+            blockNumber: block.number,
+            functionName: 'nextReplenishment',
+            args: [poolId, token],
+          })
+        const [initialEpoch, initialAmount] = await currentTranche()
+        if (initialAmount === ZERO) continue
+        let observedBlockChanged = false
         const crossAsset = !isAddressEqual(plan.asset, token)
         if (swap !== zeroAddress && observationAttempts < 2) {
           const outputs = crossAsset ? [token] : []
@@ -412,6 +440,15 @@ export async function runV3Automation(
           }
           const observed = await Promise.all(
             outputs.map(async (output) => {
+              const validQuote = await quoteV3Route(
+                client,
+                swap,
+                plan.asset,
+                output,
+                initialAmount,
+                block.number,
+              ).catch(() => undefined)
+              if (validQuote) return []
               const options = await readV3RouteOptions(client, swap, plan.asset, output, block.number)
               return options
                 ? options.filter(({ enabled }) => enabled).flatMap((path) => v3SwapLegs(path, plan.asset, output))
@@ -423,28 +460,28 @@ export async function runV3Automation(
             const key = `${leg.adapter}:${leg.input}:${leg.output}`.toLowerCase()
             if (checkedRoutes.has(key)) continue
             checkedRoutes.add(key)
-            if (
-              await observeRouteIfDue(
-                client,
-                executor,
-                account,
-                leg.adapter,
-                leg.input,
-                leg.output,
-                block.timestamp,
-              ).catch(() => false)
-            ) {
-              observationAttempts++
+            const observation = await observeRouteIfDue(
+              client,
+              executor,
+              account,
+              leg.adapter,
+              leg.input,
+              leg.output,
+              block.timestamp,
+            ).catch(() => undefined)
+            if (!observation) continue
+            observationAttempts++
+            if (observation.status === 'pending') {
+              results.push({ poolId: poolId.toString(), token, action: 'observation', ...observation })
+              return results
+            }
+            if (observation.status === 'confirmed') {
               block = await client.getBlock()
+              observedBlockChanged = true
             }
           }
         }
-        const input = { ...ledger, blockNumber: block.number }
-        const [epoch, amount] = await client.readContract({
-          ...input,
-          functionName: 'nextReplenishment',
-          args: [poolId, token],
-        })
+        const [epoch, amount] = observedBlockChanged ? await currentTranche() : [initialEpoch, initialAmount]
         if (amount === ZERO) continue
         let minimum = amount
         let maxFee = treasuryBacked || mode === 'polygon' ? MAX_PURCHASE_FEE : undefined
@@ -476,7 +513,9 @@ export async function runV3Automation(
         }
         const job = { poolId, token, epoch, amount, minimum, deadline: block.timestamp + BigInt(90), maxFee }
         replenishmentJobs++
-        results.push(await executeReplenishmentJob(client, executor, deployment, account, job))
+        const result = await executeReplenishmentJob(client, executor, deployment, account, job)
+        results.push(result)
+        if (result.status === 'pending') return results
       }
     } catch {
       results.push({

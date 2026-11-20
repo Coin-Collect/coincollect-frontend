@@ -71,7 +71,6 @@ function useCallsData(calls: (Call | undefined)[], options?: ListenerOptions): C
   useEffect(() => {
     const callKeys: string[] = JSON.parse(serializedCallKeys)
     if (!chainId || callKeys.length === 0) return undefined
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     const calls = callKeys.map((key) => parseCallKey(key))
     dispatch(
       addMulticallListeners({

@@ -5,8 +5,16 @@ on:
     paths:
       - src/features/universalRewards/**
       - src/pages/*/v3/**
+      - src/pages/api/v3/**
+      - packages/coincollect-sdk/src/index.ts
+      - src/views/Ifos/components/IfoFoldableCard/IfoPoolCard/IfoCardTokens.tsx
       - src/pages/admin/nft-pools/v3.tsx
       - src/views/NftFarms/**
+      - .eslintrc
+      - next.config.js
+      - src/instrumentation.ts
+      - scripts/verify-v3-browser.cjs
+      - scripts/run-v3-browser-acceptance.cjs
       - tsconfig.v3.json
       - package.json
       - yarn.lock
@@ -16,8 +24,16 @@ on:
     paths:
       - src/features/universalRewards/**
       - src/pages/*/v3/**
+      - src/pages/api/v3/**
+      - packages/coincollect-sdk/src/index.ts
+      - src/views/Ifos/components/IfoFoldableCard/IfoPoolCard/IfoCardTokens.tsx
       - src/pages/admin/nft-pools/v3.tsx
       - src/views/NftFarms/**
+      - .eslintrc
+      - next.config.js
+      - src/instrumentation.ts
+      - scripts/verify-v3-browser.cjs
+      - scripts/run-v3-browser-acceptance.cjs
       - tsconfig.v3.json
       - package.json
       - yarn.lock
@@ -37,8 +53,39 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
       - run: yarn install --frozen-lockfile
+      - run: yarn lint:v3
       - run: yarn typecheck:v3
       - run: yarn test --runInBand --silent src/features/universalRewards src/features/nftPoolManager src/state/nftFarms
       - run: yarn build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+
+  v3-browser-and-abi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: frontend
+      - uses: actions/checkout@v4
+        with:
+          repository: Coin-Collect/coincollect-smart-contracts
+          ref: b375dddeac4c3d11f1ad1ced9288e1f10eb7e56e
+          path: contracts
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - working-directory: contracts/projects/universal-rewards-v3
+        run: npm ci --workspaces=false --ignore-scripts
+      - working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Compare generated frontend ABI against release contracts
+        working-directory: contracts/projects/universal-rewards-v3
+        run: |
+          node scripts/export-abi.cjs "$RUNNER_TEMP/v3-abi.ts"
+          cmp "$RUNNER_TEMP/v3-abi.ts" ../../../frontend/src/features/universalRewards/abi.ts
+      - name: Run isolated browser acceptance
+        working-directory: frontend
+        run: node scripts/run-v3-browser-acceptance.cjs ../contracts/projects/universal-rewards-v3

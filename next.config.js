@@ -1,30 +1,22 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const { withSentryConfig } = require('@sentry/nextjs')
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
 
 const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry Webpack plugin. Keep in mind that
-  // the following options are set automatically, and overriding them is not
-  // recommended:
-  //   release, url, org, project, authToken, configFile, stripPrefix,
-  //   urlPrefix, include, ignore
-
-  silent: true, // Suppresses all logs
-  dryRun: !process.env.SENTRY_AUTH_TOKEN, // Set to true will skip the upload release step
-  // https://stackoverflow.com/questions/61011281/next-js-source-maps-with-typescript-on-sentry
-  include: '.next',
-  ignore: ['node_modules', 'cypress'],
-  urlPrefix: '~/_next',
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options.
+  silent: true,
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+    deleteSourcemapsAfterUpload: true,
+  },
 }
 
 /** @type {import('next').NextConfig} */
 const config = {
   // Permit isolated build verification without overwriting a running dev cache.
   distDir: process.env.COINCOLLECT_NEXT_DIST_DIR || '.next',
+  experimental: { instrumentationHook: true },
+  eslint: { dirs: ['src/features/universalRewards', 'src/pages/api/v3', 'src/pages/nftpools/v3'] },
   compiler: {
     styledComponents: true,
   },

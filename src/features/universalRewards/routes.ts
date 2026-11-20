@@ -88,7 +88,7 @@ export async function quoteV3Route(
   if (options === undefined) {
     try {
       const [quoted, minimum] = await leafQuote({ adapter: swap, input, output }, amount)
-      return { quoted, minimum, hops: 1 }
+      return { quoted, minimum, hops: 1, legs: [{ adapter: swap, input, output }] }
     } catch (error) {
       throw new Error(v3RouteFailure(error))
     }
@@ -103,7 +103,14 @@ export async function quoteV3Route(
       blockNumber,
     })
     const legs = v3SwapLegs(options[index], input, output)
-    return { quoted, minimum, hops: legs.length, intermediate: options[index].intermediate, legs }
+    return {
+      quoted,
+      minimum,
+      hops: legs.length,
+      intermediate: options[index].intermediate,
+      legs,
+      approvedPaths: options.filter(({ enabled }) => enabled).length,
+    }
   } catch (error) {
     const blockers = await Promise.all(
       options.map(async (path, index) => {

@@ -12,7 +12,8 @@ import {
 import { managedNftCollectionAbi, ownershipVerifierAbi, treasuryVaultAbi, universalRewardsAbi } from './abi'
 import { encodeV3Presentation, type V3Presentation } from './metadata'
 import { erc20Abi, readV3Pool, tokenDetails } from './reader'
-import { quoteV3Route } from './routes'
+import { quoteV3Route, readV3RouteOptions, v3SwapLegs, type V3SwapLeg } from './routes'
+import { estimateV3Economics } from './economics'
 import { isV3MissingSelector, readV3Capacity, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import type { V3Call } from './transactions'
 import { tokenScale, UINT128_MAX } from './units'
@@ -212,6 +213,7 @@ export async function inspectStudioCollection(
       sourceChainId: SETTLEMENT_SOURCE,
       collection: adapter,
       maxUnits: managed.maxUnits,
+      standard: managed.standard,
       label: `ERC-${managed.standard} · ${remote ? 'isolated journal' : 'bound transfer hook'}`,
     }
   }
@@ -230,7 +232,13 @@ export async function inspectStudioCollection(
       blockNumber,
     })
     if (!supported) throw new Error('This source chain has no isolated ownership verification policy.')
-    return { sourceChainId, collection, maxUnits: 1, label: 'ERC-721 · isolated ownership verification required' }
+    return {
+      sourceChainId,
+      collection,
+      maxUnits: 1,
+      standard: 721,
+      label: 'ERC-721 · isolated ownership verification required',
+    }
   }
 
   const code = await client.getCode({ address: collection, blockNumber })
@@ -241,7 +249,7 @@ export async function inspectStudioCollection(
     supports('0xffffffff'),
   ])
   if (!invalidInterface && supports721) {
-    return { sourceChainId, collection, maxUnits: 1, label: 'Polygon ERC-721 · direct ownership check' }
+    return { sourceChainId, collection, maxUnits: 1, standard: 721, label: 'Polygon ERC-721 · direct ownership check' }
   }
   if (!invalidInterface && supports1155) {
     throw new Error('This ERC-1155 collection needs a registered CoinCollect adapter and a bound transfer hook.')
@@ -291,11 +299,13 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     throw new Error('Each chain and NFT collection pair can be included once.')
   }
 
+  let managed = false
   for (const rule of collections) {
     const compatibility = await inspectStudioCollection(client, deployment, studio, rule.sourceChainId, rule.collection)
     if (BigInt(compatibility.maxUnits) * BigInt(rule.weight) > BigInt(4_294_967_295)) {
       throw new Error('Unit power multiplied by the adapter quantity limit must fit within 4,294,967,295.')
     }
+    managed ||= compatibility.standard === 1155
     rule.sourceChainId = compatibility.sourceChainId
     rule.collection = compatibility.collection
   }
@@ -320,7 +330,7 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
         const sampleInput = consolidated
           ? allocation
           : (allocation * BigInt(interval) + duration - BigInt(1)) / duration
-        const { quoted, minimum, hops, intermediate, legs } = await quoteV3RewardWindow(
+        const { quoted, minimum, hops, intermediate, legs, approvedPaths } = await quoteV3RewardWindow(
           client,
           studio,
           funding,
@@ -340,6 +350,7 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
           hops,
           intermediate,
           legs,
+          approvedPaths: approvedPaths ?? (hops ? 1 : 0),
         }
       }),
     )
@@ -359,7 +370,57 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     ? parseV3Amount(draft.usdPerFundingUnit, 6, 'USD reference price')
     : undefined
   const usdPerDay = usdPerFundingUnit && (budget * usdPerFundingUnit) / (tokenScale(funding.decimals) * BigInt(days))
-  const gasPrice = await client.getGasPrice().catch(() => undefined)
+  const [gasPrice, economicLanes] = await Promise.all([
+    client.getGasPrice().catch(() => undefined),
+    Promise.all(
+      rewards.map(async (reward) => {
+        const quote = await quoteV3Route(
+          client,
+          studio.swap,
+          funding.address,
+          studio.wrappedNative,
+          reward.sampleInput,
+          studio.blockNumber,
+        ).catch(() => undefined)
+        const outputs = [...new Set([reward.token, studio.wrappedNative])].filter(
+          (token) => !isAddressEqual(token, funding.address),
+        )
+        const observedLegs = (
+          await Promise.all(
+            outputs.map(async (output): Promise<V3SwapLeg[]> => {
+              if (isAddressEqual(studio.swap, zeroAddress)) return []
+              const options = await readV3RouteOptions(
+                client,
+                studio.swap,
+                funding.address,
+                output,
+                studio.blockNumber,
+              ).catch(() => undefined)
+              return options
+                ? options.filter(({ enabled }) => enabled).flatMap((path) => v3SwapLegs(path, funding.address, output))
+                : [...(reward.legs ?? []), ...(quote?.legs ?? [])].filter((leg) => isAddressEqual(leg.output, output))
+            }),
+          )
+        ).flat()
+        return { ...reward, minimumPol: quote?.minimum, observedLegs }
+      }),
+    ),
+  ])
+  const economics = estimateV3Economics({
+    budget,
+    duration,
+    interval,
+    consolidated,
+    treasuryFunded,
+    gasPrice,
+    threshold,
+    capacity: studio.capacity,
+    maxWallets: maximumWallets,
+    maxNftsPerWallet,
+    powers: collections.map(({ weight }) => weight),
+    managed,
+    lanes: economicLanes,
+  })
   return {
     admin: studio.admin,
     capacity: studio.capacity,
@@ -371,7 +432,7 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     usdPerDay,
     treasuryFunded,
     consolidated,
-    gasPrice,
+    economics,
     strategyNote,
   }
 }

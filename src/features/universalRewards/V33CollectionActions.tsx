@@ -154,6 +154,7 @@ export default function V33CollectionActions({
     wallet,
     account,
   )
+  const { refresh: refreshOwnership } = ownership
   const readProgress = useCallback(async () => {
     if (!rule.journal || local || request === undefined) return 'pending'
     const verifier = await client.readContract({
@@ -177,9 +178,9 @@ export default function V33CollectionActions({
       fromBlock: block > lookback ? block - lookback : ZERO,
       toBlock: block,
     })
-    ownership.refresh()
+    refreshOwnership()
     return skipped.length > 0 ? 'skipped' : 'processed'
-  }, [client, rule, local, request, ownership.refresh])
+  }, [client, rule, local, request, refreshOwnership])
   const progress = useV3Query(request === undefined ? '' : request.toString(), readProgress, 10_000)
 
   const check = (event: FormEvent<HTMLFormElement>) => {

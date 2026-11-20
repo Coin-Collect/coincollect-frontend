@@ -29,6 +29,7 @@ import { approveV3Funding, createdV3PoolId, describeV3Error } from './transactio
 import { UNIT } from './units'
 import { loadV3PresentationDocument, type V3PresentationDocument } from './poolPresentation'
 import V3StudioDashboard from './V3StudioDashboard'
+import V3EconomicPreflight from './V3EconomicPreflight'
 import V3StudioPool, { type V3StudioPreviewProps } from './V3StudioPool'
 import V3Treasury from './V3Treasury'
 import {
@@ -857,7 +858,7 @@ export default function V3Studio({
                         <V3Muted>Reference daily budget · {shortAmount(preview.usdPerDay, 6)} USD</V3Muted>
                       )}
                       <V3Metrics>
-                        {preview.rewards.map((reward) => (
+                        {preview.rewards.map((reward, index) => (
                           <div key={reward.token}>
                             <dt>{reward.symbol} reward cap</dt>
                             <dd>
@@ -886,22 +887,22 @@ export default function V3Studio({
                                 via <code>{leg.adapter.slice(0, 8)}…</code>
                               </dd>
                             ))}
-                            {preview.gasPrice !== undefined && (
-                              <>
-                                <dt>Indicative purchase fee</dt>
-                                <dd>
-                                  {shortAmount(
-                                    BigInt(reward.hops === 2 ? 850_000 : reward.hops === 1 ? 550_000 : 180_000) *
-                                      preview.gasPrice,
-                                    18,
-                                  )}{' '}
-                                  POL
-                                </dd>
-                              </>
+                            <dt>Quoted purchase size</dt>
+                            <dd>
+                              {shortAmount(reward.sampleInput, preview.fundingAsset.decimals)}{' '}
+                              {preview.fundingAsset.symbol}
+                            </dd>
+                            {reward.approvedPaths > 0 && (
+                              <dd>
+                                {reward.approvedPaths} approved path{reward.approvedPaths === 1 ? '' : 's'} configured
+                              </dd>
                             )}
+                            <dt>Purchase gas estimate</dt>
+                            <dd>{preview.economics.purchases[index].gas.toLocaleString('en-US')} gas</dd>
                           </div>
                         ))}
                       </V3Metrics>
+                      <V3EconomicPreflight preview={preview} />
                       <V3Muted>
                         Spending is bounded by the funded balance, each allocation and each replenishment window.
                       </V3Muted>

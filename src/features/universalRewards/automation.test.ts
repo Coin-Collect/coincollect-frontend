@@ -35,7 +35,8 @@ function worker() {
   } as unknown as V3Client
   const writeContract = jest.fn().mockResolvedValue(hash)
   const executor = { writeContract } as unknown as WalletClient
-  const run = () => executeReplenishmentJob(client, executor, deployment, address, job)
+  const run = (options: Partial<typeof job> & { maxFee?: bigint } = {}) =>
+    executeReplenishmentJob(client, executor, deployment, address, { ...job, ...options })
   const recover = () => executeTreasuryRecovery(client, executor, deployment, address, job.poolId, job.token)
   return { run, recover, readContract, writeContract, simulateContract, waitForTransactionReceipt, getContractEvents }
 }
@@ -64,6 +65,22 @@ describe('V3 automation', () => {
     const test = worker()
     test.simulateContract.mockRejectedValueOnce(new Error('price moved'))
     await expect(test.run()).resolves.toMatchObject({ status: 'deferred' })
+    expect(test.writeContract).not.toHaveBeenCalled()
+  })
+
+  it('defers when a tranche changes before the transaction can be submitted', async () => {
+    const test = worker()
+    await expect(test.run({ amount: BigInt(76) })).resolves.toMatchObject({ status: 'deferred' })
+    expect(test.simulateContract).not.toHaveBeenCalled()
+    expect(test.writeContract).not.toHaveBeenCalled()
+  })
+
+  it('enforces the configured automation fee limit before any wallet broadcast', async () => {
+    const test = worker()
+    await expect(test.run({ maxFee: BigInt(1) })).resolves.toMatchObject({
+      status: 'deferred',
+      reason: 'Estimated POL fee exceeds the approved purchase limit.',
+    })
     expect(test.writeContract).not.toHaveBeenCalled()
   })
 

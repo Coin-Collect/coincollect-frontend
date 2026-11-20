@@ -224,3 +224,26 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   ⭐ **Star us on GitHub** if you find this project useful!
   
 </div>
+
+## Universal Rewards V3.5 verification
+
+Use Node 22 and the checked-in Yarn lockfile. The V3 CI checks cover Studio, public pool routes, the automation API and the existing NFT-pool tests.
+
+```sh
+yarn install --frozen-lockfile
+yarn lint:v3
+yarn typecheck:v3
+yarn test --runInBand --silent src/features/universalRewards src/features/nftPoolManager src/state/nftFarms
+yarn build
+```
+
+For end-to-end acceptance, install the contracts repo's isolated project dependencies first, then run the headless Chrome harness from this checkout. Set `CHROME_BIN` if Chrome is installed somewhere other than its standard location.
+
+```sh
+(cd ../coincollect-smart-contracts/projects/universal-rewards-v3 && npm ci --workspaces=false --ignore-scripts)
+node scripts/run-v3-browser-acceptance.cjs ../coincollect-smart-contracts/projects/universal-rewards-v3
+```
+
+The harness starts its own loopback app and Anvil chain, uses disposable accounts, and checks Studio funding and economic preflight, NFT participation, token receipts, claim expiry and recovery. See the [contracts release evidence and runbook](https://github.com/Coin-Collect/coincollect-smart-contracts/blob/pool-management/projects/universal-rewards-v3/V3.5.md).
+
+The lockfile uses Next.js 14.2.35, the latest patch on the existing 14.x line. Next.js lists 14.x outside LTS. Review migration to a supported version before mainnet rollout. [Next.js support policy](https://nextjs.org/support-policy)
