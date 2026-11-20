@@ -41,6 +41,7 @@ import { useVerifiedV2UserPositions } from 'features/nftPoolManager/user/hooks'
 import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
 import VerifiedPoolRecoveryCard from 'features/nftPoolManager/user/components/VerifiedPoolRecoveryCard'
 import V3Catalogue from 'features/universalRewards/V3Catalogue'
+import { V3FarmCardGrid } from './components/FarmCard/V3FarmCard'
 import { getV3Deployment } from 'features/universalRewards/runtime'
 import StakedPoolsEmpty from './components/StakedPoolsEmpty'
 
@@ -1024,7 +1025,7 @@ const Farms: React.FC = ({ children }) => {
           </section>
         ) : null}
         {showV3Catalogue && (
-          <V3Catalogue embedded history={isInactive} query={query} onVisibility={setHasVisibleV3} />
+          <V3Catalogue Cards={V3FarmCardGrid} embedded history={isInactive} query={query} onVisibility={setHasVisibleV3} />
         )}
         {v3Configured && stakedView && (
           <Button as={NextLinkFromReactRouter} to="/nftpools/v3" scale="sm" variant="secondary" mb="16px">

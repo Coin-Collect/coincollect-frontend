@@ -1,60 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import { useV3Query } from './hooks'
-import { V3_FALLBACK_ART } from './metadata'
-import { dailyTarget, poolTiming, shortAmount, sourceName } from './presentation'
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react'
+import { useV3PresentationDocument, useV3Query } from './hooks'
+import { withV3Presentation } from './poolPresentation'
+import { poolTiming } from './presentation'
 import { MAX_V3_PAGE, readV3Catalogue, type V3PoolSnapshot } from './reader'
-import { createV3Client, getV3Deployment } from './runtime'
-import { V3Actions, V3Badge, V3Button, V3Card, V3Error, V3Grid, V3Link, V3Metrics, V3Muted, V3Section } from './styles'
+import { createV3Client, getV3Deployment, type V3Deployment } from './runtime'
+import { V3Actions, V3Button, V3Error, V3Muted, V3Section } from './styles'
 
-function PoolTile({ pool }: { pool: V3PoolSnapshot }) {
-  const timing = poolTiming(pool)
-  const sources = [...new Set(pool.collections.map((collection) => sourceName(collection.sourceChainId)))].join(', ')
-  return (
-    <V3Card>
-      <img
-        src={pool.presentation.artwork || V3_FALLBACK_ART}
-        alt=""
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        onError={(event) => {
-          if (event.currentTarget.getAttribute('src') !== V3_FALLBACK_ART) event.currentTarget.src = V3_FALLBACK_ART
-        }}
-      />
-      <div>
-        <V3Badge>{timing}</V3Badge>
-        <h3>{pool.presentation.name}</h3>
-        {pool.presentation.description && <V3Muted>{pool.presentation.description}</V3Muted>}
-        <V3Metrics>
-          <div>
-            <dt>Eligible NFTs</dt>
-            <dd>{sources}</dd>
-          </div>
-          <div>
-            <dt>Participant wallets</dt>
-            <dd>
-              {pool.activeWallets} / {pool.config.maxWallets}
-            </dd>
-          </div>
-          <div>
-            <dt>{timing === 'Finished' ? 'Reward assets' : 'Target per day · all participants'}</dt>
-            <dd>
-              {pool.rewards
-                .map((asset) =>
-                  timing === 'Finished'
-                    ? asset.symbol
-                    : `${shortAmount(dailyTarget(pool, asset), asset.decimals)} ${asset.symbol}`,
-                )
-                .join(' · ')}
-            </dd>
-          </div>
-        </V3Metrics>
-        <Link href={`/nftpools/v3/${pool.poolId}`} passHref legacyBehavior>
-          <V3Link>{timing === 'Finished' ? 'View earned rewards' : 'View pool'}</V3Link>
-        </Link>
-      </div>
-    </V3Card>
-  )
+export interface V3CatalogueCardsProps {
+  pools: V3PoolSnapshot[]
+  deployment: V3Deployment
+  onPositionChange: () => void
 }
 
 export default function V3Catalogue({
@@ -62,7 +17,9 @@ export default function V3Catalogue({
   query = '',
   embedded = false,
   onVisibility,
+  Cards,
 }: {
+  Cards: ComponentType<V3CatalogueCardsProps>
   history?: boolean
   query?: string
   embedded?: boolean
@@ -76,13 +33,20 @@ export default function V3Catalogue({
     return readV3Catalogue(client, deployment, offset)
   }, [client, deployment, offset])
   const result = useV3Query(deployment ? `${deployment.address}:${offset}` : '', load, 45_000)
+  const document = useV3PresentationDocument(deployment)
   const filter = query.trim().toLowerCase()
-  const pools = (result.data?.pools ?? []).filter(
-    (pool) =>
-      (!embedded || (poolTiming(pool) === 'Finished') === history) &&
-      (!filter ||
-        pool.presentation.name.toLowerCase().includes(filter) ||
-        pool.collections.some(({ collection }) => collection.toLowerCase().includes(filter))),
+  const pools = useMemo(
+    () =>
+      (result.data?.pools ?? [])
+        .map((pool) => withV3Presentation(pool, document))
+        .filter(
+          (pool) =>
+            (!embedded || (poolTiming(pool) === 'Finished') === history) &&
+            (!filter ||
+              pool.presentation.name.toLowerCase().includes(filter) ||
+              pool.collections.some(({ collection }) => collection.toLowerCase().includes(filter))),
+        ),
+    [result.data, document, embedded, history, filter],
   )
   const hasPools = pools.length > 0
   useEffect(() => {
@@ -121,13 +85,7 @@ export default function V3Catalogue({
       {!result.loading && !result.error && !hasPools && (
         <V3Muted role="status">No matching V3 pools on this page.</V3Muted>
       )}
-      {hasPools && (
-        <V3Grid>
-          {pools.map((pool) => (
-            <PoolTile key={pool.poolId.toString()} pool={pool} />
-          ))}
-        </V3Grid>
-      )}
+      {hasPools && <Cards pools={pools} deployment={deployment} onPositionChange={result.refresh} />}
       {(offset > 0 || (result.data?.total ?? BigInt(0)) > BigInt(offset + MAX_V3_PAGE)) && (
         <V3Actions>
           <V3Button type="button" $secondary disabled={offset === 0} onClick={() => setOffset(offset - MAX_V3_PAGE)}>

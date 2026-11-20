@@ -40,11 +40,12 @@ async function rpc(method, params = []) {
   return result.result
 }
 
-function injectedWallet(account, node) {
+function injectedWallet(account, node, announceProvider) {
   localStorage.setItem('wagmi.injected.connected', 'true')
   localStorage.setItem('wagmi.recentConnectorId', JSON.stringify('injected'))
   const listeners = new Map()
   window.ethereum = {
+    isMetaMask: announceProvider,
     on(event, callback) {
       listeners.set(event, callback)
     },
@@ -66,6 +67,24 @@ function injectedWallet(account, node) {
       if (result.error) throw Object.assign(new Error(result.error.message), result.error)
       return result.result
     },
+  }
+  if (announceProvider) {
+    const announce = () =>
+      window.dispatchEvent(
+        new CustomEvent('eip6963:announceProvider', {
+          detail: {
+            info: {
+              uuid: '350670db-19fa-4704-a166-e52e0cd7860d',
+              name: 'MetaMask',
+              rdns: 'io.metamask',
+              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>',
+            },
+            provider: window.ethereum,
+          },
+        }),
+      )
+    window.addEventListener('eip6963:requestProvider', announce)
+    announce()
   }
 }
 
@@ -185,11 +204,14 @@ async function testBrowser() {
         'Browser did not reach ' + label + '\n' + JSON.stringify({ ...evidence, errors: cdp.exceptions.slice(-8) }),
       )
     }
-    const visit = async (route, account) => {
+    const visit = async (route, account, announceProvider = false) => {
       if (injection) await command('Page.removeScriptToEvaluateOnNewDocument', { identifier: injection })
-      const expression =
-        '(' + injectedWallet.toString() + ')(' + JSON.stringify(account) + ',' + JSON.stringify(rpcUrl) + ')'
-      injection = (await command('Page.addScriptToEvaluateOnNewDocument', { source: expression })).identifier
+      injection = undefined
+      if (account) {
+        const expression =
+          '(' + injectedWallet.toString() + ')(...' + JSON.stringify([account, rpcUrl, announceProvider]) + ')'
+        injection = (await command('Page.addScriptToEvaluateOnNewDocument', { source: expression })).identifier
+      }
       await command('Page.navigate', { url: base + route })
       await wait(route, (expected) => location.pathname === expected && document.readyState === 'complete', route)
     }
@@ -244,31 +266,110 @@ async function testBrowser() {
       ]).then(BigInt)
 
     await viewport(1360, 900)
+    await visit('/nftpools')
+    await wait('disconnected FarmCard CTA', () => {
+      const card = [...document.querySelectorAll('article')].find(
+        (item) => item.querySelector('h3')?.textContent === 'V3 Browser Fixture',
+      )
+      return [...(card?.querySelectorAll('button') ?? [])].some(
+        (button) => button.textContent.trim() === 'Connect Wallet',
+      )
+    })
     await visit('/nftpools', fixture.participant)
     await has('Staked only')
     await has('Finished')
     await has('V3 Browser Fixture')
-    await click('a', 'View pool')
-    await field('token-id', String(fixture.tokenId))
-    await click('button', 'Check NFT')
+    await wait('one chip in the reward ticker', () => {
+      const card = [...document.querySelectorAll('article')].find(
+        (item) => item.querySelector('h3')?.textContent === 'V3 Browser Fixture',
+      )
+      return card?.querySelector('[data-testid="nft-pool-reward-ticker"]')?.firstElementChild?.children.length === 1
+    })
+    await wait('shared card details', () => {
+      const card = [...document.querySelectorAll('article')].find(
+        (item) => item.querySelector('h3')?.textContent === 'V3 Browser Fixture',
+      )
+      const toggle = [...(card?.querySelectorAll('button') ?? [])].find(
+        (button) => button.textContent.trim() === 'Details',
+      )
+      if (!toggle) return false
+      toggle.click()
+      return true
+    })
+    await has('Total staked')
+    await has('Pool ends')
+    await wait('connected shared stake button', () => {
+      const card = [...document.querySelectorAll('article')].find(
+        (item) => item.querySelector('h3')?.textContent === 'V3 Browser Fixture',
+      )
+      const stake = [...(card?.querySelectorAll('button') ?? [])].find(
+        (button) => button.textContent.trim() === 'Click to Stake Now' && !button.disabled,
+      )
+      if (!stake) return false
+      stake.focus()
+      stake.click()
+      return true
+    })
     await wait(
-      'eligible NFT checkbox',
-      (id) => {
-        const option = Array.from(document.querySelectorAll('label')).find((label) =>
-          label.textContent.includes('#' + id + ' · 3 power'),
-        )
-        const input = option?.querySelector('input[type=checkbox]')
-        if (!input || input.disabled) return false
-        input.click()
-        return true
-      },
-      fixture.tokenId,
+      'stake picker opens over the catalogue',
+      () => location.pathname === '/nftpools' && !!document.querySelector('dialog[open]'),
     )
+    await command('Input.dispatchKeyEvent', {
+      type: 'keyDown',
+      key: 'Escape',
+      code: 'Escape',
+      windowsVirtualKeyCode: 27,
+    })
+    await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+    await wait(
+      'Escape closes the picker and returns focus',
+      () => !document.querySelector('dialog') && document.activeElement?.textContent.trim() === 'Click to Stake Now',
+    )
+    await click('article button', 'Click to Stake Now')
+    await wait('reopen the stake picker', () => !!document.querySelector('dialog[open]'))
+    await command('Input.dispatchMouseEvent', { type: 'mousePressed', x: 8, y: 8, button: 'left', clickCount: 1 })
+    await command('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 8, y: 8, button: 'left', clickCount: 1 })
+    await wait('backdrop dismisses the stake picker', () => !document.querySelector('dialog'))
+    await click('article button', 'Click to Stake Now')
+    await has('Selected NFTs')
+    const selectNft = (id) =>
+      wait(
+        'eligible NFT tile',
+        (id) => {
+          const option = Array.from(document.querySelectorAll('dialog[open] button[aria-pressed]')).find((button) =>
+            button.getAttribute('aria-label').endsWith('#' + id),
+          )
+          if (!option || option.disabled) return false
+          option.click()
+          return true
+        },
+        id,
+      )
+    await selectNft(fixture.tokenId)
     await has('Estimated next 24 hours')
-    await click('button', 'Join with selected NFTs')
+    await click('dialog button', 'Confirm')
     await has('Confirmed on the settlement network.')
-    await has('Exit and claim')
+    await has('STAKED NFT COUNT')
+    await has('Stake More')
+    await has('Unstake')
+    await click('article button', 'Stake More')
+    await wait(
+      'stake more opens the same picker',
+      () => document.querySelector('dialog[open]')?.getAttribute('aria-label') === 'Select NFTs to Stake',
+    )
+    await click('dialog button', 'Cancel')
     assert.equal(await ownerOf(), '0x' + pad(fixture.participant).toLowerCase())
+    assert.equal(
+      await rpc('eth_call', [{ to: fixture.nft, data: '0x081812fc' + tokenId }, 'latest']),
+      '0x' + '0'.repeat(64),
+    )
+    assert.equal(
+      await rpc('eth_call', [
+        { to: fixture.nft, data: '0xe985e9c5' + pad(fixture.participant) + pad(fixture.ledger) },
+        'latest',
+      ]),
+      '0x' + '0'.repeat(64),
+    )
 
     await rpc('evm_increaseTime', [900])
     await rpc('evm_mine')
@@ -280,30 +381,120 @@ async function testBrowser() {
       },
     ])
     const poolPath = '/nftpools/v3/' + fixture.poolId
-    await visit(poolPath, fixture.participant)
+    await wait(
+      'upper-right pool detail link',
+      (path) => {
+        const link = document.querySelector('article a[aria-label="Open pool page"]')
+        if (link?.getAttribute('href') !== path) return false
+        link.click()
+        return true
+      },
+      poolPath,
+    )
+    await wait('pool detail route', (path) => location.pathname === path, poolPath)
     await has('No wallet positions in the records on this page.')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
-    await click('button', 'Exit and claim')
+    await click('article button', 'Unstake')
+    await wait(
+      'unstake picker on mobile',
+      () => document.querySelector('dialog[open]')?.getAttribute('aria-label') === 'Select NFTs to UnStake',
+    )
+    await selectNft(fixture.tokenId)
+    await click('dialog button', 'Confirm')
     await has('Confirmed on the settlement network.')
     await has('No active participation')
     assert.equal(await ownerOf(), '0x' + pad(fixture.operator).toLowerCase())
     assert.ok((await tokenBalance(fixture.operator)) > ownerBalance)
     assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
-    console.log('PASS Chrome desktop join, NFT transfer, mobile layout and new-owner exit')
+    console.log('PASS shared FarmCard modals, keyboard focus, detail link, non-custodial join and mobile exit')
 
     await viewport(1280, 900)
-    await visit('/admin/nft-pools/v3', fixture.operator)
+    await visit('/admin/nft-pools/v3', fixture.operator, true)
     await has('Pool Studio V3')
+    await wait('Studio wallet connection', () => {
+      if (document.querySelector('[aria-label="V3 pool dashboard"]')) return true
+      const connect = [...document.querySelectorAll('section[aria-label="Pool Studio V3"] button')].find(
+        (button) => button.textContent.trim() === 'Connect Wallet',
+      )
+      if (!connect) return false
+      connect.click()
+      return 'modal'
+    }).then(async (connection) => {
+      if (connection !== 'modal') return
+      await wait('announced Studio wallet', () => {
+        function findWallet(root) {
+          for (const element of root.querySelectorAll('*')) {
+            if (element.localName === 'wui-list-wallet' && ['MetaMask', 'Browser Wallet'].includes(element.name))
+              return element
+            const nested = element.shadowRoot && findWallet(element.shadowRoot)
+            if (nested) return nested
+          }
+          return null
+        }
+        const root = document.querySelector('w3m-modal')?.shadowRoot
+        const wallet = root && findWallet(root)
+        if (!wallet) return false
+        wallet.click()
+        return true
+      })
+    })
+    await wait('verified existing pool in Studio', () =>
+      Boolean(document.querySelector('[aria-label="Manage V3 Browser Fixture"]')),
+    )
+    await click('section[aria-label="V3 pool dashboard"] button', 'Upcoming')
+    await has('No matching pools on this page')
+    await click('section[aria-label="V3 pool dashboard"] button', 'Live')
+    await click('button[aria-label="Manage V3 Browser Fixture"]', 'Manage')
+    await has('Manage pool #1')
+    await wait('FarmCard preview', () => Boolean(document.querySelector('[aria-label="FarmCard preview"] article')))
+    await click('button', 'Hide preview')
+    await wait('preview collapses', () => !document.querySelector('[aria-label="FarmCard preview"]'))
+    await click('button', 'Preview FarmCard')
+    await wait('preview reopens', () => Boolean(document.querySelector('[aria-label="FarmCard preview"] article')))
+    await click('button', 'Back to pools')
+    await click('button', 'New pool')
+    await wait('inline FarmCard name', () => {
+      const action = document.querySelector('article button[aria-label="Edit pool name"]')
+      if (!action || action.disabled) return false
+      action.focus()
+      action.click()
+      return true
+    })
     await field('pool-name', 'Studio acceptance pool')
-    await field('collection-0', fixture.nft)
-    await field('funding-asset', fixture.token)
-    await field('reward-0', fixture.token)
+    await evalPage(() => {
+      const title = document.querySelector('[name="pool-name"]')
+      title.focus()
+      title.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    })
+    await wait('inline name committed to the card', () =>
+      document.querySelector('article h3')?.innerText.includes('Studio acceptance pool'),
+    )
+    await wait('editable collection avatar', () => {
+      const button = document.querySelector('article button[aria-label="Edit NFT collections"]')
+      if (!button) return false
+      button.click()
+      return true
+    })
+    await field('collection-address', fixture.nft)
+    await click('dialog button', 'Add collection')
+    await click('dialog button', 'Done')
+    await wait('collections dialog closes', () => !document.querySelector('dialog'))
+    await click('article button', 'Set funding budget')
+    await click('dialog button', 'V3R')
     await field('funding-budget', '12')
-    const future = new Date(Date.now() + 3 * 3600_000)
-    const localFuture = new Date(future.getTime() - future.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
-    await field('start-date', localFuture)
+    await click('dialog button', 'Done')
+    await wait('budget dialog closes', () => !document.querySelector('dialog'))
+    await wait('editable schedule badge', () => {
+      const button = document.querySelector('article button[aria-label="Edit reward schedule"]')
+      if (!button) return false
+      button.click()
+      return true
+    })
+    await click('dialog button', 'In 1 hour')
+    await click('dialog button', 'Done')
+    await wait('schedule dialog closes', () => !document.querySelector('dialog'))
     await click('button', 'Review pool plan')
     await has('Review funding and rewards')
     await click('button', 'Create V3 pool')
@@ -321,12 +512,37 @@ async function testBrowser() {
         (term) => term.textContent === 'Deposited' && term.parentElement.textContent.includes('12'),
       ),
     )
+    const blockBeforeEdit = await rpc('eth_blockNumber')
+    await click('button', 'Edit presentation')
+    await field('presentation-name', 'Studio acceptance pool updated')
+    await field('presentation-artwork-choice', '/images/poolBanners/15.webp')
+    await field('presentation-description', 'Presentation only. Ledger unchanged.')
+    await wait(
+      'presentation changes in preview',
+      () =>
+        document.querySelector('[aria-label="FarmCard preview"] article h3')?.innerText ===
+        'Studio acceptance pool updated',
+    )
+    await click('button', 'Save presentation')
+    await has('Presentation saved. The local catalogue uses the updated FarmCard.')
+    assert.equal(await rpc('eth_blockNumber'), blockBeforeEdit, 'A presentation change must not send a transaction')
     await click('a', 'View public pool')
-    await has('Studio acceptance pool')
+    await has('Studio acceptance pool updated')
     await evalPage(() => localStorage.clear())
     await visit('/nftpools/v3', fixture.participant)
-    await has('Studio acceptance pool')
-    console.log('PASS Chrome operator preview, creation, signed deposit and independent catalogue read')
+    await has('Studio acceptance pool updated')
+    assert.ok(
+      await evalPage(() =>
+        [...document.querySelectorAll('article')].some(
+          (card) =>
+            card.querySelector('h3')?.textContent === 'Studio acceptance pool updated' &&
+            card.querySelector('img[src*="15.webp"]'),
+        ),
+      ),
+    )
+    console.log(
+      'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',
+    )
   } finally {
     cdp?.close()
     browser.kill()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { ComponentType, ComponentProps, ReactNode, Ref } from 'react'
 import BigNumber from 'bignumber.js'
 import styled, { css, keyframes } from 'styled-components'
@@ -301,10 +301,28 @@ const rewardTitleShimmer = keyframes`
 `
 
 const RewardTickerWrapper = styled(Flex)`
+  position: relative;
   flex-direction: column;
   align-items: stretch;
   gap: 7px;
   margin-top: 12px;
+`
+
+const EditRewardTicker = styled.button`
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: 1px solid ({theme}) => theme.colors.primary;
+    outline-offset: 3px;
+  }
 `
 
 const RewardTickerHeader = styled(Flex)`
@@ -432,22 +450,27 @@ const RewardTickerViewport = styled.div`
   }
 `
 
-const RewardTickerTrack = styled.div<{ $paused?: boolean }>`
+const RewardTickerTrack = styled.div<{ $single?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 9px;
   width: max-content;
   padding: 7px 12px;
-  animation: ${slideRewards} 18s linear infinite;
-  animation-play-state: ${({ $paused }) => ($paused ? 'paused' : 'running')};
-  will-change: transform;
+  ${({ $single }) =>
+    $single
+      ? css`
+          width: 100%;
+          justify-content: center;
+        `
+      : css`
+          @media (prefers-reduced-motion: no-preference) {
+            animation: ${slideRewards} 18s linear infinite;
+            will-change: transform;
+          }
+        `}
 
   ${RewardTickerViewport}:hover & {
     animation-play-state: paused;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
   }
 `
 
@@ -532,18 +555,21 @@ interface FarmCardProps {
   variant?: 'default' | 'expanded'
 }
 
-// One reward presentation for both legacy and address-native pools.
+// Reward presentation shared by all NFT pool cards.
 function DailyRewards({
   chips,
   loading = false,
   note,
+  onEdit,
 }: {
   chips: Array<{ token: string; amount: string; primary: boolean; tokenMeta?: Pick<Token, 'address' | 'symbol'> }>
   loading?: boolean
   note?: string
+  onEdit?: () => void
 }) {
   const { t } = useTranslation()
   const { isXs, isSm, isMd } = useMatchBreakpoints()
+  const single = chips.length === 1
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <Flex flexDirection="column">
       {chips.map((chip) => (
@@ -558,7 +584,7 @@ function DailyRewards({
   return (
     <RewardTickerWrapper>
       <RewardTickerHeader>
-        {tooltipVisible && tooltip}
+        {!onEdit && tooltipVisible && tooltip}
         <RewardTitleWrap ref={targetRef}>
           <RewardTitleChip>{t('Daily Rewards')}</RewardTitleChip>
           <RewardCountBadge>{chips.length}</RewardCountBadge>
@@ -567,10 +593,15 @@ function DailyRewards({
       {loading ? (
         <Skeleton height={18} width={180} />
       ) : (
-        <RewardTickerViewport>
-          <RewardTickerTrack>
-            {[...chips, ...chips].map((chip, index) => (
-              <RewardChip key={`${chip.token}-${index}`} $primary={chip.primary}>
+        <RewardTickerViewport data-testid="nft-pool-reward-ticker">
+          <RewardTickerTrack $single={single}>
+            {onEdit && chips.length === 0 && <RewardChip $primary>Add a reward token</RewardChip>}
+            {(single ? chips : [...chips, ...chips]).map((chip, index) => (
+              <RewardChip
+                key={`${chip.token}-${index}`}
+                $primary={chip.primary}
+                aria-hidden={index >= chips.length || undefined}
+              >
                 <RewardChipIcon token={chip.token} tokenMeta={chip.tokenMeta} />
                 {chip.token}
                 <RewardChipAmount>{chip.amount}</RewardChipAmount>
@@ -579,23 +610,28 @@ function DailyRewards({
           </RewardTickerTrack>
         </RewardTickerViewport>
       )}
+      {onEdit && <EditRewardTicker type="button" aria-label="Edit reward tokens" onClick={onEdit} />}
     </RewardTickerWrapper>
   )
 }
 
-function NftFarmCardLayout({
+export function NftFarmCardLayout({
   children,
   heading,
   variant = 'default',
   finished,
   isActive = false,
   mainLink,
+  mainLinkLabel,
   mintLink,
+  mintLinkLabel,
   contractLink,
+  contractLinkLabel,
   details,
   poolAddress,
   rewards,
   cardRef,
+  detailsInitiallyOpen = false,
 }: {
   children: ReactNode
   heading: ReactNode | ((openDetails: () => void) => ReactNode)
@@ -603,17 +639,23 @@ function NftFarmCardLayout({
   finished?: boolean
   isActive?: boolean
   mainLink?: string
+  mainLinkLabel?: string
   mintLink?: string
+  mintLinkLabel?: string
   contractLink?: string
+  contractLinkLabel?: string
   details: ExpandableSectionProps
   poolAddress?: string
   rewards?: ComponentProps<typeof DailyRewards>
   cardRef?: Ref<HTMLDivElement>
+  detailsInitiallyOpen?: boolean
 }) {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(detailsInitiallyOpen)
+  const detailsId = useId()
   return (
     <StyledCard
+      forwardedAs="article"
       $variant={variant}
       ribbon={finished && <FinishedRibbon text={t('Finished')} />}
       isActive={isActive}
@@ -630,20 +672,36 @@ function NftFarmCardLayout({
         <FooterTopRow>
           <FooterLinks>
             {mainLink && (
-              <FooterIconWithTooltip href={mainLink} label={t('Visit project website')} IconComponent={HomeIcon} />
+              <FooterIconWithTooltip
+                href={mainLink}
+                label={mainLinkLabel ?? t('Visit project website')}
+                IconComponent={HomeIcon}
+              />
             )}
-            {mintLink && <FooterIconWithTooltip href={mintLink} label={t('Open mint page')} IconComponent={NftIcon} />}
+            {mintLink && (
+              <FooterIconWithTooltip
+                href={mintLink}
+                label={mintLinkLabel ?? t('Open mint page')}
+                IconComponent={NftIcon}
+              />
+            )}
             {contractLink && (
               <FooterIconWithTooltip
                 href={contractLink}
-                label={t('View contract on explorer')}
+                label={contractLinkLabel ?? t('View contract on explorer')}
                 IconComponent={SmartContractIcon}
               />
             )}
           </FooterLinks>
-          <ExpandableSectionButton onClick={() => setExpanded((value) => !value)} expanded={expanded} />
+          <ExpandableSectionButton
+            onClick={() => setExpanded((value) => !value)}
+            expanded={expanded}
+            controls={detailsId}
+          />
         </FooterTopRow>
-        {expanded && <DetailsSection {...details} />}
+        <div id={detailsId} hidden={!expanded}>
+          {expanded && <DetailsSection {...details} />}
+        </div>
       </ExpandingWrapper>
     </StyledCard>
   )

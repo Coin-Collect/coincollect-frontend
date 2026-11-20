@@ -1,9 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 
 const HEROES = [1, 3, 7] as const
-const TURN_MS = 5_000
+const HERO_HOLD_MS = 5_000
+const SHUFFLE_MS = 480
+
+const moveToFront = keyframes`
+  from { transform: var(--right-card); }
+  to { transform: var(--front-card); }
+`
+
+const moveToLeft = keyframes`
+  from { transform: var(--front-card); }
+  to { transform: var(--left-card); }
+`
+
+const moveBehind = keyframes`
+  from { transform: var(--left-card); }
+  50% { transform: translate(0, 12%) rotate(0) scale(0.76); }
+  to { transform: var(--right-card); }
+`
 
 const Showcase = styled.div`
   display: grid;
@@ -11,6 +28,10 @@ const Showcase = styled.div`
 `
 
 const Deck = styled.div`
+  --front-card: translate(0, 0) rotate(0) scale(1);
+  --right-card: translate(40%, 5%) rotate(14deg) scale(0.86);
+  --left-card: translate(-40%, 5%) rotate(-14deg) scale(0.86);
+
   position: relative;
   isolation: isolate;
   display: grid;
@@ -32,7 +53,7 @@ const HeroCard = styled.div`
   border-radius: 16px;
   background: linear-gradient(150deg, #fde8e6, #d88891);
   box-shadow: 0 10px 24px rgba(30, 17, 54, 0.2);
-  transform: translate(0, 0) rotate(0) scale(1);
+  transform: var(--front-card);
 
   &[data-hero='3'] {
     background: linear-gradient(150deg, #fff1cc, #e5ac57);
@@ -44,16 +65,34 @@ const HeroCard = styled.div`
 
   &[data-slot='1'] {
     z-index: 2;
-    transform: translate(37%, 5%) rotate(14deg) scale(0.86);
+    transform: var(--right-card);
   }
 
   &[data-slot='2'] {
     z-index: 1;
-    transform: translate(-37%, 6%) rotate(-14deg) scale(0.86);
+    transform: var(--left-card);
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    transition: transform 250ms cubic-bezier(0.23, 1, 0.32, 1);
+    [data-shuffling='true'] & {
+      animation-duration: ${SHUFFLE_MS}ms;
+      animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+      animation-fill-mode: both;
+    }
+
+    [data-shuffling='true'] &[data-slot='0'] {
+      animation-name: ${moveToFront};
+    }
+
+    [data-shuffling='true'] &[data-slot='1'] {
+      z-index: 1;
+      animation-name: ${moveBehind};
+    }
+
+    [data-shuffling='true'] &[data-slot='2'] {
+      z-index: 2;
+      animation-name: ${moveToLeft};
+    }
   }
 
   img,
@@ -108,6 +147,7 @@ export default function WalletHeroCards() {
   const { t } = useTranslation()
   const deckRef = useRef<HTMLDivElement>(null)
   const [front, setFront] = useState(0)
+  const [shuffling, setShuffling] = useState(false)
   const [paused, setPaused] = useState(false)
   const [motionAllowed, setMotionAllowed] = useState(false)
   const [pageVisible, setPageVisible] = useState(false)
@@ -145,20 +185,31 @@ export default function WalletHeroCards() {
   }, [])
 
   useEffect(() => {
-    if (!playing) return undefined
-    const timer = window.setInterval(() => setFront((current) => (current + 1) % HEROES.length), TURN_MS)
-    return () => window.clearInterval(timer)
-  }, [playing])
+    if (!playing) {
+      setShuffling(false)
+      return undefined
+    }
+
+    // Hold each hero in front for a full turn before starting the next shuffle.
+    const timer = window.setTimeout(
+      () => {
+        setShuffling(!shuffling)
+        if (!shuffling) setFront((current) => (current + 1) % HEROES.length)
+      },
+      shuffling ? SHUFFLE_MS : HERO_HOLD_MS,
+    )
+    return () => window.clearTimeout(timer)
+  }, [playing, shuffling])
 
   return (
     <Showcase>
-      <Deck ref={deckRef} aria-hidden="true">
+      <Deck ref={deckRef} data-shuffling={playing && shuffling} aria-hidden="true">
         {HEROES.map((id, index) => {
           const slot = (index - front + HEROES.length) % HEROES.length
           const poster = `/images/superheroes/${id}-poster.webp`
           return (
             <HeroCard key={id} data-hero={id} data-slot={slot}>
-              {playing && slot === 0 && (
+              {playing && !shuffling && slot === 0 && (
                 <video
                   src={`/images/superheroes/${id}.webm`}
                   poster={poster}

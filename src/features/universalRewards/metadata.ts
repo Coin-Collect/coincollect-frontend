@@ -5,7 +5,6 @@ export interface V3Presentation {
 }
 
 const METADATA_PREFIX = 'data:application/json;base64,'
-export const V3_FALLBACK_ART = '/logo2.png'
 
 export function safeArtwork(value: unknown): string | undefined {
   if (typeof value !== 'string' || !value || value.length > 200) return undefined

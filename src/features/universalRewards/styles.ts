@@ -28,26 +28,23 @@ export const V3Section = styled.section`
     margin-bottom: 16px;
   }
 
-  h1,
-  h2,
-  h3,
-  p {
+  > header > :is(h1, h2, h3, p) {
     margin: 0;
   }
 
-  h1 {
+  > header > h1 {
     font-size: clamp(30px, 5vw, 50px);
     font-weight: 800;
     letter-spacing: -0.04em;
   }
 
-  h2 {
+  > header > h2 {
     font-size: clamp(20px, 3vw, 28px);
     font-weight: 750;
     letter-spacing: -0.025em;
   }
 
-  h3 {
+  > header > h3 {
     font-weight: 750;
     font-size: 18px;
   }
@@ -71,6 +68,21 @@ export const V3Card = styled.section`
     display: grid;
     gap: 14px;
     padding: clamp(16px, 3vw, 24px);
+  }
+
+  > div > :is(h2, h3, p) {
+    margin: 0;
+  }
+
+  > div > h2 {
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight: 750;
+    letter-spacing: -0.025em;
+  }
+
+  > div > h3 {
+    font-size: 18px;
+    font-weight: 750;
   }
 
   img {

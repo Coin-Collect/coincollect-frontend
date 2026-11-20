@@ -4,6 +4,7 @@ import { useAccount, useConfig } from 'wagmi'
 import { getWalletClient } from 'wagmi/actions'
 import { describeV3Error, readV3Receipt, sendV3Call, V3TransactionRejected, type V3Call } from './transactions'
 import type { V3Client, V3Deployment } from './runtime'
+import { loadV3PresentationDocument } from './poolPresentation'
 
 interface QueryState<T> {
   key: string
@@ -46,6 +47,14 @@ export function useV3Query<T>(key: string, load: () => Promise<T>, pollMs?: numb
   }, [key, load, pollMs, revision])
 
   return { ...(state.key === key ? state : { key, loading: Boolean(key) }), refresh }
+}
+
+export function useV3PresentationDocument(deployment?: V3Deployment) {
+  const load = useCallback(
+    () => (deployment ? loadV3PresentationDocument(deployment) : Promise.resolve(undefined)),
+    [deployment],
+  )
+  return useV3Query(deployment?.address ?? '', load, 30_000).data
 }
 
 export function useV3Wallet(chainId?: number) {

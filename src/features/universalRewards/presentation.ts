@@ -1,6 +1,14 @@
 import { formatUnits } from 'viem'
 import type { RewardSnapshot, V3PoolSnapshot } from './reader'
+import type { V3Deployment } from './runtime'
 import { UNIT } from './units'
+
+export interface V3PoolCardProps {
+  pool: V3PoolSnapshot
+  deployment: V3Deployment
+  detail?: boolean
+  onPositionChange?: () => void
+}
 
 const ZERO = BigInt(0)
 const DAY = BigInt(86400)
@@ -13,7 +21,7 @@ export function shortAmount(amount: bigint, decimals: number | null) {
   return visible ? `${whole}.${visible}` : whole
 }
 
-export function poolTiming(pool: V3PoolSnapshot) {
+export function poolTiming(pool: Pick<V3PoolSnapshot, 'timestamp' | 'config'>) {
   if (pool.timestamp < pool.config.start) return 'Upcoming'
   if (pool.timestamp >= pool.config.end) return 'Finished'
   return 'Live'

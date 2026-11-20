@@ -162,7 +162,14 @@ export async function readV2NftMetadata(
 ): Promise<V2NftMetadata> {
   try {
     const collection = new Contract(collectionAddress, v2Erc721UserAbi, provider)
-    let uri = String(await collection.callStatic.tokenURI(tokenId))
+    return await readNftMetadataFromUri(String(await collection.callStatic.tokenURI(tokenId)))
+  } catch {
+    return {}
+  }
+}
+
+export async function readNftMetadataFromUri(uri: string): Promise<V2NftMetadata> {
+  try {
     if (uri.startsWith('ipfs://')) uri = `https://ipfs.io/ipfs/${uri.slice('ipfs://'.length)}`
     if (!/^https?:\/\//i.test(uri)) return {}
     const response = await fetch(uri, { signal: AbortSignal.timeout(4_000) })

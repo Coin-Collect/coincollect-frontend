@@ -18,6 +18,12 @@ interface StoredCountdownEstimate {
 
 export type ScheduleCountdownPhase = 'countdown' | 'awaiting-block' | 'finished' | 'unavailable'
 
+export interface TimestampSchedule {
+  status: 'UPCOMING' | 'ACTIVE' | 'FINISHED'
+  timestamp: number
+  target: number
+}
+
 export interface ScheduleCountdownEstimate {
   label: 'Starts in' | 'Ends in' | 'Schedule'
   phase: ScheduleCountdownPhase
@@ -182,6 +188,57 @@ const PulseDot = styled.span`
   }
 `
 
+function CountdownDisplay({
+  label,
+  mainText,
+  metaText,
+  ticking,
+}: {
+  label: string
+  mainText: string
+  metaText?: string
+  ticking: boolean
+}) {
+  return (
+    <CountdownPill
+      aria-live="off"
+      aria-label={`${label}: ${mainText}${metaText ? `, ${metaText}` : ''}`}
+      data-testid="published-pool-schedule-countdown"
+    >
+      <CountdownMain>
+        {ticking && <PulseDot aria-hidden="true" />}
+        {mainText}
+      </CountdownMain>
+      {metaText && <CountdownMeta>{metaText}</CountdownMeta>}
+    </CountdownPill>
+  )
+}
+
+export function TimestampScheduleCountdown({ schedule }: { schedule: TimestampSchedule }) {
+  const { status, timestamp, target } = schedule
+  const [elapsed, setElapsed] = useState(0)
+  const ticking = status !== 'FINISHED'
+
+  useEffect(() => {
+    if (!ticking) return undefined
+    const readAt = Date.now()
+    setElapsed(0)
+    const timer = window.setInterval(() => setElapsed((Date.now() - readAt) / 1000), 1000)
+    return () => window.clearInterval(timer)
+  }, [ticking, timestamp, target])
+
+  const secondsRemaining = target - timestamp - elapsed
+  return (
+    <CountdownDisplay
+      label={status === 'UPCOMING' ? 'Starts in' : 'Ends in'}
+      mainText={
+        ticking ? (secondsRemaining > 0 ? formatEstimatedCountdown(secondsRemaining) : 'Awaiting block') : 'Finished'
+      }
+      ticking={ticking}
+    />
+  )
+}
+
 export function ScheduleCountdown({ pool }: { pool: PublicV2Pool }) {
   const { snapshot } = pool
   const shouldTick = snapshot.status === 'UPCOMING' || snapshot.status === 'ACTIVE'
@@ -241,17 +298,5 @@ export function ScheduleCountdown({ pool }: { pool: PublicV2Pool }) {
         : 'Waiting for next block'
       : undefined
 
-  return (
-    <CountdownPill
-      aria-live="off"
-      aria-label={`${estimate.label}: ${mainText}${metaText ? `, ${metaText}` : ''}`}
-      data-testid="published-pool-schedule-countdown"
-    >
-      <CountdownMain>
-        {shouldTick && <PulseDot aria-hidden="true" />}
-        {mainText}
-      </CountdownMain>
-      {metaText && <CountdownMeta>{metaText}</CountdownMeta>}
-    </CountdownPill>
-  )
+  return <CountdownDisplay label={estimate.label} mainText={mainText} metaText={metaText} ticking={shouldTick} />
 }

@@ -51,6 +51,32 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
 }
 
 export type V3StudioSnapshot = Awaited<ReturnType<typeof readV3Studio>>
+type StudioAsset = V3StudioSnapshot['supported'][number]
+
+export async function quoteV3RewardWindow(
+  client: V3Client,
+  studio: V3StudioSnapshot,
+  funding: StudioAsset,
+  reward: StudioAsset,
+  amount: bigint,
+  blockNumber = studio.blockNumber,
+) {
+  if (isAddressEqual(funding.address, reward.address)) return [amount, amount] as const
+  if (isAddressEqual(studio.swap, zeroAddress)) throw new Error('This deployment has no approved swap adapter.')
+  try {
+    return await client.readContract({
+      address: studio.swap,
+      abi: rewardSwapAbi,
+      functionName: 'preview',
+      args: [funding.address, reward.address, amount, ZERO],
+      blockNumber,
+    })
+  } catch {
+    throw new Error(
+      `The ${funding.symbol} to ${reward.symbol} route could not confirm liquidity and a fresh safe price for this tranche.`,
+    )
+  }
+}
 
 export function parseV3Amount(input: string, decimals: number, field: string) {
   const cleaned = input.trim()
@@ -146,24 +172,7 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
       const allocation = (budget * BigInt(allocations[index])) / BPS
       if (allocation <= ZERO) throw new Error('A reward share is smaller than the funding asset base unit.')
       const sampleInput = (allocation * BigInt(interval) + duration - BigInt(1)) / duration
-      let quoted = sampleInput
-      let minimum = sampleInput
-      if (!isAddressEqual(asset.address, funding.address)) {
-        if (isAddressEqual(studio.swap, zeroAddress)) throw new Error('This deployment has no approved swap adapter.')
-        try {
-          ;[quoted, minimum] = await client.readContract({
-            address: studio.swap,
-            abi: rewardSwapAbi,
-            functionName: 'preview',
-            args: [funding.address, asset.address, sampleInput, ZERO],
-            blockNumber: studio.blockNumber,
-          })
-        } catch {
-          throw new Error(
-            `The ${funding.symbol} to ${asset.symbol} route could not confirm liquidity and a fresh safe price for this tranche.`,
-          )
-        }
-      }
+      const [quoted, minimum] = await quoteV3RewardWindow(client, studio, funding, asset, sampleInput)
       const cap = (allocation * minimum) / sampleInput
       if (cap <= ZERO || cap > UINT128_MAX) throw new Error('A reward projection is outside the supported range.')
       return { ...asset, token: asset.address, cap, allocation, sampleInput, quoted, minimum }

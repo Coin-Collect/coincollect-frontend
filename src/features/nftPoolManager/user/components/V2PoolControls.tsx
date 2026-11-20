@@ -1,22 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
-import { AddIcon, AutoRenewIcon, Button, Flex, Heading, MinusIcon, Text, useModal } from '@pancakeswap/uikit'
+import { AutoRenewIcon, Button, Flex, MinusIcon, Text, useModal } from '@pancakeswap/uikit'
 import { BigNumber } from '@ethersproject/bignumber'
-import { formatUnits } from '@ethersproject/units'
-import Decimal from 'bignumber.js'
-import AnimatedValue from 'components/AnimatedValue'
-import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
 import { StyledActionButton } from 'views/NftFarms/components/FarmCard/CardActionsContainer'
-import { ActionChipButton, IconButtonWrapper } from 'views/NftFarms/components/FarmCard/StakeAction'
-import {
-  RewardsPanel,
-  RewardsHeader,
-  RewardsGrid,
-  RewardRow,
-  TokenLabel,
-  RewardValue,
-  RewardTokenIcon,
-  HarvestButton,
-} from 'views/NftFarms/components/FarmCard/HarvestAction'
+import { ActionChipButton } from 'views/NftFarms/components/FarmCard/StakeAction'
+import { FarmCardEarned, FarmCardStakedPosition } from 'views/NftFarms/components/FarmCard/PositionPanels'
 import useToast from 'hooks/useToast'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import useWeb3React from 'hooks/useWeb3React'
@@ -26,11 +13,6 @@ import { ConfirmedV2WriteVerificationError, harvestV2Pool } from '../transaction
 import { notifyV2UserPositionChanged, usePublishedV2UserPosition, useVerifiedV2UserRecoveryPosition } from '../hooks'
 import type { V2UserPosition } from '../types'
 import V2PoolActionModal from './V2PoolActionModal'
-
-function PendingRewardValue({ amount, decimals }: { amount: string; decimals: number }) {
-  const { displayValue, isAnimating } = useAnimatedRewardValue(new Decimal(formatUnits(amount, decimals)))
-  return <AnimatedValue $animate={isAnimating}>{displayValue}</AnimatedValue>
-}
 
 interface V2PoolControlsProps {
   pool: PublicV2Pool
@@ -209,79 +191,24 @@ export default function V2PoolControls({ pool, position, loading, refreshing, er
         </>
       ) : position ? (
         <>
-          {hasPosition ? (
-            <Flex mb="10px" flexDirection="column" style={{ gap: 10 }}>
-              <RewardsPanel flexDirection="column" alignItems="flex-start">
-                <RewardsHeader>
-                  <Text bold textTransform="uppercase" color="secondary" fontSize="12px" pr="4px">
-                    {position.rewards.length === 1 ? position.rewards[0]?.symbol : t('REWARDS')}
-                  </Text>
-                  <Text bold textTransform="uppercase" color="textSubtle" fontSize="12px">
-                    {t('Earned')}
-                  </Text>
-                </RewardsHeader>
-                <RewardsGrid>
-                  {position.rewards.map((reward) => (
-                    <RewardRow
-                      key={reward.address}
-                      title={reward.estimated ? t('Estimated side payout') : t('Pending reward')}
-                    >
-                      <TokenLabel>
-                        <RewardTokenIcon token={reward.symbol} tokenMeta={reward} />
-                        <Text
-                          bold
-                          color="textSubtle"
-                          textTransform="uppercase"
-                          fontSize="11px"
-                          style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                        >
-                          {reward.symbol}
-                        </Text>
-                      </TokenLabel>
-                      <RewardValue>
-                        <PendingRewardValue amount={reward.amount} decimals={reward.decimals} />
-                      </RewardValue>
-                    </RewardRow>
-                  ))}
-                </RewardsGrid>
-                <HarvestButton
-                  disabled={!canHarvest || working || Boolean(pendingVerification) || refreshPending}
-                  onClick={runHarvest}
-                >
-                  {working ? t('Harvesting') : t('Harvest')}
-                </HarvestButton>
-              </RewardsPanel>
-            </Flex>
-          ) : null}
+          {hasPosition && (
+            <FarmCardEarned
+              rewards={position.rewards}
+              canHarvest={canHarvest && !working && !pendingVerification && !refreshPending}
+              harvesting={working}
+              onHarvest={runHarvest}
+            />
+          )}
           <Flex flexDirection="column">
             {hasPosition ? (
-              <>
-                <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
-                  {t('Staked NFT Count')}
-                </Text>
-                <Flex justifyContent="space-between" alignItems="center">
-                  <Heading title={`${position.power} power`}>{position.nftCount}</Heading>
-                  <IconButtonWrapper>
-                    <ActionChipButton
-                      variant="tertiary"
-                      disabled={working || Boolean(pendingVerification) || refreshPending}
-                      onClick={openUnstakeModal}
-                    >
-                      <MinusIcon width="13px" mr="4px" color="currentColor" />
-                      {t('Unstake')}
-                    </ActionChipButton>
-                    <ActionChipButton
-                      $stake
-                      variant="tertiary"
-                      disabled={displayStatus !== 'ACTIVE' || working || Boolean(pendingVerification) || refreshPending}
-                      onClick={openStakeModal}
-                    >
-                      <AddIcon width="13px" mr="4px" color="currentColor" />
-                      {t('Stake More')}
-                    </ActionChipButton>
-                  </IconButtonWrapper>
-                </Flex>
-              </>
+              <FarmCardStakedPosition
+                count={position.nftCount}
+                power={position.power}
+                canUnstake={!working && !pendingVerification && !refreshPending}
+                canStakeMore={displayStatus === 'ACTIVE' && !working && !pendingVerification && !refreshPending}
+                onUnstake={openUnstakeModal}
+                onStakeMore={openStakeModal}
+              />
             ) : (
               <StyledActionButton
                 mt="-4px"

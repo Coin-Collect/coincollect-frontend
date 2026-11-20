@@ -61,10 +61,21 @@ it('plays the three heroes in order with one video at a time and a working pause
     expect(container.querySelectorAll('video')).toHaveLength(1)
     return container.querySelector('[data-slot="0"] video')?.getAttribute('src')
   }
+  const slots = () =>
+    ['0', '1', '2'].map((slot) => container.querySelector(`[data-slot="${slot}"]`)?.getAttribute('data-hero'))
+  const advanceTurn = (nextSlots: string[]) => {
+    act(() => jest.advanceTimersByTime(5_000))
+    expect(container.querySelector('[data-shuffling="true"]')).toBeTruthy()
+    expect(slots()).toEqual(nextSlots)
+    expect(container.querySelector('video')).toBeNull()
+    act(() => jest.advanceTimersByTime(480))
+    expect(container.querySelector('[data-shuffling="true"]')).toBeNull()
+  }
 
   try {
     expect(currentVideo()).toBe('/images/superheroes/1.webm')
-    act(() => jest.advanceTimersByTime(5_000))
+    expect(slots()).toEqual(['1', '3', '7'])
+    advanceTurn(['3', '7', '1'])
     expect(currentVideo()).toBe('/images/superheroes/3.webm')
 
     fireEvent.click(screen.getByRole('button', { name: 'Pause hero animation' }))
@@ -73,9 +84,9 @@ it('plays the three heroes in order with one video at a time and a working pause
     expect(container.querySelector('[data-slot="0"]')?.getAttribute('data-hero')).toBe('3')
 
     fireEvent.click(screen.getByRole('button', { name: 'Play hero animation' }))
-    act(() => jest.advanceTimersByTime(5_000))
+    advanceTurn(['7', '1', '3'])
     expect(currentVideo()).toBe('/images/superheroes/7.webm')
-    act(() => jest.advanceTimersByTime(5_000))
+    advanceTurn(['1', '3', '7'])
     expect(currentVideo()).toBe('/images/superheroes/1.webm')
   } finally {
     unmount()

@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import type { ReactNode } from 'react'
 import {
   Tag,
   Flex,
@@ -9,6 +10,7 @@ import {
   CardBody,
   useModal,
   OpenNewIcon,
+  AddIcon,
 } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CommunityTag, PartnerTag } from 'components/Tags'
@@ -29,10 +31,17 @@ export interface ExpandableSectionProps {
   disabled?: boolean
   onOpenDetails?: () => void
   poolPageUrl?: string
+  headingLevel?: 'h1' | 'h3'
+  editor?: {
+    title: ReactNode
+    onArtwork: () => void
+    onCollections: () => void
+    onSchedule: () => void
+  }
   publishedPool?: {
     banner?: string
     status: 'UPCOMING' | 'ACTIVE' | 'FINISHED' | 'UNKNOWN'
-    collections: Array<{ address?: string; name: string; image?: string; weight: string }>
+    collections: Array<{ address?: string; name: string; image?: string; weight: string; link?: string }>
   }
 }
 
@@ -152,6 +161,44 @@ const BannerFooter = styled(Flex)`
   gap: 8px;
 `
 
+const ArtworkButton = styled.button`
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid white;
+    outline-offset: -4px;
+  }
+`
+
+const ArtworkLabel = styled.span`
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: white;
+  background: rgb(0 0 0 / 72%);
+  font-size: 12px;
+  font-weight: 700;
+`
+
+const CollectionEditButton = styled(PoolPageIcon)`
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  border: 1px solid rgb(255 255 255 / 65%);
+  cursor: pointer;
+`
+
 const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   lpLabel,
   multiplier,
@@ -161,7 +208,9 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   disabled = false,
   onOpenDetails,
   poolPageUrl,
+  headingLevel = 'h3',
   publishedPool,
+  editor,
 }) => {
   const router = useRouter()
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
@@ -262,7 +311,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
         title: collection.name,
         power: Number(collection.weight),
         avatar: collection.image || '/images/nfts/no-profile-md.png',
-        link: collection.address ? `/nfts/collections/${collection.address}` : '/nfts/collections',
+        link: collection.link || (collection.address ? `/nfts/collections/${collection.address}` : '/nfts/collections'),
       }))
     : largeAvatars
   const [onPresentAllowedNftsModal] = useModal(
@@ -297,7 +346,7 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
       <Flex justifyContent="center">
         <BannerContainer
           $clickable={pid !== undefined || Boolean(poolPageUrl || onOpenDetails)}
-          onClick={handleOpenPoolPage}
+          onClick={editor ? undefined : handleOpenPoolPage}
         >
           <StyledImage
             src={bannerSrc}
@@ -308,8 +357,26 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
             onError={handleBannerError}
           />
           <BannerOverlay />
-          <StatusContainer>
-            <StatusBadge status={status}>{statusLabel}</StatusBadge>
+          {editor && (
+            <ArtworkButton type="button" aria-label="Edit pool artwork" onClick={editor.onArtwork}>
+              <ArtworkLabel>Edit artwork</ArtworkLabel>
+            </ArtworkButton>
+          )}
+          <StatusContainer style={editor ? { zIndex: 2 } : undefined}>
+            {editor ? (
+              <StatusBadge
+                as="button"
+                type="button"
+                status={status}
+                aria-label="Edit reward schedule"
+                onClick={editor.onSchedule}
+                style={{ border: 0, cursor: 'pointer' }}
+              >
+                {statusLabel}
+              </StatusBadge>
+            ) : (
+              <StatusBadge status={status}>{statusLabel}</StatusBadge>
+            )}
             {(pid !== undefined || poolPageUrl) && (
               <NextLinkFromReactRouter
                 to={poolPageUrl || `/nftpools/${pid}`}
@@ -338,6 +405,16 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
             )}
           </StatusContainer>
 
+          {editor && displayAvatars.length === 0 && (
+            <CollectionEditButton
+              as="button"
+              type="button"
+              aria-label="Edit NFT collections"
+              onClick={editor.onCollections}
+            >
+              <AddIcon color="currentColor" />
+            </CollectionEditButton>
+          )}
           {displayAvatars.map((avatar, index) => (
             <CollectionAvatar
               key={index}
@@ -347,28 +424,36 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
               style={{ left: `${8 + index * 15}px`, top: '8px', cursor: 'pointer' }}
               role="button"
               tabIndex={0}
-              aria-label="View allowed NFTs"
+              aria-label={editor ? 'Edit NFT collections' : 'View allowed NFTs'}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault()
                   event.stopPropagation()
-                  onPresentAllowedNftsModal()
+                  if (editor) editor.onCollections()
+                  else onPresentAllowedNftsModal()
                 }
               }}
               onClick={
-                modalCollections.length > 0
+                editor || modalCollections.length > 0
                   ? (event) => {
                       event.stopPropagation()
-                      onPresentAllowedNftsModal()
+                      if (editor) editor.onCollections()
+                      else onPresentAllowedNftsModal()
                     }
                   : undefined
               }
             />
           ))}
 
-          <BannerFooter>
-            <Heading color="white" as="h3" scale="lg" mb="0" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
-              {lpLabel}
+          <BannerFooter style={editor ? { zIndex: 2 } : undefined}>
+            <Heading
+              color="white"
+              as={headingLevel}
+              scale="lg"
+              mb="0"
+              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}
+            >
+              {editor?.title ?? lpLabel}
             </Heading>
             {isCommunity ? (
               <CommunityTag variant="success" scale="sm" />

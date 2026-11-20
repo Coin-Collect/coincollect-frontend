@@ -1,28 +1,34 @@
-import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { withV3Presentation } from './poolPresentation'
+import { useCallback, useEffect, useMemo, useState, type ComponentType, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { isAddressEqual, type Address } from 'viem'
-import { useV3Action, useV3Query, useV3Wallet } from './hooks'
-import { V3_FALLBACK_ART } from './metadata'
-import { availableReward, poolTiming, positionDailyEstimate, shortAmount, sourceName } from './presentation'
+import { useV3Action, useV3PresentationDocument, useV3Query, useV3Wallet } from './hooks'
+import {
+  availableReward,
+  poolTiming,
+  positionDailyEstimate,
+  shortAmount,
+  sourceName,
+  type V3PoolCardProps,
+} from './presentation'
 import {
   discoverV3Nfts,
   MAX_V3_PAGE,
   nftRefKey,
   readV3Nft,
-  readV3Pool,
+  readV3PublicPool,
   readV3PositionPage,
   readV3WalletSeats,
   type NftRef,
   type V3PoolSnapshot,
   type WalletNftSnapshot,
 } from './reader'
-import { createV3Client, getV3Deployment, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { createV3Client, getV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import { joinV3, manageV3Position } from './transactions'
 import { UINT256_MAX } from './units'
 import {
   V3Actions,
-  V3Badge,
   V3Button,
   V3Card,
   V3Error,
@@ -163,7 +169,7 @@ function RewardRows({
   )
 }
 
-export default function V3PoolDetail({ poolId, connect }: { poolId: bigint; connect: ReactNode }) {
+export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: ComponentType<V3PoolCardProps> }) {
   const { address: account, chainId } = useAccount()
   const { switchChain, isPending: switching } = useSwitchChain()
   const client = useMemo(createV3Client, [])
@@ -182,12 +188,19 @@ export default function V3PoolDetail({ poolId, connect }: { poolId: bigint; conn
 
   const readPool = useCallback(async () => {
     if (!deployment) throw new Error('V3 is unavailable in this environment.')
-    const block = await client.getBlock()
-    await validateV3Deployment(client, deployment, block.number)
-    return readV3Pool(client, deployment, poolId, block)
+    return readV3PublicPool(client, deployment, poolId)
   }, [client, deployment, poolId])
   const result = useV3Query(deployment ? `${deployment.address}:${poolId}` : '', readPool, 20_000)
-  const pool = result.data
+  const presentation = useV3PresentationDocument(deployment)
+  const pool = useMemo(() => result.data && withV3Presentation(result.data, presentation), [result.data, presentation])
+  const hasPool = Boolean(pool)
+  useEffect(() => {
+    if (!hasPool) return
+    const target = window.location.hash.slice(1)
+    if (target === 'eligible-nfts' || target === 'v3-positions' || target === 'contract') {
+      document.getElementById(target)?.scrollIntoView()
+    }
+  }, [hasPool])
   const readNfts = useCallback(async () => {
     if (!pool || !deployment || !account) throw new Error('Connect your wallet to read eligible NFTs.')
     return loadNfts(client, deployment, pool, account, collectionIndex, collectionOffset, historyOffset, manual)
@@ -272,51 +285,17 @@ export default function V3PoolDetail({ poolId, connect }: { poolId: bigint; conn
           </V3Actions>
         )}
         {result.loading && !pool && <V3Muted role="status">Reading pool and reward reserves…</V3Muted>}
-        {pool && (
+        {pool && deployment && (
           <>
             <V3Grid>
-              <V3Card>
-                <img
-                  src={pool.presentation.artwork || V3_FALLBACK_ART}
-                  referrerPolicy="no-referrer"
-                  alt=""
-                  onError={(event) => {
-                    if (event.currentTarget.getAttribute('src') !== V3_FALLBACK_ART)
-                      event.currentTarget.src = V3_FALLBACK_ART
-                  }}
-                />
-                <div>
-                  <V3Badge>{poolTiming(pool)} · Polygon settlement</V3Badge>
-                  <h1>{pool.presentation.name}</h1>
-                  {pool.presentation.description && <V3Muted>{pool.presentation.description}</V3Muted>}
-                  <V3Metrics>
-                    <div>
-                      <dt>Active participant wallets</dt>
-                      <dd>
-                        {pool.activeWallets} / {pool.config.maxWallets}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>NFTs per wallet</dt>
-                      <dd>{pool.config.maxNftsPerWallet}</dd>
-                    </div>
-                    <div>
-                      <dt>Full reward rate at</dt>
-                      <dd>{pool.config.threshold || 1} wallet(s)</dd>
-                    </div>
-                    <div>
-                      <dt>Registered power</dt>
-                      <dd>{pool.totalWeight.toString()}</dd>
-                    </div>
-                  </V3Metrics>
-                </div>
-              </V3Card>
-              <V3Card>
+              <Card pool={pool} deployment={deployment} detail onPositionChange={result.refresh} />
+              <V3Card id="contract">
                 <div>
                   <h2>Pool rewards</h2>
                   <V3Muted>
                     Rewards are paid in these tokens. NFT ownership controls who can claim each balance.
                   </V3Muted>
+                  <V3Muted>Settlement contract · {deployment.address}</V3Muted>
                   <V3Metrics>
                     {pool.rewards.map((reward) => (
                       <div key={reward.token}>
@@ -333,11 +312,10 @@ export default function V3PoolDetail({ poolId, connect }: { poolId: bigint; conn
               </V3Card>
             </V3Grid>
 
-            <V3Section aria-label="Your NFTs and rewards">
+            <V3Section id="eligible-nfts" aria-label="Your NFTs and rewards">
               <header>
                 <h2>Your NFTs and rewards</h2>
               </header>
-              {!account && <V3Actions>{connect}</V3Actions>}
               {wrongChain && deployment && (
                 <V3Actions>
                   <V3Muted role="status">Switch to the settlement network to send transactions.</V3Muted>
@@ -520,6 +498,7 @@ export default function V3PoolDetail({ poolId, connect }: { poolId: bigint; conn
                       </V3Button>
                     </div>
                   </V3Card>
+                  <div id="v3-positions" />
                   {walletData.data && (
                     <V3Section aria-label="Your V3 positions">
                       <header>

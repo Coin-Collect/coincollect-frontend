@@ -60,7 +60,8 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse | null
  */
  export const walletOfOwnerApi = async (
   ownerAddress: string,
-  collectionAddresses: string[]
+  collectionAddresses: string[],
+  options?: { maxPages?: number; signal?: AbortSignal },
 ): Promise<Array<{
   tokenId: BigNumber;
   media?: { original?: string; thumbnail?: string };
@@ -84,11 +85,12 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse | null
   const seen = new Set<string>()
 
   let pageKey: string | undefined
+  let pages = 0
   try {
     do {
       const queryParams = `?owner=${ownerAddress}&${contractAddressesParam}&withMetadata=true&pageSize=100${pageKey ? `&pageKey=${pageKey}` : ''}`
       const fullUrl = `${baseUrl}${queryParams}`
-      const res = await fetch(fullUrl)
+      const res = await fetch(fullUrl, { signal: options?.signal })
       if (!res.ok) {
         console.error('Failed to fetch NFTs', res.statusText)
         break
@@ -124,7 +126,8 @@ export const getCollectionsApi = async (): Promise<ApiCollectionsResponse | null
       }
 
       pageKey = json?.pageKey
-    } while (pageKey)
+      pages++
+    } while (pageKey && (options?.maxPages === undefined || pages < options.maxPages))
   } catch (error) {
     console.error('Failed to fetch NFTs via Alchemy v3 API', error)
   }

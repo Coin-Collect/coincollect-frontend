@@ -1,7 +1,16 @@
-import { useCallback, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import Link from 'next/link'
-import { useAccount, useSwitchChain } from 'wagmi'
-import { encodeFunctionData, isAddressEqual, type Address } from 'viem'
+import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
+import { encodeFunctionData, isAddressEqual, zeroAddress, type Address } from 'viem'
 import { universalRewardsAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
 import { shortAmount } from './presentation'
@@ -15,9 +24,14 @@ import {
   readV3Studio,
   type V3Preview,
   type V3StudioDraft,
+  type V3StudioSnapshot,
 } from './studio'
 import { approveV3Funding, createdV3PoolId, describeV3Error } from './transactions'
-import { UINT256_MAX, UNIT } from './units'
+import { UNIT } from './units'
+import { loadV3PresentationDocument, type V3PresentationDocument } from './poolPresentation'
+import V3StudioDashboard from './V3StudioDashboard'
+import V3StudioPool, { type V3StudioPreviewProps } from './V3StudioPool'
+import { StudioBar, WorkspaceBack, WorkspaceHeading } from './studioDashboardStyles'
 import {
   V3Actions,
   V3Badge,
@@ -25,7 +39,6 @@ import {
   V3Card,
   V3Error,
   V3Field,
-  V3Fields,
   V3Grid,
   V3Link,
   V3Metrics,
@@ -35,13 +48,12 @@ import {
 } from './styles'
 
 const ZERO = BigInt(0)
-const defaultCollection = { sourceChain: '137', address: '', power: '1' }
 const defaultDraft: V3StudioDraft = {
   name: '',
   description: '',
-  artwork: '',
+  artwork: '/images/collectHeroes/14.jpg',
   startLocal: '',
-  durationDays: '30',
+  durationDays: '7',
   threshold: '1',
   maxWallets: '20',
   maxNfts: '3',
@@ -49,8 +61,8 @@ const defaultDraft: V3StudioDraft = {
   budget: '',
   intervalHours: '24',
   usdPerFundingUnit: '',
-  collections: [defaultCollection],
-  rewards: [{ address: '', sharePercent: '100' }],
+  collections: [],
+  rewards: [],
 }
 
 function TransactionFeedback({
@@ -97,12 +109,14 @@ function FundingPanel({
   account,
   poolId,
   writeAllowed,
+  setPending,
 }: {
   client: V3Client
   deployment: V3Deployment
   account?: Address
   poolId: bigint
   writeAllowed: boolean
+  setPending: (pending: boolean) => void
 }) {
   const getWallet = useV3Wallet(deployment?.chainId)
   const [deposit, setDeposit] = useState('')
@@ -115,7 +129,12 @@ function FundingPanel({
   const result = useV3Query(`${deployment.address}:${poolId}:${account ?? ''}`, load, 20_000)
   const view = result.data
   const transaction = useV3Action(client, deployment, getWallet, account)
-  const locked = !writeAllowed || !getWallet || transaction.busy || transaction.unconfirmed
+  const pending = transaction.busy || transaction.unconfirmed
+  useEffect(() => {
+    setPending(pending)
+    return () => setPending(false)
+  }, [pending, setPending])
+  const locked = !writeAllowed || !getWallet || pending
   const remaining = view ? view.pool.funding.budget - view.pool.funding.deposited : ZERO
   const ended = view ? view.pool.timestamp >= view.pool.config.end : false
   const value = () => {
@@ -354,18 +373,44 @@ function FundingPanel({
   )
 }
 
-export default function V3Studio({ connect }: { connect: ReactNode }) {
+export interface V3StudioComposerProps {
+  draft: V3StudioDraft
+  studio: V3StudioSnapshot
+  deployment: V3Deployment
+  client: V3Client
+  locked: boolean
+  onChange: (next: Partial<V3StudioDraft>) => void
+  launch: ReactNode
+}
+
+export default function V3Studio({
+  connect,
+  Composer,
+  Preview,
+}: {
+  connect: ReactNode
+  Composer: ComponentType<V3StudioComposerProps>
+  Preview: ComponentType<V3StudioPreviewProps>
+}) {
   const deployment = useMemo(getV3Deployment, [])
   const client = useMemo(createV3Client, [])
-  const { address: account, chainId } = useAccount()
+  const wallet = useAccount()
+  const account = wallet.isConnected ? wallet.address : undefined
+  const { chainId } = wallet
+  const { disconnect, isPending: disconnecting, error: disconnectError } = useDisconnect()
   const getWallet = useV3Wallet(deployment?.chainId)
   const { switchChain } = useSwitchChain()
   const [draft, setDraft] = useState<V3StudioDraft>(defaultDraft)
   const [preview, setPreview] = useState<V3Preview>()
-  const [poolId, setPoolId] = useState<bigint>()
-  const [existingId, setExistingId] = useState('')
+  const [mode, setMode] = useState<'dashboard' | 'create' | bigint>('dashboard')
+  const [savedPresentations, setSavedPresentations] = useState<{
+    document: V3PresentationDocument
+    checkedAt: number
+  }>()
+  const workspace = useRef<HTMLHeadingElement>(null)
   const [reviewError, setReviewError] = useState('')
   const [reviewing, setReviewing] = useState(false)
+  const [fundingPending, setFundingPending] = useState(false)
   const summary = useRef<HTMLParagraphElement>(null)
   const reviewHeading = useRef<HTMLHeadingElement>(null)
   const loadStudio = useCallback(async () => {
@@ -378,15 +423,39 @@ export default function V3Studio({ connect }: { connect: ReactNode }) {
   const transaction = useV3Action(client, deployment, getWallet, account)
   const locked = transaction.busy || transaction.unconfirmed || reviewing
 
-  const update = <K extends keyof V3StudioDraft>(field: K, value: V3StudioDraft[K]) => {
-    setDraft((previous) => ({ ...previous, [field]: value }))
+  const loadPresentation = useCallback(() => {
+    if (!deployment) return Promise.resolve(undefined)
+    return loadV3PresentationDocument(deployment, true).then((document) => ({ document, checkedAt: Date.now() }))
+  }, [deployment])
+  const presentations = useV3Query(allowed && deployment ? deployment.address : '', loadPresentation, 30_000)
+  const refreshPresentation = () => {
+    setSavedPresentations(undefined)
+    presentations.refresh()
+  }
+  const setPresentation = (document: V3PresentationDocument) => {
+    setSavedPresentations({ document, checkedAt: Date.now() })
+    presentations.refresh()
+  }
+  // A just-saved local document takes effect immediately, ahead of the next read.
+  const latest = presentations.data
+  const activePresentation =
+    latest?.document && (!savedPresentations || latest.checkedAt > savedPresentations.checkedAt)
+      ? latest.document
+      : savedPresentations?.document ?? latest?.document
+
+  const navigate = (next: typeof mode) => {
+    setMode(next)
+    window.requestAnimationFrame(() => workspace.current?.focus())
+  }
+
+  const update = (next: Partial<V3StudioDraft>) => {
+    setDraft((previous) => ({ ...previous, ...next }))
     if (preview) setPreview(undefined)
     if (reviewError) setReviewError('')
   }
 
-  const review = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!deployment || locked) return
+  const review = async () => {
+    if (!deployment || !allowed || locked) return
     setReviewError('')
     setReviewing(true)
     try {
@@ -404,8 +473,10 @@ export default function V3Studio({ connect }: { connect: ReactNode }) {
   const confirmCreated = (receipt: NonNullable<Awaited<ReturnType<typeof transaction.run>>>) => {
     if (!deployment) return
     try {
-      setPoolId(createdV3PoolId(receipt, deployment.address))
+      const created = createdV3PoolId(receipt, deployment.address)
+      setDraft(defaultDraft)
       setPreview(undefined)
+      navigate(created)
     } catch (error) {
       setReviewError(describeV3Error(error))
     }
@@ -418,23 +489,22 @@ export default function V3Studio({ connect }: { connect: ReactNode }) {
     if (receipt) confirmCreated(receipt)
   }
 
-  const openExisting = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!/^[1-9]\d{0,77}$/.test(existingId) || BigInt(existingId) > UINT256_MAX) return
-    setPoolId(BigInt(existingId))
-  }
-
-  const tokens = studio.data?.supported ?? []
   return (
     <V3Page>
       <V3Section aria-label="Pool Studio V3">
-        <header>
-          <Link href="/admin/nft-pools" passHref legacyBehavior>
-            <V3Link>NFT pool administration</V3Link>
-          </Link>
-          <h1>Pool Studio V3</h1>
-          <V3Muted>Choose eligible NFTs, a budget and reward assets. Review the plan before signing.</V3Muted>
-        </header>
+        <StudioBar>
+          <div>
+            <h1 ref={mode === 'dashboard' ? workspace : undefined} tabIndex={-1}>
+              Pool Studio V3
+            </h1>
+            <V3Muted>Create and manage your NFT reward pools.</V3Muted>
+          </div>
+          {allowed && mode === 'dashboard' && (
+            <V3Button type="button" disabled={locked} onClick={() => navigate('create')}>
+              New pool
+            </V3Button>
+          )}
+        </StudioBar>
         {!deployment && <V3Muted role="status">V3 Studio has no active deployment in this environment.</V3Muted>}
         {deployment && !account && connect}
         {studio.loading && !studio.data && <V3Muted role="status">Checking the V3 deployment…</V3Muted>}
@@ -447,7 +517,26 @@ export default function V3Studio({ connect }: { connect: ReactNode }) {
           </V3Actions>
         )}
         {account && studio.data && !allowed && (
-          <V3Error role="status">Connect the V3 operator wallet to manage pools.</V3Error>
+          <V3Card aria-label="V3 operator account required">
+            <div>
+              <h2>Switch to the V3 operator account</h2>
+              <V3Muted role="status">
+                Connected account · <code>{account}</code>
+                <br />
+                V3 operator · <code>{studio.data.admin}</code>
+              </V3Muted>
+              <V3Muted>
+                Select the operator account in {wallet.connector?.name || 'your wallet'}. To use a different wallet
+                extension, disconnect here, then connect with that wallet.
+              </V3Muted>
+              <V3Actions>
+                <V3Button type="button" $secondary disabled={disconnecting} onClick={() => disconnect()}>
+                  {disconnecting ? 'Disconnecting…' : 'Disconnect wallet'}
+                </V3Button>
+              </V3Actions>
+              {disconnectError && <V3Error role="alert">{describeV3Error(disconnectError)}</V3Error>}
+            </div>
+          </V3Card>
         )}
         {allowed && deployment && !writeAllowed && (
           <V3Actions>
@@ -457,383 +546,127 @@ export default function V3Studio({ connect }: { connect: ReactNode }) {
             </V3Button>
           </V3Actions>
         )}
-        {allowed && deployment && (
+        {allowed && deployment && studio.data && (
           <>
-            <V3Card>
-              <div>
-                <form method="post" onSubmit={review} aria-label="V3 pool configuration">
-                  <V3Grid>
-                    <V3Fields disabled={locked}>
-                      <legend>Pool details</legend>
-                      <V3Field>
-                        Pool name
-                        <input
-                          name="pool-name"
-                          required
-                          maxLength={60}
-                          value={draft.name}
-                          onChange={(event) => update('name', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Description
-                        <textarea
-                          name="description"
-                          maxLength={200}
-                          rows={3}
-                          value={draft.description}
-                          onChange={(event) => update('description', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Artwork URL{' '}
-                        <input
-                          name="artwork"
-                          inputMode="url"
-                          maxLength={200}
-                          value={draft.artwork}
-                          onChange={(event) => update('artwork', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Start date and time
-                        <input
-                          name="start-date"
-                          type="datetime-local"
-                          required
-                          value={draft.startLocal}
-                          onChange={(event) => update('startLocal', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Duration in days
-                        <input
-                          name="duration"
-                          required
-                          inputMode="numeric"
-                          pattern="[0-9]+"
-                          value={draft.durationDays}
-                          onChange={(event) => update('durationDays', event.target.value)}
-                        />
-                      </V3Field>
-                    </V3Fields>
-                    <V3Fields disabled={locked}>
-                      <legend>NFT eligibility</legend>
-                      {draft.collections.map((collection, index) => (
-                        <V3Fields key={index}>
-                          <legend>Collection {index + 1}</legend>
-                          <V3Field>
-                            Source chain
-                            <select
-                              name={`source-${index}`}
-                              value={collection.sourceChain}
-                              onChange={(event) =>
-                                update(
-                                  'collections',
-                                  draft.collections.map((row, i) =>
-                                    i === index ? { ...row, sourceChain: event.target.value } : row,
-                                  ),
-                                )
-                              }
-                            >
-                              <option value="137">Polygon</option>
-                              <option value="8453">Base</option>
-                              <option value="42161">Arbitrum One</option>
-                            </select>
-                          </V3Field>
-                          <V3Field>
-                            Collection address
-                            <input
-                              name={`collection-${index}`}
-                              required
-                              spellCheck={false}
-                              autoCapitalize="none"
-                              maxLength={42}
-                              value={collection.address}
-                              onChange={(event) =>
-                                update(
-                                  'collections',
-                                  draft.collections.map((row, i) =>
-                                    i === index ? { ...row, address: event.target.value } : row,
-                                  ),
-                                )
-                              }
-                            />
-                          </V3Field>
-                          <V3Field>
-                            Relative power
-                            <input
-                              name={`power-${index}`}
-                              required
-                              inputMode="numeric"
-                              pattern="[0-9]+"
-                              value={collection.power}
-                              onChange={(event) =>
-                                update(
-                                  'collections',
-                                  draft.collections.map((row, i) =>
-                                    i === index ? { ...row, power: event.target.value } : row,
-                                  ),
-                                )
-                              }
-                            />
-                          </V3Field>
-                          {draft.collections.length > 1 && (
-                            <V3Button
-                              type="button"
-                              $secondary
-                              onClick={() =>
-                                update(
-                                  'collections',
-                                  draft.collections.filter((_, i) => i !== index),
-                                )
-                              }
-                            >
-                              Remove collection {index + 1}
-                            </V3Button>
-                          )}
-                        </V3Fields>
-                      ))}
-                      {draft.collections.length < 16 && (
-                        <V3Button
-                          type="button"
-                          $secondary
-                          onClick={() => update('collections', [...draft.collections, defaultCollection])}
-                        >
-                          Add collection
-                        </V3Button>
-                      )}
-                      <V3Field>
-                        Wallets needed for full rate
-                        <input
-                          name="wallet-threshold"
-                          required
-                          inputMode="numeric"
-                          pattern="[0-9]+"
-                          value={draft.threshold}
-                          onChange={(event) => update('threshold', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Maximum participant wallets
-                        <input
-                          name="max-participant-wallets"
-                          required
-                          inputMode="numeric"
-                          pattern="[0-9]+"
-                          value={draft.maxWallets}
-                          onChange={(event) => update('maxWallets', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Maximum NFTs per wallet
-                        <input
-                          name="max-wallet-nfts"
-                          required
-                          inputMode="numeric"
-                          pattern="[0-9]+"
-                          value={draft.maxNfts}
-                          onChange={(event) => update('maxNfts', event.target.value)}
-                        />
-                      </V3Field>
-                    </V3Fields>
-                    <V3Fields disabled={locked}>
-                      <legend>Funding and rewards</legend>
-                      <V3Field>
-                        Funding asset
-                        <select
-                          name="funding-asset"
-                          required
-                          value={draft.fundAsset}
-                          onChange={(event) => update('fundAsset', event.target.value)}
-                        >
-                          <option value="">Choose an asset</option>
-                          {tokens.map(({ address, symbol }) => (
-                            <option key={address} value={address}>
-                              {symbol}
-                            </option>
-                          ))}
-                        </select>
-                      </V3Field>
-                      <V3Field>
-                        Total budget
-                        <input
-                          name="funding-budget"
-                          required
-                          inputMode="decimal"
-                          value={draft.budget}
-                          onChange={(event) => update('budget', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Replenish every (hours)
-                        <input
-                          name="replenishment-hours"
-                          required
-                          inputMode="numeric"
-                          pattern="[0-9]+"
-                          value={draft.intervalHours}
-                          onChange={(event) => update('intervalHours', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Field>
-                        Reference USD per funding token{' '}
-                        <input
-                          name="usd-per-token"
-                          inputMode="decimal"
-                          value={draft.usdPerFundingUnit}
-                          onChange={(event) => update('usdPerFundingUnit', event.target.value)}
-                        />
-                      </V3Field>
-                      <V3Muted>
-                        Optional. USD estimates use this reference price. Rewards accrue in the selected tokens.
-                      </V3Muted>
-                      {draft.rewards.map((reward, index) => (
-                        <V3Fields key={index}>
-                          <legend>Reward {index + 1}</legend>
-                          <V3Field>
-                            Reward asset
-                            <select
-                              name={`reward-${index}`}
-                              required
-                              value={reward.address}
-                              onChange={(event) =>
-                                update(
-                                  'rewards',
-                                  draft.rewards.map((row, i) =>
-                                    i === index ? { ...row, address: event.target.value } : row,
-                                  ),
-                                )
-                              }
-                            >
-                              <option value="">Choose an asset</option>
-                              {tokens.map(({ address, symbol }) => (
-                                <option key={address} value={address}>
-                                  {symbol}
-                                </option>
-                              ))}
-                            </select>
-                          </V3Field>
-                          <V3Field>
-                            Budget share (%)
-                            <input
-                              name={`share-${index}`}
-                              required
-                              inputMode="decimal"
-                              value={reward.sharePercent}
-                              onChange={(event) =>
-                                update(
-                                  'rewards',
-                                  draft.rewards.map((row, i) =>
-                                    i === index ? { ...row, sharePercent: event.target.value } : row,
-                                  ),
-                                )
-                              }
-                            />
-                          </V3Field>
-                          {draft.rewards.length > 1 && (
-                            <V3Button
-                              type="button"
-                              $secondary
-                              onClick={() =>
-                                update(
-                                  'rewards',
-                                  draft.rewards.filter((_, i) => i !== index),
-                                )
-                              }
-                            >
-                              Remove reward {index + 1}
-                            </V3Button>
-                          )}
-                        </V3Fields>
-                      ))}
-                      {draft.rewards.length < 4 && (
-                        <V3Button
-                          type="button"
-                          $secondary
-                          onClick={() => update('rewards', [...draft.rewards, { address: '', sharePercent: '' }])}
-                        >
-                          Add reward asset
-                        </V3Button>
-                      )}
-                    </V3Fields>
-                  </V3Grid>
-                  <V3Actions>
-                    <V3Button type="submit" disabled={locked}>
-                      {reviewing ? 'Checking on-chain routes…' : 'Review pool plan'}
-                    </V3Button>
-                    <V3Error tabIndex={-1} ref={summary} role="status">
-                      {reviewError}
-                    </V3Error>
-                  </V3Actions>
-                </form>
-              </div>
-            </V3Card>
-            {preview && (
-              <V3Card>
-                <div>
-                  <h2 ref={reviewHeading} tabIndex={-1}>
-                    Review funding and rewards
-                  </h2>
-                  {preview.usdPerDay !== undefined && (
-                    <V3Muted>Reference daily budget · {shortAmount(preview.usdPerDay, 6)} USD</V3Muted>
-                  )}
-                  <V3Metrics>
-                    {preview.rewards.map((reward) => (
-                      <div key={reward.token}>
-                        <dt>{reward.symbol} reward cap</dt>
-                        <dd>
-                          {shortAmount(reward.cap, reward.decimals)} {reward.symbol}
-                        </dd>
-                        <dt>Allocated funding</dt>
-                        <dd>
-                          {shortAmount(reward.allocation, preview.fundingAsset.decimals)} {preview.fundingAsset.symbol}
-                        </dd>
-                        <dt>Next tranche minimum</dt>
-                        <dd>
-                          {shortAmount(reward.minimum, reward.decimals)} {reward.symbol}
-                        </dd>
-                      </div>
-                    ))}
-                  </V3Metrics>
-                  <V3Muted>
-                    Spending is bounded by the funded balance, each allocation and each replenishment window.
-                  </V3Muted>
-                  <V3Button type="button" disabled={locked || !writeAllowed} onClick={() => void create()}>
-                    Create V3 pool
-                  </V3Button>
-                </div>
-              </V3Card>
-            )}
-            <TransactionFeedback transaction={transaction} onReceipt={confirmCreated} deployment={deployment} />
-            <form method="get" onSubmit={openExisting} aria-label="Open an existing funding plan">
-              <V3Actions>
-                <V3Field>
-                  Existing V3 pool number
-                  <input
-                    name="pool-number"
-                    required
-                    inputMode="numeric"
-                    pattern="[0-9]+"
-                    value={existingId}
-                    maxLength={78}
-                    onChange={(event) => setExistingId(event.target.value)}
-                  />
-                </V3Field>
-                <V3Button type="submit" $secondary>
-                  Open pool funding
-                </V3Button>
-              </V3Actions>
-            </form>
-            {poolId !== undefined && (
-              <FundingPanel
-                key={poolId.toString()}
+            <div hidden={mode !== 'dashboard'}>
+              <V3StudioDashboard
+                active={mode === 'dashboard'}
                 client={client}
                 deployment={deployment}
-                account={account}
-                poolId={poolId}
-                writeAllowed={writeAllowed}
+                presentation={activePresentation}
+                open={navigate}
+                create={() => navigate('create')}
               />
+            </div>
+            {mode !== 'dashboard' && (
+              <WorkspaceBack
+                type="button"
+                $secondary
+                disabled={locked || fundingPending}
+                onClick={() => navigate('dashboard')}
+              >
+                Back to pools
+              </WorkspaceBack>
+            )}
+            {mode === 'create' && (
+              <>
+                <WorkspaceHeading ref={workspace} tabIndex={-1}>
+                  Create a pool
+                </WorkspaceHeading>
+                <Composer
+                  draft={draft}
+                  studio={studio.data}
+                  deployment={deployment}
+                  client={client}
+                  locked={locked}
+                  onChange={update}
+                  launch={
+                    <>
+                      <V3Button type="button" disabled={locked} onClick={() => void review()}>
+                        {reviewing ? 'Checking on-chain routes…' : 'Review pool plan'}
+                      </V3Button>
+                      {reviewError && (
+                        <V3Error tabIndex={-1} ref={summary} role="alert">
+                          {reviewError}
+                        </V3Error>
+                      )}
+                    </>
+                  }
+                />
+                {preview && (
+                  <V3Card>
+                    <div>
+                      <h2 ref={reviewHeading} tabIndex={-1}>
+                        Review funding and rewards
+                      </h2>
+                      {preview.usdPerDay !== undefined && (
+                        <V3Muted>Reference daily budget · {shortAmount(preview.usdPerDay, 6)} USD</V3Muted>
+                      )}
+                      <V3Metrics>
+                        {preview.rewards.map((reward) => (
+                          <div key={reward.token}>
+                            <dt>{reward.symbol} reward cap</dt>
+                            <dd>
+                              {shortAmount(reward.cap, reward.decimals)} {reward.symbol}
+                            </dd>
+                            <dt>Allocated funding</dt>
+                            <dd>
+                              {shortAmount(reward.allocation, preview.fundingAsset.decimals)}{' '}
+                              {preview.fundingAsset.symbol}
+                            </dd>
+                            <dt>Next tranche minimum</dt>
+                            <dd>
+                              {shortAmount(reward.minimum, reward.decimals)} {reward.symbol}
+                            </dd>
+                          </div>
+                        ))}
+                      </V3Metrics>
+                      <V3Muted>
+                        Spending is bounded by the funded balance, each allocation and each replenishment window.
+                      </V3Muted>
+                      <V3Button type="button" disabled={locked || !writeAllowed} onClick={() => void create()}>
+                        Create V3 pool
+                      </V3Button>
+                    </div>
+                  </V3Card>
+                )}
+              </>
+            )}
+            {mode !== 'dashboard' && (
+              <TransactionFeedback transaction={transaction} onReceipt={confirmCreated} deployment={deployment} />
+            )}
+            {typeof mode === 'bigint' && account && (
+              <>
+                <WorkspaceHeading ref={workspace} tabIndex={-1}>
+                  Manage pool #{mode.toString()}
+                </WorkspaceHeading>
+                <V3StudioPool
+                  key={mode.toString()}
+                  client={client}
+                  deployment={deployment}
+                  poolId={mode}
+                  account={account}
+                  writeAllowed={writeAllowed}
+                  document={activePresentation}
+                  setDocument={setPresentation}
+                  refreshPresentation={refreshPresentation}
+                  Preview={Preview}
+                  renderFunding={(pool) =>
+                    pool.funding.asset === zeroAddress ? (
+                      <V3Muted>This pool uses direct reward deposits.</V3Muted>
+                    ) : (
+                      <FundingPanel
+                        client={client}
+                        deployment={deployment}
+                        account={account}
+                        poolId={mode}
+                        writeAllowed={writeAllowed}
+                        setPending={setFundingPending}
+                      />
+                    )
+                  }
+                />
+              </>
             )}
           </>
         )}

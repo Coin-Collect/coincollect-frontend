@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import ConnectWalletButton from 'components/ConnectWalletButton'
+import V3FarmCard from 'views/NftFarms/components/FarmCard/V3FarmCard'
 import { UINT256_MAX } from 'features/universalRewards/units'
 import V3PoolDetail from 'features/universalRewards/V3PoolDetail'
 import { V3Page, V3Muted } from 'features/universalRewards/styles'
@@ -14,5 +14,5 @@ export default function UniversalRewardPoolPage() {
       </V3Page>
     )
   }
-  return <V3PoolDetail key={query.poolId} poolId={BigInt(query.poolId)} connect={<ConnectWalletButton />} />
+  return <V3PoolDetail key={query.poolId} poolId={BigInt(query.poolId)} Card={V3FarmCard} />
 }

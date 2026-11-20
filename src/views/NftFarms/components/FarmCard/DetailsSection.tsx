@@ -1,21 +1,22 @@
 import { useTranslation } from 'contexts/Localization'
+import type { ReactNode } from 'react'
 import styled from 'styled-components'
-import { Text, Flex, LinkExternal, Skeleton, HelpIcon, useTooltip, Link, TimerIcon } from '@pancakeswap/uikit'
+import { Text, Flex, LinkExternal, Skeleton, HelpIcon, useTooltip } from '@pancakeswap/uikit'
 import Balance from 'components/Balance'
 import BigNumber from 'bignumber.js'
 import { useCurrentBlock } from 'state/block/hooks'
-import { getPolygonScanLink } from 'utils'
 import { getNftFarmBlockInfo } from 'views/NftFarms/helpers'
 import MaxStakeRow from 'views/NftFarms/components/MaxStakeRow'
 import { Token } from '@coincollect/sdk'
 import { ProjectLink } from 'config/constants/types'
 import { TimeCountdownDisplay } from '../Cells/EndsInCell'
 import type { PublicV2Pool } from 'features/nftPoolManager/publication'
-import { ScheduleCountdown } from './ScheduleCountdown'
+import { ScheduleCountdown, TimestampScheduleCountdown, type TimestampSchedule } from './ScheduleCountdown'
 
 export interface ExpandableSectionProps {
   bscScanAddress?: string
   earningToken?: Pick<Token, 'address'>
+  tokenInfoUrl?: string
   removed?: boolean
   totalValueFormatted?: string
   lpLabel?: string
@@ -28,6 +29,9 @@ export interface ExpandableSectionProps {
   isFinished?: boolean
   projectLink?: ProjectLink
   publishedPool?: PublicV2Pool
+  timestampSchedule?: TimestampSchedule
+  editSchedule?: ReactNode
+  additionalDetails?: ReactNode
 }
 
 const Wrapper = styled.div`
@@ -46,6 +50,7 @@ const StyledLinkExternal = styled(LinkExternal)`
 const DetailsSection: React.FC<ExpandableSectionProps> = ({
   bscScanAddress,
   earningToken,
+  tokenInfoUrl,
   removed,
   totalStaked,
   lpLabel,
@@ -57,6 +62,9 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
   isFinished,
   projectLink,
   publishedPool,
+  timestampSchedule,
+  editSchedule,
+  additionalDetails,
 }) => {
   const { t } = useTranslation()
   const currentBlock = useCurrentBlock()
@@ -70,12 +78,9 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
 
   const { shouldShowBlockCountdown, timeUntilStart, timeRemaining, hasPoolStarted, timeToDisplay } =
     getNftFarmBlockInfo(startTimestamp || 0, endTimestamp || 0, Boolean(isFinished), currentBlock)
+  const status = timestampSchedule?.status ?? publishedPool?.snapshot.status
   const publishedScheduleLabel =
-    publishedPool?.snapshot.status === 'UPCOMING'
-      ? 'Starts in'
-      : publishedPool?.snapshot.status === 'ACTIVE' || publishedPool?.snapshot.status === 'FINISHED'
-      ? 'Ends in'
-      : 'Schedule'
+    status === 'UPCOMING' ? 'Starts in' : status === 'ACTIVE' || status === 'FINISHED' ? 'Ends in' : 'Schedule'
 
   return (
     <Wrapper>
@@ -97,14 +102,18 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
           </Flex>
         </Flex>
       }
-      {publishedPool && (
-        <>
-          <Flex mb="2px" justifyContent="space-between" alignItems="center" style={{ gap: 12 }}>
-            <Text small>{t(publishedScheduleLabel)}:</Text>
-            <ScheduleCountdown pool={publishedPool} />
-          </Flex>
-        </>
+      {(publishedPool || timestampSchedule || editSchedule) && (
+        <Flex mb="2px" justifyContent="space-between" alignItems="center" style={{ gap: 12 }}>
+          <Text small>{t(publishedScheduleLabel)}:</Text>
+          {editSchedule ??
+            (timestampSchedule ? (
+              <TimestampScheduleCountdown schedule={timestampSchedule} />
+            ) : (
+              publishedPool && <ScheduleCountdown pool={publishedPool} />
+            ))}
+        </Flex>
       )}
+      {additionalDetails}
       {stakingLimit && stakingLimit.gt(0) && (
         <MaxStakeRow
           small
@@ -133,8 +142,8 @@ const DetailsSection: React.FC<ExpandableSectionProps> = ({
       )}
       {bscScanAddress && <StyledLinkExternal href={bscScanAddress}>{t('View Contract')}</StyledLinkExternal>}
 
-      {earningToken?.address && (
-        <StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${earningToken.address}`}>
+      {(tokenInfoUrl || earningToken?.address) && (
+        <StyledLinkExternal href={tokenInfoUrl ?? `https://app.uniswap.org/#/tokens/polygon/${earningToken?.address}`}>
           {t('See Token Info')}
         </StyledLinkExternal>
       )}
