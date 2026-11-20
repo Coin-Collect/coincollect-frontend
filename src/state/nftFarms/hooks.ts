@@ -2,9 +2,9 @@ import useWeb3React from 'hooks/useWeb3React'
 import BigNumber from 'bignumber.js'
 import { nftFarmsConfig } from 'config/constants'
 import { useFastRefreshEffect, useSlowRefreshEffect } from 'hooks/useRefreshEffect'
-import { useMemo } from 'react'
-import { batch, useSelector } from 'react-redux'
-import { useAppDispatch } from 'state'
+import { useCallback, useMemo } from 'react'
+import { batch, useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, type AppDispatch } from 'state'
 import { deserializeToken } from 'state/user/hooks/helpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceAmount } from 'utils/formatBalance'
@@ -77,24 +77,25 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
 }
 
 export const usePollFarmsWithUserData = (includeArchive = false, enabled = true) => {
-  const dispatch = useAppDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const { account } = useWeb3React()
   const { chainId } = useActiveChainId()
+  const pids = useMemo(() => (includeArchive ? nftFarmsConfig : nonArchivedFarms).map(({ pid }) => pid), [includeArchive])
+  const refreshUserData = useCallback(() => {
+    if (account) void dispatch(fetchFarmUserDataAsync({ account, pids }))
+  }, [account, dispatch, pids])
 
   useSlowRefreshEffect((currentBlock) => {
     if (!enabled) return
-    const farmsToFetch = includeArchive ? nftFarmsConfig : nonArchivedFarms
-    const pids = farmsToFetch.map((farmToFetch) => farmToFetch.pid)
 
     batch(() => {
       dispatch(fetchFarmsPublicDataAsync({pids, currentBlock, chainId}))
       dispatch(fetchNftPoolsStakingLimitsAsync(chainId))
     })
 
-    if (account) {
-      dispatch(fetchFarmUserDataAsync({ account, pids }))
-    }
-  }, [enabled, includeArchive, dispatch, account, chainId])
+    refreshUserData()
+  }, [enabled, dispatch, pids, refreshUserData, chainId])
+  return refreshUserData
 }
 
 /**
@@ -113,10 +114,12 @@ export const usePollCoreFarmData = () => {
 export const useFarms = (): DeserializedNftFarmsState => {
   const farms = useSelector((state: State) => state.nftFarms)
   const deserializedFarmsData = farms.data.map(deserializeNftFarm)
-  const { loadArchivedFarmsData, userDataLoaded, poolLength } = farms
+  const { loadArchivedFarmsData, userDataLoaded, userDataAccount, walletScan, poolLength } = farms
   return {
     loadArchivedFarmsData,
     userDataLoaded,
+    userDataAccount,
+    walletScan,
     data: deserializedFarmsData,
     poolLength,
   }

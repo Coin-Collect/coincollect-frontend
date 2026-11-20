@@ -18,10 +18,11 @@ import { latinise } from 'utils/latinise'
 import { useUserFarmStakedOnly, useUserFarmsViewMode } from 'state/user/hooks'
 import { ViewMode } from 'state/user/actions'
 import { useRouter } from 'next/router'
+import { useAccount } from 'wagmi'
+import { getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
 import PageHeader from 'components/PageHeader'
 import SearchInput from 'components/SearchInput'
 import Select, { OptionProps } from 'components/Select/Select'
-import Loading from 'components/Loading'
 import FarmCard, { NftFarmWithStakedValue } from './components/FarmCard/FarmCard'
 import formatRewardAmount from 'utils/formatRewardAmount'
 import Table from './components/FarmTable/FarmTable'
@@ -39,6 +40,7 @@ import { usePublishedNftPools } from 'features/nftPoolManager/usePublishedNftPoo
 import { useVerifiedV2UserPositions } from 'features/nftPoolManager/user/hooks'
 import { selectPublishedNftPools } from 'features/nftPoolManager/publication'
 import VerifiedPoolRecoveryCard from 'features/nftPoolManager/user/components/VerifiedPoolRecoveryCard'
+import StakedPoolsEmpty from './components/StakedPoolsEmpty'
 
 const ControlContainer = styled.div`
   display: flex;
@@ -404,6 +406,8 @@ const Farms: React.FC = ({ children }) => {
   const {
     data: farmsLP,
     userDataLoaded,
+    userDataAccount,
+    walletScan,
     scheduleLoading,
     scheduleError,
     scheduleRefreshing,
@@ -413,6 +417,7 @@ const Farms: React.FC = ({ children }) => {
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useUserFarmsViewMode()
   const { account, chainId, library } = useWeb3React()
+  const { chainId: walletChainId, isConnecting, isReconnecting } = useAccount()
   const [sortOption, setSortOption] = useState('latest')
   const { observerRef, isIntersecting } = useIntersectionObserver()
   const chosenFarmsLength = useRef(0)
@@ -433,11 +438,17 @@ const Farms: React.FC = ({ children }) => {
   const userDataReady = !account || (!!account && userDataLoaded)
 
   const [stakedOnly, setStakedOnly] = useUserFarmStakedOnly(isActive, false)
+  const stakedView = stakedOnly && !isArchived
+  const hasWallet = Boolean(account)
+  const walletConnecting = isConnecting || isReconnecting
+  const walletNeedsNetwork = Boolean(account && walletChainId && walletChainId !== getPolygonRuntimeChainId())
+  const canReadWallet = Boolean(account && library && chainId === getPolygonRuntimeChainId())
+  const hideCatalogueForWallet = stakedView && (!account || walletNeedsNetwork)
   const showLiveCatalogue = isActive && !stakedOnly
   const liveCatalogue = usePublishedNftPools(true, showLiveCatalogue)
   const verifiedCatalogue = usePublishedNftPools(
     false,
-    !showLiveCatalogue || (Boolean(account) && !liveCatalogue.loading),
+    !hideCatalogueForWallet && (!showLiveCatalogue || (hasWallet && !liveCatalogue.loading)),
   )
   const published = showLiveCatalogue ? liveCatalogue : verifiedCatalogue
   const poolFilters = {
@@ -459,7 +470,7 @@ const Farms: React.FC = ({ children }) => {
     account,
     chainId,
     library,
-    Boolean(account),
+    canReadWallet,
   )
   const stakedPublishedAddresses = Object.values(publishedUserPositions.positions)
     .filter((position) => position.state === 'positive')
@@ -490,7 +501,10 @@ const Farms: React.FC = ({ children }) => {
       (farm.contractAddresses ? farm.isFinished === false : !farm.isFinished) &&
       matchesCollection(farm),
   )
-  usePollFarmsWithUserData(isArchived, !isActive || Boolean(account) || activeFarms.length > 0)
+  const refreshLegacyPositions = usePollFarmsWithUserData(
+    isArchived,
+    !hideCatalogueForWallet && (!isActive || hasWallet || activeFarms.length > 0),
+  )
 
   const inactiveFarms = farmsLP.filter(
     (farm) =>
@@ -501,13 +515,11 @@ const Farms: React.FC = ({ children }) => {
   )
   const archivedFarms = farmsLP.filter((farm) => isArchivedPid(farm.pid))
 
-  const stakedOnlyFarms = activeFarms.filter(
-    (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
-  )
-
-  const stakedInactiveFarms = inactiveFarms.filter(
-    (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
-  )
+  const activeWalletKey = account?.toLowerCase()
+  const ownsDisplayedStake = (farm: DeserializedNftFarm) =>
+    Boolean(activeWalletKey && userDataAccount === activeWalletKey && farm.userData?.stakedBalance.gt(0))
+  const stakedOnlyFarms = activeFarms.filter(ownsDisplayedStake)
+  const stakedInactiveFarms = inactiveFarms.filter(ownsDisplayedStake)
 
   // The Staked only filter should keep a user's finished positions visible on the Live tab.
   const stakedLiveFarms = [...stakedOnlyFarms, ...stakedInactiveFarms]
@@ -516,9 +528,24 @@ const Farms: React.FC = ({ children }) => {
     (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
   )
 
-  const catalogueError = published.connectionError || (!isArchived && scheduleError)
+  const catalogueError = !hideCatalogueForWallet && (published.connectionError || (!isArchived && scheduleError))
   const catalogueLoading = published.loading || (!isArchived && scheduleLoading)
   const catalogueRefreshing = published.refreshing || (!isArchived && scheduleRefreshing)
+  const legacyWalletStatus = walletScan?.account === activeWalletKey ? walletScan?.status : undefined
+  const legacyWalletError = stakedView && canReadWallet && !isLocalForkMode && legacyWalletStatus === 'error'
+  const hasV2PositionErrors = Object.keys(publishedUserPositions.errors).length > 0
+  const checkingStakedPositions =
+    stakedView &&
+    !walletNeedsNetwork &&
+    !catalogueError &&
+    !legacyWalletError &&
+    !hasV2PositionErrors &&
+    (walletConnecting ||
+      (hasWallet &&
+        (!canReadWallet ||
+          catalogueLoading ||
+          publishedUserPositions.loading ||
+          (!isLocalForkMode && legacyWalletStatus !== 'ready'))))
   const refreshCatalogue = () => {
     void published.refresh()
     if (!isArchived) void refreshSchedules().catch(() => undefined)
@@ -725,6 +752,30 @@ const Farms: React.FC = ({ children }) => {
   })
 
   const renderContent = (): JSX.Element => {
+    if (
+      stakedView &&
+      !checkingStakedPositions &&
+      !walletNeedsNetwork &&
+      !catalogueError &&
+      !legacyWalletError &&
+      !hasV2PositionErrors &&
+      chosenFarmsMemoized.length === 0 &&
+      publishedPools.length === 0 &&
+      recoveryPools.length === 0
+    ) {
+      return (
+        <StakedPoolsEmpty
+          history={isInactive}
+          connected={hasWallet}
+          filtered={Boolean(query.trim() || isPartner || isCommunity)}
+          onBrowse={() => {
+            document.getElementById('staked-only-farms')?.focus()
+            setStakedOnly(false)
+          }}
+        />
+      )
+    }
+
     if (viewMode === ViewMode.TABLE && rowData.length) {
       const columnSchema = DesktopColumnSchema
 
@@ -803,6 +854,7 @@ const Farms: React.FC = ({ children }) => {
             <ToggleWrapper>
               <Toggle
                 id="staked-only-farms"
+                aria-label={t('Staked only')}
                 checked={stakedOnly}
                 onChange={() => setStakedOnly(!stakedOnly)}
                 scale="sm"
@@ -883,12 +935,29 @@ const Farms: React.FC = ({ children }) => {
             </Button>
           ) : null}
         </Flex>
-        {account && publishedUserPositions.loading ? (
+        {stakedView && walletNeedsNetwork ? (
+          <Text small color="warning" mb="16px" role="status">
+            {isLocalForkMode
+              ? t('Switch your wallet to the local fork to view your staked positions.')
+              : t('Switch your wallet to Polygon to view your staked positions.')}
+          </Text>
+        ) : null}
+        {legacyWalletError ? (
+          <Flex alignItems="center" justifyContent="space-between" mb="16px">
+            <Text small color="warning" role="status">
+              {t('Could not check your positions in configured NFT pools.')}
+            </Text>
+            <Button scale="sm" variant="secondary" onClick={refreshLegacyPositions}>
+              {t('Try again')}
+            </Button>
+          </Flex>
+        ) : null}
+        {account && !stakedView && publishedUserPositions.loading ? (
           <Text small color="textSubtle" mb="16px" role="status" aria-live="polite">
             {t('Checking wallet positions across verified pools…')}
           </Text>
         ) : null}
-        {account && Object.keys(publishedUserPositions.errors).length > 0 ? (
+        {account && hasV2PositionErrors ? (
           <Flex
             role="status"
             aria-live="polite"
@@ -949,9 +1018,11 @@ const Farms: React.FC = ({ children }) => {
           </section>
         ) : null}
         {renderContent()}
-        {account && !userDataLoaded && stakedOnly && (
-          <Flex justifyContent="center">
-            <Loading />
+        {checkingStakedPositions && (
+          <Flex justifyContent="center" alignItems="center" py="28px" style={{ gap: 10 }}>
+            <Text small color="textSubtle" role="status">
+              {t('Checking your staked NFT positions…')}
+            </Text>
           </Flex>
         )}
         <div ref={observerRef} />

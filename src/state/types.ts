@@ -196,6 +196,8 @@ export interface SerializedNftFarmsState {
   data: SerializedNftFarm[]
   loadArchivedFarmsData: boolean
   userDataLoaded: boolean
+  userDataAccount?: string
+  walletScan?: { account: string; requestId: string; status: 'loading' | 'ready' | 'error' }
   loadingKeys: Record<string, boolean>
   poolLength?: number
 }
@@ -204,6 +206,8 @@ export interface DeserializedNftFarmsState {
   data: DeserializedNftFarm[]
   loadArchivedFarmsData: boolean
   userDataLoaded: boolean
+  userDataAccount?: string
+  walletScan?: SerializedNftFarmsState['walletScan']
   poolLength?: number
 }
 

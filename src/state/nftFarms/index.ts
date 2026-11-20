@@ -42,6 +42,8 @@ const initialState: SerializedNftFarmsState = {
 }
 
 export const nonArchivedFarms = farmsConfig.filter(({ pid }) => !isArchivedPid(pid))
+const includesWalletScan = (pids: number[]) =>
+  pids.length >= nonArchivedFarms.length && nonArchivedFarms.every(({ pid }) => pids.includes(pid))
 
 // Async thunks
 // Main Function for Farm Data and Price Calculation
@@ -116,8 +118,8 @@ export const fetchFarmUserDataAsync = createAsyncThunk<
   },
   {
     condition: (arg, { getState }) => {
-      const { farms } = getState()
-      if (farms.loadingKeys[stringify({ type: fetchFarmUserDataAsync.typePrefix, arg })]) {
+      const { nftFarms } = getState()
+      if (nftFarms.loadingKeys[stringify({ type: fetchFarmUserDataAsync.typePrefix, arg })]) {
         console.debug('farms user action is fetching, skipping here')
         return false
       }
@@ -196,13 +198,35 @@ export const farmsSlice = createSlice({
     })
 
     // Update farms with user data
+    builder.addCase(fetchFarmUserDataAsync.pending, (state, { meta }) => {
+      if (!includesWalletScan(meta.arg.pids)) return
+      const account = meta.arg.account.toLowerCase()
+      const previous = state.walletScan
+      state.walletScan = {
+        account,
+        requestId: meta.requestId,
+        status: previous?.account === account && previous.status === 'ready' ? 'ready' : 'loading',
+      }
+    })
     builder.addCase(fetchFarmUserDataAsync.fulfilled, (state, action) => {
+      const account = action.meta.arg.account.toLowerCase()
+      if (state.walletScan && state.walletScan.account !== account) return
+      if (state.userDataAccount && state.userDataAccount !== account) {
+        state.data.forEach((farm) => {
+          farm.userData = undefined
+        })
+      }
       action.payload.forEach((userDataEl) => {
         const { pid } = userDataEl
         const index = state.data.findIndex((farm) => farm.pid === pid)
         state.data[index] = { ...state.data[index], userData: userDataEl }
       })
       state.userDataLoaded = true
+      state.userDataAccount = account
+      if (state.walletScan?.requestId === action.meta.requestId) state.walletScan.status = 'ready'
+    })
+    builder.addCase(fetchFarmUserDataAsync.rejected, (state, { meta }) => {
+      if (state.walletScan?.requestId === meta.requestId) state.walletScan.status = 'error'
     })
 
     builder.addMatcher(isAnyOf(fetchFarmUserDataAsync.pending, fetchFarmsPublicDataAsync.pending), (state, action) => {
