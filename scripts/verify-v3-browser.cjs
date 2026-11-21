@@ -157,8 +157,14 @@ async function testBrowser() {
     })
   if (secret) {
     assert.equal((await fetch(cronUrl)).status, 401)
+    // The build leaves Anvil idle. Use a fresh block for the first 90-second
+    // purchase deadline so runner build time does not make the quote stale.
+    await rpc('evm_mine')
     const first = await tick()
-    assert.ok(first.results.some((job) => job.poolId === String(fixture.poolId) && job.status === 'confirmed'))
+    assert.ok(
+      first.results.some((job) => job.poolId === String(fixture.poolId) && job.status === 'confirmed'),
+      'The first isolated purchase must confirm: ' + JSON.stringify(first.results),
+    )
     const repeated = await tick()
     assert.ok(repeated.results.every((job) => job.status !== 'confirmed'))
     console.log('PASS local cron authorization, receipt verification and duplicate delivery')
