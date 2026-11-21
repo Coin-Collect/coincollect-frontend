@@ -9,7 +9,7 @@ import { getPancakeProfileAddress } from 'utils/addressHelpers'
 
 const profileContract = getProfileContract()
 
-export const getTeam = async (teamId: number): Promise<Team> => {
+export const getTeam = async (teamId: number): Promise<Team | null> => {
   try {
     const { 0: teamName, 2: numberUsers, 3: numberPoints, 4: isJoinable } = await profileContract.getTeamProfile(teamId)
     const staticTeamInfo = teamsList.find((staticTeam) => staticTeam.id === teamId)
@@ -28,7 +28,7 @@ export const getTeam = async (teamId: number): Promise<Team> => {
 /**
  * Gets on-chain data and merges it with the existing static list of teams
  */
-export const getTeams = async (): Promise<TeamsById> => {
+export const getTeams = async (): Promise<TeamsById | null> => {
   try {
     const teamsById = teamsList.reduce((accum, team) => {
       return {
@@ -38,7 +38,7 @@ export const getTeams = async (): Promise<TeamsById> => {
     }, {})
     const nbTeams = await profileContract.numberTeams()
 
-    const calls = []
+    const calls: { address: string; name: string; params: number[] }[] = []
     for (let i = 1; i <= nbTeams.toNumber(); i++) {
       calls.push({
         address: getPancakeProfileAddress(),

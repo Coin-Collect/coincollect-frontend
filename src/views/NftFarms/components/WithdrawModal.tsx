@@ -6,7 +6,7 @@ import NftSelectionModal from './NftSelectionModal'
 
 interface WithdrawModalProps {
   max: BigNumber
-  onConfirm: (selectedNftList: { collectionAddress: string; tokenId: number }[]) => void
+  onConfirm: (selectedNftList: { collectionAddress: string; tokenId: string }[]) => void
   onDismiss?: () => void
   tokenName?: string
   pid: number
@@ -15,7 +15,7 @@ interface WithdrawModalProps {
 export default function WithdrawModal({ onConfirm, onDismiss, tokenName = '', pid }: WithdrawModalProps) {
   const { t } = useTranslation()
   const [pending, setPending] = useState(false)
-  const [selected, setSelected] = useState<{ collectionAddress: string; tokenId: number }[]>([])
+  const [selected, setSelected] = useState<{ collectionAddress: string; tokenId: string }[]>([])
   const { nfts, isLoading, error, revalidateNfts } = useStakedNfts(pid)
 
   return (

@@ -76,7 +76,7 @@ const ClaimPrizesModal: React.FC<ClaimPrizesModalModalProps> = ({ onDismiss, rou
       <ModalBody p="24px">
         <ClaimPrizesInner
           onSuccess={() => {
-            dispatch(fetchUserLotteries({ account, currentLotteryId }))
+            if (account && currentLotteryId) dispatch(fetchUserLotteries({ account, currentLotteryId }))
             onDismiss?.()
           }}
           roundsToClaim={roundsToClaim}

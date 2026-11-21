@@ -63,7 +63,7 @@ const AchievementRow: React.FC<AchievementRowProps> = ({ achievement, onCollectS
       return callWithGasPrice(pointCenterContract, 'getPoints', [achievement.address])
     })
     if (receipt?.status) {
-      onCollectSuccess(achievement)
+      onCollectSuccess?.(achievement)
       toastSuccess(t('Points Collected!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
     }
   }

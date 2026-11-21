@@ -13,7 +13,7 @@ const useGetTopFarmsByApr = (isIntersecting: boolean) => {
   const dispatch = useAppDispatch()
   const { data: farms } = useFarms()
   const [fetchStatus, setFetchStatus] = useState(FetchStatus.Idle)
-  const [topFarms, setTopFarms] = useState<FarmWithStakedValue[]>([null, null, null, null, null])
+  const [topFarms, setTopFarms] = useState<(FarmWithStakedValue | null)[]>([null, null, null, null, null])
   const cakePriceBusd = usePriceCakeBusd()
 
   useEffect(() => {
@@ -45,17 +45,17 @@ const useGetTopFarmsByApr = (isIntersecting: boolean) => {
           farm.multiplier !== '0X',
       )
       const farmsWithApr: FarmWithStakedValue[] = farmsWithPrices.map((farm) => {
-        const totalLiquidity = farm.lpTotalInQuoteToken.times(farm.quoteTokenPriceBusd)
+        const totalLiquidity = farm.lpTotalInQuoteToken.times(farm.quoteTokenPriceBusd ?? NaN)
         const { cakeRewardsApr, lpRewardsApr } = getFarmApr(
           farm.poolWeight,
           cakePriceBusd,
           totalLiquidity,
           farm.lpAddresses[ChainId.POLYGON],
         )
-        return { ...farm, apr: cakeRewardsApr, lpRewardsApr }
+        return { ...farm, apr: cakeRewardsApr ?? undefined, lpRewardsApr }
       })
 
-      const sortedByApr = orderBy(farmsWithApr, (farm) => farm.apr + farm.lpRewardsApr, 'desc')
+      const sortedByApr = orderBy(farmsWithApr, (farm) => (farm.apr ?? 0) + (farm.lpRewardsApr ?? 0), 'desc')
       setTopFarms(sortedByApr.slice(0, 5))
     }
 

@@ -43,7 +43,7 @@ const Proposals = () => {
     }))
   }
 
-  const filteredProposals = filterProposalsByState(filterProposalsByType(data, proposalType), filterState)
+  const filteredProposals = filterProposalsByState(filterProposalsByType(data ?? [], proposalType), filterState)
 
   return (
     <Container py="40px">

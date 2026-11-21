@@ -14,7 +14,7 @@ import {
   AutoRenewIcon,
 } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { getAllV1History } from './helpers'
+import { getAllV1History, V1Bet } from './helpers'
 
 const Modal = styled(ModalContainer)`
   overflow: visible;
@@ -30,7 +30,7 @@ const BunnyDecoration = styled.div`
 
 const CollectRoundWinningsModal: React.FC<InjectedModalProps> = ({ onDismiss }) => {
   const [isFetching, setIsFetching] = useState(false)
-  const [history, setHistory] = useState([])
+  const [history, setHistory] = useState<V1Bet[]>([])
   const { t } = useTranslation()
   const { account } = useWeb3React()
 
@@ -49,7 +49,7 @@ const CollectRoundWinningsModal: React.FC<InjectedModalProps> = ({ onDismiss }) 
       'Round Failed',
     ].join(',')
 
-    const rows = history.reduce((accum, bet) => {
+    const rows = history.reduce<string[]>((accum, bet) => {
       return [
         ...accum,
         [
@@ -84,6 +84,7 @@ const CollectRoundWinningsModal: React.FC<InjectedModalProps> = ({ onDismiss }) 
 
   useEffect(() => {
     const fetchAllHistory = async () => {
+      if (!account) return
       setIsFetching(true)
 
       try {

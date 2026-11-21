@@ -6,7 +6,7 @@ import { Divider } from './styles'
 
 interface TransactionConfirmedProps {
   txHash: string
-  onDismiss: () => void
+  onDismiss?: () => void
 }
 
 const TransactionConfirmed: React.FC<TransactionConfirmedProps> = ({ txHash, onDismiss }) => {

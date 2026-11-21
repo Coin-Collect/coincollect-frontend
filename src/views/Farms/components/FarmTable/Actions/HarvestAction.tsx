@@ -72,7 +72,7 @@ const HarvestAction: React.FunctionComponent<HarvestActionProps> = ({ pid, userD
                   {t('Your %symbol% earnings have been sent to your wallet!', { symbol: 'COLLECT' })}
                 </ToastDescriptionWithTx>,
               )
-              dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+              if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
             }
           }}
           ml="4px"

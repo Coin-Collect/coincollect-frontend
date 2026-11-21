@@ -15,7 +15,7 @@ const RoundResult: React.FC<RoundResultProps> = ({ round, hasFailed = false, chi
   const { t } = useTranslation()
 
   return (
-    <RoundResultBox betPosition={betPosition} {...props}>
+    <RoundResultBox betPosition={betPosition ?? undefined} {...props}>
       <Text color="textSubtle" fontSize="12px" bold textTransform="uppercase" mb="8px">
         {t('Closed Price')}
       </Text>

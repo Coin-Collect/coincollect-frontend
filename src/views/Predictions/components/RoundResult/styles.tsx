@@ -144,8 +144,8 @@ export const RoundResultBox: React.FC<RoundResultBoxProps> = ({
 }
 
 interface RoundPriceProps {
-  lockPrice: BigNumber
-  closePrice: BigNumber
+  lockPrice: NodeRound['lockPrice']
+  closePrice: NodeRound['closePrice']
 }
 
 export const RoundPrice: React.FC<RoundPriceProps> = ({ lockPrice, closePrice }) => {
@@ -173,7 +173,7 @@ export const RoundPrice: React.FC<RoundPriceProps> = ({ lockPrice, closePrice })
       ) : (
         <Skeleton height="34px" my="1px" />
       )}
-      <PositionTag betPosition={betPosition}>{formatUsdv2(priceDifference)}</PositionTag>
+      <PositionTag betPosition={betPosition ?? BetPosition.HOUSE}>{formatUsdv2(priceDifference)}</PositionTag>
     </Flex>
   )
 }
@@ -216,7 +216,7 @@ export const LockPriceHistoryRow: React.FC<LockPriceHistoryRowProps> = ({ lockPr
   return (
     <Row {...props}>
       <Text fontSize="14px">{t('Locked Price')}:</Text>
-      <Text fontSize="14px">{formatUsd(lockPrice)}</Text>
+      <Text fontSize="14px">{lockPrice === null ? '—' : formatUsd(lockPrice)}</Text>
     </Row>
   )
 }

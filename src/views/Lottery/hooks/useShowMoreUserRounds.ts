@@ -10,6 +10,7 @@ const useShowMoreUserRounds = () => {
   const [numUserRoundsRequested, setNumUserRoundsRequested] = useState(MAX_USER_LOTTERIES_REQUEST_SIZE)
 
   const handleShowMoreUserRounds = () => {
+    if (!account) return
     dispatch(fetchAdditionalUserLotteries({ account, skip: numUserRoundsRequested }))
     setNumUserRoundsRequested(numUserRoundsRequested + MAX_USER_LOTTERIES_REQUEST_SIZE)
   }

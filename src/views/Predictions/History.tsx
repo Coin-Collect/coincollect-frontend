@@ -66,7 +66,7 @@ const History = () => {
   const results = getFilteredBets(bets, historyFilter)
   const hasBetHistory = results && results.length > 0
 
-  let activeTabComponent = null
+  let activeTabComponent: React.ReactNode = null
 
   switch (activeTab) {
     case HistoryTabs.PNL:

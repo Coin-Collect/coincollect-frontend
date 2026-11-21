@@ -69,7 +69,7 @@ const getValueAsEthersBn = (value: string) => {
 
 const SetPositionCard: React.FC<SetPositionCardProps> = ({ position, togglePosition, epoch, onBack, onSuccess }) => {
   const [value, setValue] = useState('')
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [percent, setPercent] = useState(0)
 
   const { account } = useWeb3React()
@@ -87,7 +87,7 @@ const SetPositionCard: React.FC<SetPositionCardProps> = ({ position, togglePosit
   const balanceDisplay = formatBigNumber(bnbBalance)
 
   const valueAsBn = getValueAsEthersBn(value)
-  const showFieldWarning = account && valueAsBn.gt(0) && errorMessage !== null
+  const showFieldWarning = Boolean(account) && valueAsBn.gt(0) && errorMessage !== null
 
   const handleInputChange = (input: string) => {
     const inputAsBn = getValueAsEthersBn(input)
@@ -128,12 +128,14 @@ const SetPositionCard: React.FC<SetPositionCardProps> = ({ position, togglePosit
 
   // Disable the swiper events to avoid conflicts
   const handleMouseOver = () => {
+    if (!swiper) return
     swiper.keyboard.disable()
     swiper.mousewheel.disable()
     swiper.detachEvents()
   }
 
   const handleMouseOut = () => {
+    if (!swiper) return
     swiper.keyboard.enable()
     swiper.mousewheel.enable()
     swiper.attachEvents()

@@ -38,7 +38,7 @@ const ChoiceText = styled.div`
 `
 
 const Vote: React.FC<VoteProps> = ({ proposal, onSuccess, ...props }) => {
-  const [vote, setVote] = useState<State>(null)
+  const [vote, setVote] = useState<State | null>(null)
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { account } = useWeb3React()
@@ -51,7 +51,7 @@ const Vote: React.FC<VoteProps> = ({ proposal, onSuccess, ...props }) => {
   }
 
   const [presentCastVoteModal] = useModal(
-    <CastVoteModal onSuccess={handleSuccess} proposalId={proposal.id} vote={vote} block={Number(proposal.snapshot)} />,
+    vote ? <CastVoteModal onSuccess={handleSuccess} proposalId={proposal.id} vote={vote} block={Number(proposal.snapshot)} /> : null,
   )
 
   return (

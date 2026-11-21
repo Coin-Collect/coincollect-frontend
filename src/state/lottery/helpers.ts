@@ -114,20 +114,20 @@ export const fetchCurrentLotteryIdAndMaxBuy = async () => {
     )) as EthersBigNumber[][]
 
     return {
-      currentLotteryId: currentLotteryId ? currentLotteryId.toString() : null,
-      maxNumberTicketsPerBuyOrClaim: maxNumberTicketsPerBuyOrClaim ? maxNumberTicketsPerBuyOrClaim.toString() : null,
+      currentLotteryId: currentLotteryId?.toString() ?? '',
+      maxNumberTicketsPerBuyOrClaim: maxNumberTicketsPerBuyOrClaim?.toString() ?? '',
     }
   } catch (error) {
     return {
-      currentLotteryId: null,
-      maxNumberTicketsPerBuyOrClaim: null,
+      currentLotteryId: '',
+      maxNumberTicketsPerBuyOrClaim: '',
     }
   }
 }
 
 export const getRoundIdsArray = (currentLotteryId: string): string[] => {
   const currentIdAsInt = parseInt(currentLotteryId, 10)
-  const roundIds = []
+  const roundIds: number[] = []
   for (let i = 0; i < NUM_ROUNDS_TO_FETCH_FROM_NODES; i++) {
     roundIds.push(currentIdAsInt - i)
   }
@@ -135,8 +135,8 @@ export const getRoundIdsArray = (currentLotteryId: string): string[] => {
 }
 
 export const useProcessLotteryResponse = (
-  lotteryData: LotteryResponse & { userTickets?: LotteryRoundUserTickets },
-): LotteryRound => {
+  lotteryData: LotteryResponse & { userTickets: LotteryRoundUserTickets },
+): LotteryRound & { userTickets: LotteryRoundUserTickets } => {
   const {
     priceTicketInCake: priceTicketInCakeAsString,
     discountDivisor: discountDivisorAsString,

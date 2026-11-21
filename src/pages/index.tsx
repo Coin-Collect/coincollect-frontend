@@ -27,7 +27,7 @@ const IndexPage = ({ totalTx30Days, addressCount30Days, tvl }) => {
 // Values fetched from TheGraph and BitQuery jan 24, 2022
 const txCount = 54780336
 const addressCount = 4425459
-const tvl = 11511781748.920916
+const tvl = null
 
 export const getStaticProps: GetStaticProps = async () => {
   const totalTxQuery = gql`
@@ -90,7 +90,7 @@ export const getStaticProps: GetStaticProps = async () => {
     }
   `
 
-  if (process.env.BIT_QUERY_HEADER) {
+  if (bitQueryServerClient) {
     try {
       const result = await bitQueryServerClient.request(usersQuery, {
         since: days30Ago.toISOString(),
@@ -106,15 +106,6 @@ export const getStaticProps: GetStaticProps = async () => {
     }
   }
 
-  try {
-    //const response = await fetch('https://openapi.debank.com/v1/protocol?id=bsc_pancakeswap')
-    //const responseData: DeBankTvlResponse = await response.json()
-    results.tvl = null // Fix this line
-  } catch (error) {
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Error when fetching tvl stats', error)
-    }
-  }
 
   return {
     props: results,

@@ -26,7 +26,7 @@ export const getStaticPaths: GetStaticPaths = () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { id } = params
+  const { id } = params ?? {}
   if (typeof id !== 'string') {
     return {
       notFound: true,

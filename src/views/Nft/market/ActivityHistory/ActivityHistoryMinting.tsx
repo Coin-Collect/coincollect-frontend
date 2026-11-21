@@ -36,11 +36,13 @@ const ActivityHistoryMinting: React.FC<ActivityHistoryProps> = ({ collectionAddr
   const { activities, isLoading, error, refresh } = useMintingActivity(collectionAddress.toLowerCase())
   
   useEffect(() => {
-    if(activities.length > 0) {
+    const activity = activities[0]
+    const timestamp = activity?.timestamp ? parseISO(activity.timestamp) : undefined
+    if (timestamp && !Number.isNaN(timestamp.getTime())) {
       // Using setTimeout to delay the execution of toastSuccess by 30 seconds
       // TODO: Use lodash/delay
       const timeoutId = setTimeout(() => {
-        const dateCreated = formatDistanceToNowStrict(parseISO(activities[0].timestamp), { addSuffix: true });
+        const dateCreated = formatDistanceToNowStrict(timestamp, { addSuffix: true });
         toastSuccess(
           `${t('🎉 New NFT Alert!')}`,
           <ToastDescriptionWithTx txHash={activities[0].tx}>

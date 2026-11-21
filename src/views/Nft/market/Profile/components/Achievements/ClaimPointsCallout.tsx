@@ -17,6 +17,7 @@ const ClaimPointsCallout: React.FC<{ onSuccess?: () => void }> = ({ onSuccess = 
   const { account } = useWeb3React()
 
   useEffect(() => {
+    if (!account) return
     const fetchIfoClaims = async () => {
       const ifoData = await getClaimableIfoData(account)
       setClaimableAchievement(ifoData)

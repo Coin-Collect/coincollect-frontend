@@ -15,7 +15,7 @@ import { useTranslation } from 'contexts/Localization'
 import useWeb3React from 'hooks/useWeb3React'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { useIfoPoolCreditBlock, useVaultPoolByKey } from 'state/pools/hooks'
-import { DeserializedPool, VaultKey } from 'state/types'
+import { DeserializedVaultPool, VaultKey } from 'state/types'
 import { convertSharesToCake } from 'views/Pools/helpers'
 import { FlexGap } from 'components/Layout/Flex'
 import { vaultPoolConfig } from 'config/constants/pools'
@@ -33,7 +33,7 @@ const StyledCardBody = styled(CardBody)<{ isLoading: boolean }>`
 `
 
 interface CakeVaultProps extends CardProps {
-  pool: DeserializedPool
+  pool: DeserializedVaultPool
   showStakedOnly: boolean
   defaultFooterExpanded?: boolean
 }

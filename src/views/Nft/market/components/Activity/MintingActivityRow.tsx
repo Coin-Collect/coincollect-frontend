@@ -37,11 +37,14 @@ const MintingActivityRow: React.FC<MintingActivityRowProps> = ({
 }) => {
   const { chainId } = useActiveWeb3React()
   const { isXs, isSm } = useMatchBreakpoints()
-  const localeTimestamp = formatDistanceToNowStrict(parseISO(activity.timestamp), { addSuffix: true });
+  const timestamp = activity.timestamp ? parseISO(activity.timestamp) : undefined
+  const localeTimestamp = timestamp && !Number.isNaN(timestamp.getTime())
+    ? formatDistanceToNowStrict(timestamp, { addSuffix: true })
+    : '—'
   
 
   return (
-    <tr {...((isXs || isSm) && { onClick: null })} data-test="nft-activity-row">
+    <tr data-test="nft-activity-row">
       {!isNftActivity ? (
         <Td
           {...((isXs || isSm) && {

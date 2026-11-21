@@ -20,7 +20,7 @@ const ImageWrapper = styled(Flex)`
   }
 `
 
-const ClaimModal: React.FC<CompetitionProps> = ({ onDismiss, onClaimSuccess, userTradingInformation }) => {
+const ClaimModal: React.FC<Pick<CompetitionProps, 'onDismiss' | 'onClaimSuccess' | 'userTradingInformation'>> = ({ onDismiss, onClaimSuccess, userTradingInformation }) => {
   const tradingCompetitionContract = useTradingCompetitionContractV2()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: isConfirming } = useCatchTxError()
@@ -50,8 +50,8 @@ const ClaimModal: React.FC<CompetitionProps> = ({ onDismiss, onClaimSuccess, use
     })
     if (receipt?.status) {
       toastSuccess(t('You have claimed your rewards!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
-      onDismiss()
-      onClaimSuccess()
+      onDismiss?.()
+      onClaimSuccess?.()
     }
   }
 
@@ -63,7 +63,7 @@ const ClaimModal: React.FC<CompetitionProps> = ({ onDismiss, onClaimSuccess, use
         </Text>
         <Flex mt="16px" alignItems="center">
           {/* achievements */}
-          <Image src={`/images/achievements/${achievement.image}`} width={25} height={25} />
+          {achievement && <Image alt="" src={`/images/achievements/${achievement.image}`} width={25} height={25} />}
           <Text ml={['4px', '8px']}>
             +{userPointReward} {t('Points')}
           </Text>
@@ -85,7 +85,7 @@ const ClaimModal: React.FC<CompetitionProps> = ({ onDismiss, onClaimSuccess, use
         {canClaimNFT ? (
           <Flex alignItems="center" flexDirection="column" width="100%">
             <ImageWrapper>
-              <Image src={NftBunnies} width={128} height={128} />
+              <Image alt="" src={NftBunnies} width={128} height={128} />
             </ImageWrapper>
             <Text mt="8px" fontSize="16px">
               {t('Collectible NFT')}

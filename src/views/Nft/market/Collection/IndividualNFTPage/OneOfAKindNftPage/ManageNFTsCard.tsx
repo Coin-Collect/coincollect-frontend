@@ -61,7 +61,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, onSuccess }) => {
             </Text>
             <Flex justifySelf="flex-end" width="max-content">
               <BinanceIcon width="16px" height="16px" mr="4px" />
-              <Text small>{nft.marketData.currentAskPrice}</Text>
+              <Text small>{nft.marketData?.currentAskPrice}</Text>
             </Flex>
           </>
         ) : (
@@ -81,13 +81,15 @@ interface CollectibleByLocationProps {
 
 const CollectibleByLocation: React.FC<CollectibleByLocationProps> = ({ nft, onSuccess }) => {
   const { t } = useTranslation()
-  const IconComponent = LocationIcons[nft.location]
+  const location = nft.location
+  if (!location) return null
+  const IconComponent = LocationIcons[location]
   return (
     <Flex flexDirection="column">
       <Grid gridTemplateColumns="32px 1fr" px="16px" pb="8px">
-        <IconComponent color={LocationColors[nft.location]} width="24px" height="24px" />
-        <Text display="inline" bold color={LocationColors[nft.location]}>
-          {t(nft.location)}
+        <IconComponent color={LocationColors[location]} width="24px" height="24px" />
+        <Text display="inline" bold color={LocationColors[location]}>
+          {t(location)}
         </Text>
       </Grid>
       <CollectibleRow key={nft.tokenId} nft={nft} onSuccess={onSuccess} />

@@ -25,7 +25,7 @@ interface VotesProps {
 }
 
 const parseVotePower = (incomingVote: Vote) => {
-  let votingPower = parseFloat(incomingVote?.metadata?.votingPower)
+  let votingPower = parseFloat(incomingVote?.metadata?.votingPower ?? '0')
   if (!votingPower) votingPower = 0
   return votingPower
 }
@@ -57,7 +57,7 @@ const Votes: React.FC<VotesProps> = ({ votes, votesLoadingStatus }) => {
       {isFetched && displayVotes.length > 0 && (
         <>
           {displayVotes.map((vote) => {
-            const isVoter = account && vote.voter.toLowerCase() === account.toLowerCase()
+            const isVoter = vote.voter.toLowerCase() === account?.toLowerCase()
             return <VoteRow key={vote.id} vote={vote} isVoter={isVoter} />
           })}
           <Flex alignItems="center" justifyContent="center" py="8px" px="24px">

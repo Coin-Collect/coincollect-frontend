@@ -135,9 +135,9 @@ export const immutableMiddleware: Middleware = (useSWRNext) => (key, fetcher, co
   return useSWRNext(key, fetcher, config)
 }
 
-export function useSWRMulticall<Data>(abi: any[], calls: Call[], options?: MulticallOptions & SWRConfiguration) {
+export function useSWRMulticall<Data>(abi: any[], calls: Call[] | null, options?: MulticallOptions & SWRConfiguration) {
   const { requireSuccess = true, ...config } = options || {}
-  return useSWR<Data>(calls, () => multicallv2(abi, calls, { requireSuccess }), {
+  return useSWR<Data>(calls, (activeCalls: Call[]) => multicallv2(abi, activeCalls, { requireSuccess }), {
     revalidateIfStale: false,
     revalidateOnFocus: false,
     ...config,

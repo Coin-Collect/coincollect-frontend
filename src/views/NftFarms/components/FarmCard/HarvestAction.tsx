@@ -22,8 +22,8 @@ import styled from 'styled-components'
 import tokens from 'config/constants/tokens'
 
 interface FarmCardActionsProps {
-  earnings?: BigNumber
-  pid?: number
+  earnings: BigNumber
+  pid: number
   earnLabel?: string
   sideRewards?: any
   earningToken?: Token
@@ -223,6 +223,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabe
           disabled={rawEarningsBalance.eq(0) || pendingTx}
           variant="primary"
           onClick={async () => {
+            if (!account) return
             const receipt = await fetchWithCatchTxError(() => {
               return onReward()
             })

@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { useCountUp } from 'react-countup'
+import CountUp from 'react-countup'
 import styled from 'styled-components'
 import { BnbUsdtPairTokenIcon, Box, Flex, PocketWatchIcon, Text } from '@pancakeswap/uikit'
 import { ROUND_BUFFER } from 'state/predictions/config'
@@ -92,18 +91,8 @@ const Label = styled(Flex)<{ dir: 'left' | 'right' }>`
 export const PricePairLabel: React.FC = () => {
   const price = usePollOraclePrice()
   const priceAsNumber = parseFloat(formatBigNumberToFixed(price, 3, 8))
-  const { countUp, update } = useCountUp({
-    start: 0,
-    end: priceAsNumber,
-    duration: 1,
-    decimals: 3,
-  })
 
-  const updateRef = useRef(update)
 
-  useEffect(() => {
-    updateRef.current(priceAsNumber)
-  }, [priceAsNumber, updateRef])
 
   return (
     <Box pl="24px" position="relative" display="inline-block">
@@ -114,7 +103,7 @@ export const PricePairLabel: React.FC = () => {
         <Title bold textTransform="uppercase">
           BNBUSD
         </Title>
-        <Price fontSize="12px">{`$${countUp}`}</Price>
+        <Price fontSize="12px">{price.gt(0) ? <CountUp prefix="$" decimals={3} duration={1} end={priceAsNumber} preserveValue /> : '—'}</Price>
       </Label>
     </Box>
   )
@@ -127,7 +116,7 @@ interface TimerLabelProps {
 
 export const TimerLabel: React.FC<TimerLabelProps> = ({ interval, unit }) => {
   const currentRoundLockTimestamp = useGetCurrentRoundLockTimestamp()
-  const { secondsRemaining } = useCountdown(currentRoundLockTimestamp + ROUND_BUFFER)
+  const { secondsRemaining } = useCountdown(currentRoundLockTimestamp ? currentRoundLockTimestamp + ROUND_BUFFER : 0)
   const countdown = formatRoundTime(secondsRemaining)
   const { t } = useTranslation()
 

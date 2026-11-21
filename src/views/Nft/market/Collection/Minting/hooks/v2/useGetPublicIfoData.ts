@@ -113,7 +113,7 @@ const useGetPublicIfoData = (ifo: Minting): PublicIfoData => {
             address,
             name: 'holderDiscountPercentage',
           },
-      ].filter(Boolean)
+      ].filter((call) => call !== false)
 
         let results
 

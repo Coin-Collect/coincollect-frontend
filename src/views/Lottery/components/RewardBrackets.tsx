@@ -23,7 +23,7 @@ const RewardsInner = styled.div`
 `
 
 interface RewardMatchesProps {
-  lotteryNodeData: LotteryRound
+  lotteryNodeData: LotteryRound | null
   isHistoricRound?: boolean
 }
 
@@ -41,8 +41,8 @@ const RewardBrackets: React.FC<RewardMatchesProps> = ({ lotteryNodeData, isHisto
     isLoading: true,
     cakeToBurn: BIG_ZERO,
     rewardsLessTreasuryFee: BIG_ZERO,
-    rewardsBreakdown: null,
-    countWinnersPerBracket: null,
+    rewardsBreakdown: [],
+    countWinnersPerBracket: [],
   })
 
   useEffect(() => {
@@ -64,8 +64,8 @@ const RewardBrackets: React.FC<RewardMatchesProps> = ({ lotteryNodeData, isHisto
         isLoading: true,
         cakeToBurn: BIG_ZERO,
         rewardsLessTreasuryFee: BIG_ZERO,
-        rewardsBreakdown: null,
-        countWinnersPerBracket: null,
+        rewardsBreakdown: [],
+        countWinnersPerBracket: [],
       })
     }
   }, [lotteryNodeData])
@@ -90,8 +90,8 @@ const RewardBrackets: React.FC<RewardMatchesProps> = ({ lotteryNodeData, isHisto
           <RewardBracketDetail
             key={bracketIndex}
             rewardBracket={bracketIndex}
-            cakeAmount={!isLoading && getCakeRewards(bracketIndex)}
-            numberWinners={!isLoading && countWinnersPerBracket[bracketIndex]}
+            cakeAmount={isLoading ? BIG_ZERO : getCakeRewards(bracketIndex)}
+            numberWinners={isLoading ? undefined : countWinnersPerBracket[bracketIndex]}
             isHistoricRound={isHistoricRound}
             isLoading={isLoading}
           />

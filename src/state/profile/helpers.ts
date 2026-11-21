@@ -5,6 +5,7 @@ import { getTeam } from 'state/teams/helpers'
 import { NftToken } from 'state/nftMarket/types'
 import { getNftApi } from 'state/nftMarket/helpers'
 import { multicallv2 } from 'utils/multicall'
+import { teamsById } from 'utils/teamsById'
 import { getPancakeProfileAddress } from 'utils/addressHelpers'
 
 export interface GetProfileResponse {
@@ -14,7 +15,7 @@ export interface GetProfileResponse {
 
 const transformProfileResponse = (
   profileResponse: Awaited<ReturnType<PancakeProfile['getUserProfile']>>,
-): Partial<Profile> => {
+): Pick<Profile, 'userId' | 'points' | 'teamId' | 'tokenId' | 'collectionAddress' | 'isActive'> => {
   const { 0: userId, 1: numberPoints, 2: teamId, 3: collectionAddress, 4: tokenId, 5: isActive } = profileResponse
 
   return {
@@ -45,22 +46,24 @@ export const getUsername = async (address: string): Promise<string> => {
   }
 }
 
-export const getProfile = async (address: string): Promise<GetProfileResponse> => {
+export const getProfile = async (address: string): Promise<GetProfileResponse | null> => {
   try {
     const profileCalls = ['hasRegistered', 'getUserProfile'].map((method) => {
       return { address: getPancakeProfileAddress(), name: method, params: [address] }
     })
-    const profileCallsResult = await multicallv2(profileABI, profileCalls, { requireSuccess: false })
-    const [[hasRegistered], profileResponse] = profileCallsResult
-
-    if (!hasRegistered) {
-      return { hasRegistered, profile: null }
-    }
+    const [registration, profileResponse] = await multicallv2<[
+      [boolean] | null,
+      Awaited<ReturnType<PancakeProfile['getUserProfile']>> | null,
+    ]>(profileABI, profileCalls, { requireSuccess: false })
+    const hasRegistered = registration?.[0]
+    if (hasRegistered === false) return { hasRegistered }
+    if (!hasRegistered || !profileResponse) return null
 
     const { userId, points, teamId, tokenId, collectionAddress, isActive } = transformProfileResponse(profileResponse)
-    const team = await getTeam(teamId)
+    const team = (await getTeam(teamId)) ?? teamsById[teamId]
+    if (!team) return { hasRegistered }
     const username = await getUsername(address)
-    let nftToken: NftToken
+    let nftToken: NftToken | undefined
 
     // If the profile is not active the tokenId returns 0, which is still a valid token id
     // so only fetch the nft data if active
@@ -84,7 +87,7 @@ export const getProfile = async (address: string): Promise<GetProfileResponse> =
       }
     }
 
-    const profile = {
+    const profile: Profile = {
       userId,
       points,
       teamId,
@@ -94,7 +97,8 @@ export const getProfile = async (address: string): Promise<GetProfileResponse> =
       isActive,
       nft: nftToken,
       team,
-    } as Profile
+      hasRegistered,
+    }
 
     return { hasRegistered, profile }
   } catch (e) {

@@ -5,14 +5,14 @@ import getTimePeriods from 'utils/getTimePeriods'
 import { SaleStatusEnum, UserStatusEnum } from './types'
 
 type getUserStatusType = {
-  account?: string
-  hasGen0: boolean | null
+  account?: string | null
+  hasGen0?: boolean | null
   hasActiveProfile: boolean
 }
 
 export type getEventStepStatusType = {
   eventStatus: SaleStatusEnum[]
-  saleStatus: SaleStatusEnum
+  saleStatus?: SaleStatusEnum
   startTimestamp?: number
 }
 
@@ -75,6 +75,7 @@ export const getEventStepStatus = ({
   saleStatus,
   startTimestamp,
 }: getEventStepStatusType): EventStatus => {
+  if (saleStatus === undefined) return 'upcoming'
   const now = Date.now()
   if (eventStatus.every((status) => status < saleStatus)) return 'past'
   if (eventStatus.some((status) => status === saleStatus)) {

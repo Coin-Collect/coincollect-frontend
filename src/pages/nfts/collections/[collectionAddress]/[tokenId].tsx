@@ -25,7 +25,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { collectionAddress, tokenId } = params
+  const { collectionAddress, tokenId } = params ?? {}
 
   if (typeof collectionAddress !== 'string' || typeof tokenId !== 'string') {
     return {

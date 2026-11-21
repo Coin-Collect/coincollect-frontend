@@ -3,9 +3,8 @@ import { Box, Modal } from '@pancakeswap/uikit'
 import useWeb3React from 'hooks/useWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import { SnapshotCommand } from 'state/types'
-import { signMessage } from 'utils/web3React'
+import { useSignMessage } from 'wagmi'
 import useToast from 'hooks/useToast'
-import useWeb3Provider from 'hooks/useActiveWeb3React'
 import useTheme from 'hooks/useTheme'
 import { CastVoteModalProps, ConfirmVoteView } from './types'
 import MainView from './MainView'
@@ -20,7 +19,7 @@ const CastVoteModal: React.FC<CastVoteModalProps> = ({ onSuccess, proposalId, vo
   const { account } = useWeb3React()
   const { t } = useTranslation()
   const { toastError } = useToast()
-  const { library, connector } = useWeb3Provider()
+  const { signMessageAsync } = useSignMessage()
   const { theme } = useTheme()
   const {
     isLoading,
@@ -34,7 +33,7 @@ const CastVoteModal: React.FC<CastVoteModalProps> = ({ onSuccess, proposalId, vo
   } = useGetVotingPower(block, modalIsOpen)
 
   const isStartView = view === ConfirmVoteView.MAIN
-  const handleBack = isStartView ? null : () => setView(ConfirmVoteView.MAIN)
+  const handleBack = isStartView ? undefined : () => setView(ConfirmVoteView.MAIN)
   const handleViewDetails = () => setView(ConfirmVoteView.DETAILS)
 
   const title = {
@@ -44,10 +43,11 @@ const CastVoteModal: React.FC<CastVoteModalProps> = ({ onSuccess, proposalId, vo
 
   const handleDismiss = () => {
     setModalIsOpen(false)
-    onDismiss()
+    onDismiss?.()
   }
 
   const handleConfirmVote = async () => {
+    if (!account) return
     try {
       setIsPending(true)
       const voteMsg = JSON.stringify({
@@ -59,7 +59,7 @@ const CastVoteModal: React.FC<CastVoteModalProps> = ({ onSuccess, proposalId, vo
         },
       })
 
-      const sig = await signMessage(connector, library, account, voteMsg)
+      const sig = await signMessageAsync({ account, message: voteMsg })
       const msg: Message = { address: account, msg: voteMsg, sig }
 
       // Save proposal to snapshot

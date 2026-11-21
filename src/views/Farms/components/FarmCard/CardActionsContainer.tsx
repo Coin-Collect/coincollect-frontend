@@ -46,6 +46,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
   const { onApprove } = useApproveFarm(lpContract)
 
   const handleApprove = useCallback(async () => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       return onApprove()
     })
@@ -67,7 +68,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
         tokenName={farm.lpSymbol}
         pid={pid}
         apr={farm.apr}
-        lpLabel={lpLabel}
+        lpLabel={lpLabel ?? farm.lpSymbol}
         cakePrice={cakePrice}
         addLiquidityUrl={addLiquidityUrl}
         allowance={allowance}

@@ -231,6 +231,10 @@ Use Node 22 and the checked-in Yarn lockfile. The V3 CI checks cover Studio, pub
 
 ```sh
 yarn install --frozen-lockfile
+yarn typecheck
+yarn typecheck:workspaces
+yarn lint
+yarn test --runInBand --silent
 yarn lint:v3
 yarn typecheck:v3
 yarn test --runInBand --silent src/features/universalRewards src/features/nftPoolManager src/state/nftFarms
@@ -246,4 +250,4 @@ node scripts/run-v3-browser-acceptance.cjs ../coincollect-smart-contracts/projec
 
 The harness starts its own loopback app and Anvil chain, uses disposable accounts, and checks Studio funding and economic preflight, NFT participation, token receipts, claim expiry and recovery. See the [contracts release evidence and runbook](https://github.com/Coin-Collect/coincollect-smart-contracts/blob/pool-management/projects/universal-rewards-v3/V3.5.md).
 
-See [V3.5.1 platform and release checks](docs/universal-rewards-v351-readiness.md) for the current approval status.
+See the [V3.5.3 frontend verification](docs/universal-rewards-v353-verification.md) for the TypeScript baseline, root causes and release checks.

@@ -64,11 +64,11 @@ export const fetchNftsFromCollections = createAsyncThunk<
       return []
     }
 
-    const tokenIds = Object.values(nfts.data).map((nft) => nft.tokenId)
+    const tokens = Object.entries(nfts.data).map(([key, metadata]) => [metadata.tokenId ?? key, metadata] as const)
+    const tokenIds = tokens.map(([id]) => id)
     const nftsMarket = await getMarketDataForTokenIds(collectionAddress, tokenIds)
 
-    return tokenIds.map((id) => {
-      const apiMetadata = nfts.data[id]
+    return tokens.map(([id, apiMetadata]) => {
       const marketData = nftsMarket.find((nft) => nft.tokenId === id)
 
       return {
@@ -105,15 +105,18 @@ export const filterNftsFromCollection = createAsyncThunk<
     }
     const attrFilters = await fetchNftsFiltered(collectionAddress, attrParams)
 
+    if (!attrFilters) return []
+
     // Fetch market data for each token returned
-    const tokenIds = Object.values(attrFilters.data).map((apiToken) => apiToken.tokenId)
+    const tokens = Object.entries(attrFilters.data).map(([key, metadata]) => [metadata.tokenId ?? key, metadata] as const)
+    const tokenIds = tokens.map(([id]) => id)
     const marketData = await getNftsMarketData({ tokenId_in: tokenIds, collection: collectionAddress.toLowerCase() })
 
-    const nftTokens: NftToken[] = Object.values(attrFilters.data).map((apiToken) => {
-      const apiTokenMarketData = marketData.find((tokenMarketData) => tokenMarketData.tokenId === apiToken.tokenId)
+    const nftTokens: NftToken[] = tokens.map(([id, apiToken]) => {
+      const apiTokenMarketData = marketData.find((tokenMarketData) => tokenMarketData.tokenId === id)
 
       return {
-        tokenId: apiToken.tokenId,
+        tokenId: id,
         name: apiToken.name,
         description: apiToken.description,
         collectionName: apiToken.collection.name,
@@ -141,7 +144,7 @@ export const fetchNewPBAndUpdateExisting = createAsyncThunk<
     bunnyId: string
     existingTokensWithBunnyId: string[]
     allExistingPBTokenIds: string[]
-    existingMetadata: ApiSingleTokenData
+    existingMetadata: ApiSingleTokenData | null
     orderDirection: 'asc' | 'desc'
   }
 >(
@@ -164,11 +167,9 @@ export const fetchNewPBAndUpdateExisting = createAsyncThunk<
       })
 
       // 2. Fetch 30 more NFTs with specified bunny id
-      let newNfts = { data: { [bunnyId]: existingMetadata } }
-
-      if (!existingMetadata) {
-        newNfts = await getNftsFromCollectionApi(pancakeBunniesAddress)
-      }
+      const newNfts = existingMetadata
+        ? { data: { [bunnyId]: existingMetadata } }
+        : await getNftsFromCollectionApi(pancakeBunniesAddress)
       const nftsMarket = await getNftsByBunnyIdSg(bunnyId, existingTokensWithBunnyId, orderDirection)
 
       if (!newNfts?.data) {

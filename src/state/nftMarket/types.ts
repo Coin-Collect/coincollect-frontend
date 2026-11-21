@@ -100,6 +100,11 @@ export interface NftToken {
   meta?: Record<string, string | number>
 }
 
+export type NftListing = NftToken & { marketData: TokenMarketData }
+
+export const hasNftListing = (nft: NftToken): nft is NftListing =>
+  nft.marketData?.isTradable === true && Number(nft.marketData.currentAskPrice) > 0
+
 export interface NftFilter {
   loadingState: FetchStatus
   activeFilters: Record<string, NftAttribute>
@@ -130,6 +135,7 @@ export interface NftAttribute {
 // Internal type used to refer to a collection
 // Most fields are populated from API (via ApiCollection type)
 export interface Collection {
+  status?: string
   id: string
   address: string
   name: string
@@ -139,8 +145,8 @@ export interface Collection {
   active: boolean
   totalVolumeBNB: string
   numberTokensListed: string
-  tradingFee: string
-  creatorFee: string
+  tradingFee?: string
+  creatorFee?: string
   owner: string
   totalSupply: string
   verified: boolean
@@ -169,6 +175,13 @@ export interface User {
  */
 
 export interface ApiCollection {
+  status?: string
+  id?: string
+  active?: boolean
+  totalVolumeBNB?: string
+  numberTokensListed?: string
+  tradingFee?: string
+  creatorFee?: string
   address: string
   owner: string
   name: string

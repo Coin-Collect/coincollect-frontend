@@ -7,7 +7,7 @@ import { Divider, HorizontalDivider, RoundedImage } from '../shared/styles'
 
 interface SellStageProps {
   nftToSell: NftToken
-  lowestPrice: number
+  lowestPrice?: number
   continueToNextStage: () => void
   continueToTransferStage: () => void
 }

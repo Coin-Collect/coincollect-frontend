@@ -171,7 +171,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
           ? getFarmApr(new BigNumber(farm.poolWeight), cakePrice, totalLiquidity, farm.lpAddresses[ChainId.POLYGON])
           : { cakeRewardsApr: 0, lpRewardsApr: 0 }
 
-        return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalLiquidity }
+        return { ...farm, apr: cakeRewardsApr ?? undefined, lpRewardsApr, liquidity: totalLiquidity }
       })
 
       if (query) {
@@ -197,7 +197,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
     const sortFarms = (farms: FarmWithStakedValue[]): FarmWithStakedValue[] => {
       switch (sortOption) {
         case 'apr':
-          return orderBy(farms, (farm: FarmWithStakedValue) => farm.apr + farm.lpRewardsApr, 'desc')
+          return orderBy(farms, (farm: FarmWithStakedValue) => (farm.apr ?? 0) + (farm.lpRewardsApr ?? 0), 'desc')
         case 'multiplier':
           return orderBy(
             farms,

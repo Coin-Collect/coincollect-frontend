@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ChangeEvent, FormEvent, useEffect, useState, useMemo } from 'react'
 import {
   AutoRenewIcon,
@@ -21,10 +20,9 @@ import isEmpty from 'lodash/isEmpty'
 import { useInitialBlock } from 'state/block/hooks'
 import { SnapshotCommand } from 'state/types'
 import useToast from 'hooks/useToast'
-import useWeb3Provider from 'hooks/useActiveWeb3React'
 import { getBscScanLink } from 'utils'
 import truncateHash from 'utils/truncateHash'
-import { signMessage } from 'utils/web3React'
+import { useSignMessage } from 'wagmi'
 import { useTranslation } from 'contexts/Localization'
 import Container from 'components/Layout/Container'
 import { DatePicker, TimePicker, DatePickerPortal } from 'views/Voting/components/DatePicker'
@@ -34,6 +32,7 @@ import { PageMeta } from 'components/Layout/Page'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import type EasyMdeEditor from 'easymde'
 import { sendSnapshotData, Message, generateMetaData, generatePayloadData } from '../helpers'
 import Layout from '../components/Layout'
 import { FormErrors, Label, SecondaryLabel } from './styles'
@@ -64,7 +63,7 @@ const CreateProposal = () => {
   const { account } = useWeb3React()
   const initialBlock = useInitialBlock()
   const { push } = useRouter()
-  const { library, connector } = useWeb3Provider()
+  const { signMessageAsync } = useSignMessage()
   const { toastSuccess, toastError } = useToast()
   const [onPresentVoteDetailsModal] = useModal(<VoteDetailsModal block={state.snapshot} />)
   const { name, body, choices, startDate, startTime, endDate, endTime, snapshot } = state
@@ -72,6 +71,7 @@ const CreateProposal = () => {
 
   const handleSubmit = async (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault()
+    if (!account || !isEmpty(formErrors)) return
 
     try {
       setIsLoading(true)
@@ -94,7 +94,7 @@ const CreateProposal = () => {
         },
       })
 
-      const sig = await signMessage(connector, library, account, proposal)
+      const sig = await signMessageAsync({ account, message: proposal })
 
       if (sig) {
         const msg: Message = { address: account, msg: proposal, sig }
@@ -116,7 +116,7 @@ const CreateProposal = () => {
     }
   }
 
-  const updateValue = (key: string, value: string | Choice[] | Date) => {
+  const updateValue = (key: string, value: string | Choice[] | Date | null) => {
     setState((prevState) => ({
       ...prevState,
       [key]: value,
@@ -142,11 +142,11 @@ const CreateProposal = () => {
     updateValue('choices', newChoices)
   }
 
-  const handleDateChange = (key: string) => (value: Date) => {
+  const handleDateChange = (key: string) => (value: Date | null) => {
     updateValue(key, value)
   }
 
-  const options = useMemo(() => {
+  const options = useMemo<EasyMdeEditor.Options>(() => {
     return {
       hideIcons:
         account && ADMINS.includes(account.toLowerCase())

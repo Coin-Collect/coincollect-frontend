@@ -25,6 +25,7 @@ export const useApprovePool = (lpContract: Contract, sousId, earningTokenSymbol)
   const sousChefContract = useSousChef(sousId)
 
   const handleApprove = useCallback(async () => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       return callWithGasPrice(lpContract, 'approve', [sousChefContract.address, MaxUint256])
     })
@@ -54,7 +55,7 @@ export const useApprovePool = (lpContract: Contract, sousId, earningTokenSymbol)
 }
 
 // Approve COLLECT auto pool
-export const useVaultApprove = (vaultKey: VaultKey, setLastUpdated: () => void) => {
+export const useVaultApprove = (vaultKey: VaultKey | undefined, setLastUpdated: () => void) => {
   const vaultPoolContract = useVaultPoolContract(vaultKey)
   const { t } = useTranslation()
 
@@ -65,7 +66,7 @@ export const useVaultApprove = (vaultKey: VaultKey, setLastUpdated: () => void) 
   )
 }
 
-export const useCheckVaultApprovalStatus = (vaultKey: VaultKey) => {
+export const useCheckVaultApprovalStatus = (vaultKey: VaultKey | undefined) => {
   const vaultPoolContract = useVaultPoolContract(vaultKey)
 
   return useCakeApprovalStatus(vaultPoolContract?.address)

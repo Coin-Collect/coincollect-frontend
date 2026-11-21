@@ -11,6 +11,7 @@ export function ProfileRequirementWarning({
 }) {
   const { t } = useTranslation()
   const { notMeetRequired, notMeetThreshold } = useProfileRequirement(profileRequirement)
+  if (!profileRequirement) return null
   return (
     <Message variant="warning">
       <Box>

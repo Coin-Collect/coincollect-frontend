@@ -3,8 +3,8 @@ import times from 'lodash/times'
 import orderBy from 'lodash/orderBy'
 import { Skeleton, Table, Td, Th } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { getBetHistory, transformBetResponse } from 'state/predictions/helpers'
-import { Bet } from 'state/types'
+import { getBetHistory, transformBetResponse, hasPredictionRound } from 'state/predictions/helpers'
+import { BetWithRound } from 'state/types'
 import PositionLabel from './PositionLabel'
 import { NetWinnings } from './Results/styles'
 
@@ -15,7 +15,7 @@ interface PreviousBetsTableProps {
 
 const PreviousBetsTable: React.FC<PreviousBetsTableProps> = ({ numberOfBets = 5, account }) => {
   const [isFetching, setIsFetching] = useState(false)
-  const [bets, setBets] = useState<Bet[]>([])
+  const [bets, setBets] = useState<BetWithRound[]>([])
   const { t } = useTranslation()
   const orderedBets = orderBy(bets, ['round.epoch'], ['desc'])
 
@@ -30,7 +30,7 @@ const PreviousBetsTable: React.FC<PreviousBetsTableProps> = ({ numberOfBets = 5,
           numberOfBets,
         )
 
-        setBets(response.map(transformBetResponse))
+        setBets(response.map(transformBetResponse).filter(hasPredictionRound))
       } finally {
         setIsFetching(false)
       }

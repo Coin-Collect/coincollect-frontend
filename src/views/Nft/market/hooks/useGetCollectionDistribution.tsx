@@ -11,7 +11,7 @@ import { pancakeBunniesAddress } from '../constants'
 const useGetCollectionDistribution = (collectionAddress: string) => {
   const { data, status } = useSWRImmutable(
     collectionAddress ? ['distribution', collectionAddress] : null,
-    async () => (await getCollectionDistributionApi<ApiCollectionDistribution>(collectionAddress)).data,
+    async () => (await getCollectionDistributionApi<ApiCollectionDistribution>(collectionAddress))?.data,
   )
 
   return {
@@ -22,7 +22,7 @@ const useGetCollectionDistribution = (collectionAddress: string) => {
 
 interface StatePB {
   isFetching: boolean
-  data: Record<string, ApiSingleTokenData & { tokenCount: number }>
+  data: Record<string, ApiSingleTokenData & { tokenCount: number }> | null
 }
 
 export const useGetCollectionDistributionPB = () => {
@@ -31,9 +31,10 @@ export const useGetCollectionDistributionPB = () => {
   useEffect(() => {
     const fetchTokens = async () => {
       setState((prevState) => ({ ...prevState, isFetching: true }))
-      let apiResponse: ApiResponseCollectionTokens
+      let apiResponse: ApiResponseCollectionTokens | null
       try {
         apiResponse = await getNftsFromCollectionApi(pancakeBunniesAddress)
+        if (!apiResponse) throw new Error('Collection metadata unavailable')
       } catch (error) {
         setState((prevState) => ({ ...prevState, isFetching: false }))
         return

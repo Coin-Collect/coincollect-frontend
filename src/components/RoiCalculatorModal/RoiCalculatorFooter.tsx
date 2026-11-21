@@ -30,11 +30,11 @@ const BulletList = styled.ul`
 interface RoiCalculatorFooterProps {
   isFarm: boolean
   apr: number
-  displayApr: string
+  displayApr?: string
   autoCompoundFrequency: number
-  multiplier: string
-  linkLabel: string
-  linkHref: string
+  multiplier?: string
+  linkLabel?: string
+  linkHref?: string
   performanceFee: number
 }
 
@@ -86,7 +86,7 @@ const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
                   {t('APR (incl. LP rewards)')}
                 </Text>
                 <Text small textAlign="right">
-                  {displayApr}%
+                  {displayApr ? `${displayApr}%` : '—'}
                 </Text>
               </>
             )}
@@ -152,7 +152,7 @@ const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
             )}
           </BulletList>
           <Flex justifyContent="center" mt="24px">
-            <LinkExternal href={linkHref}>{linkLabel}</LinkExternal>
+            {linkHref && linkLabel && <LinkExternal href={linkHref}>{linkLabel}</LinkExternal>}
           </Flex>
         </Box>
       )}

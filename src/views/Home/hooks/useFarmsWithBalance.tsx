@@ -16,13 +16,13 @@ export interface FarmWithBalance extends SerializedFarmConfig {
 
 const useFarmsWithBalance = () => {
   const [farmsWithStakedBalance, setFarmsWithStakedBalance] = useState<FarmWithBalance[]>([])
-  const [earningsSum, setEarningsSum] = useState<number>(null)
+  const [earningsSum, setEarningsSum] = useState<number | null>(null)
   const { account } = useWeb3React()
   const poolLength = useFarmsPoolLength()
 
   useFastRefreshEffect(() => {
     const fetchBalances = async () => {
-      const farmsCanFetch = farmsConfig.filter((f) => poolLength > f.pid)
+      const farmsCanFetch = farmsConfig.filter((f) => poolLength !== undefined && poolLength > f.pid)
       const calls = farmsCanFetch.map((farm) => ({
         address: getMasterChefAddress(),
         name: 'pendingCake',

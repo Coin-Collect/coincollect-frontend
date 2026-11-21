@@ -9,7 +9,7 @@ interface WonAuction {
   bidderData: Bidder
 }
 
-const useCongratulateAuctionWinner = (currentAuction: Auction, bidders: Bidder[]): WonAuction => {
+const useCongratulateAuctionWinner = (currentAuction: Auction, bidders: Bidder[]): WonAuction | null => {
   const [wonAuction, setWonAuction] = useState<WonAuction | null>(null)
 
   const { account } = useWeb3React()
@@ -17,17 +17,18 @@ const useCongratulateAuctionWinner = (currentAuction: Auction, bidders: Bidder[]
   const farmAuctionContract = useFarmAuctionContract(false)
 
   useEffect(() => {
+    setWonAuction(null)
+    if (!account) return
     const checkIfWonPreviousAuction = async (previousAuctionId: number) => {
       const auctionData = await farmAuctionContract.auctions(previousAuctionId)
       const processedAuctionData = await processAuctionData(previousAuctionId, auctionData)
       const [auctionBidders] = await farmAuctionContract.viewBidsPerAuction(previousAuctionId, 0, 500)
       const sortedBidders = sortAuctionBidders(auctionBidders)
       const { leaderboardThreshold } = processedAuctionData
-      const winnerAddresses = sortedBidders
-        .filter((bidder) => leaderboardThreshold.lte(bidder.amount))
-        .map((bidder) => bidder.account)
-      if (winnerAddresses.includes(account)) {
-        const accountBidderData = sortedBidders.find((bidder) => bidder.account === account)
+      const accountBidderData = sortedBidders.find(
+        (bidder) => bidder.account === account && leaderboardThreshold.lte(bidder.amount),
+      )
+      if (accountBidderData) {
         setWonAuction({
           auction: processedAuctionData,
           bidderData: accountBidderData,
@@ -35,12 +36,11 @@ const useCongratulateAuctionWinner = (currentAuction: Auction, bidders: Bidder[]
       }
     }
 
-    const winnerAddresses = bidders
-      .filter((bidder) => currentAuction.leaderboardThreshold.lte(bidder.amount))
-      .map((bidder) => bidder.account)
+    const accountBidderData = bidders.find(
+      (bidder) => bidder.account === account && currentAuction.leaderboardThreshold.lte(bidder.amount),
+    )
     const previousAuctionId = currentAuction.id - 1
-    if (currentAuction.status === AuctionStatus.Closed && winnerAddresses.includes(account)) {
-      const accountBidderData = bidders.find((bidder) => bidder.account === account)
+    if (currentAuction.status === AuctionStatus.Closed && accountBidderData) {
       setWonAuction({
         auction: currentAuction,
         bidderData: accountBidderData,

@@ -54,6 +54,7 @@ const IfoCardActions: React.FC<Props> = ({
 
   const needClaim =
     publicIfoData.status === 'finished' &&
+    userPoolCharacteristics &&
     !userPoolCharacteristics.hasClaimed &&
     (userPoolCharacteristics.offeringAmountInToken.isGreaterThan(0) ||
       userPoolCharacteristics.refundingAmountInLP.isGreaterThan(0))

@@ -57,7 +57,7 @@ const AprRow: React.FC<AprRowProps> = ({ pool, stakedBalance, performanceFee = 0
       stakingTokenBalance={stakedBalance.plus(stakingTokenBalance)}
       stakingTokenSymbol={stakingToken.symbol}
       earningTokenSymbol={earningToken.symbol}
-      autoCompoundFrequency={vaultPoolConfig[vaultKey]?.autoCompoundFrequency ?? 0}
+      autoCompoundFrequency={vaultKey ? vaultPoolConfig[vaultKey].autoCompoundFrequency : 0}
       performanceFee={performanceFee}
     />,
   )

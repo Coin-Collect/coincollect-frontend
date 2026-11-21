@@ -34,7 +34,7 @@ const POOL_SEARCH = gql`
 `
 
 interface SingleQueryResponse {
-  id: string[]
+  id: string
 }
 
 interface TokenSearchResponse {
@@ -50,7 +50,7 @@ interface PoolSearchResponse {
 
 const getIds = (entityArrays: SingleQueryResponse[][]) => {
   const ids = entityArrays
-    .reduce((entities, currentTokenArray) => [...entities, ...currentTokenArray], [])
+    .flat()
     .map((entity) => entity.id)
   return Array.from(new Set(ids))
 }
@@ -64,7 +64,7 @@ const useFetchSearchResults = (
   poolsLoading: boolean
   error: boolean
 } => {
-  const [searchResults, setSearchResults] = useState({
+  const [searchResults, setSearchResults] = useState<{ tokens: string[]; pools: string[]; loading: boolean; error: boolean }>({
     tokens: [], // Token ids found by search query
     pools: [], // Pool ids found by search query
     loading: false, // Search query is in progress

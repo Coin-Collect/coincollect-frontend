@@ -235,7 +235,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
       </Text>
       <TooltipTokenRow>
         <TooltipTokenLabel>
-          <RewardTooltipTokenIcon token={earnLabel} tokenMeta={farm.earningToken as Token} />
+          <RewardTooltipTokenIcon token={earnLabel ?? 'COLLECT'} tokenMeta={farm.earningToken as Token} />
           <Text fontSize="12px" lineHeight="1.2">
             {earnLabel}
           </Text>
@@ -269,7 +269,7 @@ const CardActions: React.FC<FarmCardActionsProps> = ({ farm, account, addLiquidi
 
   // TODO: Duplicate Use Codes
   const { onStake } = useStakeFarms(pid)
-  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
+  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: string }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
       const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
       const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);

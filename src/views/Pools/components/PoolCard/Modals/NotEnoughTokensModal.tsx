@@ -4,7 +4,7 @@ import { Modal, Text, Button, OpenNewIcon, Link } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
 
 interface NotEnoughTokensModalProps {
-  tokenSymbol: string
+  tokenSymbol?: string
   onDismiss?: () => void
 }
 
@@ -18,17 +18,17 @@ const NotEnoughTokensModal: React.FC<NotEnoughTokensModalProps> = ({ tokenSymbol
 
   return (
     <Modal
-      title={t('%symbol% required', { symbol: tokenSymbol })}
+      title={t('%symbol% required', { symbol: tokenSymbol ?? t('token') })}
       onDismiss={onDismiss}
       headerBackground={theme.colors.gradients.cardHeader}
     >
       <Text color="failure" bold>
-        {t('Insufficient %symbol% balance', { symbol: tokenSymbol })}
+        {t('Insufficient %symbol% balance', { symbol: tokenSymbol ?? t('token') })}
       </Text>
-      <Text mt="24px">{t('You’ll need %symbol% to stake in this pool!', { symbol: tokenSymbol })}</Text>
+      <Text mt="24px">{t('You’ll need %symbol% to stake in this pool!', { symbol: tokenSymbol ?? t('token') })}</Text>
       <Text>
         {t('Buy some %symbol%, or make sure your %symbol% isn’t in another pool or LP.', {
-          symbol: tokenSymbol,
+          symbol: tokenSymbol ?? t('token'),
         })}
       </Text>
       <Button mt="24px" as="a" external href="/swap">

@@ -242,6 +242,7 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({ onDismiss }) => {
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
+        if (!account) return false
         try {
           const response = await cakeContract.allowance(account, lotteryContract.address)
           const currentAllowance = ethersToBigNumber(response)
@@ -251,6 +252,7 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({ onDismiss }) => {
         }
       },
       onApprove: () => {
+        if (!account) throw new Error('Connect your wallet to approve lottery tickets')
         return callWithGasPrice(cakeContract, 'approve', [lotteryContract.address, MaxUint256])
       },
       onApproveSuccess: async ({ receipt }) => {
@@ -260,12 +262,13 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({ onDismiss }) => {
         )
       },
       onConfirm: () => {
+        if (!account || !currentLotteryId) throw new Error('A connected wallet and active lottery round are required')
         const ticketsForPurchase = getTicketsForPurchase()
         return callWithGasPrice(lotteryContract, 'buyTickets', [currentLotteryId, ticketsForPurchase])
       },
       onSuccess: async ({ receipt }) => {
         onDismiss?.()
-        dispatch(fetchUserTicketsAndLotteries({ account, currentLotteryId }))
+        if (account) dispatch(fetchUserTicketsAndLotteries({ account, currentLotteryId }))
         toastSuccess(t('Lottery tickets purchased!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       },
     })
@@ -321,7 +324,7 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({ onDismiss }) => {
         </Flex>
       </Flex>
       <BalanceInput
-        isWarning={account && (userNotEnoughCake || maxTicketPurchaseExceeded)}
+        isWarning={Boolean(account) && (userNotEnoughCake || maxTicketPurchaseExceeded)}
         placeholder="0"
         value={ticketsToBuy}
         onUserInput={handleInputChange}
@@ -357,7 +360,7 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({ onDismiss }) => {
       {account && !hasFetchedBalance ? (
         <Skeleton width="100%" height={20} mt="8px" mb="24px" />
       ) : (
-        <ShortcutButtonsWrapper isVisible={account && hasFetchedBalance && oneHundredPercentOfBalance >= 1}>
+        <ShortcutButtonsWrapper isVisible={Boolean(account) && hasFetchedBalance && oneHundredPercentOfBalance >= 1}>
           {tenPercentOfBalance >= 1 && (
             <NumTicketsToBuyButton onClick={() => handleNumberButtonClick(tenPercentOfBalance)}>
               {hasFetchedBalance ? tenPercentOfBalance : ``}

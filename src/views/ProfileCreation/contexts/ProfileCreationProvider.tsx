@@ -56,7 +56,7 @@ const reducer = (state: State, action: Actions): State => {
   }
 }
 
-export const ProfileCreationContext = createContext<ContextType>(null)
+export const ProfileCreationContext = createContext<ContextType | null>(null)
 
 const ProfileCreationProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -67,9 +67,9 @@ const ProfileCreationProvider: React.FC<React.PropsWithChildren> = ({ children }
     let isSubscribed = true
 
     const fetchData = async () => {
+      if (!account) return
       const bunnyFactoryContract = getBunnyFactoryContract()
       const canMint = await bunnyFactoryContract.canMint(account)
-      dispatch({ type: 'initialize', step: canMint ? 0 : 1 })
 
       // When changing wallets quickly unmounting before the hasClaim finished causes a React error
       if (isSubscribed) {

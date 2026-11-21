@@ -36,7 +36,7 @@ import PoolTabButtons from './components/PoolTabButtons'
 import BountyCard from './components/BountyCard'
 import HelpButton from './components/HelpButton'
 import PoolsTable from './components/PoolsTable/PoolsTable'
-import { getCakeVaultEarnings } from './helpers'
+import { getCakeVaultEarnings, isVaultPool } from './helpers'
 import DynamicPoolsSection from 'features/poolManager/components/DynamicPoolsSection'
 
 const CardLayout = styled(FlexLayout)`
@@ -242,7 +242,7 @@ const Pools: React.FC = () => {
   const cardLayout = (
     <CardLayout>
       {chosenPools.map((pool) =>
-        pool.vaultKey ? (
+        isVaultPool(pool) ? (
           <CakeVaultCard key={pool.vaultKey} pool={pool} showStakedOnly={stakedOnly} />
         ) : (
           <PoolCard key={pool.sousId} pool={pool} account={account} />

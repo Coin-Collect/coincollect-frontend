@@ -7,15 +7,17 @@ import { getAddress } from 'utils/addressHelpers'
 
 const useStakeFarms = (pid: number) => {
   const farm = useFarmFromPid(pid)
-  const isSmartNftPool = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
+  const isSmartNftPool = farm?.contractAddresses ? getAddress(farm.contractAddresses) : null
   const masterChefContract = useNftFarmActionContract(pid, Boolean(isSmartNftPool))
   const gasPrice = useGasPrice()
+  const hasPool = Boolean(farm)
 
   const handleStake = useCallback(
-    async (collectionAddresses: string[], tokenIds: number[]) => {
-      return stakeNftFarm(masterChefContract, pid, collectionAddresses, tokenIds, gasPrice, isSmartNftPool, farm.performanceFee);
+    async (collectionAddresses: string[], tokenIds: string[]) => {
+      if (!hasPool || !masterChefContract) throw new Error('NFT pool or wallet is unavailable.')
+      return stakeNftFarm(masterChefContract, pid, collectionAddresses, tokenIds, gasPrice, isSmartNftPool, farm?.performanceFee);
     },
-    [masterChefContract, pid, gasPrice, isSmartNftPool, farm.performanceFee]
+    [hasPool, masterChefContract, pid, gasPrice, isSmartNftPool, farm?.performanceFee]
   );
   
 

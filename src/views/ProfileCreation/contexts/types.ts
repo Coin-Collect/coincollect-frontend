@@ -4,16 +4,16 @@ export type Actions =
   | { type: 'next_step' }
   | { type: 'set_team'; teamId: number }
   | { type: 'set_selected_nft'; collectionAddress: string; tokenId: string }
-  | { type: 'set_username'; userName: string | null }
+  | { type: 'set_username'; userName: string }
   | { type: 'initialize'; step: number }
 
 export interface State {
   isInitialized: boolean
   currentStep: number
-  teamId: number
+  teamId: number | null
   selectedNft: {
-    tokenId: string
-    collectionAddress: string
+    tokenId: string | null
+    collectionAddress: string | null
   }
   userName: string
   minimumCakeRequired: BigNumber

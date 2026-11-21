@@ -58,7 +58,7 @@ const CollectionNfts: React.FC<CollectionNftsProps> = ({ collection }) => {
     const fetchApiData = async (marketData: TokenMarketData[]) => {
       const apiRequestPromises = marketData.map((marketNft) => getNftApi(collectionAddress, marketNft.tokenId))
       const apiResponses = await Promise.all(apiRequestPromises)
-      const responsesWithMarketData = apiResponses.reduce((acc, apiNft, i) => {
+      const responsesWithMarketData = apiResponses.reduce<NftToken[]>((acc, apiNft, i) => {
         if (apiNft) {
           acc.push({
             ...apiNft,
@@ -141,7 +141,7 @@ const CollectionNfts: React.FC<CollectionNftsProps> = ({ collection }) => {
         alignItems="start"
       >
         {nftsToShow.map((nft) => {
-          const currentAskPriceAsNumber = nft.marketData && parseFloat(nft.marketData.currentAskPrice)
+          const currentAskPriceAsNumber = Number(nft.marketData?.currentAskPrice)
 
           return (
             <CollectibleLinkCard

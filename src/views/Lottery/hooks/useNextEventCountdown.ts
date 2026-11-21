@@ -1,34 +1,37 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch } from 'state'
 import { useLottery } from 'state/lottery/hooks'
 import { fetchCurrentLottery, setLotteryIsTransitioning } from 'state/lottery'
 
-const useNextEventCountdown = (nextEventTime: number): number => {
+const useNextEventCountdown = (nextEventTime: number | null): number | null => {
   const dispatch = useAppDispatch()
-  const [secondsRemaining, setSecondsRemaining] = useState(null)
-  const timer = useRef(null)
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null)
   const { currentLotteryId } = useLottery()
 
   useEffect(() => {
     dispatch(setLotteryIsTransitioning({ isTransitioning: false }))
-    const currentSeconds = Math.floor(Date.now() / 1000)
-    const secondsRemainingCalc = nextEventTime - currentSeconds
-    setSecondsRemaining(secondsRemainingCalc)
+    if (nextEventTime === null || !Number.isFinite(nextEventTime)) {
+      setSecondsRemaining(null)
+      return undefined
+    }
 
-    timer.current = setInterval(() => {
-      setSecondsRemaining((prevSecondsRemaining) => {
-        // Clear current interval at end of countdown and fetch current lottery to get updated state
-        if (prevSecondsRemaining <= 1) {
-          clearInterval(timer.current)
+    const getRemaining = () => Math.max(0, nextEventTime - Math.floor(Date.now() / 1000))
+    setSecondsRemaining(getRemaining())
+
+    const timer = setInterval(() => {
+      const remaining = getRemaining()
+      setSecondsRemaining(remaining)
+      if (remaining === 0) {
+        clearInterval(timer)
+        if (currentLotteryId) {
           dispatch(setLotteryIsTransitioning({ isTransitioning: true }))
           dispatch(fetchCurrentLottery({ currentLotteryId }))
         }
-        return prevSecondsRemaining - 1
-      })
+      }
     }, 1000)
 
-    return () => clearInterval(timer.current)
-  }, [setSecondsRemaining, nextEventTime, currentLotteryId, timer, dispatch])
+    return () => clearInterval(timer)
+  }, [nextEventTime, currentLotteryId, dispatch])
 
   return secondsRemaining
 }

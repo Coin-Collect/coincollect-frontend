@@ -5,14 +5,15 @@ import { nftsBaseUrl } from 'views/Nft/market/constants'
 import useWeb3React from 'hooks/useWeb3React'
 import { useRouter } from 'next/router'
 
-const ReactivateProfile: React.FC<CompetitionProps> = ({ onDismiss }) => {
+const ReactivateProfile: React.FC<Pick<CompetitionProps, 'onDismiss'>> = ({ onDismiss }) => {
   const { account } = useWeb3React()
   const { t } = useTranslation()
   const router = useRouter()
 
   const handleClick = () => {
+    if (!account) return
     router.push(`${nftsBaseUrl}/profile/${account.toLowerCase()}`)
-    onDismiss()
+    onDismiss?.()
   }
 
   return (

@@ -48,6 +48,10 @@ export const transformPool = (pool: SerializedPool): DeserializedPool => {
 
   return {
     ...rest,
+    apr: pool.apr ?? NaN,
+    rawApr: pool.rawApr ?? NaN,
+    earningTokenPrice: pool.earningTokenPrice ?? NaN,
+    stakingTokenPrice: pool.stakingTokenPrice ?? NaN,
     startBlock,
     profileRequirement: transformProfileRequirement(profileRequirement),
     stakingToken: deserializeToken(stakingToken),

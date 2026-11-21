@@ -31,8 +31,8 @@ export interface PublicIfoData {
   startBlockNum: number
   endBlockNum: number
   currencyPriceInUSD: BigNumber
-  numberPoints: number
-  thresholdPoints: EthersBigNumber
+  numberPoints: number | null
+  thresholdPoints?: EthersBigNumber
   balance: number
   totalSupply: number
   cost: number
@@ -54,7 +54,7 @@ export interface UserPoolCharacteristics {
   refundingAmountInLP: BigNumber // @contract: userRefundingAmountPool
   taxAmountInLP: BigNumber // @contract: userTaxAmountPool
   hasClaimed: boolean // @contract: claimedPool
-  isPendingTx: boolean
+  isPendingTx?: boolean
 }
 
 // Use only inside the useGetWalletIfoData hook

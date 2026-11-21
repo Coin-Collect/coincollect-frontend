@@ -1,8 +1,6 @@
-import { NoProfileAvatarIcon, Flex, Heading, Skeleton, Text, Box } from '@pancakeswap/uikit'
+import { NoProfileAvatarIcon, Flex, Skeleton, Text, Box } from '@pancakeswap/uikit'
 import useWeb3React from 'hooks/useWeb3React'
 import styled from 'styled-components'
-import { useProfile } from 'state/profile/hooks'
-import ProfileAvatarWithTeam from 'components/ProfileAvatarWithTeam'
 import { useTranslation } from 'contexts/Localization'
 import truncateHash from 'utils/truncateHash'
 
@@ -11,12 +9,6 @@ const Desktop = styled(Flex)`
   display: none;
   ${({ theme }) => theme.mediaQueries.md} {
     display: flex;
-  }
-`
-
-const Mobile = styled(Flex)`
-  ${({ theme }) => theme.mediaQueries.md} {
-    display: none;
   }
 `
 
@@ -35,56 +27,22 @@ const StyledNoProfileAvatarIcon = styled(NoProfileAvatarIcon)`
 `
 
 const UserDetail = () => {
-  //const { profile, isLoading } = useProfile()
   const { t } = useTranslation()
   const { account } = useWeb3React()
-  const truncatedAddress = truncateHash(account)
-
-  // CAUTION: Profile details disabled here
-  const profile = null
-  const isLoading = false
-
-  const getDesktopHeading = () => {
-    if (profile) {
-      return <Heading scale="xl">{t('Hi, %userName%!', { userName: profile.username })}</Heading>
-    }
-    if (isLoading && !profile) {
-      return <Skeleton width={200} height={40} my="4px" />
-    }
-    return <></>
-  }
-
-  const getMobileHeading = () => {
-    if (profile) {
-      return (
-        <Heading mb="18px" textAlign="center">
-          {t('Hi, %userName%!', { userName: profile.username })}
-        </Heading>
-      )
-    }
-    if (isLoading && !profile) {
-      return <Skeleton width={120} height={20} mt="2px" mb="18px" />
-    }
-    return <></>
-  }
 
   return (
-    <>
-      <Desktop>
+    <Desktop>
         <Box mr="24px">
-          <Sticker>{profile ? <ProfileAvatarWithTeam profile={profile} /> : <StyledNoProfileAvatarIcon />}</Sticker>
+          <Sticker><StyledNoProfileAvatarIcon /></Sticker>
         </Box>
         <Flex flexDirection="column">
-          {getDesktopHeading()}
-          {isLoading || !account ? (
+          {!account ? (
             <Skeleton width={160} height={16} my="4px" />
           ) : (
-            <Text fontSize="16px"> {t('Connected with %address%', { address: truncatedAddress })}</Text>
+            <Text fontSize="16px"> {t('Connected with %address%', { address: truncateHash(account) })}</Text>
           )}
         </Flex>
-      </Desktop>
-      <Mobile>{getMobileHeading()}</Mobile>
-    </>
+    </Desktop>
   )
 }
 

@@ -3,9 +3,11 @@ import addresses from 'config/constants/contracts'
 import { Address } from 'config/constants/types'
 import { VaultKey } from 'state/types'
 
-export const getAddress = (address: Address): string => {
-  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID
-  return address[chainId] ? address[chainId] : address[ChainId.MAINNET]
+export const getAddress = (address: Address, fallback = ChainId.MAINNET): string => {
+  const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON)
+  const configured = address[chainId] ?? address[fallback]
+  if (!configured) throw new Error(`Contract address is unavailable on chain ${chainId}`)
+  return configured
 }
 
 export const getMasterChefAddress = () => {
@@ -13,41 +15,41 @@ export const getMasterChefAddress = () => {
 }
 // Only Pool Version Masterchef
 export const getCoinCollectPoolAddress = () => {
-  return getAddress(addresses.coinCollectPool)
+  return getAddress(addresses.coinCollectPool, ChainId.POLYGON)
 }
 
-export const getSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+export const getSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON)) => {
   return addresses.smartChefFactory?.[chainId] || null
 }
 
-export const getSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+export const getSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON)) => {
   return addresses.smartChefFactoryDeploymentBlock?.[chainId] || null
 }
-export const getNftSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+export const getNftSmartChefFactoryAddress = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON)) => {
   return addresses.nftSmartChefFactory?.[chainId] || null
 }
-export const getNftSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)) => {
+export const getNftSmartChefFactoryDeploymentBlock = (chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON)) => {
   return addresses.nftSmartChefFactoryDeploymentBlock?.[chainId] || null
 }
 // Only Farm Version Masterchef
 export const getCoinCollectFarmAddress = () => {
-  return getAddress(addresses.coinCollectFarm)
+  return getAddress(addresses.coinCollectFarm, ChainId.POLYGON)
 }
 // Nft Farm Version Masterchef
 export const getCoinCollectNftStakeAddress = () => {
-  return getAddress(addresses.coinCollectNftStake)
+  return getAddress(addresses.coinCollectNftStake, ChainId.POLYGON)
 }
 export const getCoinCollectClaimRewardAddress = () => {
-  return getAddress(addresses.coinCollectClaimReward)
+  return getAddress(addresses.coinCollectClaimReward, ChainId.POLYGON)
 }
 export const getCoinCollectClaimRewardV2Address = () => {
-  return getAddress(addresses.coinCollectClaimRewardV2)
+  return getAddress(addresses.coinCollectClaimRewardV2, ChainId.POLYGON)
 }
 export const getMulticallAddress = () => {
   return getAddress(addresses.multiCall)
 }
 export const getMulticallPolygonAddress = () => {
-  return getAddress(addresses.multiCallPolygon)
+  return getAddress(addresses.multiCallPolygon, ChainId.POLYGON)
 }
 export const getLotteryV2Address = () => {
   return getAddress(addresses.lotteryV2)
@@ -80,55 +82,53 @@ export const getEasterNftAddress = () => {
   return getAddress(addresses.easterNft)
 }
 export const getCoinCollectNftAddress = () => {
-  return getAddress(addresses.coinCollectNft)
+  return getAddress(addresses.coinCollectNft, ChainId.POLYGON)
 }
 export const getCoinCollectBronzeNftAddress = () => {
-  return getAddress(addresses.coinCollectBronzeNft)
+  return getAddress(addresses.coinCollectBronzeNft, ChainId.POLYGON)
 }
 export const getCoinCollectSilverNftAddress = () => {
-  return getAddress(addresses.coinCollectSilverNft)
+  return getAddress(addresses.coinCollectSilverNft, ChainId.POLYGON)
 }
 export const getCoinCollectGoldNftAddress = () => {
-  return getAddress(addresses.coinCollectGoldNft)
+  return getAddress(addresses.coinCollectGoldNft, ChainId.POLYGON)
 }
 export const getLotNftAddress = () => {
-  return getAddress(addresses.lotNft)
+  return getAddress(addresses.lotNft, ChainId.POLYGON)
 }
 export const getBlitzBrawlerNftAddress = () => {
-  return getAddress(addresses.blitzBrawlerNft)
+  return getAddress(addresses.blitzBrawlerNft, ChainId.POLYGON)
 }
 export const getAvatarsAiNftAddress = () => {
-  return getAddress(addresses.avatarsAiNft)
+  return getAddress(addresses.avatarsAiNft, ChainId.POLYGON)
 }
 export const getBeastHunterNftAddress = () => {
-  return getAddress(addresses.beastHunterNft)
+  return getAddress(addresses.beastHunterNft, ChainId.POLYGON)
 }
 export const getNitroNftAddress = () => {
-  return getAddress(addresses.nitroNft)
+  return getAddress(addresses.nitroNft, ChainId.POLYGON)
 }
 export const getPlaceDjNftAddress = () => {
-  return getAddress(addresses.placeDjNft)
+  return getAddress(addresses.placeDjNft, ChainId.POLYGON)
 }
 export const getZidanogoNftAddress = () => {
-  return getAddress(addresses.zidanogoNft)
+  return getAddress(addresses.zidanogoNft, ChainId.POLYGON)
 }
 export const getSapienXNftAddress = () => {
-  return getAddress(addresses.sapienXNft)
+  return getAddress(addresses.sapienXNft, ChainId.POLYGON)
 }
-export const getVaultPoolAddress = (vaultKey: VaultKey) => {
+export const getVaultPoolAddress = (vaultKey?: VaultKey) => {
   if (!vaultKey) {
     return null
   }
-  // CAUTION: This line below added by CoinCollect
-  const address = vaultKey == "cakeVault" ? addresses.coinCollectAutoPoolVault : addresses[vaultKey]
-  return getAddress(address)
+  return vaultKey === VaultKey.CakeVault ? getCoinCollectAutoPoolVaultAddress() : getAddress(addresses[vaultKey])
 }
 
 export const getCakeVaultAddress = () => {
   return getAddress(addresses.cakeVault)
 }
 export const getCoinCollectAutoPoolVaultAddress = () => {
-  return getAddress(addresses.coinCollectAutoPoolVault)
+  return getAddress(addresses.coinCollectAutoPoolVault, ChainId.POLYGON)
 }
 export const getIfoPoolAddress = () => {
   return getAddress(addresses.ifoPool)

@@ -5,7 +5,7 @@ const BAD_SRCS: string[] = []
 
 export interface LogoLoaderProps {
   alt: string
-  src: string
+  src?: string
 }
 
 /**
@@ -14,7 +14,7 @@ export interface LogoLoaderProps {
 const LogoLoader: React.FC<LogoLoaderProps> = ({ src, alt, ...rest }) => {
   const [, refresh] = useState(0)
 
-  const srcFailedLoading = BAD_SRCS.includes(src)
+  const srcFailedLoading = src && BAD_SRCS.includes(src)
 
   if (src && !srcFailedLoading) {
     return (

@@ -40,7 +40,7 @@ const cardConfig = (
 ): {
   title: string
   variant: 'blue' | 'violet'
-  tooltip: string | ReactElement
+  tooltip: string | ReactElement | null
 } => {
   switch (poolId) {
     case PoolIds.poolBasic:
@@ -93,7 +93,7 @@ const cardConfig = (
 const SmallCard: React.FC<IfoCardProps> = ({ poolId, ifo, publicIfoData, walletIfoData, onApprove, enableStatus }) => {
   const { t } = useTranslation()
 
-  const { admissionProfile, pointThreshold } = publicIfoData[poolId]
+  const { admissionProfile, pointThreshold }  = publicIfoData[poolId] ?? {}
 
   const { needQualifiedNFT, needQualifiedPoints } = useMemo(() => {
     return ifo.version === 3.1 && poolId === PoolIds.poolBasic

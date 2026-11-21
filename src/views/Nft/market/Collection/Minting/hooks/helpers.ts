@@ -1,6 +1,6 @@
-import { IfoStatus } from 'config/constants/types'
+import { MintingStatus } from 'config/constants/types'
 
-export const getStatus = (currentBlock: number, startBlock: number, totalSupply: number, maxSupply: number, isSaleActive: boolean): IfoStatus => {
+export const getStatus = (currentBlock: number, startBlock: number, totalSupply: number, maxSupply: number, isSaleActive: boolean): MintingStatus => {
   // Add an extra check to currentBlock because it takes awhile to fetch so the initial value is 0
   // making the UI change to an inaccurate status
   if (currentBlock === 0) {
@@ -20,7 +20,6 @@ export const getStatus = (currentBlock: number, startBlock: number, totalSupply:
   }
 
   if (!isSaleActive) {
-    // @ts-ignore
     return 'paused'
   }
 

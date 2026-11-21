@@ -1,14 +1,15 @@
 import { useRef, useState, useEffect, useCallback, Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'contexts/Localization'
-import { createChart, IChartApi } from 'lightweight-charts'
+import { createChart, IChartApi, UTCTimestamp } from 'lightweight-charts'
 import { format } from 'date-fns'
 import useTheme from 'hooks/useTheme'
+import { PriceChartEntry } from 'state/info/types'
 import { CandleChartLoader } from 'views/Info/components/ChartLoaders'
 
 const CANDLE_CHART_HEIGHT = 250
 
 export type LineChartProps = {
-  data: any[]
+  data?: PriceChartEntry[]
   setValue?: Dispatch<SetStateAction<number | undefined>> // used for value on hover
   setLabel?: Dispatch<SetStateAction<string | undefined>> // used for value label on hover
 } & React.HTMLAttributes<HTMLDivElement>
@@ -33,7 +34,7 @@ const CandleChart = ({ data, setValue, setLabel, ...rest }: LineChartProps) => {
   const isClient = typeof window === 'object'
   useEffect(() => {
     if (!isClient) {
-      return null
+      return
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -109,7 +110,7 @@ const CandleChart = ({ data, setValue, setLabel, ...rest }: LineChartProps) => {
         wickUpColor: theme.colors.success,
       })
 
-      series.setData(data)
+      series.setData(data.map((entry) => ({ ...entry, time: entry.time as UTCTimestamp })))
 
       // update the title when hovering on the chart
       chartCreated.subscribeCrosshairMove((param) => {

@@ -58,15 +58,11 @@ const CollectionTraits: React.FC<CollectionTraitsProps> = ({ collectionAddress }
           const total = sum(Object.values(data[traitType]))
 
           // Parse the distribution values into an array to make it easier to sort
-          const traitValues: { value: string; count: number; rarity: number }[] = Object.keys(data[traitType]).reduce(
-            (accum, traitValue) => {
-              const count = data[traitType][traitValue]
-              const rarity = (count / total) * 100
-
-              return [...accum, { value: traitValue, count, rarity }]
-            },
-            [],
-          )
+          const traitValues = Object.entries(data[traitType]).map(([value, count]) => ({
+            value,
+            count,
+            rarity: total ? (count / total) * 100 : 0,
+          }))
           const sortType = raritySort[traitType] || 'desc'
 
           const toggleRaritySort = () => {

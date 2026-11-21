@@ -4,7 +4,7 @@ import Balance from 'components/Balance'
 import styled from 'styled-components'
 import { Flex, Text, Box, Skeleton } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { DeserializedPool, VaultKey } from 'state/types'
+import { DeserializedVaultPool, VaultKey } from 'state/types'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { useIfoPoolCredit } from 'state/pools/hooks'
 import QuestionHelper from 'components/QuestionHelper'
@@ -74,7 +74,7 @@ export const IfoVaultCardAvgBalance = () => {
 }
 
 const CakeVaultCardActions: React.FC<{
-  pool: DeserializedPool
+  pool: DeserializedVaultPool
   accountHasSharesStaked: boolean
   isLoading: boolean
   performanceFee: number

@@ -38,7 +38,7 @@ const fetchTokenPriceData = async (
 }> => {
   // Construct timestamps to query against
   const endTimestamp = getUnixTime(new Date())
-  const timestamps = []
+  const timestamps: number[] = []
   let time = startTimestamp
   while (time <= endTimestamp) {
     timestamps.push(time)
@@ -103,7 +103,7 @@ const fetchTokenPriceData = async (
     // graphql-request does not guarantee same ordering of batched requests subqueries, hence sorting by timestamp from oldest to newest
     tokenPrices.sort((a, b) => parseInt(a.timestamp, 10) - parseInt(b.timestamp, 10))
 
-    const formattedHistory = []
+    const formattedHistory: { time: number; open: number; close: number; high: number; low: number }[] = []
 
     // for each timestamp, construct the open and close price
     for (let i = 0; i < tokenPrices.length - 1; i++) {

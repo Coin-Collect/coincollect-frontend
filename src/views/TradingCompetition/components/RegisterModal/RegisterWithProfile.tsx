@@ -7,6 +7,7 @@ import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
+import { Profile } from 'state/types'
 import { CompetitionProps } from '../../types'
 
 const StyledCheckbox = styled(Checkbox)`
@@ -17,7 +18,7 @@ const StyledLabel = styled.label`
   cursor: pointer;
 `
 
-const RegisterWithProfile: React.FC<CompetitionProps> = ({ profile, onDismiss, onRegisterSuccess }) => {
+const RegisterWithProfile: React.FC<Pick<CompetitionProps, 'onDismiss' | 'onRegisterSuccess'> & { profile: Profile }> = ({ profile, onDismiss, onRegisterSuccess }) => {
   const [isAcknowledged, setIsAcknowledged] = useState(false)
   const tradingCompetitionContract = useTradingCompetitionContractV2()
   const { toastSuccess } = useToast()
@@ -34,8 +35,8 @@ const RegisterWithProfile: React.FC<CompetitionProps> = ({ profile, onDismiss, o
         t('You have registered for the competition!'),
         <ToastDescriptionWithTx txHash={receipt.transactionHash} />,
       )
-      onDismiss()
-      onRegisterSuccess()
+      onDismiss?.()
+      onRegisterSuccess?.()
     }
   }
 

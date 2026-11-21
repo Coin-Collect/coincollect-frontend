@@ -91,14 +91,14 @@ const Overview: React.FC = () => {
   const formattedTokens = useMemo(() => {
     return Object.values(allTokens)
       .map((token) => token.data)
-      .filter((token) => token)
+      .filter((token) => token !== undefined)
   }, [allTokens])
 
   const allPoolData = useAllPoolData()
   const poolDatas = useMemo(() => {
     return Object.values(allPoolData)
       .map((pool) => pool.data)
-      .filter((pool) => pool)
+      .filter((pool) => pool !== undefined)
   }, [allPoolData])
 
   const somePoolsAreLoading = useMemo(() => {
@@ -116,7 +116,7 @@ const Overview: React.FC = () => {
             <Text bold color="secondary">
               {t('Liquidity')}
             </Text>
-            {liquidityHover > 0 ? (
+            {liquidityHover !== undefined && liquidityHover > 0 ? (
               <Text bold fontSize="24px">
                 ${formatAmount(liquidityHover)}
               </Text>
@@ -138,7 +138,7 @@ const Overview: React.FC = () => {
             <Text bold color="secondary">
               {t('Volume 24H')}
             </Text>
-            {volumeHover > 0 ? (
+            {volumeHover !== undefined && volumeHover > 0 ? (
               <Text bold fontSize="24px">
                 ${formatAmount(volumeHover)}
               </Text>

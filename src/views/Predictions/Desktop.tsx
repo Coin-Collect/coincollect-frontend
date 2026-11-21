@@ -103,9 +103,9 @@ const Gutter = styled.div<{ isChartPaneOpen?: boolean }>`
 `
 
 const Desktop: React.FC = () => {
-  const splitWrapperRef = useRef<HTMLDivElement>()
-  const chartRef = useRef<HTMLDivElement>()
-  const gutterRef = useRef<HTMLDivElement>()
+  const splitWrapperRef = useRef<HTMLDivElement>(null)
+  const chartRef = useRef<HTMLDivElement>(null)
+  const gutterRef = useRef<HTMLDivElement>(null)
   const isHistoryPaneOpen = useIsHistoryPaneOpen()
   const isChartPaneOpen = useIsChartPaneOpen()
   const chartView = useChartView()
@@ -114,13 +114,15 @@ const Desktop: React.FC = () => {
   const status = useGetPredictionsStatus()
 
   const openChartPane = () => {
-    splitWrapperRef.current.style.transition = 'grid-template-rows 150ms'
-    splitWrapperRef.current.style.gridTemplateRows = GRID_TEMPLATE_ROW
+    const wrapper = splitWrapperRef.current
+    if (!wrapper) return
+    wrapper.style.transition = 'grid-template-rows 150ms'
+    wrapper.style.gridTemplateRows = GRID_TEMPLATE_ROW
 
     // Purely comedic: We only want to animate if we are clicking the open chart button
     // If we keep the transition on the resizing becomes very choppy
     delay(() => {
-      splitWrapperRef.current.style.transition = ''
+      wrapper.style.transition = ''
     }, 150)
 
     dispatch(setChartPaneState(true))
@@ -137,13 +139,15 @@ const Desktop: React.FC = () => {
   useEffect(() => {
     const threshold = 100
     const handleDrag = debounce(() => {
+      if (!chartRef.current) return
       const { height } = chartRef.current.getBoundingClientRect()
 
       // If the height of the chart pane goes below the "snapOffset" threshold mark the chart pane as closed
       dispatch(setChartPaneState(height > threshold))
     }, 50)
 
-    if (isChartPaneOpen && !splitInstance.current) {
+    const gutter = gutterRef.current
+    if (isChartPaneOpen && gutter && !splitInstance.current) {
       splitInstance.current = Split({
         dragInterval: 1,
         snapOffset: threshold,
@@ -151,7 +155,7 @@ const Desktop: React.FC = () => {
         rowGutters: [
           {
             track: 1,
-            element: gutterRef.current,
+            element: gutter,
           },
         ],
       })

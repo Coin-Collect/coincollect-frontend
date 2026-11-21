@@ -109,7 +109,7 @@ const Podium: React.FC<PodiumProps> = ({ teamsSortedByVolume }) => {
         <PodiumBase />
         <Flex justifyContent="space-between" mt="8px">
           <StyledVolumeFlex>
-            {secondTeam ? (
+            {secondTeam?.leaderboardData?.volume != null ? (
               <StyledVolumeText bold>${localiseTradingVolume(secondTeam.leaderboardData.volume)}</StyledVolumeText>
             ) : (
               <Skeleton width="77px" height="24px" />
@@ -119,7 +119,7 @@ const Podium: React.FC<PodiumProps> = ({ teamsSortedByVolume }) => {
             </Text>
           </StyledVolumeFlex>
           <StyledVolumeFlex>
-            {firstTeam ? (
+            {firstTeam?.leaderboardData?.volume != null ? (
               <StyledVolumeText bold>${localiseTradingVolume(firstTeam.leaderboardData.volume)}</StyledVolumeText>
             ) : (
               <Skeleton width="77px" height="24px" />
@@ -129,7 +129,7 @@ const Podium: React.FC<PodiumProps> = ({ teamsSortedByVolume }) => {
             </Text>
           </StyledVolumeFlex>
           <StyledVolumeFlex>
-            {thirdTeam ? (
+            {thirdTeam?.leaderboardData?.volume != null ? (
               <StyledVolumeText bold>${localiseTradingVolume(thirdTeam.leaderboardData.volume)}</StyledVolumeText>
             ) : (
               <Skeleton width="77px" height="24px" />

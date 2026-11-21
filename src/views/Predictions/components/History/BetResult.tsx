@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { useAppDispatch } from 'state'
 import { useTranslation } from 'contexts/Localization'
 import { REWARD_RATE } from 'state/predictions/config'
-import { Bet, BetPosition } from 'state/types'
+import { BetWithRound, BetPosition } from 'state/types'
 import { fetchLedgerData, markAsCollected } from 'state/predictions'
 import { Result } from 'state/predictions/helpers'
 import { useGetIsClaimable } from 'state/predictions/hooks'
@@ -18,7 +18,7 @@ import PositionTag from '../PositionTag'
 import ReclaimPositionButton from '../ReclaimPositionButton'
 
 interface BetResultProps {
-  bet: Bet
+  bet: BetWithRound
   result: Result
 }
 
@@ -110,7 +110,7 @@ const BetResult: React.FC<BetResultProps> = ({ bet, result }) => {
   const handleSuccess = async () => {
     // We have to mark the bet as claimed immediately because it does not update fast enough
     dispatch(markAsCollected({ [bet.round.epoch]: true }))
-    dispatch(fetchLedgerData({ account, epochs: [bet.round.epoch] }))
+    if (account) dispatch(fetchLedgerData({ account, epochs: [bet.round.epoch] }))
   }
 
   return (

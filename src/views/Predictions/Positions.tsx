@@ -32,7 +32,7 @@ const Positions: React.FC<{ view?: PageView }> = ({ view }) => {
   const currentEpoch = useGetCurrentEpoch()
   const previousEpoch = currentEpoch > 0 ? currentEpoch - 1 : currentEpoch
   const previousRound = rounds.find((round) => round.epoch === previousEpoch)
-  const swiperIndex = rounds.indexOf(previousRound)
+  const swiperIndex = previousRound ? rounds.indexOf(previousRound) : 0
 
   useOnNextRound()
   useOnViewChange(swiperIndex, view)

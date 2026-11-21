@@ -5,7 +5,7 @@ import { LotteryRound } from 'state/types'
 import FooterExpanded from './FooterExpanded'
 
 interface PreviousRoundCardFooterProps {
-  lotteryNodeData: LotteryRound
+  lotteryNodeData: LotteryRound | null
   lotteryId: string
 }
 

@@ -5,7 +5,7 @@ import { polygon } from 'viem/chains'
 
 import { CHAINS } from 'config/chains'
 import { PUBLIC_NODES } from 'config/nodes'
-import { getLocalForkRpcUrl, isLocalForkMode } from 'config/localFork'
+import { getLocalForkRpcUrl, isLocalForkMode, LOCAL_FORK_CHAIN_ID } from 'config/localFork'
 
 export type CreatePublicClientParams = {
   transportSignal?: AbortSignal
@@ -57,7 +57,8 @@ export function createViemPublicClientGetter({
   const clients = viemClientsOverride || createViemPublicClients(restParams)
 
   return function getClients({ chainId }: { chainId?: ChainId }): PublicClient {
-    return clients[chainId as ChainId]
+    const configuredChain = isLocalForkMode && chainId === LOCAL_FORK_CHAIN_ID ? ChainId.POLYGON : chainId
+    return clients[configuredChain as ChainId]
   }
 }
 

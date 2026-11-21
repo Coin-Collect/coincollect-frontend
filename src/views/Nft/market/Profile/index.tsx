@@ -70,8 +70,8 @@ const NftProfile: FC<React.PropsWithChildren> = ({ children }) => {
           <ProfileHeader
             accountPath={accountAddress}
             profile={null}
-            achievements={null}
-            nftCollected={null}
+            achievements={[]}
+            nftCollected={0}
             isAchievementsLoading={false}
             isNftLoading={false}
             isProfileLoading={false}
@@ -94,16 +94,12 @@ const NftProfile: FC<React.PropsWithChildren> = ({ children }) => {
       <MarketPageHeader position="relative">
         <ProfileHeader
           accountPath={accountAddress}
-          profile={profile}
+          profile={profile ?? null}
           achievements={achievements}
           nftCollected={userNfts.length}
           isProfileLoading={isProfileFetching}
           isNftLoading={isNftLoading}
           isAchievementsLoading={isAchievementsFetching}
-          onSuccess={async () => {
-            await refreshProfile()
-            refreshUserNfts()
-          }}
         />
         <TabMenuWrapper>
           <TabMenu />

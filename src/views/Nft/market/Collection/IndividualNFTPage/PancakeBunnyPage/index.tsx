@@ -41,8 +41,8 @@ const IndividualPancakeBunnyPage = (props: IndividualPancakeBunnyPageProps) => {
 const IndividualPancakeBunnyPageBase: React.FC<IndividualPancakeBunnyPageProps> = ({ bunnyId }) => {
   const { account } = useWeb3React()
   const collection = useGetCollection(pancakeBunniesAddress)
-  const totalBunnyCount = Number(collection.totalSupply)
-  const [nothingForSaleBunny, setNothingForSaleBunny] = useState<NftToken>(null)
+  const totalBunnyCount = Number(collection?.totalSupply)
+  const [nothingForSaleBunny, setNothingForSaleBunny] = useState<NftToken | null>(null)
   const { lastUpdated, previousLastUpdated, setLastUpdated: refresh } = useLastUpdated()
   const allBunnies = useGetAllBunniesByBunnyId(bunnyId)
   const [priceSort, setPriceSort] = useState<SortType>('asc')
@@ -97,7 +97,9 @@ const IndividualPancakeBunnyPageBase: React.FC<IndividualPancakeBunnyPageProps> 
 
   useEffect(() => {
     const fetchBasicBunnyData = async () => {
-      const { data } = await getNftsFromCollectionApi(pancakeBunniesAddress)
+      const response = await getNftsFromCollectionApi(pancakeBunniesAddress)
+      const data = response?.data
+      if (!data?.[bunnyId]) return
       setNothingForSaleBunny({
         // In this case tokenId doesn't matter, this token can't be bought
         tokenId: data[bunnyId].name,
@@ -137,21 +139,22 @@ const IndividualPancakeBunnyPageBase: React.FC<IndividualPancakeBunnyPageProps> 
 
   const getBunnyIdCount = () => {
     if (distributionData && !isFetchingDistribution) {
-      return distributionData[bunnyId].tokenCount
+      return distributionData[bunnyId]?.tokenCount
     }
-    return null
+    return undefined
   }
 
   const getBunnyIdRarity = () => {
-    if (distributionData && !isFetchingDistribution) {
+    if (distributionData?.[bunnyId] && !isFetchingDistribution && totalBunnyCount > 0) {
       return (distributionData[bunnyId].tokenCount / totalBunnyCount) * 100
     }
-    return null
+    return undefined
   }
 
-  const properties = cheapestBunny?.attributes || nothingForSaleBunny?.attributes
+  const properties = cheapestBunny?.attributes ?? nothingForSaleBunny?.attributes ?? []
 
-  const propertyRarity = { bunnyId: getBunnyIdRarity() }
+  const bunnyIdRarity = getBunnyIdRarity()
+  const propertyRarity: Record<string, number> = bunnyIdRarity === undefined ? {} : { bunnyId: bunnyIdRarity }
 
   return (
     <Page>
@@ -168,7 +171,7 @@ const IndividualPancakeBunnyPageBase: React.FC<IndividualPancakeBunnyPageProps> 
           <DetailsCard
             contractAddress={pancakeBunniesAddress}
             ipfsJson={cheapestBunny?.marketData?.metadataUrl}
-            rarity={propertyRarity?.bunnyId}
+            rarity={bunnyIdRarity}
             count={getBunnyIdCount()}
           />
         </Flex>

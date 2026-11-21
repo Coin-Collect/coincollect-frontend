@@ -112,7 +112,7 @@ export const getAllVotes = async (proposalId: string, block?: number, votesPerCh
         const snapshotVotersChunk = _chunk(voteChunkVoters, NUMBER_OF_VOTERS_PER_SNAPSHOT_REQUEST)
 
         const votingPowers = await Promise.all(
-          snapshotVotersChunk.map((votersChunk) => getVotingPowerList(votersChunk, poolAddresses, block)),
+          snapshotVotersChunk.map((votersChunk) => getVotingPowerList(votersChunk, poolAddresses, block ?? undefined)),
         )
 
         const vpByVoter = keyBy(_flatten(votingPowers), 'voter')

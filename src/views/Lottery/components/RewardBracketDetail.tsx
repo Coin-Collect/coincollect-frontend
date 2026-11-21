@@ -7,7 +7,7 @@ import { getBalanceNumber, getFullDisplayBalance } from 'utils/formatBalance'
 
 interface RewardBracketDetailProps {
   cakeAmount: BigNumber
-  rewardBracket?: number
+  rewardBracket: number
   numberWinners?: string
   isBurn?: boolean
   isHistoricRound?: boolean
@@ -66,7 +66,7 @@ const RewardBracketDetail: React.FC<RewardBracketDetailProps> = ({
         )}
         {isHistoricRound && cakeAmount && (
           <>
-            {numberWinners !== '0' && (
+            {numberWinners && numberWinners !== '0' && (
               <Text fontSize="12px" color="textSubtle">
                 {getFullDisplayBalance(cakeAmount.div(parseInt(numberWinners, 10)), 18, 2)} CAKE {t('each')}
               </Text>

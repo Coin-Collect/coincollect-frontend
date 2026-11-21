@@ -39,17 +39,17 @@ function useChainlinkLatestRound() {
 
 const chainlinkAddress = getChainlinkOracleAddress()
 function useChainlinkRoundDataSet() {
-  const lastRound = useChainlinkLatestRound()
+  const { data: roundId } = useChainlinkLatestRound()
 
   const calls = useMemo(() => {
-    return lastRound.data
+    return roundId
       ? Array.from({ length: 50 }).map((_, i) => ({
           address: chainlinkAddress,
           name: 'getRoundData',
-          params: [lastRound.data.sub(i)],
+          params: [roundId.sub(i)],
         }))
       : null
-  }, [lastRound.data])
+  }, [roundId])
 
   const { data, error } = useSWRMulticall<Awaited<ReturnType<ChainlinkOracle['getRoundData']>>[]>(
     chainlinkOracleAbi,
@@ -176,7 +176,7 @@ const ChainLinkChart = (props: FlexProps & { isMobile?: boolean }) => {
         alignItems="center"
         flexWrap="wrap"
         columnGap="12px"
-        height={['56px', , , , '44px']}
+        height={['56px', null, null, null, '44px']}
       >
         <HoverData rounds={rounds} />
       </FlexGap>
@@ -266,13 +266,13 @@ const Chart = ({
             if (rounds[props.payload.roundId]) {
               return <ActiveDot {...props} />
             }
-            return null
+            return <g />
           }}
           dot={(props) => {
             if (rounds[props.payload.roundId]) {
               return <Dot {...props} r={4} fill={chartColor.stroke} fillOpacity={1} strokeWidth={0} />
             }
-            return null
+            return <g />
           }}
         />
       </AreaChart>

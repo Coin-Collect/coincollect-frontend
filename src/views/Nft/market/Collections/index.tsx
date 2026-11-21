@@ -46,7 +46,7 @@ const Collectible = () => {
   const { data: collections, status } = useGetShuffledCollections()
   const { isMobile } = useMatchBreakpoints()
   const [isNavigating, setIsNavigating] = useState(false)
-  const [sortField, setSortField] = useState(null)
+  const [sortField, setSortField] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [maxPage, setMaxPage] = useState(1)
 
@@ -86,6 +86,7 @@ const Collectible = () => {
     const collectionValues = collections ? Object.values(collections) : []
 
     return collectionValues.sort((a, b) => {
+      if (!sortField) return 0
       if (a && b) {
         if (sortField === SORT_FIELD.createdAt) {
           if (a.createdAt && b.createdAt) {
@@ -93,7 +94,7 @@ const Collectible = () => {
           }
           return -1
         }
-        return parseFloat(a[sortField]) > parseFloat(b[sortField]) ? -1 : 1
+        return Number(a[sortField]) > Number(b[sortField]) ? -1 : 1
       }
       return -1
     })
@@ -102,21 +103,18 @@ const Collectible = () => {
   // CC - Filtering
   const finishedMintings = useMemo(() => {
     const collectionValues = collections ? Object.values(collections) : []
-    // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'finished')
   }, [collections])
 
   // CC - Filtering
   const activePublicMintings = useMemo(() => {
     const collectionValues = collections ? Object.values(collections) : []
-    // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'livepublic')
   }, [collections])
 
   // CC - Filtering
   const activePrivateMintings = useMemo(() => {
     const collectionValues = collections ? Object.values(collections) : []
-    // @ts-ignore
     return collectionValues.filter((collection) => collection.status == 'liveprivate')
   }, [collections])
 
@@ -199,7 +197,7 @@ const Collectible = () => {
               key="coming-soon-collections"
               title={t('Coming Soon')}
               testId="nfts-coming-soon-collections"
-              collections={null}
+              collections={[]}
             />
 
             {finishedMintings.length > 0 && <Collections

@@ -14,7 +14,7 @@ import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import useApproveConfirmTransaction from 'hooks/useApproveConfirmTransaction'
 import useToast from 'hooks/useToast'
 import { ToastDescriptionWithTx } from 'components/Toast'
-import { NftToken } from 'state/nftMarket/types'
+import { hasNftListing, NftListing, NftToken } from 'state/nftMarket/types'
 import { StyledModal } from './styles'
 import ReviewStage from './ReviewStage'
 import ConfirmStage from '../shared/ConfirmStage'
@@ -33,7 +33,7 @@ interface BuyModalProps extends InjectedModalProps {
   nftToBuy: NftToken
 }
 
-const BuyModal: React.FC<BuyModalProps> = ({ nftToBuy, onDismiss }) => {
+const BuyListingModal: React.FC<Omit<BuyModalProps, 'nftToBuy'> & { nftToBuy: NftListing }> = ({ nftToBuy, onDismiss }) => {
   const [stage, setStage] = useState(BuyingStage.REVIEW)
   const [confirmedTxHash, setConfirmedTxHash] = useState('')
   const [paymentCurrency, setPaymentCurrency] = useState<PaymentCurrency>(PaymentCurrency.BNB)
@@ -76,6 +76,7 @@ const BuyModal: React.FC<BuyModalProps> = ({ nftToBuy, onDismiss }) => {
 
   const { isApproving, isApproved, isConfirming, handleApprove, handleConfirm } = useApproveConfirmTransaction({
     onRequiresApproval: async () => {
+      if (!account) return false
       try {
         const currentAllowance = await wbnbContractReader.allowance(account, nftMarketContract.address)
         return currentAllowance.gt(0)
@@ -84,6 +85,7 @@ const BuyModal: React.FC<BuyModalProps> = ({ nftToBuy, onDismiss }) => {
       }
     },
     onApprove: () => {
+      if (!account) throw new Error('Connect your wallet to approve the purchase')
       return callWithGasPrice(wbnbContractApprover, 'approve', [nftMarketContract.address, MaxUint256])
     },
     onApproveSuccess: async ({ receipt }) => {
@@ -93,7 +95,8 @@ const BuyModal: React.FC<BuyModalProps> = ({ nftToBuy, onDismiss }) => {
       )
     },
     onConfirm: () => {
-      const payAmount = Number.isNaN(nftPrice) ? Zero : parseUnits(nftToBuy.marketData.currentAskPrice)
+      if (!account) throw new Error('Connect your wallet to confirm the purchase')
+      const payAmount = nftPriceWei
       if (paymentCurrency === PaymentCurrency.BNB) {
         return callWithGasPrice(nftMarketContract, 'buyTokenUsingBNB', [nftToBuy.collectionAddress, nftToBuy.tokenId], {
           value: payAmount,
@@ -134,7 +137,7 @@ const BuyModal: React.FC<BuyModalProps> = ({ nftToBuy, onDismiss }) => {
       title={modalTitles(t)[stage]}
       stage={stage}
       onDismiss={onDismiss}
-      onBack={showBackButton ? goBack : null}
+      onBack={showBackButton ? goBack : undefined}
       headerBackground={theme.colors.gradients.cardHeader}
     >
       {stage === BuyingStage.REVIEW && (
@@ -163,6 +166,10 @@ const BuyModal: React.FC<BuyModalProps> = ({ nftToBuy, onDismiss }) => {
       {stage === BuyingStage.TX_CONFIRMED && <TransactionConfirmed txHash={confirmedTxHash} onDismiss={onDismiss} />}
     </StyledModal>
   )
+}
+
+const BuyModal: React.FC<BuyModalProps> = (props) => {
+  return hasNftListing(props.nftToBuy) ? <BuyListingModal {...props} nftToBuy={props.nftToBuy} /> : null
 }
 
 export default BuyModal

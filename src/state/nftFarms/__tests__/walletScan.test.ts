@@ -3,7 +3,6 @@ import reducer, { fetchFarmUserDataAsync, nonArchivedFarms } from '..'
 jest.mock('../fetchFarms', () => ({}))
 jest.mock('../fetchFarmUser', () => ({}))
 jest.mock('../fetchMasterChefData', () => ({}))
-jest.mock('../getFarmsPrices', () => ({}))
 jest.mock('utils/viem', () => ({}))
 
 const pids = nonArchivedFarms.map(({ pid }) => pid)

@@ -31,11 +31,13 @@ const formatPriceDifference = ({
   return `${unitPrefix}${formatBigNumberToFixed(price, DISPLAYED_DECIMALS, decimals)}`
 }
 
-export const formatUsdv2 = (usd: BigNumber) => {
+export const formatUsdv2 = (usd: BigNumber | null | undefined) => {
+  if (!usd) return '—'
   return formatPriceDifference({ price: usd, minPriceDisplayed: MIN_PRICE_USD_DISPLAYED, unitPrefix: '$', decimals: 8 })
 }
 
-export const formatBnbv2 = (bnb: BigNumber) => {
+export const formatBnbv2 = (bnb: BigNumber | null | undefined) => {
+  if (!bnb) return '—'
   return formatPriceDifference({ price: bnb, minPriceDisplayed: MIN_PRICE_BNB_DISPLAYED, unitPrefix: '', decimals: 18 })
 }
 
@@ -53,10 +55,11 @@ export const formatRoundTime = (secondsBetweenBlocks: number) => {
 }
 
 export const getHasRoundFailed = (round: NodeRound, buffer: number) => {
+  if (round.closeTimestamp === null) return false
   const closeTimestampMs = (round.closeTimestamp + buffer) * 1000
   const now = Date.now()
 
-  if (closeTimestampMs !== null && now > closeTimestampMs && !round.oracleCalled) {
+  if (now > closeTimestampMs && !round.oracleCalled) {
     return true
   }
 
@@ -78,7 +81,7 @@ export const getMultiplierV2 = (total: BigNumber, amount: BigNumber) => {
   return rewardAmountFixed.divUnsafe(multiplierAmountFixed)
 }
 
-export const getPriceDifference = (price: BigNumber, lockPrice: BigNumber) => {
+export const getPriceDifference = (price: BigNumber | null | undefined, lockPrice: BigNumber | null | undefined) => {
   if (!price || !lockPrice) {
     return Zero
   }
@@ -86,8 +89,8 @@ export const getPriceDifference = (price: BigNumber, lockPrice: BigNumber) => {
   return price.sub(lockPrice)
 }
 
-export const getRoundPosition = (lockPrice: BigNumber, closePrice: BigNumber) => {
-  if (!closePrice) {
+export const getRoundPosition = (lockPrice: BigNumber | null, closePrice: BigNumber | null) => {
+  if (!closePrice || !lockPrice) {
     return null
   }
 

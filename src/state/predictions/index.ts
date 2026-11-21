@@ -5,7 +5,7 @@ import maxBy from 'lodash/maxBy'
 import merge from 'lodash/merge'
 import range from 'lodash/range'
 import {
-  Bet,
+  BetWithRound,
   LedgerData,
   HistoryFilter,
   PredictionsState,
@@ -29,6 +29,7 @@ import {
 import {
   getBetHistory,
   transformBetResponse,
+  hasPredictionRound,
   makeFutureRoundResponse,
   makeRoundData,
   getRoundsData,
@@ -92,7 +93,7 @@ type PredictionInitialization = Pick<
   | 'claimableStatuses'
   | 'bufferSeconds'
 >
-export const initializePredictions = createAsyncThunk<PredictionInitialization, string>(
+export const initializePredictions = createAsyncThunk<PredictionInitialization, string | null | undefined>(
   'predictions/initialize',
   async (account = null) => {
     // Static values
@@ -183,25 +184,25 @@ export const fetchClaimableStatuses = createAsyncThunk<
   return ledgers
 })
 
-export const fetchHistory = createAsyncThunk<{ account: string; bets: Bet[] }, { account: string; claimed?: boolean }>(
+export const fetchHistory = createAsyncThunk<{ account: string; bets: BetWithRound[] }, { account: string; claimed?: boolean }>(
   'predictions/fetchHistory',
   async ({ account, claimed }) => {
     const response = await getBetHistory({
       user: account.toLowerCase(),
-      claimed,
+      ...(claimed === undefined ? {} : { claimed }),
     })
-    const bets = response.map(transformBetResponse)
+    const bets = response.map(transformBetResponse).filter(hasPredictionRound)
 
     return { account, bets }
   },
 )
 
 export const fetchNodeHistory = createAsyncThunk<
-  { bets: Bet[]; claimableStatuses: PredictionsState['claimableStatuses']; page?: number; totalHistory: number },
+  { bets: BetWithRound[]; claimableStatuses: PredictionsState['claimableStatuses']; page: number; totalHistory: number },
   { account: string; page?: number }
 >('predictions/fetchNodeHistory', async ({ account, page = 1 }) => {
   const userRoundsLength = await fetchUsersRoundsLength(account)
-  const emptyResult = { bets: [], claimableStatuses: {}, totalHistory: userRoundsLength.toNumber() }
+  const emptyResult = { bets: [], claimableStatuses: {}, page, totalHistory: userRoundsLength.toNumber() }
   const maxPages = userRoundsLength.lte(ROUNDS_PER_PAGE) ? 1 : Math.ceil(userRoundsLength.toNumber() / ROUNDS_PER_PAGE)
 
   if (userRoundsLength.eq(0)) {
@@ -232,9 +233,10 @@ export const fetchNodeHistory = createAsyncThunk<
   const claimableStatuses = await getClaimStatuses(account, epochs)
 
   // Turn the data from the node into an Bet object that comes from the graph
-  const bets: Bet[] = roundData.reduce((accum, round) => {
+  const bets = roundData.reduce<BetWithRound[]>((accum, round) => {
     const reduxRound = serializePredictionsRoundsResponse(round)
     const ledger = userRounds[reduxRound.epoch]
+    if (!ledger) return accum
     const ledgerAmount = BigNumber.from(ledger.amount)
     const closePrice = round.closePrice ? parseFloat(formatUnits(round.closePrice, 8)) : null
     const lockPrice = round.lockPrice ? parseFloat(formatUnits(round.lockPrice, 8)) : null
@@ -371,7 +373,7 @@ export const predictionsSlice = createSlice({
     markAsCollected: (state, action: PayloadAction<{ [key: string]: boolean }>) => {
       state.claimableStatuses = { ...state.claimableStatuses, ...action.payload }
     },
-    setSelectedAddress: (state, action: PayloadAction<string>) => {
+    setSelectedAddress: (state, action: PayloadAction<string | null>) => {
       state.leaderboard.selectedAddress = action.payload
     },
   },
@@ -416,7 +418,7 @@ export const predictionsSlice = createSlice({
     })
     builder.addCase(fetchAddressResult.rejected, (state, action) => {
       state.leaderboard.loadingState = FetchStatus.Fetched // TODO: should handle error
-      state.leaderboard.addressResults[action.payload] = null
+      if (action.payload) state.leaderboard.addressResults[action.payload] = null
     })
 
     // Leaderboard next page
@@ -452,12 +454,13 @@ export const predictionsSlice = createSlice({
       // If the round has change add a new future round
       if (state.currentEpoch !== currentEpoch) {
         const newestRound = maxBy(Object.values(state.rounds), 'epoch')
-        const futureRound = makeFutureRoundResponse(
-          newestRound.epoch + 1,
-          newestRound.startTimestamp + intervalSeconds + ROUND_BUFFER,
-        )
-
-        state.rounds[futureRound.epoch] = futureRound
+        if (newestRound?.startTimestamp != null) {
+          const futureRound = makeFutureRoundResponse(
+            newestRound.epoch + 1,
+            newestRound.startTimestamp + intervalSeconds + ROUND_BUFFER,
+          )
+          state.rounds[futureRound.epoch] = futureRound
+        }
       }
 
       state.status = status
@@ -473,8 +476,10 @@ export const predictionsSlice = createSlice({
       const futureRounds: ReduxNodeRound[] = []
       const currentRound = rounds[currentEpoch]
 
-      for (let i = 1; i <= FUTURE_ROUND_COUNT; i++) {
-        futureRounds.push(makeFutureRoundResponse(currentEpoch + i, currentRound.startTimestamp + intervalSeconds * i))
+      if (currentRound?.startTimestamp != null) {
+        for (let i = 1; i <= FUTURE_ROUND_COUNT; i++) {
+          futureRounds.push(makeFutureRoundResponse(currentEpoch + i, currentRound.startTimestamp + intervalSeconds * i))
+        }
       }
 
       return {

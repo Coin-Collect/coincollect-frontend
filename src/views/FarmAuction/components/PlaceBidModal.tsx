@@ -15,7 +15,7 @@ import { DEFAULT_TOKEN_DECIMAL } from 'config'
 import useToast from 'hooks/useToast'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import ApproveConfirmButtons, { ButtonArrangement } from 'components/ApproveConfirmButtons'
-import { ConnectedBidder, FetchStatus } from 'config/constants/types'
+import { Bidder, FetchStatus } from 'config/constants/types'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import { ToastDescriptionWithTx } from 'components/Toast'
@@ -42,15 +42,15 @@ interface PlaceBidModalProps {
   onDismiss?: () => void
   // undefined initialBidAmount is passed only if auction is not loaded
   // in this case modal will not be possible to open
-  initialBidAmount?: number
-  connectedBidder: ConnectedBidder
+  initialBidAmount: number
+  bidderData: Bidder
   refreshBidders: () => void
 }
 
 const PlaceBidModal: React.FC<PlaceBidModalProps> = ({
   onDismiss,
   initialBidAmount,
-  connectedBidder,
+  bidderData,
   refreshBidders,
 }) => {
   const { account } = useWeb3React()
@@ -62,7 +62,7 @@ const PlaceBidModal: React.FC<PlaceBidModalProps> = ({
   const [isMultipleOfTen, setIsMultipleOfTen] = useState(false)
   const [isMoreThanInitialBidAmount, setIsMoreThanInitialBidAmount] = useState(false)
   const [userNotEnoughCake, setUserNotEnoughCake] = useState(false)
-  const [errorText, setErrorText] = useState(null)
+  const [errorText, setErrorText] = useState<string | null>(null)
 
   const { balance: userCake, fetchStatus } = useTokenBalance(tokens.cake.address)
   const userCakeBalance = getBalanceAmount(userCake)
@@ -73,7 +73,6 @@ const PlaceBidModal: React.FC<PlaceBidModalProps> = ({
 
   const { toastSuccess } = useToast()
 
-  const { bidderData } = connectedBidder
   const { amount, position } = bidderData
   const isFirstBid = amount.isZero()
   const isInvalidFirstBid = isFirstBid && !isMoreThanInitialBidAmount
@@ -103,6 +102,7 @@ const PlaceBidModal: React.FC<PlaceBidModalProps> = ({
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
+        if (!account) return false
         try {
           const response = await cakeContract.allowance(account, farmAuctionContract.address)
           const currentAllowance = ethersToBigNumber(response)

@@ -15,6 +15,7 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
   const { priceImpactWithoutFee, realizedLPFee } = computeTradePriceBreakdown(trade)
   const isExactIn = trade.tradeType === TradeType.EXACT_INPUT
   const slippageAdjustedAmounts = computeSlippageAdjustedAmounts(trade, allowedSlippage)
+  const adjustedAmount = slippageAdjustedAmounts[isExactIn ? Field.OUTPUT : Field.INPUT]
 
   return (
     <AutoColumn style={{ padding: '0 16px' }}>
@@ -33,10 +34,7 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
         </RowFixed>
         <RowFixed>
           <Text fontSize="14px">
-            {isExactIn
-              ? `${slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(4)} ${trade.outputAmount.currency.symbol}` ??
-                '-'
-              : `${slippageAdjustedAmounts[Field.INPUT]?.toSignificant(4)} ${trade.inputAmount.currency.symbol}` ?? '-'}
+            {adjustedAmount ? `${adjustedAmount.toSignificant(4)} ${adjustedAmount.currency.symbol ?? ''}` : '-'}
           </Text>
         </RowFixed>
       </RowBetween>

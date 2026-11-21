@@ -6,7 +6,7 @@ import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
 
-const useCakeApprove = (setLastUpdated: () => void, spender, successMsg) => {
+const useCakeApprove = (setLastUpdated: () => void, spender: string | undefined, successMsg: string) => {
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
@@ -14,6 +14,7 @@ const useCakeApprove = (setLastUpdated: () => void, spender, successMsg) => {
   const cakeContract = useCoinCollect()
 
   const handleApprove = async () => {
+    if (!spender) return
     const receipt = await fetchWithCatchTxError(() => {
       return callWithGasPrice(cakeContract, 'approve', [spender, MaxUint256])
     })

@@ -8,7 +8,7 @@ export type EventStepsProps = {
   userInfos?: UserInfos
   isLoading: boolean
   userStatus: UserStatusEnum
-  account: string
+  account?: string | null
 }
 
 export type EventStepsType = { t: ContextApi['t']; theme: DefaultTheme; cakeBalance: BigNumber } & Pick<

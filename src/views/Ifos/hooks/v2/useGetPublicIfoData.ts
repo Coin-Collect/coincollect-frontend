@@ -122,7 +122,7 @@ const useGetPublicIfoData = (ifo: Ifo): PublicIfoData => {
             address,
             name: 'pointThreshold',
           },
-        ].filter(Boolean),
+        ].filter((call) => call !== false),
       )
 
       const poolBasicFormatted = formatPool(poolBasic)

@@ -8,6 +8,7 @@ const useIsRefundable = (epoch: number) => {
 
   useEffect(() => {
     const fetchRefundableStatus = async () => {
+      if (!account) return
       const predictionsContract = getPredictionsContract()
       const refundable = await predictionsContract.refundable(epoch, account)
 

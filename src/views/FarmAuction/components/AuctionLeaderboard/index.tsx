@@ -15,8 +15,8 @@ const AuctionLeaderboardCard = styled(Card)`
 `
 
 interface AuctionLeaderboardProps {
-  auction: Auction
-  bidders: Bidder[]
+  auction: Auction | null
+  bidders: Bidder[] | null
 }
 
 enum Tabs {

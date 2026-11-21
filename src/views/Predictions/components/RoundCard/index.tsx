@@ -18,10 +18,10 @@ const RoundCard: React.FC<RoundCardProps> = ({ round, isActive }) => {
   const { account } = useWeb3React()
   const ledger = useGetBetByEpoch(account, epoch)
   const hasEntered = ledger ? ledger.amount.gt(0) : false
-  const hasEnteredUp = hasEntered && ledger.position === BetPosition.BULL
-  const hasEnteredDown = hasEntered && ledger.position === BetPosition.BEAR
-  const hasClaimedUp = hasEntered && ledger.claimed && ledger.position === BetPosition.BULL
-  const hasClaimedDown = hasEntered && ledger.claimed && ledger.position === BetPosition.BEAR
+  const hasEnteredUp = hasEntered && ledger?.position === BetPosition.BULL
+  const hasEnteredDown = hasEntered && ledger?.position === BetPosition.BEAR
+  const hasClaimedUp = hasEntered && ledger?.claimed === true && ledger.position === BetPosition.BULL
+  const hasClaimedDown = hasEntered && ledger?.claimed === true && ledger.position === BetPosition.BEAR
 
   const bullMultiplier = getMultiplierV2(totalAmount, bullAmount)
   const bearMultiplier = getMultiplierV2(totalAmount, bearAmount)

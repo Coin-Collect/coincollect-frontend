@@ -1,3 +1,4 @@
+import type { Ifo as IfoConfig } from 'config/constants/types'
 import { ifosConfig } from 'config/constants'
 import styled from 'styled-components'
 import { Box } from '@pancakeswap/uikit'
@@ -21,21 +22,21 @@ const IfoStepBackground = styled(Box)`
  */
 const activeIfo = ifosConfig.find((ifo) => ifo.isActive)
 
-const Ifo = () => {
-  const publicIfoData = useGetPublicIfoV2Data(activeIfo)
-  const walletIfoData = useGetWalletIfoV3Data(activeIfo)
+const CurrentIfo = ({ ifo }: { ifo: IfoConfig }) => {
+  const publicIfoData = useGetPublicIfoV2Data(ifo)
+  const walletIfoData = useGetWalletIfoV3Data(ifo)
 
   return (
     <IfoLayout id="current-ifo" py={['24px', '24px', '40px']}>
       <Container>
         <IfoLayoutWrapper>
           <IfoPoolVaultCard />
-          <IfoCurrentCard ifo={activeIfo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+          <IfoCurrentCard ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
         </IfoLayoutWrapper>
       </Container>
       <IfoStepBackground>
         <Container>
-          <IfoSteps isLive={publicIfoData.status === 'live'} ifo={activeIfo} walletIfoData={walletIfoData} />
+          <IfoSteps isLive={publicIfoData.status === 'live'} ifo={ifo} walletIfoData={walletIfoData} />
         </Container>
       </IfoStepBackground>
       <Container>
@@ -44,5 +45,7 @@ const Ifo = () => {
     </IfoLayout>
   )
 }
+
+const Ifo = () => activeIfo ? <CurrentIfo ifo={activeIfo} /> : <IfoQuestions />
 
 export default Ifo

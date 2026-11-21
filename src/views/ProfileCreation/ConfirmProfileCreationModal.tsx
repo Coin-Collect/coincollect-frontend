@@ -15,8 +15,8 @@ import { State } from './contexts/types'
 interface Props {
   userName: string
   selectedNft: State['selectedNft']
-  account: string
-  teamId: number
+  account?: string | null
+  teamId: number | null
   minimumCakeRequired: BigNumber
   allowance: BigNumber
   onDismiss?: () => void
@@ -40,6 +40,7 @@ const ConfirmProfileCreationModal: React.FC<Props> = ({
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
+        if (!account) return false
         try {
           const response = await cakeContract.allowance(account, profileContract.address)
           return response.gte(minimumCakeRequired)
@@ -48,9 +49,13 @@ const ConfirmProfileCreationModal: React.FC<Props> = ({
         }
       },
       onApprove: () => {
+        if (!account) throw new Error('Connect your wallet to approve profile creation')
         return callWithGasPrice(cakeContract, 'approve', [profileContract.address, allowance.toJSON()])
       },
       onConfirm: () => {
+        if (!account || !teamId || !selectedNft.collectionAddress || !selectedNft.tokenId) {
+          throw new Error('Choose a team and NFT with a connected wallet first')
+        }
         return callWithGasPrice(profileContract, 'createProfile', [
           teamId,
           selectedNft.collectionAddress,
@@ -59,7 +64,7 @@ const ConfirmProfileCreationModal: React.FC<Props> = ({
       },
       onSuccess: async ({ receipt }) => {
         refreshProfile()
-        onDismiss()
+        onDismiss?.()
         toastSuccess(t('Profile created!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       },
     })

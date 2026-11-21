@@ -63,6 +63,7 @@ const CollectModal: React.FC<CollectModalProps> = ({
   )
 
   const handleHarvestConfirm = async () => {
+    if (!account) return
     
     const receipt = await fetchWithCatchTxError(() => {
 

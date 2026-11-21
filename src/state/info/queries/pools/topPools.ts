@@ -40,7 +40,7 @@ const fetchTopPools = async (timestamp24hAgo: number): Promise<string[]> => {
  * Fetch top addresses by volume
  */
 const useTopPoolAddresses = (): string[] => {
-  const [topPoolAddresses, setTopPoolAddresses] = useState([])
+  const [topPoolAddresses, setTopPoolAddresses] = useState<string[]>([])
   const [timestamp24hAgo] = getDeltaTimestamps()
 
   useEffect(() => {

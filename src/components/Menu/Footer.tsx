@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Flex, Svg, Image, Button, Text } from '@pancakeswap/uikit'
+import { Flex, Svg, Image, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 
 interface WrapperProps {
@@ -63,7 +63,7 @@ const BubbleWrapper = styled(Flex)`
   }
 `
 
-const SupportButton = styled(Button)`
+const SupportButton = styled.a`
   font-weight: 600;
   letter-spacing: 0.01em;
 `
@@ -77,25 +77,22 @@ type FooterVariant = 'default' | 'side'
 const Footer: React.FC<{ variant?: FooterVariant }> = ({ variant = 'default' }) => {
   const { t } = useTranslation()
   const isSide = variant === 'side'
-  const TextAny = Text as unknown as React.ComponentType<any>
   return (
     <Wrapper $isSide={isSide}>
       <ContentGrid $isSide={isSide}>
         <Flex justifyContent={['center', 'center', 'flex-start']}>
-          <TextAny fontSize="12px" color="textSubtle" textAlign={['center', 'center', 'left']} style={{ opacity: 0.9 }}>
+          <Text fontSize="12px" color="textSubtle" textAlign={['center', 'center', 'left']} style={{ opacity: 0.9 }}>
             {t('AI Assistant powered by OpenAI, created by SapienX')}
-          </TextAny>
+          </Text>
         </Flex>
         <Flex alignItems="center" width="100%" justifyContent={['center', 'center', 'flex-end']}>
           <SupportCard>
             <BubbleWrapper>
               <SupportButton
                 id="clickExchangeHelp"
-                as="a"
-                external
+                target="_blank"
+                rel="noreferrer noopener"
                 href="https://docs.coincollect.org"
-                variant="subtle"
-                scale="sm"
               >
                 {t('Need help?')}
               </SupportButton>

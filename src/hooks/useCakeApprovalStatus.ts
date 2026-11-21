@@ -8,7 +8,7 @@ export const useCakeApprovalStatus = (spender) => {
   const { account } = useWeb3React()
   const cakeContract = useCoinCollect(false)
 
-  const key = useMemo<UseSWRContractKey>(
+  const key = useMemo<UseSWRContractKey | null>(
     () =>
       account && spender
         ? {

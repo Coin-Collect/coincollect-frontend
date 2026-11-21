@@ -3,7 +3,7 @@ import kebabCase from 'lodash/kebabCase'
 import { Toast, toastTypes } from 'components/Toast'
 import { ToastContextApi } from './types'
 
-export const ToastsContext = createContext<ToastContextApi>(undefined)
+export const ToastsContext = createContext<ToastContextApi | undefined>(undefined)
 
 export const ToastsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastContextApi['toasts']>([])

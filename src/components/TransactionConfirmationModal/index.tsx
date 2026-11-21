@@ -85,7 +85,7 @@ function TransactionSubmittedContent({
               {t('View on PolygonScan')}
             </Link>
           )}
-          {currencyToAdd && library?.provider?.isMetaMask && (
+          {token && library && 'provider' in library && library.provider.isMetaMask && (
             <Button
               variant="tertiary"
               mt="12px"
@@ -93,7 +93,7 @@ function TransactionSubmittedContent({
               onClick={() => registerToken(token.address, token.symbol, token.decimals)}
             >
               <RowFixed>
-                {t('Add %asset% to Metamask', { asset: currencyToAdd.symbol })}
+                {t('Add %asset% to Metamask', { asset: token.symbol })}
                 <MetamaskIcon width="16px" ml="6px" />
               </RowFixed>
             </Button>
@@ -122,7 +122,7 @@ export function ConfirmationModalContent({
   )
 }
 
-export function TransactionErrorContent({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+export function TransactionErrorContent({ message, onDismiss }: { message: string; onDismiss?: () => void }) {
   const { t } = useTranslation()
   return (
     <Wrapper>

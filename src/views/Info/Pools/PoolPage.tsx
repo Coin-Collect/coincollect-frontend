@@ -80,7 +80,7 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
   const [watchlistPools, addPoolToWatchlist] = useWatchlistPools()
 
   return (
-    <Page symbol={poolData ? `${poolData?.token0.symbol} / ${poolData?.token1.symbol}` : null}>
+    <Page symbol={poolData ? `${poolData.token0.symbol} / ${poolData.token1.symbol}` : undefined}>
       {poolData ? (
         <>
           <Flex justifyContent="space-between" mb="16px" flexDirection={['column', 'column', 'row']}>

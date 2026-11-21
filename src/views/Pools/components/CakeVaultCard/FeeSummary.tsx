@@ -7,7 +7,7 @@ import { getHasWithdrawFee } from '../../hooks/useWithdrawalFeeTimer'
 import UnstakingFeeCountdownRow from './UnstakingFeeCountdownRow'
 
 interface FeeSummaryProps {
-  stakingTokenSymbol: string
+  stakingTokenSymbol?: string
   stakeAmount: string
   vaultKey: VaultKey
 }

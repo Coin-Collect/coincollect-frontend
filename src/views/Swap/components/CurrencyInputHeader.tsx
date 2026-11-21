@@ -47,7 +47,7 @@ const CurrencyInputHeader: React.FC<Props> = ({
 }) => {
   const [expertMode] = useExpertModeManager()
   const toggleChartDisplayed = () => {
-    setIsChartDisplayed((currentIsChartDisplayed) => !currentIsChartDisplayed)
+    setIsChartDisplayed?.((currentIsChartDisplayed) => !currentIsChartDisplayed)
   }
   const [onPresentTransactionsModal] = useModal(<TransactionsModal />)
 

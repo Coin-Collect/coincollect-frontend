@@ -1,5 +1,6 @@
 import snapshot from '@snapshot-labs/snapshot.js'
 import BigNumber from 'bignumber.js'
+import { simpleRpcProvider } from 'utils/providers'
 import { SNAPSHOT_HUB_API } from 'config/constants/endpoints'
 import tokens from 'config/constants/tokens'
 import { Proposal, ProposalState, ProposalType, Vote } from 'state/types'
@@ -102,7 +103,7 @@ export const calculateVoteResults = (votes: Vote[]): { [key: string]: Vote[] } =
 export const getTotalFromVotes = (votes: Vote[]) => {
   if (votes) {
     return votes.reduce((accum, vote) => {
-      let power = parseFloat(vote.metadata?.votingPower)
+      let power = parseFloat(vote.metadata?.votingPower ?? '0')
 
       if (!power) {
         power = 0
@@ -235,7 +236,8 @@ function verifyDefaultContract(blockNumber: number) {
   }
 }
 
-export async function getVotingPowerList(voters: string[], poolAddresses: string[], blockNumber: number) {
+export async function getVotingPowerList(voters: string[], poolAddresses: string[], block?: number) {
+  const blockNumber = block ?? (await simpleRpcProvider.getBlockNumber())
   const poolsStrategyList = poolAddresses.map((address) => createPoolStrategy(address))
   const contractsValid = verifyDefaultContract(blockNumber)
   const scoresListIndex = {
@@ -250,7 +252,7 @@ export async function getVotingPowerList(voters: string[], poolAddresses: string
     cakeBnbLpCakeBnbBalances: -1,
     poolStart: 0,
   }
-  const defaultStrategy = []
+  const defaultStrategy: typeof snapshotStrategies = []
   let indexCounter = 0
   if (contractsValid.Cake) {
     defaultStrategy.push(snapshotStrategies[0])

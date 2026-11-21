@@ -3,9 +3,9 @@ import { useTranslation } from 'contexts/Localization'
 import { useEffect, useState } from 'react'
 
 interface LotteryEvent {
-  nextEventTime: number
-  postCountdownText?: string
-  preCountdownText?: string
+  nextEventTime: number | null
+  postCountdownText?: string | null
+  preCountdownText?: string | null
 }
 
 const useGetNextLotteryEvent = (endTime: number, status: LotteryStatus): LotteryEvent => {
@@ -13,7 +13,7 @@ const useGetNextLotteryEvent = (endTime: number, status: LotteryStatus): Lottery
   const vrfRequestTime = 180 // 3 mins
   const secondsBetweenRounds = 300 // 5 mins
   const transactionResolvingBuffer = 30 // Delay countdown by 30s to ensure contract transactions have been calculated and broadcast
-  const [nextEvent, setNextEvent] = useState({ nextEventTime: null, preCountdownText: null, postCountdownText: null })
+  const [nextEvent, setNextEvent] = useState<LotteryEvent>({ nextEventTime: null, preCountdownText: null, postCountdownText: null })
 
   useEffect(() => {
     // Current lottery is active

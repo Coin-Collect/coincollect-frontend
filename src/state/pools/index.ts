@@ -1,3 +1,4 @@
+import { ChainId } from '@coincollect/sdk'
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import BigNumber from 'bignumber.js'
 import poolsConfig from 'config/constants/pools'
@@ -81,7 +82,7 @@ const initialState: PoolsState = {
 const configuredCakePool = poolsConfig.find((pool) => pool.sousId === 0)
 if (!configuredCakePool) throw new Error('The main COLLECT pool is missing from the configuration.')
 const cakePool = configuredCakePool
-const cakePoolAddress = getAddress(cakePool.contractAddress)
+const cakePoolAddress = getAddress(cakePool.contractAddress, ChainId.POLYGON)
 const cakeContract = getCoinCollectContract()
 
 export const fetchCakePoolPublicDataAsync = () => async (dispatch, getState) => {
@@ -105,7 +106,7 @@ export const fetchCakePoolPublicDataAsync = () => async (dispatch, getState) => 
         totalStaked: new BigNumber(totalStaking.toString()).toJSON(),
         stakingTokenPrice,
         earningTokenPrice,
-        apr,
+        apr: apr ?? undefined,
       },
     }),
   )
@@ -193,7 +194,7 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
         profileRequirement,
         stakingTokenPrice,
         earningTokenPrice,
-        apr,
+        apr: apr ?? undefined,
         isFinished: isPoolFinished,
       }
     })

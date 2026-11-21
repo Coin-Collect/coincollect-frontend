@@ -6,10 +6,10 @@ import { pancakeBunniesAddress } from '../constants'
 
 export interface LowestNftPrice {
   isFetching: boolean
-  lowestPrice: number
+  lowestPrice?: number | null
 }
 
-const getBunnyIdFromNft = (nft: NftToken): string => {
+const getBunnyIdFromNft = (nft: NftToken): string | null => {
   const bunnyId = nft.attributes?.find((attr) => attr.traitType === 'bunnyId')?.value
   return bunnyId ? bunnyId.toString() : null
 }

@@ -7,9 +7,10 @@ import tokens from 'config/constants/tokens'
 // Gets pairs using specified token as primary token
 const getFarmFromTokenSymbol = (
   farms: SerializedFarm[],
-  tokenSymbol: string,
+  tokenSymbol: string | undefined,
   preferredQuoteTokens?: string[],
-): SerializedFarm => {
+): SerializedFarm | undefined => {
+  if (!tokenSymbol) return undefined
   const farmsWithTokenSymbol = farms.filter((farm) => farm.token.symbol === tokenSymbol)
   const filteredFarm = filterFarmsByQuoteToken(farmsWithTokenSymbol, preferredQuoteTokens)
   return filteredFarm
@@ -17,17 +18,18 @@ const getFarmFromTokenSymbol = (
 
 const getFarmBaseTokenPrice = (
   farm: SerializedFarm,
-  quoteTokenFarm: SerializedFarm,
+  quoteTokenFarm: SerializedFarm | undefined,
   bnbPriceBusd: BigNumber,
 ): BigNumber => {
-  const hasTokenPriceVsQuote = Boolean(farm.tokenPriceVsQuote)
+  const tokenPrice = farm.tokenPriceVsQuote
+  if (!tokenPrice) return BIG_ZERO
 
   if (farm.quoteToken.symbol === tokens.usdt.symbol) {
-    return hasTokenPriceVsQuote ? new BigNumber(farm.tokenPriceVsQuote) : BIG_ZERO
+    return new BigNumber(tokenPrice)
   }
 
   if (farm.quoteToken.symbol === tokens.wmatic.symbol) {
-    return hasTokenPriceVsQuote ? bnbPriceBusd.times(farm.tokenPriceVsQuote) : BIG_ZERO
+    return bnbPriceBusd.times(tokenPrice)
   }
 
   // We can only calculate profits without a quoteTokenFarm for BUSD/BNB farms
@@ -41,17 +43,13 @@ const getFarmBaseTokenPrice = (
   // i.e. for farm PNT - pBTC we use the pBTC farm's quote token - BNB, (pBTC - BNB)
   // from the BNB - pBTC price, we can calculate the PNT - BUSD price
   if (quoteTokenFarm.quoteToken.symbol === tokens.wmatic.symbol) {
-    const quoteTokenInBusd = bnbPriceBusd.times(quoteTokenFarm.tokenPriceVsQuote)
-    return hasTokenPriceVsQuote && quoteTokenInBusd
-      ? new BigNumber(farm.tokenPriceVsQuote).times(quoteTokenInBusd)
-      : BIG_ZERO
+    const quoteTokenPrice = quoteTokenFarm.tokenPriceVsQuote
+    return quoteTokenPrice ? new BigNumber(tokenPrice).times(bnbPriceBusd.times(quoteTokenPrice)) : BIG_ZERO
   }
 
   if (quoteTokenFarm.quoteToken.symbol === tokens.usdt.symbol) {
     const quoteTokenInBusd = quoteTokenFarm.tokenPriceVsQuote
-    return hasTokenPriceVsQuote && quoteTokenInBusd
-      ? new BigNumber(farm.tokenPriceVsQuote).times(quoteTokenInBusd)
-      : BIG_ZERO
+    return quoteTokenInBusd ? new BigNumber(tokenPrice).times(quoteTokenInBusd) : BIG_ZERO
   }
 
   // Catch in case token does not have immediate or once-removed BUSD/WBNB quoteToken
@@ -60,7 +58,7 @@ const getFarmBaseTokenPrice = (
 
 const getFarmQuoteTokenPrice = (
   farm: SerializedFarm,
-  quoteTokenFarm: SerializedFarm,
+  quoteTokenFarm: SerializedFarm | undefined,
   bnbPriceBusd: BigNumber,
 ): BigNumber => {
   if (farm.quoteToken.symbol === 'USDT') {
@@ -91,13 +89,13 @@ const getFarmsPrices = (farms: SerializedFarm[]) => {
   //const bnbPriceBusd = bnbBusdFarm.tokenPriceVsQuote ? BIG_ONE.div(bnbBusdFarm.tokenPriceVsQuote) : BIG_ZERO
 
   const collectUsdtFarm = farms.find((farm) => farm.pid === 1)
-  const collectPriceUsdt = collectUsdtFarm.tokenPriceVsQuote ? BIG_ONE.div(collectUsdtFarm.tokenPriceVsQuote) : BIG_ZERO
+  const collectPriceUsdt = collectUsdtFarm?.tokenPriceVsQuote ? BIG_ONE.div(collectUsdtFarm.tokenPriceVsQuote) : BIG_ZERO
 
   // CAUTION: This codes added by CoinCollect to calculate matic/usdt price
   // If we have matic/usdt pair directly, we wont't need this anymore.
   const collectMaticFarm = farms.find((farm) => farm.pid === 2)
-  const collectPriceMatic = collectMaticFarm.tokenPriceVsQuote ? BIG_ONE.div(collectMaticFarm.tokenPriceVsQuote) : BIG_ZERO
-  const maticPriceUsdt = collectPriceMatic.div(collectPriceUsdt)
+  const collectPriceMatic = collectMaticFarm?.tokenPriceVsQuote ? BIG_ONE.div(collectMaticFarm.tokenPriceVsQuote) : BIG_ZERO
+  const maticPriceUsdt = collectPriceUsdt.gt(0) ? collectPriceMatic.div(collectPriceUsdt) : BIG_ZERO
 
   const farmsWithPrices = farms.map((farm) => {
     const quoteTokenFarm = getFarmFromTokenSymbol(farms, farm.quoteToken.symbol)

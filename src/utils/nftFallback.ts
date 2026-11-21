@@ -23,7 +23,10 @@ export const getRandomNftFallbackSrc = (exclude?: string): string => {
   return buildFallbackSrc(1)
 }
 
-export const useNftFallbackSource = (src?: string, onError?: (event: SyntheticEvent<Element, Event>) => void) => {
+export const useNftFallbackSource = <T extends HTMLElement = HTMLImageElement>(
+  src?: string,
+  onError?: (event: SyntheticEvent<T>) => void,
+) => {
   const [currentSrc, setCurrentSrc] = useState<string>(() => (src ? src : getRandomNftFallbackSrc()))
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export const useNftFallbackSource = (src?: string, onError?: (event: SyntheticEv
   }, [src])
 
   const handleError = useCallback(
-    (event: SyntheticEvent<Element, Event>) => {
+    (event: SyntheticEvent<T>) => {
       setCurrentSrc((previous) => getRandomNftFallbackSrc(previous))
       if (onError) {
         onError(event)

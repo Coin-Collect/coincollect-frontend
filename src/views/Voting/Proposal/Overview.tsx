@@ -15,13 +15,14 @@ import { FetchStatus } from 'config/constants/types'
 import { isCoreProposal } from '../helpers'
 import { ProposalStateTag, ProposalTypeTag } from '../components/Proposals/tags'
 import Layout from '../components/Layout'
+import { Skeleton } from '@pancakeswap/uikit'
 import Details from './Details'
 import Results from './Results'
 import Vote from './Vote'
 import Votes from './Votes'
 
 const Overview = () => {
-  const id = useRouter().query.id as string
+  const { id } = useRouter().query
   const { t } = useTranslation()
   const { account } = useWeb3React()
 
@@ -29,15 +30,16 @@ const Overview = () => {
     status: proposalLoadingStatus,
     data: proposal,
     error,
-  } = useSWRImmutable(id ? ['proposal', id] : null, () => getProposal(id))
+  } = useSWRImmutable(typeof id === 'string' ? ['proposal', id] as const : null, ([, proposalId]) => getProposal(proposalId))
   const { id: proposalId = null, snapshot = null } = proposal ?? {}
 
   const {
     status: votesLoadingStatus,
-    data: votes,
+    data: votes = [],
     mutate: refetch,
-  } = useSWR(proposalId && snapshot ? ['proposal', proposalId, 'votes'] : null, async () =>
-    getAllVotes(proposalId, Number(snapshot)),
+  } = useSWR(
+    proposalId && snapshot ? ['proposal', proposalId, 'votes', snapshot] as const : null,
+    ([, target, , targetSnapshot]) => getAllVotes(target, Number(targetSnapshot)),
   )
   const hasAccountVoted = account && votes && votes.some((vote) => vote.voter.toLowerCase() === account.toLowerCase())
 
@@ -46,6 +48,8 @@ const Overview = () => {
   if (!proposal && error) {
     return <NotFound />
   }
+
+  if (!proposal) return <Skeleton width="100%" height="180px" />
 
   return (
     <Container py="40px">

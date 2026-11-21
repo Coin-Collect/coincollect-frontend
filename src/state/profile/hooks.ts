@@ -7,7 +7,7 @@ import { getProfile, GetProfileResponse } from './helpers'
 import { Profile } from '../types'
 
 export const useProfileForAddress = (
-  address: string,
+  address: string | null | undefined,
   fetchConfiguration = {
     revalidateIfStale: true,
     revalidateOnFocus: false,
@@ -17,15 +17,15 @@ export const useProfileForAddress = (
   profile?: Profile
   isFetching: boolean
   isValidating: boolean
-  refresh: KeyedMutator<GetProfileResponse>
+  refresh: KeyedMutator<GetProfileResponse | null>
 } => {
   const { data, status, mutate, isValidating } = useSWR(
     address ? [address, 'profile'] : null,
-    () => getProfile(address),
+    ([target]) => getProfile(target),
     fetchConfiguration,
   )
 
-  const { profile } = data ?? { profile: null }
+  const profile = data?.profile
 
   return {
     profile,
@@ -53,17 +53,17 @@ export const useProfile = (): {
   hasActiveProfile: boolean
   isInitialized: boolean
   isLoading: boolean
-  refresh: KeyedMutator<GetProfileResponse>
+  refresh: KeyedMutator<GetProfileResponse | null>
 } => {
   const { account } = useWeb3React()
-  const { data, status, mutate } = useSWRImmutable(account ? [account, 'profile'] : null, () => getProfile(account))
+  const { data, status, mutate } = useSWRImmutable(account ? [account, 'profile'] : null, ([address]) => getProfile(address))
 
-  const { profile, hasRegistered } = data ?? ({ profile: null, hasRegistered: false } as GetProfileResponse)
+  const { profile, hasRegistered = false } = data ?? {}
 
   const isLoading = status === FetchStatus.Fetching
   const isInitialized = status === FetchStatus.Fetched || status === FetchStatus.Failed
   const hasProfile = isInitialized && hasRegistered
-  const hasActiveProfile = hasProfile && profile?.isActive
+  const hasActiveProfile = hasProfile && profile?.isActive === true
 
   return { profile, hasProfile, hasActiveProfile, isInitialized, isLoading, refresh: mutate }
 }

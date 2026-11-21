@@ -78,12 +78,12 @@ const FarmAuction = () => {
     <>
       <StyledHeader>
         <Breadcrumbs>
-          <Link as={NextLink} href="/" color="primary" style={{ fontWeight: 400 }}>
+          <NextLink href="/" style={{ color: theme.colors.primary, fontWeight: 400 }}>
             {t('Home')}
-          </Link>
-          <Link as={NextLink} href="/farms" color="primary" style={{ fontWeight: 400 }}>
+          </NextLink>
+          <NextLink href="/farms" style={{ color: theme.colors.primary, fontWeight: 400 }}>
             {t('Farms')}
-          </Link>
+          </NextLink>
           <Text>{t('Community Farm Auction')}</Text>
         </Breadcrumbs>
         <Flex flexDirection={['column-reverse', null, 'row']}>

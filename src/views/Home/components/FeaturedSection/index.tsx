@@ -119,7 +119,7 @@ export const FeaturedSection: React.FC = () => {
       .filter((farm): farm is typeof farmsData[number] => Boolean(farm))
       .map((farm) => {
         const configEntry = nftFarmsConfig.find((configFarm) => configFarm.pid === farm.pid)
-        const mainCollectionWeight = configEntry?.mainCollectionWeight ?? 1
+        const mainCollectionWeight = Number(configEntry?.mainCollectionWeight ?? 1)
         const isSmartNftStakePool = Boolean(farm.contractAddresses)
         const totalStaked = farm.totalStaked ?? new BigNumber(0)
         const totalShares = farm.totalShares ?? new BigNumber(0)
@@ -130,7 +130,7 @@ export const FeaturedSection: React.FC = () => {
         const totalLiquidityWithThreshold = new BigNumber(rawLiquidity > 0 ? rawLiquidity : 1)
         const { cakeRewardsApr, lpRewardsApr } = getNftFarmApr(
           new BigNumber(farm.poolWeight),
-          farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
+          farm.tokenPerBlock ? Number(farm.tokenPerBlock) : 0,
           totalLiquidityWithThreshold,
           mainCollectionWeight,
         )

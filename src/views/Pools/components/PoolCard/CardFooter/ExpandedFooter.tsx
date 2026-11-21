@@ -30,7 +30,7 @@ import MaxStakeRow from '../../MaxStakeRow'
 
 interface ExpandedFooterProps {
   pool: DeserializedPool
-  account: string
+  account?: string | null
 }
 
 const ExpandedWrapper = styled(Flex)`
@@ -74,7 +74,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ pool, account }) => {
   const isMetaMaskInScope = !!window.ethereum?.isMetaMask
   const isManualCakePool = sousId === 0
 
-  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
+  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay, countdownBlock } =
     getPoolBlockInfo(pool, currentBlock)
 
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
@@ -147,7 +147,7 @@ const ExpandedFooter: React.FC<ExpandedFooterProps> = ({ pool, account }) => {
           <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
           {blocksRemaining || blocksUntilStart ? (
             <Flex alignItems="center">
-              <Link external href={getPolygonScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
+              <Link external href={countdownBlock === undefined ? undefined : getPolygonScanLink(countdownBlock, 'countdown')}>
                 <Balance small value={blocksToDisplay} decimals={0} color="primary" />
                 <Text small ml="4px" color="primary" textTransform="lowercase">
                   {t('Blocks')}

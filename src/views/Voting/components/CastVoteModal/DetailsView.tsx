@@ -21,7 +21,7 @@ interface DetailsViewProps {
   poolsBalance: number
   cakeBnbLpBalance: number
   ifoPoolBalance: number
-  block: number
+  block?: number
 }
 
 const DetailsView: React.FC<DetailsViewProps> = ({
@@ -54,9 +54,11 @@ const DetailsView: React.FC<DetailsViewProps> = ({
       </VotingBox>
       <Text color="secondary" textTransform="uppercase" mb="4px" bold fontSize="14px">
         {t('Your CAKE held at block')}
-        <StyledLinkExternal href={getBscScanLink(block, 'block')} ml="8px">
-          {block}
-        </StyledLinkExternal>
+        {block !== undefined && (
+          <StyledLinkExternal href={getBscScanLink(block, 'block')} ml="8px">
+            {block}
+          </StyledLinkExternal>
+        )}
       </Text>
       <Flex alignItems="center" justifyContent="space-between" mb="4px">
         <Text color="textSubtle" fontSize="16px">

@@ -14,7 +14,7 @@ import { ButtonsEnum } from './types'
 
 export type CtaButtonsProps = {
   t: ContextApi['t']
-  account: string
+  account?: string | null
   saleStatus: SaleStatusEnum
   userStatus: UserStatusEnum
   theme: DefaultTheme

@@ -9,7 +9,7 @@ import ExpandedFooter from './ExpandedFooter'
 
 interface FooterProps {
   claim: any
-  account: string
+  account: string | null | undefined
   defaultExpanded?: boolean
 }
 

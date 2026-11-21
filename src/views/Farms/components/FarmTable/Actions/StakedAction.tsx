@@ -79,7 +79,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
           {t('Your funds have been staked in the farm')}
         </ToastDescriptionWithTx>,
       )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
     }
   }
 
@@ -94,7 +94,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
           {t('Your earnings have also been harvested to your wallet')}
         </ToastDescriptionWithTx>,
       )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
     }
   }
 
@@ -119,7 +119,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     })
     if (receipt?.status) {
       toastSuccess(t('Contract Enabled'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
     }
   }, [onApprove, dispatch, account, pid, t, toastSuccess, fetchWithCatchTxError])
 

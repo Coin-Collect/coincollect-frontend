@@ -139,7 +139,7 @@ export const getLastMintedNft = async (
   ownerAddress: string,
   collectionAddress: string,
   chainId: number
-): Promise<any> => {
+): Promise<{ name: string; image: string; tokenId: string; description: string }[] | null> => {
   const network = chainId == 80001 ? 'mumbai' : 'mainnet';
   const baseUrl = `https://polygon-${network}.g.alchemy.com/nft/v3/w_1-F8BIeLkGtlMHR8BczL7Ko7NNTiZ4/getNFTsForOwner`;
   const queryParams = `?owner=${ownerAddress}&contractAddresses[]=${collectionAddress}&withMetadata=true&orderBy=transferTime&pageSize=1`;
@@ -147,8 +147,16 @@ export const getLastMintedNft = async (
 
   const res = await fetch(fullUrl);
   if (res.ok) {
-    const json = await res.json();
-    return json.ownedNfts.map(item => ({ "name": item.name, "image": item.image.originalUrl }));
+    const json: { ownedNfts?: { name?: string; image?: { originalUrl?: string }; tokenId?: string; description?: string }[] } = await res.json()
+    return (json.ownedNfts ?? []).flatMap((item) => {
+      if (!item.tokenId || !item.image?.originalUrl) return []
+      return [{
+        name: item.name ?? '',
+        image: item.image.originalUrl,
+        tokenId: item.tokenId,
+        description: item.description ?? '',
+      }]
+    })
   }
 
   console.error('Failed to fetch NFTs', res.statusText);
@@ -310,21 +318,8 @@ const fetchCollectionsTotalSupply = async (collections: ApiCollection[]): Promis
  */
 export const getCollections = async (): Promise<Record<string, Collection>> => {
   try {
-    const [collections, /*collectionsMarket*/] = await Promise.all([getCollectionsApi(), /*getCollectionsSg()*/])
-    const collectionApiData: ApiCollection[] = collections?.data ?? []
-    /*
-    const collectionsTotalSupply = await fetchCollectionsTotalSupply(collectionApiData)
-    const collectionApiDataCombinedOnChain = collectionApiData.map((collection, index) => {
-      const totalSupplyFromApi = Number(collection.totalSupply) || 0
-      const totalSupplyFromOnChain = collectionsTotalSupply[index]
-      return {
-        ...collection,
-        totalSupply: Math.max(totalSupplyFromApi, totalSupplyFromOnChain).toString(),
-      }
-    })
-    */
-    // @ts-ignore
-    return collectionApiData /*combineCollectionData(collectionApiDataCombinedOnChain, collectionsMarket)*/
+    const collections = await getCollectionsApi()
+    return combineCollectionData(collections?.data ?? [], [])
   } catch (error) {
     console.error('Unable to fetch data:', error)
     return {}
@@ -1120,7 +1115,7 @@ export const combineCollectionData = (
   collectionApiData: ApiCollection[],
   collectionSgData: CollectionMarketDataBaseFields[],
 ): Record<string, Collection> => {
-  const collectionsMarketObj: Record<string, CollectionMarketDataBaseFields> = collectionSgData.reduce(
+  const collectionsMarketObj: Record<string, CollectionMarketDataBaseFields | undefined> = collectionSgData.reduce(
     (prev, current) => ({ ...prev, [current.id]: { ...current } }),
     {},
   )
@@ -1129,6 +1124,10 @@ export const combineCollectionData = (
     const collectionMarket = collectionsMarketObj[current.address.toLowerCase()]
     const collection: Collection = {
       ...current,
+      id: current.id ?? current.address,
+      active: current.active ?? false,
+      totalVolumeBNB: current.totalVolumeBNB ?? '0',
+      numberTokensListed: current.numberTokensListed ?? '0',
       ...collectionMarket,
     }
 

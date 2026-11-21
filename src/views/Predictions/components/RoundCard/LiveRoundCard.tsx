@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { useCountUp } from 'react-countup'
+import CountUp from 'react-countup'
 import {
   Card,
   CardBody,
@@ -46,7 +45,7 @@ const LiveRoundCard: React.FC<LiveRoundCardProps> = ({
   const price = usePollOraclePrice()
   const bufferSeconds = useGetBufferSeconds()
 
-  const isBull = lockPrice && price.gt(lockPrice)
+  const isBull = Boolean(lockPrice && price.gt(lockPrice))
   const priceColor = isBull ? 'success' : 'failure'
 
   const priceDifference = getPriceDifference(price, lockPrice)
@@ -55,27 +54,17 @@ const LiveRoundCard: React.FC<LiveRoundCardProps> = ({
 
   const now = Date.now()
 
-  const { countUp, update } = useCountUp({
-    start: 0,
-    end: priceAsNumber,
-    duration: 1,
-    decimals: 3,
-  })
   const { targetRef, tooltip, tooltipVisible } = useTooltip(t('Last price from Chainlink Oracle'), {
     placement: 'bottom',
   })
 
-  const updateRef = useRef(update)
 
-  useEffect(() => {
-    updateRef.current(priceAsNumber)
-  }, [priceAsNumber, updateRef])
 
   if (hasRoundFailed) {
     return <CanceledRoundCard round={round} />
   }
 
-  if (now > closeTimestamp * 1000) {
+  if (closeTimestamp === null || lockTimestamp === null || now > closeTimestamp * 1000) {
     return <CalculatingCard round={round} hasEnteredDown={hasEnteredDown} hasEnteredUp={hasEnteredUp} />
   }
 
@@ -102,7 +91,7 @@ const LiveRoundCard: React.FC<LiveRoundCardProps> = ({
           <Flex alignItems="center" justifyContent="space-between" mb="16px" height="36px">
             <div ref={targetRef}>
               <TooltipText bold color={priceColor} fontSize="24px" style={{ minHeight: '36px' }}>
-                {price.gt(0) ? `$${countUp}` : <Skeleton height="36px" width="94px" />}
+                {price.gt(0) ? <CountUp prefix="$" decimals={3} duration={1} end={priceAsNumber} preserveValue /> : <Skeleton height="36px" width="94px" />}
               </TooltipText>
             </div>
             <PositionTag betPosition={isBull ? BetPosition.BULL : BetPosition.BEAR}>

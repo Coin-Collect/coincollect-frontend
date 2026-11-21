@@ -5,6 +5,7 @@ import { NextLinkFromReactRouter } from 'components/NextLink'
 import BigNumber from 'bignumber.js'
 import { useTranslation } from 'contexts/Localization'
 import { usePriceCakeBusd } from 'state/farms/hooks'
+import { useGasPrice } from 'state/user/hooks'
 import useToast from 'hooks/useToast'
 import { useCoinCollectFarm } from 'hooks/useContract'
 import useCatchTxError from 'hooks/useCatchTxError'
@@ -21,13 +22,14 @@ const StyledCard = styled(Card)`
 
 const HarvestCard = () => {
   const { t } = useTranslation()
+  const gasPrice = useGasPrice()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
   const { farmsWithStakedBalance, earningsSum: farmEarningsSum } = useFarmsWithBalance()
 
   const masterChefContract = useCoinCollectFarm() //useMasterchef()
   const cakePriceBusd = usePriceCakeBusd()
-  const earningsBusd = new BigNumber(farmEarningsSum).multipliedBy(cakePriceBusd)
+  const earningsBusd = new BigNumber(farmEarningsSum ?? NaN).multipliedBy(cakePriceBusd)
   const numTotalToCollect = farmsWithStakedBalance.length
   const numFarmsToCollect = farmsWithStakedBalance.filter((value) => value.pid !== 0).length
   const hasCakePoolToCollect = numTotalToCollect - numFarmsToCollect > 0
@@ -40,7 +42,7 @@ const HarvestCard = () => {
       const farmWithBalance = farmsWithStakedBalance[i]
       // eslint-disable-next-line no-await-in-loop
       const receipt = await fetchWithCatchTxError(() => {
-        return harvestFarm(masterChefContract, farmWithBalance.pid)
+        return harvestFarm(masterChefContract, farmWithBalance.pid, gasPrice)
       })
       if (receipt?.status) {
         toastSuccess(
@@ -51,7 +53,7 @@ const HarvestCard = () => {
         )
       }
     }
-  }, [farmsWithStakedBalance, masterChefContract, toastSuccess, t, fetchWithCatchTxError])
+  }, [farmsWithStakedBalance, masterChefContract, gasPrice, toastSuccess, t, fetchWithCatchTxError])
 
   return (
     <StyledCard>

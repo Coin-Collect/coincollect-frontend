@@ -122,7 +122,7 @@ const CollectWinningsPopup = () => {
   const [isOpen, setIsOpen] = useState(false)
   const { t } = useTranslation()
   const ref = useRef(null)
-  const timer = useRef(null)
+  const timer = useRef<ReturnType<typeof setInterval>>()
   const { account } = useWeb3React()
   const predictionStatus = useGetPredictionsStatus()
   const isHistoryPaneOpen = useIsHistoryPaneOpen()
@@ -147,7 +147,7 @@ const CollectWinningsPopup = () => {
         if (!isCancelled) {
           // Filter out bets that were not winners
           const winnerBets = bets.filter((bet) => {
-            return bet.position === bet.round.position
+            return bet.position === bet.round?.position
           })
 
           if (!isHistoryPaneOpen) {

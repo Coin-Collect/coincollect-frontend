@@ -17,8 +17,9 @@ const applyNodeDataToUserGraphResponse = (
 ): UserRound[] => {
   //   If no graph rounds response - return node data
   if (userGraphData.length === 0) {
-    return lotteryNodeData.map((nodeRound) => {
+    return lotteryNodeData.flatMap((nodeRound) => {
       const ticketDataForRound = userNodeData.find((roundTickets) => roundTickets.roundId === nodeRound.lotteryId)
+      if (!ticketDataForRound) return []
       return {
         endTime: nodeRound.endTime,
         status: nodeRound.status,
@@ -31,11 +32,12 @@ const applyNodeDataToUserGraphResponse = (
   }
 
   // Return the rounds with combined node + subgraph data, plus all remaining subgraph rounds.
-  const nodeRoundsWithGraphData = userNodeData.map((userNodeRound) => {
+  const nodeRoundsWithGraphData = userNodeData.flatMap((userNodeRound) => {
     const userGraphRound = userGraphData.find(
       (graphResponseRound) => graphResponseRound.lotteryId === userNodeRound.roundId,
     )
     const nodeRoundData = lotteryNodeData.find((nodeRound) => nodeRound.lotteryId === userNodeRound.roundId)
+    if (!nodeRoundData) return userGraphRound ?? []
     return {
       endTime: nodeRoundData.endTime,
       status: nodeRoundData.status,
@@ -50,7 +52,7 @@ const applyNodeDataToUserGraphResponse = (
   const [lastCombinedDataRound] = nodeRoundsWithGraphData.slice(-1)
   const lastCombinedDataRoundIndex = userGraphData
     .map((graphRound) => graphRound?.lotteryId)
-    .indexOf(lastCombinedDataRound?.lotteryId)
+    .indexOf(lastCombinedDataRound?.lotteryId ?? '')
   const remainingSubgraphRounds = userGraphData ? userGraphData.splice(lastCombinedDataRoundIndex + 1) : []
   const mergedResponse = [...nodeRoundsWithGraphData, ...remainingSubgraphRounds]
   return mergedResponse
@@ -70,6 +72,7 @@ export const getGraphLotteryUser = async (
     rounds: [],
   }
 
+  if (!GRAPH_API_LOTTERY) return blankUser
   try {
     const response = await request(
       GRAPH_API_LOTTERY,

@@ -15,7 +15,7 @@ import { FetchStatus } from 'config/constants/types'
 
 import { fetchNewPBAndUpdateExisting } from './reducer'
 import { State } from '../types'
-import { ApiCollections, NftActivityFilter, NftFilter, NftToken, Collection, MintingActivity } from './types'
+import { ApiCollections, NftActivityFilter, NftFilter, NftToken, Collection, MintingActivity, hasNftListing } from './types'
 import { getCollection, getCollections, getLastMintedNft, mintingActivityApi } from './helpers'
 import BigNumber from 'bignumber.js'
 
@@ -76,13 +76,13 @@ export const useLoadingState = () => {
 
 export const useGetCollections = (): { data: ApiCollections; status: FetchStatus } => {
   const { data, error } = useSWR(['nftMarket', 'collections'], async () => getCollections())
-  const collections = data ?? ({} as ApiCollections)
+  const collections = data ?? {}
   const status: FetchStatus = error
     ? FetchStatus.Failed
     : data === undefined
     ? FetchStatus.Fetching
     : FetchStatus.Fetched
-  return { data: collections as unknown as ApiCollections, status }
+  return { data: collections, status }
 }
 
 export const useGetCollection = (collectionAddress: string): Collection | undefined => {
@@ -95,9 +95,8 @@ export const useGetCollection = (collectionAddress: string): Collection | undefi
   return collectionObject[checksummedCollectionAddress]
 }
 
-export const useGetShuffledCollections = (): { data: ApiCollections; status: FetchStatus } => {
+export const useGetShuffledCollections = (): { data: Collection[]; status: FetchStatus } => {
   const { data, error } = useSWRImmutable(['nftMarket', 'collections'], async () => getCollections())
-  const collections = data ?? ({} as ApiCollections)
 
   // Compute status from the primary fetch
   const status: FetchStatus = error
@@ -106,15 +105,9 @@ export const useGetShuffledCollections = (): { data: ApiCollections; status: Fet
     ? FetchStatus.Fetching
     : FetchStatus.Fetched
 
-  // Shuffle deterministically when data is available; avoid second SWR indirection
-  const shuffled = useMemo(() => {
-    if (!isEmpty(collections)) {
-      return shuffle(collections as unknown as any[])
-    }
-    return collections
-  }, [collections])
+  const shuffled = useMemo(() => shuffle(Object.values(data ?? {})), [data])
 
-  return { data: shuffled as unknown as ApiCollections, status }
+  return { data: shuffled, status }
 }
 
 export const useNftsFromCollection = (collectionAddress: string) => {
@@ -125,7 +118,7 @@ export const useNftsFromCollection = (collectionAddress: string) => {
 
 export const useGetAllBunniesByBunnyId = (bunnyId: string) => {
   const nfts: NftToken[] = useSelector((state: State) => state.nftMarket.data.nfts[pancakeBunniesAddress])
-  return nfts ? nfts.filter((nft) => nft.attributes[0].value === bunnyId && nft.marketData.isTradable) : EMPTY_ARRAY
+  return nfts ? nfts.filter(hasNftListing).filter((nft) => nft.attributes?.[0]?.value === bunnyId) : EMPTY_ARRAY
 }
 
 export const useApprovalNfts = (nftsInWallet: NftToken[]) => {
@@ -217,14 +210,14 @@ export const useMintingActivity = (
 }
 
 export const useLastMintedNft = (
-  ownerAddress: string,
+  ownerAddress: string | null | undefined,
   collectionAddress: string,
-  chainId: number
+  chainId?: number
 ) => {
 
   const { data, status, error, mutate, isValidating } = useSWR(
-    [collectionAddress, 'lastMintedNft'], 
-    async () => getLastMintedNft(ownerAddress, collectionAddress, chainId), {
+    ownerAddress && chainId ? [ownerAddress, collectionAddress, chainId, 'lastMintedNft'] as const : null,
+    () => ownerAddress && chainId ? getLastMintedNft(ownerAddress, collectionAddress, chainId) : null, {
     revalidateOnFocus: false,
     revalidateIfStale: true,
     revalidateOnReconnect: false

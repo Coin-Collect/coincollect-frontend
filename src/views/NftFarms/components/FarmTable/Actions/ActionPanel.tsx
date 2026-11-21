@@ -1,3 +1,4 @@
+import { TimeCountdownDisplay } from '../../Cells/EndsInCell'
 import styled, { keyframes, css } from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
 import { Flex, Link, LinkExternal, Skeleton, Text, TimerIcon } from '@pancakeswap/uikit'
@@ -155,8 +156,8 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
   const bsc = getPolygonScanLink(nftAddress, 'address')
   const farmConfig = nftFarmsConfig.filter((farmConfig) => farmConfig.pid == farm.pid)[0]
 
-  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
-    getNftFarmBlockInfo(farm.startBlock, farm.endBlock, farm.isFinished, currentBlock)
+  const { shouldShowBlockCountdown, timeUntilStart, timeRemaining, hasPoolStarted } =
+    getNftFarmBlockInfo(farm.startTimestamp ?? 0, farm.endTimestamp ?? 0, Boolean(farm.isFinished), currentBlock)
 
   return (
     <Container expanded={expanded}>
@@ -167,23 +168,16 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
             currentBlock={currentBlock}
             hasPoolStarted={hasPoolStarted}
             stakingLimit={farm.stakingLimit}
-            stakingLimitEndBlock={farm.stakingLimitEndBlock}
+            stakingLimitEndTimestamp={farm.stakingLimitEndTimestamp}
+            endTimestamp={farm.endTimestamp}
             stakingTokenSymbol={lpLabel}
           />
         )}
         {shouldShowBlockCountdown && (
           <Flex mb="2px" justifyContent="space-between" alignItems="center">
             <Text small>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
-            {blocksRemaining || blocksUntilStart ? (
-              <Flex alignItems="center">
-                <Link external href={getBscScanLink(hasPoolStarted ? farm.endBlock : farm.startBlock, 'countdown')}>
-                  <Balance small value={blocksToDisplay} decimals={0} color="primary" />
-                  <Text small ml="4px" color="primary" textTransform="lowercase">
-                    {t('Blocks')}
-                  </Text>
-                  <TimerIcon ml="4px" color="primary" />
-                </Link>
-              </Flex>
+            {timeRemaining || timeUntilStart ? (
+              <TimeCountdownDisplay timestamp={hasPoolStarted ? farm.endTimestamp : farm.startTimestamp} />
             ) : (
               <Skeleton width="54px" height="21px" />
             )}
@@ -199,7 +193,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
         <StyledLinkExternal href={bsc}>{t('View Contract')}</StyledLinkExternal>
 
         {farm.earningToken?.address && (<StyledLinkExternal href={`https://app.uniswap.org/#/tokens/polygon/${farm.earningToken.address}`}>{t('See Token Info')}</StyledLinkExternal>)}
-        {farmConfig.projectLink && (<StyledLinkExternal href={farmConfig.projectLink}>{t('View Project Site')}</StyledLinkExternal>)}
+        {farmConfig?.projectLink?.mainLink && (<StyledLinkExternal href={farmConfig.projectLink.mainLink}>{t('View Project Site')}</StyledLinkExternal>)}
 
         <TagsContainer>
           {dual ? <DualTag /> : null}
@@ -221,7 +215,7 @@ const ActionPanel: React.FunctionComponent<ActionPanelProps> = ({
       </ValueContainer>
       <ActionContainer>
         <HarvestAction {...farm} userDataReady={userDataReady} />
-        <StakedAction {...farm} userDataReady={userDataReady} lpLabel={lpLabel} displayApr={apr.value} />
+        <StakedAction {...farm} userDataReady={userDataReady} lpLabel={lpLabel} displayApr={apr.value ?? undefined} />
       </ActionContainer>
     </Container>
   )

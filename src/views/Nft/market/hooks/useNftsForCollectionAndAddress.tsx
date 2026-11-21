@@ -52,12 +52,13 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
 
 
     const getNfts = async () => {
+      if (!account) return []
       try {
         const collectionName = await resolveCollectionName()
         const nftData = nftPool["useApi"] ? await walletOfOwnerApi(account, [collectionAddress]) : await collectionContract.walletOfOwner(account);
         const tokenIds = nftPool["useApi"] ? nftData.map(nft => nft.tokenId) : nftData;
     
-        let tokenIdsNumber = [];
+        let tokenIdsNumber: { tokenId: string; collectionAddress: string; image: string; collectionName: string }[] = [];
     
         if (nftPool["staticNftImage"]) {
           // If staticNftImage exists, use that image directly
@@ -82,7 +83,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             return {
               address: collectionAddress,
               name: 'tokenURI',
-              params: [id.toNumber()]
+              params: [id.toString()]
             };
           });
 
@@ -96,7 +97,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
               const rawImage = meta.data?.image ?? meta.data?.image_url ?? meta.data?.imageUrl
               const image = normalizeIpfsUri(rawImage) ?? FALLBACK_IMAGE
               return {
-                tokenId: id.toNumber(),
+                tokenId: id.toString(),
                 collectionAddress,
                 image,
                 collectionName,
@@ -104,7 +105,7 @@ export const useNftsForCollectionAndAddress = (selectedPid: number) => {
             } catch (error) {
               console.log('IPFS link is broken!', error);
               return {
-                tokenId: id.toNumber(),
+                tokenId: id.toString(),
                 collectionAddress,
                 image: FALLBACK_IMAGE,
                 collectionName,

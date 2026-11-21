@@ -21,9 +21,8 @@ import { formatUnits } from '@ethersproject/units'
 import { API_PROFILE } from 'config/constants/endpoints'
 import useToast from 'hooks/useToast'
 import { useGetCakeBalance } from 'hooks/useTokenBalance'
-import { signMessage } from 'utils/web3React'
+import { useSignMessage } from 'wagmi'
 import fetchWithTimeout from 'utils/fetchWithTimeout'
-import useWeb3Provider from 'hooks/useActiveWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import { FetchStatus } from 'config/constants/types'
 import ConfirmProfileCreationModal from './ConfirmProfileCreationModal'
@@ -63,12 +62,12 @@ const UserName: React.FC = () => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
   const { toastError } = useToast()
-  const { library, connector } = useWeb3Provider()
+  const { signMessageAsync } = useSignMessage()
   const [existingUserState, setExistingUserState] = useState<ExistingUserState>(ExistingUserState.IDLE)
   const [isValid, setIsValid] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const fetchAbortSignal = useRef<AbortController>(null)
+  const fetchAbortSignal = useRef<AbortController | null>(null)
   const { balance: cakeBalance, fetchStatus } = useGetCakeBalance()
   const hasMinimumCakeRequired = fetchStatus === FetchStatus.Fetched && cakeBalance.gte(REGISTER_COST)
   const [onPresentConfirmProfileCreation] = useModal(
@@ -84,11 +83,11 @@ const UserName: React.FC = () => {
   )
   const isUserCreated = existingUserState === ExistingUserState.CREATED
 
-  const [usernameToCheck, setUsernameToCheck] = useState<string>(undefined)
+  const [usernameToCheck, setUsernameToCheck] = useState<string>()
   const debouncedUsernameToCheck = useDebounce(usernameToCheck, 200)
 
   useEffect(() => {
-    const fetchUsernameToCheck = async (abortSignal) => {
+    const fetchUsernameToCheck = async (abortSignal: AbortSignal) => {
       try {
         setIsLoading(true)
         if (!debouncedUsernameToCheck) {
@@ -140,10 +139,11 @@ const UserName: React.FC = () => {
   }
 
   const handleConfirm = async () => {
+    if (!account) return
     try {
       setIsLoading(true)
 
-      const signature = await signMessage(connector, library, account, userName)
+      const signature = await signMessageAsync({ account, message: userName })
       const response = await fetch(`${API_PROFILE}/api/users/register`, {
         method: 'POST',
         headers: {
@@ -225,8 +225,8 @@ const UserName: React.FC = () => {
             <InputWrap>
               <Input
                 onChange={handleChange}
-                isWarning={userName && !isValid}
-                isSuccess={userName && isValid}
+                isWarning={Boolean(userName) && !isValid}
+                isSuccess={Boolean(userName) && isValid}
                 minLength={USERNAME_MIN_LENGTH}
                 maxLength={USERNAME_MAX_LENGTH}
                 disabled={isUserCreated}

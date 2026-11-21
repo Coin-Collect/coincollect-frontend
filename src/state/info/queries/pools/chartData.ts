@@ -36,7 +36,7 @@ const getPoolChartData = async (skip: number, address: string): Promise<{ data?:
 }
 
 const fetchPoolChartData = async (address: string): Promise<{ data?: ChartEntry[]; error: boolean }> => {
-  return fetchChartData(getPoolChartData, address)
+  return fetchChartData((skip) => getPoolChartData(skip, address))
 }
 
 export default fetchPoolChartData

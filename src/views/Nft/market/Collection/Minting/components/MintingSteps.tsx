@@ -71,7 +71,7 @@ const AnimatedStepCard = styled(Card)<{ $isActive: boolean }>`
   opacity: ${({ $isActive }) => ($isActive ? 1 : 0.72)};
   transform: ${({ $isActive }) => ($isActive ? 'scale(1.015)' : 'scale(0.985)')};
   transition: opacity 280ms ease, transform 280ms ease, box-shadow 280ms ease;
-  box-shadow: ${({ $isActive, theme }) => ($isActive ? theme.shadows.level2 : 'none')};
+  box-shadow: ${({ $isActive, theme }) => ($isActive ? theme.shadows.level1 : 'none')};
 `
 
 const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
@@ -98,7 +98,7 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
     {},
   )
 
-  const creditDollarValue = useBUSDCakeAmount(getBalanceNumber(credit))
+  const creditDollarValue = useBUSDCakeAmount(getBalanceNumber(credit)) ?? NaN
 
   const stakingTokenBalance = pool?.userData?.stakingTokenBalance
     ? new BigNumber(pool.userData.stakingTokenBalance)
@@ -137,7 +137,7 @@ const Step1 = ({ hasProfile }: { hasProfile: boolean }) => {
                 </Text>
                 <Balance fontSize="20px" bold decimals={5} value={getBalanceNumber(credit)} />
                 <Text fontSize="12px" color="textSubtle">
-                  {creditDollarValue !== undefined ? (
+                  {Number.isFinite(creditDollarValue) ? (
                     <Balance
                       value={creditDollarValue}
                       fontSize="12px"
@@ -191,12 +191,12 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
   const { t } = useTranslation()
   const { balance } = useTokenBalance(ifo.currency.address)
   const isCommitted =
-    poolBasic.amountTokenCommittedInLP.isGreaterThan(0) || poolUnlimited.amountTokenCommittedInLP.isGreaterThan(0)
+    poolBasic?.amountTokenCommittedInLP.isGreaterThan(0) === true || poolUnlimited.amountTokenCommittedInLP.isGreaterThan(0)
   const stepsValidationStatus = [
     hasActiveProfile,
     balance.isGreaterThan(0),
     isCommitted,
-    poolBasic.hasClaimed || poolUnlimited.hasClaimed,
+    poolBasic?.hasClaimed || poolUnlimited.hasClaimed,
   ]
   const [activeAnimatedStep, setActiveAnimatedStep] = useState(0)
   const totalSteps = stepsValidationStatus.length
@@ -275,7 +275,7 @@ const IfoSteps: React.FC<Props> = ({ ifo, walletIfoData, isLive }) => {
       case 1:
         return <Step1 hasProfile={hasActiveProfile} />
       case 2:
-        return <Step2 hasProfile={hasActiveProfile} isLive={isLive} isCommitted={isCommitted} />
+        return <Step2 hasProfile={hasActiveProfile} isLive={Boolean(isLive)} isCommitted={Boolean(isCommitted)} />
       case 3:
         return (
           <CardBody>

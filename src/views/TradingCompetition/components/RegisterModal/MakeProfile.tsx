@@ -5,14 +5,15 @@ import { CompetitionProps } from 'views/TradingCompetition/types'
 import { nftsBaseUrl } from 'views/Nft/market/constants'
 import { useRouter } from 'next/router'
 
-const MakeProfile: React.FC<CompetitionProps> = ({ onDismiss }) => {
+const MakeProfile: React.FC<Pick<CompetitionProps, 'onDismiss'>> = ({ onDismiss }) => {
   const { account } = useWeb3React()
   const { t } = useTranslation()
   const router = useRouter()
 
   const handleClick = () => {
+    if (!account) return
     router.push(`${nftsBaseUrl}/profile/${account.toLowerCase()}`)
-    onDismiss()
+    onDismiss?.()
   }
 
   return (

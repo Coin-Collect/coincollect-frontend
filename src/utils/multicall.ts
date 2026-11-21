@@ -37,7 +37,7 @@ export const multicallv2 = async <T = any>(
   calls: Call[],
   options: MulticallOptions = { requireSuccess: true },
 ): Promise<T> => {
-  const { requireSuccess } = options
+  const { requireSuccess = true } = options
   const multi = getMulticallContract()
   const itf = new Interface(abi)
 
@@ -76,7 +76,7 @@ export const multicallPolygonv2 = async <T = any>(
   calls: Call[],
   options: MulticallOptions = { requireSuccess: true },
 ): Promise<T> => {
-  const { requireSuccess } = options
+  const { requireSuccess = true } = options
   const multi = getMulticallPolygonContract()
   const itf = new Interface(abi)
 

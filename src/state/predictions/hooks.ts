@@ -5,34 +5,35 @@ import minBy from 'lodash/minBy'
 import { BigNumber } from '@ethersproject/bignumber'
 import { isAddress } from 'utils'
 import { useAppDispatch } from 'state'
-import { State, NodeRound, ReduxNodeLedger, NodeLedger, ReduxNodeRound } from '../types'
-import { parseBigNumberObj } from './helpers'
+import { State, NodeRound } from '../types'
+import { deserializePredictionRound, deserializePredictionLedger } from './helpers'
 import { fetchAddressResult } from '.'
 
 export const useGetRounds = () => {
   const rounds = useSelector((state: State) => state.predictions.rounds)
-  return Object.keys(rounds).reduce((accum, epoch) => {
+  return Object.keys(rounds).reduce<Record<string, NodeRound>>((accum, epoch) => {
     return {
       ...accum,
-      [epoch]: parseBigNumberObj<ReduxNodeRound, NodeRound>(rounds[epoch]),
+      [epoch]: deserializePredictionRound(rounds[epoch]),
     }
-  }, {}) as { [key: string]: NodeRound }
+  }, {})
 }
 
 export const useGetRoundsByCloseOracleId = () => {
   const rounds = useSelector((state: State) => state.predictions.rounds)
-  return Object.keys(rounds).reduce((accum, epoch) => {
-    const parsed = parseBigNumberObj<ReduxNodeRound, NodeRound>(rounds[epoch])
+  return Object.keys(rounds).reduce<Record<string, NodeRound>>((accum, epoch) => {
+    const parsed = deserializePredictionRound(rounds[epoch])
+    if (!parsed.closeOracleId) return accum
     return {
       ...accum,
       [parsed.closeOracleId]: parsed,
     }
-  }, {}) as { [key: string]: NodeRound }
+  }, {})
 }
 
 export const useGetRound = (epoch: number) => {
   const round = useSelector((state: State) => state.predictions.rounds[epoch])
-  return parseBigNumberObj<ReduxNodeRound, NodeRound>(round)
+  return round ? deserializePredictionRound(round) : undefined
 }
 
 export const useGetSortedRounds = () => {
@@ -40,18 +41,9 @@ export const useGetSortedRounds = () => {
   return orderBy(Object.values(roundData), ['epoch'], ['asc'])
 }
 
-export const useGetBetByEpoch = (account: string, epoch: number) => {
-  const bets = useSelector((state: State) => state.predictions.ledgers)
-
-  if (!bets[account]) {
-    return null
-  }
-
-  if (!bets[account][epoch]) {
-    return null
-  }
-
-  return parseBigNumberObj<ReduxNodeLedger, NodeLedger>(bets[account][epoch])
+export const useGetBetByEpoch = (account: string | null | undefined, epoch: number) => {
+  const bet = useSelector((state: State) => account ? state.predictions.ledgers[account]?.[epoch] : undefined)
+  return bet ? deserializePredictionLedger(bet) : null
 }
 
 export const useGetIsClaimable = (epoch) => {
@@ -140,7 +132,7 @@ export const useGetCurrentRoundLockTimestamp = () => {
   }
 
   if (!currentRound.lockTimestamp) {
-    return currentRound.startTimestamp + intervalSeconds
+    return currentRound.startTimestamp == null ? undefined : currentRound.startTimestamp + intervalSeconds
   }
 
   return currentRound.lockTimestamp
@@ -167,11 +159,11 @@ export const useGetLeaderboardHasMoreResults = () => {
   return useSelector((state: State) => state.predictions.leaderboard.hasMoreResults)
 }
 
-export const useGetAddressResult = (account: string) => {
-  return useSelector((state: State) => state.predictions.leaderboard.addressResults[account])
+export const useGetAddressResult = (account: string | null | undefined) => {
+  return useSelector((state: State) => account ? state.predictions.leaderboard.addressResults[account] : undefined)
 }
 
-export const useGetOrFetchLeaderboardAddressResult = (account: string) => {
+export const useGetOrFetchLeaderboardAddressResult = (account: string | null | undefined) => {
   const addressResult = useGetAddressResult(account)
   const dispatch = useAppDispatch()
 
@@ -180,7 +172,7 @@ export const useGetOrFetchLeaderboardAddressResult = (account: string) => {
 
     // If address result is null it means we already tried fetching the results and none came back
     if (!addressResult && addressResult !== null && address) {
-      dispatch(fetchAddressResult(account))
+      dispatch(fetchAddressResult(address))
     }
   }, [dispatch, account, addressResult])
 

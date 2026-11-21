@@ -6,15 +6,15 @@ import getLiquidityUrlPathParts from 'utils/getLiquidityUrlPathParts'
 import { Skeleton } from '@pancakeswap/uikit'
 
 export interface AprProps {
-  value: string
-  multiplier: string
+  value: string | null
+  multiplier?: string
   pid: number
   lpLabel: string
   lpSymbol: string
   tokenAddress?: string
   quoteTokenAddress?: string
   cakePrice: BigNumber
-  originalValue: number
+  originalValue?: number
   hideButton?: boolean
 }
 
@@ -52,7 +52,7 @@ const Apr: React.FC<AprProps> = ({
   originalValue,
   hideButton = false,
 }) => {
-  const liquidityUrlPathParts = getLiquidityUrlPathParts({ quoteTokenAddress, tokenAddress })
+  const liquidityUrlPathParts = getLiquidityUrlPathParts({ quoteTokenAddress: quoteTokenAddress ?? '', tokenAddress: tokenAddress ?? '' })
   const addLiquidityUrl = `${BASE_ADD_LIQUIDITY_URL}/${liquidityUrlPathParts}`
 
   return originalValue !== 0 ? (
@@ -66,7 +66,7 @@ const Apr: React.FC<AprProps> = ({
           multiplier={multiplier}
           cakePrice={cakePrice}
           apr={originalValue}
-          displayApr={value}
+          displayApr={value ?? undefined}
           addLiquidityUrl={addLiquidityUrl}
         />
       ) : (

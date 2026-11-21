@@ -12,7 +12,7 @@ import {
   ExpandableLabel,
 } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { TeamRanksProps } from '../../../types'
+import { LeaderboardDataItem, TeamRanksProps } from '../../../types'
 import TopTradersGrid from './TopTradersGrid'
 
 const TopTradersCard: React.FC<TeamRanksProps> = ({
@@ -25,26 +25,26 @@ const TopTradersCard: React.FC<TeamRanksProps> = ({
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState(0)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [topTradersGridData, setTopTradersGridData] = useState(null)
+  const [topTradersGridData, setTopTradersGridData] = useState<LeaderboardDataItem[] | undefined>()
   const handleItemClick = (index: number) => setActiveTab(index)
   const tabs = [t('Total'), 'Storm', 'Flippers', 'Cakers']
 
   useEffect(() => {
     const getData = () => {
       if (activeTab === 0) {
-        setTopTradersGridData(globalLeaderboardInformation.data)
+        setTopTradersGridData(globalLeaderboardInformation?.data)
       }
 
       if (activeTab === 1) {
-        setTopTradersGridData(team1LeaderboardInformation.leaderboardData.data)
+        setTopTradersGridData(team1LeaderboardInformation.leaderboardData?.data)
       }
 
       if (activeTab === 2) {
-        setTopTradersGridData(team2LeaderboardInformation.leaderboardData.data)
+        setTopTradersGridData(team2LeaderboardInformation.leaderboardData?.data)
       }
 
       if (activeTab === 3) {
-        setTopTradersGridData(team3LeaderboardInformation.leaderboardData.data)
+        setTopTradersGridData(team3LeaderboardInformation.leaderboardData?.data)
       }
     }
 

@@ -51,8 +51,8 @@ export const ListTraitFilter: React.FC<ListTraitFilterProps> = ({ title, traitTy
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [orderState, setOrderState] = useState<ListOrderState>({ orderKey: 'count', orderDir: 'asc' })
-  const wrapperRef = useRef(null)
-  const menuRef = useRef(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const nftFilters = useGetNftFilters(collectionAddress)
   const nftFilterState = useGetNftFilterLoadingState(collectionAddress)
   const dispatch = useAppDispatch()
@@ -116,6 +116,7 @@ export const ListTraitFilter: React.FC<ListTraitFilterProps> = ({ title, traitTy
   useEffect(() => {
     const handleClickOutside = ({ target }: Event) => {
       if (
+        target instanceof Node &&
         wrapperRef.current &&
         menuRef.current &&
         !menuRef.current.contains(target) &&

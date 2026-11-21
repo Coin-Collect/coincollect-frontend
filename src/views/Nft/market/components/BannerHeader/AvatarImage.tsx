@@ -35,7 +35,7 @@ const ImageElement = styled.img`
 `
 
 const AvatarImageComponent: FC<AvatarImageProps> = ({ src, borderColor, alt, className }) => {
-  const { currentSrc: mediaSrc, handleError } = useNftFallbackSource(src)
+  const { currentSrc: mediaSrc, handleError } = useNftFallbackSource<HTMLImageElement | HTMLVideoElement>(src)
 
   const isVideo = useMemo(() => mediaSrc && /\.(webm|mp4)$/i.test(mediaSrc), [mediaSrc])
 

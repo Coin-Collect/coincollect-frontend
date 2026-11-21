@@ -31,7 +31,7 @@ const ChartDisclaimer: FC<InjectedModalProps> = ({ onDismiss }) => {
   const { t } = useTranslation()
 
   const handleConfirm = () => {
-    onDismiss()
+    onDismiss?.()
   }
 
   return (

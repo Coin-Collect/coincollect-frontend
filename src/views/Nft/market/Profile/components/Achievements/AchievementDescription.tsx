@@ -7,7 +7,7 @@ interface AchievementDescriptionProps extends TextProps {
   description?: AchievementDescriptionType
 }
 
-const Description = styled(Text).attrs({ as: 'p', fontSize: '14px' })`
+const Description = styled(Text)`
   display: none;
 
   ${({ theme }) => theme.mediaQueries.md} {
@@ -33,7 +33,7 @@ const AchievementDescription: React.FC<AchievementDescriptionProps> = ({ descrip
   const { key, data = {} } = description
 
   return (
-    <Description color="textSubtle" {...props}>
+    <Description as="p" fontSize="14px" color="textSubtle" {...props}>
       {t(key, data)}
     </Description>
   )

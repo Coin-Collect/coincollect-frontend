@@ -73,7 +73,7 @@ const UnstakingFeeCountdownRow: React.FC<UnstakingFeeCountdownRowProps> = ({ isT
       <TooltipText ref={targetRef} small textTransform="lowercase">
         {noFeeToPay ? '0' : feeAsDecimal}% {getRowText()}
       </TooltipText>
-      {shouldShowTimer && <WithdrawalFeeTimer secondsRemaining={secondsRemaining} />}
+      {shouldShowTimer && secondsRemaining != null && <WithdrawalFeeTimer secondsRemaining={secondsRemaining} />}
     </Flex>
   )
 }

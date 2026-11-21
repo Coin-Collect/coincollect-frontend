@@ -30,7 +30,7 @@ import BattleCta from './components/BattleCta'
 import PrizesInfo from './components/PrizesInfo'
 import Rules from './components/Rules'
 import TeamRanks from './components/TeamRanks'
-import { UserTradingInformationProps } from './types'
+import { LeaderboardData, TeamLeaderboardProps, UserTradingInformationProps, CompetitionPhaseProps, YourScoreProps } from './types'
 
 const CompetitionPage = styled.div`
   min-height: calc(100vh - 64px);
@@ -81,7 +81,7 @@ const TradingCompetition = () => {
   const { profile, isLoading } = useProfile()
   const { isDark, theme } = useTheme()
   const tradingCompetitionContract = useTradingCompetitionContractV2(false)
-  const [currentPhase, setCurrentPhase] = useState(CompetitionPhases.REGISTRATION)
+  const [currentPhase, setCurrentPhase] = useState<CompetitionPhaseProps>(CompetitionPhases.REGISTRATION)
   const [registrationSuccessful, setRegistrationSuccessful] = useState(false)
   const [claimSuccessful, setClaimSuccessful] = useState(false)
   const [userTradingInformation, setUserTradingInformation] = useState<UserTradingInformationProps>({
@@ -95,19 +95,19 @@ const TradingCompetition = () => {
     userPointReward: '0',
     canClaimNFT: false,
   })
-  const [globalLeaderboardInformation, setGlobalLeaderboardInformation] = useState(null)
-  const [userLeaderboardInformation, setUserLeaderboardInformation] = useState({
+  const [globalLeaderboardInformation, setGlobalLeaderboardInformation] = useState<LeaderboardData | null>(null)
+  const [userLeaderboardInformation, setUserLeaderboardInformation] = useState<YourScoreProps['userLeaderboardInformation']>({
     global: 0,
     team: 0,
     volume: 0,
     next_rank: 0,
   })
   // 1. Storm
-  const [team1LeaderboardInformation, setTeam1LeaderboardInformation] = useState({ teamId: 1, leaderboardData: null })
+  const [team1LeaderboardInformation, setTeam1LeaderboardInformation] = useState<TeamLeaderboardProps>({ teamId: 1, leaderboardData: null })
   // 2. Flippers
-  const [team2LeaderboardInformation, setTeam2LeaderboardInformation] = useState({ teamId: 2, leaderboardData: null })
+  const [team2LeaderboardInformation, setTeam2LeaderboardInformation] = useState<TeamLeaderboardProps>({ teamId: 2, leaderboardData: null })
   // 3. Cakers
-  const [team3LeaderboardInformation, setTeam3LeaderboardInformation] = useState({ teamId: 3, leaderboardData: null })
+  const [team3LeaderboardInformation, setTeam3LeaderboardInformation] = useState<TeamLeaderboardProps>({ teamId: 3, leaderboardData: null })
 
   const isCompetitionLive = currentPhase.state === LIVE
   const hasCompetitionEnded =
@@ -132,8 +132,8 @@ const TradingCompetition = () => {
       userSantosRewards !== '0' ||
       userPointReward !== '0' ||
       canClaimNFT)
-  const finishedAndPrizesClaimed = hasCompetitionEnded && account && hasUserClaimed
-  const finishedAndNothingToClaim = hasCompetitionEnded && account && !userCanClaimPrizes
+  const finishedAndPrizesClaimed = hasCompetitionEnded && Boolean(account) && hasUserClaimed
+  const finishedAndNothingToClaim = hasCompetitionEnded && Boolean(account) && !userCanClaimPrizes
 
   const onRegisterSuccess = () => {
     setRegistrationSuccessful(true)
@@ -150,6 +150,7 @@ const TradingCompetition = () => {
     }
 
     const fetchUserContract = async () => {
+      if (!account) return
       try {
         const user = await tradingCompetitionContract.claimInformation(account)
         const userObject = {
@@ -206,7 +207,7 @@ const TradingCompetition = () => {
       setGlobalLeaderboardInformation(data)
     }
 
-    const fetchTeamsLeaderboardStats = async (teamId: number, callBack: (data: any) => void) => {
+    const fetchTeamsLeaderboardStats = async (teamId: number, callBack: (data: LeaderboardData) => void) => {
       try {
         const res = await fetch(`${profileApiUrl}/api/leaderboard/team/${teamId}`)
         const data = await res.json()
@@ -381,7 +382,7 @@ const TradingCompetition = () => {
               </Flex>
             )}
             <BottomBunnyWrapper>
-              <Image src={StormBunny} width={147} height={200} />
+              <Image alt="" src={StormBunny} width={147} height={200} />
             </BottomBunnyWrapper>
           </Flex>
         </PageSection>

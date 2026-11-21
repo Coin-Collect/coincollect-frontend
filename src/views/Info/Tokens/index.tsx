@@ -15,7 +15,7 @@ const TokensOverview: React.FC = () => {
   const formattedTokens = useMemo(() => {
     return Object.values(allTokens)
       .map((token) => token.data)
-      .filter((token) => token)
+      .filter((token) => token !== undefined)
   }, [allTokens])
 
   const [savedTokens] = useWatchlistTokens()

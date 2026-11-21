@@ -51,6 +51,7 @@ export const fetchMasterChefData = async (farms: SerializedNftFarmConfig[], isSm
   const masterChefAggregatedCalls = masterChefCalls
     .filter((masterChefCall) => masterChefCall[0] !== null && masterChefCall[1] !== null)
     .flat()
+    .filter((call) => call !== null)
 
   const masterChefMultiCallResult = await multicallPolygonv2(isSmartNftPool ? smartNftStakeABI : coinCollectNftStakeABI, masterChefAggregatedCalls)
   

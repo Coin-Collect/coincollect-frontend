@@ -149,7 +149,7 @@ const NoHatBunny = ({ isLive, isCurrent }: { isLive?: boolean; isCurrent?: boole
   const isSmallerThanTablet = isXs || isSm || isMd
   if (isSmallerThanTablet && isLive) return null
   return (
-    <StyledNoHatBunny $isLive={isLive} $isCurrent={isCurrent}>
+    <StyledNoHatBunny $isLive={Boolean(isLive)} $isCurrent={isCurrent}>
       <img
         src={`/images/ifos/assets/bunnypop-${!isSmallerThanTablet ? 'right' : 'left'}.png`}
         width={123}
@@ -314,6 +314,7 @@ const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfo
 
   useEffect(() => {
     const checkAllowance = async () => {
+      if (!account) return
       try {
         const response = await raisingTokenContract.allowance(account, contract.address)
         const currentAllowance = new BigNumber(response.toString())

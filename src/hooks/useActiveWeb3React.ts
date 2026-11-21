@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import useWeb3React from 'hooks/useWeb3React'
 import { simpleRpcProvider } from 'utils/providers'
+import { ChainId } from '@coincollect/sdk'
 import { CHAIN_ID } from 'config/constants/networks'
 
 /**
@@ -19,7 +20,7 @@ const useActiveWeb3React = () => {
     }
   }, [library])
 
-  return { library: provider, chainId: chainId ?? parseInt(CHAIN_ID, 10), ...web3React }
+  return { library: provider, chainId: chainId ?? Number(CHAIN_ID ?? ChainId.POLYGON), ...web3React }
 }
 
 export default useActiveWeb3React

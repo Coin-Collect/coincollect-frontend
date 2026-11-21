@@ -12,7 +12,7 @@ import CardFooter from './CardFooter'
 import PoolCardHeader, { PoolCardHeaderTitle } from './PoolCardHeader'
 import CardActions from './CardActions'
 
-const PoolCard: React.FC<{ pool: DeserializedPool; account: string }> = ({ pool, account }) => {
+const PoolCard: React.FC<{ pool: DeserializedPool; account?: string | null }> = ({ pool, account }) => {
   const { sousId, stakingToken, earningToken, isFinished, userData } = pool
   const { t } = useTranslation()
   const stakedBalance = userData?.stakedBalance ? new BigNumber(userData.stakedBalance) : BIG_ZERO

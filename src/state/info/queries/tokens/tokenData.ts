@@ -70,7 +70,7 @@ const fetchTokenData = async (
   try {
     const query = gql`
       query tokens {
-        now: ${TOKEN_AT_BLOCK(null, tokenAddresses)}
+        now: ${TOKEN_AT_BLOCK(undefined, tokenAddresses)}
         oneDayAgo: ${TOKEN_AT_BLOCK(block24h, tokenAddresses)}
         twoDaysAgo: ${TOKEN_AT_BLOCK(block48h, tokenAddresses)}
         oneWeekAgo: ${TOKEN_AT_BLOCK(block7d, tokenAddresses)}
@@ -122,6 +122,7 @@ const useFetchedTokenDatas = (tokenAddresses: string[]): TokenDatas => {
   const bnbPrices = useBnbPrices()
 
   useEffect(() => {
+    if (!bnbPrices || !block24h || !block48h || !block7d || !block14d) return
     const fetch = async () => {
       const { error, data } = await fetchTokenData(
         block24h.number,

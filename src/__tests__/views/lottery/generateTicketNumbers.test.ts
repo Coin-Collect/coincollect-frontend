@@ -66,7 +66,7 @@ describe('generateTicketNumbers', () => {
     it(`generates ${numbersToGenerate} unique numbers between ${startingNumber} & ${endingNumber} WITHOUT existing numbers`, () => {
       const ticketsArray = generateTicketNumbers(numbersToGenerate, null, startingNumber, endingNumber)
 
-      const expectedNumbers = []
+      const expectedNumbers: number[] = []
       for (let i = startingNumber; i < endingNumber; i++) {
         expectedNumbers.push(i)
       }

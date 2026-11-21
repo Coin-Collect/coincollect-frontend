@@ -121,9 +121,8 @@ const IFOBanner = () => {
             src={`/images/decorations/3d-ifo-${activeIfoWithBlocks.id}.png`}
             alt={`IFO ${activeIfoWithBlocks.id}`}
             onError={(event) => {
-              // @ts-ignore
               // eslint-disable-next-line no-param-reassign
-              event.target.style.display = 'none'
+              event.currentTarget.style.display = 'none'
             }}
           />
         </RightWrapper>

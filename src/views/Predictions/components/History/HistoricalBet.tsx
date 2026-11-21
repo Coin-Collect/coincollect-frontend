@@ -14,7 +14,7 @@ import {
 import useWeb3React from 'hooks/useWeb3React'
 import styled from 'styled-components'
 import { useAppDispatch } from 'state'
-import { Bet, PredictionStatus } from 'state/types'
+import { BetWithRound, PredictionStatus } from 'state/types'
 import { REWARD_RATE } from 'state/predictions/config'
 import { useGetCurrentEpoch, useGetIsClaimable, useGetPredictionsStatus } from 'state/predictions/hooks'
 import { fetchLedgerData, markAsCollected } from 'state/predictions'
@@ -26,7 +26,7 @@ import ReclaimPositionButton from '../ReclaimPositionButton'
 import BetDetails from './BetDetails'
 
 interface BetProps {
-  bet: Bet
+  bet: BetWithRound
 }
 
 const StyledBet = styled(Flex).attrs({ alignItems: 'center', p: '16px' })`
@@ -151,7 +151,7 @@ const HistoricalBet: React.FC<BetProps> = ({ bet }) => {
   const handleSuccess = async () => {
     // We have to mark the bet as claimed immediately because it does not update fast enough
     dispatch(markAsCollected({ [bet.round.epoch]: true }))
-    dispatch(fetchLedgerData({ account, epochs: [bet.round.epoch] }))
+    if (account) dispatch(fetchLedgerData({ account, epochs: [bet.round.epoch] }))
   }
 
   return (

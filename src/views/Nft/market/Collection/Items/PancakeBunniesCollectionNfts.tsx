@@ -15,7 +15,7 @@ const PancakeBunniesCollectionNfts: React.FC<CollectionNftsProps> = ({ collectio
   const allPancakeBunnyNfts = useAllPancakeBunnyNfts(address)
 
   const sortedNfts = allPancakeBunnyNfts
-    ? orderBy(allPancakeBunnyNfts, (nft) => (nft.meta[sortBy] ? Number(nft?.meta[sortBy]) : 0), [
+    ? orderBy(allPancakeBunnyNfts, (nft) => (Number(nft.meta?.[sortBy] ?? 0)), [
         sortBy === 'currentAskPrice' ? 'asc' : 'desc',
       ])
     : []

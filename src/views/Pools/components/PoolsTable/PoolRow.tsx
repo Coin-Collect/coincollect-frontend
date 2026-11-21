@@ -17,7 +17,7 @@ import StakedCell from './Cells/StakedCell'
 
 interface PoolRowProps {
   pool: DeserializedPool
-  account: string
+  account?: string | null
   userDataLoaded: boolean
 }
 

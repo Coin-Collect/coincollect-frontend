@@ -33,7 +33,7 @@ const StyledNoProfileAvatarIcon = styled(NoProfileAvatarIcon)`
   height: 100%;
 `
 
-const ScoreHeader: React.FC<YourScoreProps> = ({ profile, isLoading }) => {
+const ScoreHeader: React.FC<Pick<YourScoreProps, 'profile' | 'isLoading'>> = ({ profile, isLoading }) => {
   return (
     <Wrapper>
       <LaurelWrapper dir="left">

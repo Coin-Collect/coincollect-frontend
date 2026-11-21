@@ -28,6 +28,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowMaticBalance, onDismiss }
     logout()
   }
 
+  if (!account) return null
+
   return (
     <>
       <Text color="secondary" fontSize="12px" textTransform="uppercase" fontWeight="bold" mb="8px">

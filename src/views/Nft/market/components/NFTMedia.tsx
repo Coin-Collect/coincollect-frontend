@@ -22,14 +22,14 @@ export const AspectRatio = ({ ratio, children, ...props }) => (
 const NFTMedia: FC<
   {
     nft?: NftToken
-    as?: any
+    as?: (props: BoxProps & { src: string; width: number; height: number; alt?: string }) => React.ReactNode
     width: number
     height: number
   } & Omit<BoxProps, 'width' | 'height' | 'as'>
 > = ({ width, height, nft, borderRadius = 'default', as, ...props }) => {
   const dispatch = useAppDispatch()
   const tryVideoNftMedia = useTryVideoNftMedia()
-  const vidRef = useRef(null)
+  const vidRef = useRef<HTMLVideoElement>(null)
   const { observerRef, isIntersecting } = useIntersectionObserver()
 
   useEffect(() => {
@@ -58,13 +58,13 @@ const NFTMedia: FC<
     )
   }
 
+  const ImageComponent = as ?? RoundedImage
   return (
-    <RoundedImage
+    <ImageComponent
       width={width}
       height={height}
-      src={nft?.image.gif || nft?.image.thumbnail}
+      src={nft?.image.gif || nft?.image.thumbnail || '/images/nfts/no-profile-md.png'}
       alt={nft?.name}
-      as={as}
       {...props}
     />
   )

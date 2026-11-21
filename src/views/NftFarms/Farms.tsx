@@ -584,7 +584,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
                 new BigNumber(farm.poolWeight),
                 farm.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : null,
                 totalLiquidityWithThreshold,
-                mainCollectionWeight,
+                mainCollectionWeight === undefined ? undefined : Number(mainCollectionWeight),
               )
             : { cakeRewardsApr: 0, lpRewardsApr: 0 }
         return { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: totalStaked }
@@ -639,7 +639,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
     const sortFarms = (farms: NftFarmWithStakedValue[]): NftFarmWithStakedValue[] => {
       switch (sortOption) {
         case 'apr':
-          return orderBy(farms, (farm: NftFarmWithStakedValue) => farm.apr + farm.lpRewardsApr, 'desc')
+          return orderBy(farms, (farm: NftFarmWithStakedValue) => (farm.apr ?? 0) + (farm.lpRewardsApr ?? 0), 'desc')
         case 'multiplier':
           return orderBy(
             farms,

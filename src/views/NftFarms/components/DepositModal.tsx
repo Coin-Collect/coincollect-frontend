@@ -13,7 +13,7 @@ interface DepositModalProps {
   multiplier?: string
   lpPrice: BigNumber
   lpLabel?: string
-  onConfirm: (selectedNftList: { collectionAddress: string; tokenId: number }[]) => void
+  onConfirm: (selectedNftList: { collectionAddress: string; tokenId: string }[]) => void
   onDismiss?: () => void
   tokenName?: string
   apr?: number
@@ -33,7 +33,7 @@ export default function DepositModal({
 }: DepositModalProps) {
   const { t } = useTranslation()
   const [pending, setPending] = useState(false)
-  const [selected, setSelected] = useState<{ collectionAddress: string; tokenId: number }[]>([])
+  const [selected, setSelected] = useState<{ collectionAddress: string; tokenId: string }[]>([])
   const { nfts, isLoading, error, revalidateNfts } = useNftsForCollectionAndAddress(pid)
   const limit = stakingLimit.toNumber()
   const count = stakedBalance.toNumber() + selected.length

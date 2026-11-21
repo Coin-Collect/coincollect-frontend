@@ -7,10 +7,11 @@ import { Ifo } from '../config/constants/types'
 
 const activeIfo = ifosConfig.find((ifo) => ifo.isActive)
 
-export const useActiveIfoWithBlocks = (): Ifo & { startBlock: number; endBlock: number } => {
+export const useActiveIfoWithBlocks = (): (Ifo & { startBlock: number; endBlock: number }) | null => {
   const { data: currentIfoBlocks = { startBlock: 0, endBlock: 0 } } = useSWRImmutable(
     activeIfo ? ['ifo', 'currentIfo'] : null,
     async () => {
+      if (!activeIfo) return { startBlock: 0, endBlock: 0 }
       const abi = activeIfo.version === 3.1 ? ifoV3Abi : ifoV2Abi
       const [startBlock, endBlock] = await multicallv2(
         abi,

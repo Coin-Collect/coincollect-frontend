@@ -1,7 +1,7 @@
 import { EventInfos, UserInfos, UserStatusEnum } from 'views/PancakeSquad/types'
 
 export type PancakeSquadHeaderType = {
-  account: string
+  account?: string | null
   isLoading: boolean
   eventInfos?: EventInfos
   userInfos?: UserInfos

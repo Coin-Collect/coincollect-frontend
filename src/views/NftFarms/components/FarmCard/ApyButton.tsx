@@ -18,7 +18,7 @@ export interface ApyButtonProps {
   pid: number
   lpSymbol: string
   lpLabel?: string
-  multiplier: string
+  multiplier?: string
   cakePrice?: BigNumber
   apr?: number
   displayApr?: string
@@ -45,8 +45,8 @@ const ApyButton: React.FC<ApyButtonProps> = ({
       stakingTokenBalance={stakedBalance.plus(tokenBalance)}
       stakingTokenSymbol={lpSymbol}
       stakingTokenPrice={lpPrice.toNumber()}
-      earningTokenPrice={cakePrice.toNumber()}
-      apr={apr}
+      earningTokenPrice={cakePrice?.toNumber() ?? NaN}
+      apr={apr ?? NaN}
       multiplier={multiplier}
       displayApr={displayApr}
       linkHref={addLiquidityUrl}

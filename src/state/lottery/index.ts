@@ -12,12 +12,12 @@ interface PublicLotteryData {
 }
 
 const initialState: LotteryState = {
-  currentLotteryId: null,
+  currentLotteryId: '',
   isTransitioning: false,
-  maxNumberTicketsPerBuyOrClaim: null,
+  maxNumberTicketsPerBuyOrClaim: '',
   currentRound: {
     isLoading: true,
-    lotteryId: null,
+    lotteryId: '',
     status: LotteryStatus.PENDING,
     startTime: '',
     endTime: '',
@@ -36,7 +36,7 @@ const initialState: LotteryState = {
       tickets: [],
     },
   },
-  lotteriesData: null,
+  lotteriesData: [],
   userLotteryData: { account: '', totalCake: '', totalTickets: '', rounds: [] },
 }
 
@@ -59,12 +59,7 @@ export const fetchUserTicketsAndLotteries = createAsyncThunk<
 >('lottery/fetchUserTicketsAndLotteries', async ({ account, currentLotteryId }) => {
   const userLotteriesRes = await getUserLotteryData(account, currentLotteryId)
   const userParticipationInCurrentRound = userLotteriesRes.rounds?.find((round) => round.lotteryId === currentLotteryId)
-  const userTickets = userParticipationInCurrentRound?.tickets
-
-  // User has not bought tickets for the current lottery, or there has been an error
-  if (!userTickets || userTickets.length === 0) {
-    return { userTickets: null, userLotteries: userLotteriesRes }
-  }
+  const userTickets = userParticipationInCurrentRound?.tickets ?? []
 
   return { userTickets, userLotteries: userLotteriesRes }
 })

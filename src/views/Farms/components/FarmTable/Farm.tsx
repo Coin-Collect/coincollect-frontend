@@ -37,7 +37,7 @@ const Farm: React.FunctionComponent<FarmProps> = ({ token, quoteToken, label, pi
   const { t } = useTranslation()
   const rawStakedBalance = getBalanceNumber(stakedBalance)
 
-  const handleRenderFarming = (): JSX.Element => {
+  const handleRenderFarming = (): JSX.Element | null => {
     if (rawStakedBalance) {
       return (
         <Text color="secondary" fontSize="12px" bold textTransform="uppercase">

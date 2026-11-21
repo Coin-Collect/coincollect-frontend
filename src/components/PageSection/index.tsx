@@ -28,7 +28,7 @@ const BackgroundColor = styled(Flex)<BackgroundColorProps>`
   align-items: center;
   z-index: ${({ index }) => index - 1};
   background: ${({ background, theme }) => background || theme.colors.background};
-  padding: ${({ getPadding }) => getPadding()};
+  padding: ${({ getPadding }) => getPadding?.()};
 `
 
 const ChildrenWrapper = styled(Container)`

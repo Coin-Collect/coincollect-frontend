@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { AutoRenewIcon, Button, Card, CardBody, Heading, Skeleton, Text } from '@pancakeswap/uikit'
 import useWeb3React from 'hooks/useWeb3React'
@@ -11,11 +11,11 @@ import { useProfileContract } from 'hooks/useContract'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { nftsBaseUrl } from 'views/Nft/market/constants'
-import { NftLocation } from 'state/nftMarket/types'
+import { NftLocation, NftToken } from 'state/nftMarket/types'
 import { useProfile } from 'state/profile/hooks'
 import SelectionCard from './SelectionCard'
 import NextStepButton from './NextStepButton'
-import { ProfileCreationContext } from './contexts/ProfileCreationProvider'
+import useProfileCreation from './contexts/hook'
 import multicall from '../../utils/multicall'
 import profileABI from '../../config/abi/pancakeProfile.json'
 import useNftsForAddress from '../Nft/market/hooks/useNftsForAddress'
@@ -31,8 +31,8 @@ const NftWrapper = styled.div`
 const ProfilePicture: React.FC = () => {
   const { account, library } = useWeb3React()
   const [isApproved, setIsApproved] = useState(false)
-  const [userProfileCreationNfts, setUserProfileCreationNfts] = useState(null)
-  const { selectedNft, actions } = useContext(ProfileCreationContext)
+  const [userProfileCreationNfts, setUserProfileCreationNfts] = useState<NftToken[] | null>(null)
+  const { selectedNft, actions } = useProfileCreation()
   const profileContract = useProfileContract(false)
   const { isLoading: isProfileLoading, profile } = useProfile()
   const { nfts, isLoading: isUserNftLoading } = useNftsForAddress(account, profile, isProfileLoading)
@@ -77,7 +77,8 @@ const ProfilePicture: React.FC = () => {
   const { callWithGasPrice } = useCallWithGasPrice()
 
   const handleApprove = async () => {
-    const contract = getErc721Contract(selectedNft.collectionAddress, library.getSigner())
+    if (!library || !account || !selectedNft.collectionAddress || !selectedNft.tokenId) return
+    const contract = getErc721Contract(selectedNft.collectionAddress, library.getSigner(account))
     const receipt = await fetchWithCatchTxError(() => {
       return callWithGasPrice(contract, 'approve', [getPancakeProfileAddress(), selectedNft.tokenId])
     })
@@ -128,7 +129,7 @@ const ProfilePicture: React.FC = () => {
             </Link>
           </Text>
           <NftWrapper>
-            {userProfileCreationNfts?.length > 0 ? (
+            {userProfileCreationNfts && userProfileCreationNfts.length > 0 ? (
               userProfileCreationNfts
                 .filter((walletNft) => walletNft.location === NftLocation.WALLET)
                 .map((walletNft) => {

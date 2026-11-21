@@ -126,7 +126,7 @@ const DataRow: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
 }
 
 const TransactionTable: React.FC<{
-  transactions: Transaction[]
+  transactions?: Transaction[]
 }> = ({ transactions }) => {
   const [sortField, setSortField] = useState(SORT_FIELD.timestamp)
   const [sortDirection, setSortDirection] = useState<boolean>(true)
@@ -176,7 +176,7 @@ const TransactionTable: React.FC<{
   }, [transactions, txFilter])
 
   const handleFilter = useCallback(
-    (newFilter: TransactionType) => {
+    (newFilter: TransactionType | undefined) => {
       if (newFilter !== txFilter) {
         setTxFilter(newFilter)
         setPage(1)

@@ -34,7 +34,7 @@ const getOverviewData = async (block?: number): Promise<{ data?: OverviewRespons
     return { data, error: false }
   } catch (error) {
     console.error('Failed to fetch info overview', error)
-    return { data: null, error: true }
+    return { error: true }
   }
 }
 

@@ -4,14 +4,14 @@ import Timer from './Timer'
 import useNextEventCountdown from '../../hooks/useNextEventCountdown'
 
 interface CountdownProps {
-  nextEventTime: number
-  preCountdownText?: string
-  postCountdownText?: string
+  nextEventTime: number | null
+  preCountdownText?: string | null
+  postCountdownText?: string | null
 }
 
 const Countdown: React.FC<CountdownProps> = ({ nextEventTime, preCountdownText, postCountdownText }) => {
   const secondsRemaining = useNextEventCountdown(nextEventTime)
-  const { days, hours, minutes } = getTimePeriods(secondsRemaining)
+  const { days, hours, minutes } = getTimePeriods(secondsRemaining ?? 0)
 
   return (
     <>

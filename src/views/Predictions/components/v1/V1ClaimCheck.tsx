@@ -27,6 +27,7 @@ const ClaimCheck = () => {
   const [onPresentNothingToClaimModal] = useModal(<NothingToClaimModal />)
 
   const handleClick = async () => {
+    if (!account) return
     try {
       setIsFetching(true)
       const betHistory = await getAllV1History({ user: account.toLowerCase(), claimed: false })

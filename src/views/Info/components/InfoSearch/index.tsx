@@ -176,10 +176,10 @@ const Search = () => {
   useEffect(() => {
     if (showMenu) {
       document.addEventListener('click', handleOutsideClick)
-      document.querySelector('body').style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
     } else {
       document.removeEventListener('click', handleOutsideClick)
-      document.querySelector('body').style.overflow = 'visible'
+      document.body.style.overflow = 'visible'
     }
 
     return () => {

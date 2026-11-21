@@ -65,13 +65,11 @@ export const mapPairDayData = (pairDayData: PairDayData): ChartEntry => ({
 })
 
 type PoolOrTokenFetchFn = (skip: number, address: string) => Promise<{ data?: ChartEntry[]; error: boolean }>
-type OverviewFetchFn = (skip: number) => Promise<{ data?: ChartEntry[]; error: boolean }>
 
 // Common helper function to retrieve chart data
 // Used for both Pool and Token charts
 export const fetchChartData = async (
-  getEntityDayDatas: PoolOrTokenFetchFn | OverviewFetchFn,
-  address?: string,
+  getEntityDayDatas: (skip: number) => ReturnType<PoolOrTokenFetchFn>,
 ): Promise<{ data?: ChartEntry[]; error: boolean }> => {
   let chartEntries: ChartEntry[] = []
   let error = false
@@ -80,9 +78,9 @@ export const fetchChartData = async (
 
   while (!allFound) {
     // eslint-disable-next-line no-await-in-loop
-    const { data, error: fetchError } = await getEntityDayDatas(skip, address)
+    const { data, error: fetchError } = await getEntityDayDatas(skip)
     skip += 1000
-    allFound = data.length < 1000
+    allFound = fetchError || !data || data.length < 1000
     error = fetchError
     if (data) {
       chartEntries = chartEntries.concat(data)

@@ -25,7 +25,7 @@ const usePollPredictions = () => {
       dispatch(fetchRounds(liveCurrentAndRecent))
       dispatch(fetchMarketData())
 
-      if (account) {
+      if (account && earliestEpoch !== undefined) {
         const epochRange = range(earliestEpoch, currentEpoch + 1)
         dispatch(fetchLedgerData({ account, epochs: epochRange }))
         dispatch(fetchClaimableStatuses({ account, epochs: epochRange }))

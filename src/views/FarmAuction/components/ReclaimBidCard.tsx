@@ -33,6 +33,7 @@ const ReclaimBidCard: React.FC = () => {
 
   const { isApproving, isApproved, isConfirming, handleApprove, handleConfirm } = useApproveConfirmTransaction({
     onRequiresApproval: async () => {
+      if (!account) return false
       try {
         const response = await cakeContract.allowance(account, farmAuctionContract.address)
         const currentAllowance = ethersToBigNumber(response)
@@ -51,6 +52,7 @@ const ReclaimBidCard: React.FC = () => {
       )
     },
     onConfirm: () => {
+      if (!account || !reclaimableAuction) throw new Error('No auction bid available to reclaim')
       return callWithGasPrice(farmAuctionContract, 'claimAuction', [reclaimableAuction.id])
     },
     onSuccess: async ({ receipt }) => {

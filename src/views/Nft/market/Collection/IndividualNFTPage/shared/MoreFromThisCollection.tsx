@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react'
 import type SwiperCore from 'swiper'
 import { ArrowBackIcon, ArrowForwardIcon, Box, IconButton, Text, Flex, useMatchBreakpoints } from '@pancakeswap/uikit'
 import { isAddress } from 'utils'
+import { NftToken } from 'state/nftMarket/types'
 import { useNftsFromCollection } from 'state/nftMarket/hooks'
 import { fetchNftsFromCollections } from 'state/nftMarket/reducer'
 import { useAppDispatch } from 'state'
@@ -93,9 +94,9 @@ const MoreFromThisCollection: React.FC<MoreFromThisCollectionProps> = ({
 
   if (isPBCollection) {
     // PancakeBunnies should display 1 card per bunny id
-    nftsToShow = nftsToShow.reduce((nftArray, current) => {
-      const bunnyId = current.attributes[0].value
-      if (!nftArray.find((nft) => nft.attributes[0].value === bunnyId)) {
+    nftsToShow = nftsToShow.reduce<NftToken[]>((nftArray, current) => {
+      const bunnyId = current.attributes?.[0]?.value
+      if (bunnyId === undefined || !nftArray.some((nft) => nft.attributes?.[0]?.value === bunnyId)) {
         nftArray.push(current)
       }
       return nftArray
@@ -106,20 +107,20 @@ const MoreFromThisCollection: React.FC<MoreFromThisCollectionProps> = ({
   const nextSlide = () => {
     if (activeIndex < maxPageIndex - 1) {
       setActiveIndex((index) => index + 1)
-      swiperRef.slideNext()
+      swiperRef?.slideNext()
     }
   }
 
   const previousSlide = () => {
     if (activeIndex > 0) {
       setActiveIndex((index) => index - 1)
-      swiperRef.slidePrev()
+      swiperRef?.slidePrev()
     }
   }
 
   const goToSlide = (index: number) => {
     setActiveIndex(index / slidesPerView)
-    swiperRef.slideTo(index)
+    swiperRef?.slideTo(index)
   }
 
   const updateActiveIndex = ({ activeIndex: newActiveIndex }) => {
@@ -157,7 +158,7 @@ const MoreFromThisCollection: React.FC<MoreFromThisCollectionProps> = ({
               <SwiperSlide key={nft.tokenId}>
                 <CollectibleLinkCard
                   nft={nft}
-                  currentAskPrice={isPBCollection ? null : parseFloat(nft.marketData?.currentAskPrice)}
+                  currentAskPrice={!isPBCollection && nft.marketData?.currentAskPrice ? Number(nft.marketData.currentAskPrice) : undefined}
                 />
               </SwiperSlide>
             ))}

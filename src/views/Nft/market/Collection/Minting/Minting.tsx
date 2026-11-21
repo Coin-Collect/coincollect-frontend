@@ -45,7 +45,7 @@ import { getDisplayApr } from 'views/NftFarms/Farms'
 import BigNumber from 'bignumber.js'
 import { getNftFarmApr } from 'utils/apr'
 import nftFarmsConfig from 'config/constants/nftFarms'
-import { useFarmFromLpSymbol, useFarmFromPid, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
+import { useFarmFromPid, usePollFarmsWithUserData, usePriceCakeBusd } from 'state/nftFarms/hooks'
 import useStakeFarms from "views/NftFarms/hooks/useStakeFarms";
 import { StyledCard } from "../../../../../../packages/uikit/src/components/Card/StyledCard";
 import FlexLayout from "components/Layout/Flex";
@@ -183,7 +183,7 @@ export default function Minting() {
   const cakePrice = usePriceCakeBusd()
 
   usePollFarmsWithUserData()
-  const farm = useFarmFromPid(minting?.stake_pid ?? 0)
+  const farm = useFarmFromPid(minting?.stake_pid)
 
   // Compute APR to match nftpools FarmCard expectations
   const mainCollectionWeight = nftFarmsConfig.filter((f) => f.pid == (farm?.pid ?? 0))[0]?.mainCollectionWeight
@@ -197,7 +197,7 @@ export default function Minting() {
     new BigNumber(farm?.poolWeight ?? 0),
     farm?.tokenPerBlock ? parseFloat(farm.tokenPerBlock) : 0,
     totalLiquidityWithThreshold,
-    mainCollectionWeight,
+    mainCollectionWeight == null ? undefined : Number(mainCollectionWeight),
   )
   const farmWithApr = farm ? { ...farm, apr: cakeRewardsApr, lpRewardsApr, liquidity: (farm?.totalStaked ?? new BigNumber(0)) } : null
 

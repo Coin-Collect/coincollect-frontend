@@ -6,7 +6,7 @@ import claimConfig from 'config/constants/claim'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import BigNumber from 'bignumber.js'
 import { getAddress, getCoinCollectClaimRewardV2Address } from 'utils/addressHelpers'
-import { multicallPolygonv2 } from 'utils/multicall'
+import { Call, multicallPolygonv2 } from 'utils/multicall'
 import coinCollectClaimRewardAbi from 'config/abi/coinCollectClaimReward.json'
 import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import erc20Abi from 'config/abi/erc20.json'
@@ -38,7 +38,7 @@ const getSpecificData = (claimInfo, dataType) => {
     return claimInfo[3]
   } else if (dataType == "targetNftsForClaimIndex") {
 
-    const targetNftsForClaimIndex = []
+    const targetNftsForClaimIndex: [string[], number[]][] = []
     for (let i = 0; i < claimInfo[1].length; i += 1) {
       const addressList = Array(claimInfo[1][i][1].length).fill(claimInfo[1][i][0]);
       const nftList = claimInfo[1][i][1].map((nft: BigNumber) => nft.toNumber());
@@ -48,7 +48,7 @@ const getSpecificData = (claimInfo, dataType) => {
 
   } else if (dataType == "communityNfts") {
 
-    const communityNfts = [[], []]
+    const communityNfts: [string[], number[]] = [[], []]
     for (let i = 0; i < claimInfo[0].length; i += 1) {
       const addressList = Array(claimInfo[0][i][1].length).fill(claimInfo[0][i][0]);
       const nftList = claimInfo[0][i][1].map((nft: BigNumber) => nft.toNumber());
@@ -274,7 +274,7 @@ const getClaimInfoApi = async (account) => {
   //=============================================================
 
 
-  let isClaimedListCalls = [];
+  const isClaimedListCalls: Call[] = [];
   for (let i = 0; i < parsedClaims.length; i++) {
     const claim = parsedClaims[i];
     const allNftsForClaim = [targetNFTs[i], ...communityNfts];
@@ -296,17 +296,17 @@ const getClaimInfoApi = async (account) => {
 
   }
 
-  const isClaimedListRaw = await multicallPolygonv2<any>(coinCollectClaimRewardAbi, isClaimedListCalls);
+  const isClaimedListRaw = await multicallPolygonv2<[boolean][]>(coinCollectClaimRewardAbi, isClaimedListCalls);
   const isClaimedListFlat = isClaimedListRaw.flat();
   console.log("isClaimedListFlat")
   console.log(isClaimedListFlat)
 
-  let isClaimedListSeperated = [];
+  const isClaimedListSeperated: boolean[][] = [];
   let tokenIndex = 0;
   for (let i = 0; i < parsedClaims.length; i++) {
     const claim = parsedClaims[i];
     const allNftsForClaim = [targetNFTs[i], ...communityNfts];
-    let isClaimedListForClaim = [];
+    const isClaimedListForClaim: boolean[] = [];
 
     allNftsForClaim.forEach((collectionInfo) => {
 
@@ -385,7 +385,7 @@ const getClaimInfo = async (account, claimRewardContract, claimRewardV2Contract)
       if (claim.version == 2) {
 
       const nftsToClaim: CollectionInfo[] = [targetNFTs[claimIndex], ...communityNfts];
-      let nftsToClaimClean = [[], []];
+      const nftsToClaimClean: [string[], number[]] = [[], []];
       nftsToClaim.forEach((info) => {
         info.nftIds.forEach((tokenId) => {
           nftsToClaimClean[0].push(info.collectionAddress);

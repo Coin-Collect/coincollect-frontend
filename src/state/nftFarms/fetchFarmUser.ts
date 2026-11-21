@@ -5,7 +5,7 @@ import coinCollectNftStakeABI from 'config/abi/coinCollectNftStake.json'
 import smartNftStakeABI from '../../config/abi/smartNftStake.json'
 import { multicallPolygonv1 } from 'utils/multicall'
 import { getAddress, getCoinCollectNftStakeAddress } from 'utils/addressHelpers'
-import { SerializedNftFarmConfig } from 'config/constants/types'
+import { Address, SerializedNftFarmConfig } from 'config/constants/types'
 import nftFarmsConfig from 'config/constants/nftFarms'
 
 export const fetchFarmUserAllowances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
@@ -22,14 +22,15 @@ export const fetchFarmUserAllowances = async (account: string, farmsToFetch: Ser
       if(farm?.supportedCollectionPids && farm.supportedCollectionPids.length > 0) {
         for (const pid of farm.supportedCollectionPids) {
           const supportedPool = nftFarmsConfig.find(farm => farm.pid === pid);
+          if (!supportedPool) throw new Error(`NFT pool collection ${pid} is unavailable`)
           const supportedNftContractAddress = getAddress(supportedPool.nftAddresses)
-          calls.push({ address: supportedNftContractAddress, name: 'isApprovedForAll', params: [account, smartNftPoolAddress] })
+          calls.push({ address: supportedNftContractAddress, name: 'isApprovedForAll', params: [account, smartNftPoolAddress ?? masterChefAddress] })
         }
       }
     
   }
 
-  const rawAllowances = await multicallPolygonv1<boolean[]>(erc721ABI, calls)
+  const rawAllowances = await multicallPolygonv1<[boolean][]>(erc721ABI, calls)
   const parsedNftAllowances: boolean[][] = []
   let currentIndex = 0
   for (const farm of farmsToFetch) {
@@ -73,7 +74,7 @@ export const fetchFarmUserTokenBalances = async (account: string, farmsToFetch: 
 export const fetchFarmUserStakedBalances = async (account: string, farmsToFetch: SerializedNftFarmConfig[]) => {
   const masterChefAddress = getCoinCollectNftStakeAddress()
   const coinCollectFarms = farmsToFetch.filter((f) => !f.contractAddresses)
-  const smartNftFarms = farmsToFetch.filter((f) => f.contractAddresses)
+  const smartNftFarms = farmsToFetch.filter((f): f is SerializedNftFarmConfig & { contractAddresses: Address } => f.contractAddresses !== undefined)
 
   const coinCollectNftsCalls = coinCollectFarms.map((farm) => {
     return {
@@ -107,7 +108,7 @@ export const fetchFarmUserEarnings = async (account: string, farmsToFetch: Seria
   const masterChefAddress = getCoinCollectNftStakeAddress() //getMasterChefAddress()
   // Only farms in nftStakeContract(not smartchef)
   const coinCollectFarms = farmsToFetch.filter((f) => !f.contractAddresses)
-  const smartNftFarms = farmsToFetch.filter((f) => f.contractAddresses)
+  const smartNftFarms = farmsToFetch.filter((f): f is SerializedNftFarmConfig & { contractAddresses: Address } => f.contractAddresses !== undefined)
   
   const coinCollectNftsCalls = coinCollectFarms.map((farm) => {
     return {

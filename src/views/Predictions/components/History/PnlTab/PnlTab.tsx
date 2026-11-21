@@ -8,14 +8,14 @@ import { getBscScanLink } from 'utils'
 import { multiplyPriceByAmount } from 'utils/prices'
 import { useBNBBusdPrice } from 'hooks/useBUSDPrice'
 import { useGetCurrentEpoch } from 'state/predictions/hooks'
-import { Bet, BetPosition } from 'state/types'
+import { BetWithRound, BetPosition } from 'state/types'
 import { formatBnb, getMultiplier, getNetPayout } from '../helpers'
 import PnlChart from './PnlChart'
 import SummaryRow from './SummaryRow'
 
 interface PnlTabProps {
   hasBetHistory: boolean
-  bets: Bet[]
+  bets: BetWithRound[]
 }
 
 interface PnlCategory {
@@ -57,7 +57,7 @@ const initialPnlSummary: PnlSummary = {
   },
 }
 
-const getPnlSummary = (bets: Bet[], currentEpoch: number): PnlSummary => {
+const getPnlSummary = (bets: BetWithRound[], currentEpoch: number): PnlSummary => {
   return bets.reduce((summary: PnlSummary, bet) => {
     const roundResult = getRoundResult(bet, currentEpoch)
     if (roundResult === Result.WIN) {
@@ -183,14 +183,14 @@ const PnlTab: React.FC<PnlTabProps> = ({ hasBetHistory, bets }) => {
         <SummaryRow type="lost" summary={summary} bnbBusdPrice={bnbBusdPrice} />
         <SummaryRow type="entered" summary={summary} bnbBusdPrice={bnbBusdPrice} />
 
-        <Flex justifyContent="center" mt="24px">
+        {account && <Flex justifyContent="center" mt="24px">
           <Link href={`${getBscScanLink(account, 'address')}#internaltx`} mb="16px" external>
             <Button mt="8px" width="100%">
               {t('View Reclaimed & Won')}
               <OpenNewIcon color="white" ml="4px" />
             </Button>
           </Link>
-        </Flex>
+        </Flex>}
       </Box>
     </Box>
   ) : (

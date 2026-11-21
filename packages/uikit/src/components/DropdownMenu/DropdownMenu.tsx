@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable react/no-array-index-key */
 import React, { useContext, useEffect, useState } from "react";
 import { usePopper } from "react-popper";

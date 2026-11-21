@@ -105,7 +105,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ nft }) => {
                 activitiesSlice.map((activity) => {
                   return (
                     <ActivityRow
-                      key={`${activity.nft.tokenId}${activity.timestamp}`}
+                      key={`${activity.tx}-${activity.timestamp}`}
                       activity={activity}
                       nft={nft}
                       bnbBusdPrice={bnbBusdPrice}

@@ -10,7 +10,7 @@ const StyledThead = styled.thead`
   border-bottom: 2px solid ${({ theme }) => theme.colors.cardBorder};
 `
 
-const UserPrizeGrid: React.FC<{ userTradingInformation?: UserTradingInformationProps }> = ({
+const UserPrizeGrid: React.FC<{ userTradingInformation: UserTradingInformationProps }> = ({
   userTradingInformation,
 }) => {
   const { t } = useTranslation()
@@ -60,7 +60,7 @@ const UserPrizeGrid: React.FC<{ userTradingInformation?: UserTradingInformationP
           </BoldTd>
           <Td>
             <Flex alignItems="center" flexWrap="wrap" justifyContent="center" width="100%">
-              <Image src={`/images/achievements/${achievement.image}`} width={25} height={25} />
+              {achievement && <Image src={`/images/achievements/${achievement.image}`} width={25} height={25} />}
               <Text fontSize="12px" color="textSubtle" textTransform="lowercase">
                 + {userPointReward} {t('Points')}
               </Text>

@@ -10,7 +10,7 @@ const Achievements: React.FC<{
   isLoading: boolean
   points?: number
   onSuccess?: () => void
-}> = ({ achievements, isLoading, points = 0, onSuccess = null }) => {
+}> = ({ achievements, isLoading, points = 0, onSuccess }) => {
   const { t } = useTranslation()
 
   return (

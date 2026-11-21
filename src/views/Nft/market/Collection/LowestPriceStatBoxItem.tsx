@@ -8,7 +8,7 @@ interface LowestPriceStatBoxItemProps extends Omit<StatBoxItemProps, 'title' | '
 }
 
 const LowestPriceStatBoxItem: React.FC<LowestPriceStatBoxItemProps> = ({ collectionAddress, ...props }) => {
-  const [lowestPrice, setLowestPrice] = useState<number>(null)
+  const [lowestPrice, setLowestPrice] = useState<number | null>(null)
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const LowestPriceStatBoxItem: React.FC<LowestPriceStatBoxItemProps> = ({ collect
 
   const formattedLowestPrice =
     lowestPrice === null
-      ? null
+      ? undefined
       : lowestPrice.toLocaleString(undefined, {
           minimumFractionDigits: 3,
           maximumFractionDigits: 3,

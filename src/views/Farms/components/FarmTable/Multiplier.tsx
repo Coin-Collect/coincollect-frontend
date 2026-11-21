@@ -7,7 +7,7 @@ const ReferenceElement = styled.div`
 `
 
 export interface MultiplierProps {
-  multiplier: string
+  multiplier?: string
 }
 
 const MultiplierWrapper = styled.div`

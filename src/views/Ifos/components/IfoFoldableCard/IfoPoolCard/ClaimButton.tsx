@@ -42,10 +42,10 @@ const ClaimButton: React.FC<Props> = ({ poolId, ifoVersion, walletIfoData }) => 
   return (
     <Button
       onClick={handleClaim}
-      disabled={userPoolCharacteristics.isPendingTx}
+      disabled={userPoolCharacteristics?.isPendingTx}
       width="100%"
-      isLoading={userPoolCharacteristics.isPendingTx}
-      endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+      isLoading={userPoolCharacteristics?.isPendingTx}
+      endIcon={userPoolCharacteristics?.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
     >
       {t('Claim')}
     </Button>

@@ -17,7 +17,7 @@ const applyNodeDataToLotteriesGraphResponse = (
     return nodeData.map((nodeRound) => {
       return {
         endTime: nodeRound.endTime,
-        finalNumber: nodeRound.finalNumber.toString(),
+        finalNumber: nodeRound.finalNumber?.toString() ?? '',
         startTime: nodeRound.startTime,
         status: nodeRound.status,
         id: nodeRound.lotteryId.toString(),
@@ -34,14 +34,14 @@ const applyNodeDataToLotteriesGraphResponse = (
     const graphRoundData = graphResponse.find((graphResponseRound) => graphResponseRound.id === nodeRoundData.lotteryId)
     return {
       endTime: nodeRoundData.endTime,
-      finalNumber: nodeRoundData.finalNumber.toString(),
+      finalNumber: nodeRoundData.finalNumber?.toString() ?? graphRoundData?.finalNumber ?? '',
       startTime: nodeRoundData.startTime,
       status: nodeRoundData.status,
       id: nodeRoundData.lotteryId,
-      ticketPrice: graphRoundData?.ticketPrice,
-      totalTickets: graphRoundData?.totalTickets,
-      totalUsers: graphRoundData?.totalUsers,
-      winningTickets: graphRoundData?.winningTickets,
+      ticketPrice: graphRoundData?.ticketPrice ?? nodeRoundData.priceTicketInCake,
+      totalTickets: graphRoundData?.totalTickets ?? '',
+      totalUsers: graphRoundData?.totalUsers ?? '',
+      winningTickets: graphRoundData?.winningTickets ?? '',
     }
   })
 
@@ -49,7 +49,7 @@ const applyNodeDataToLotteriesGraphResponse = (
   const [lastCombinedDataRound] = nodeRoundsWithGraphData.slice(-1)
   const lastCombinedDataRoundIndex = graphResponse
     .map((graphRound) => graphRound?.id)
-    .indexOf(lastCombinedDataRound?.id)
+    .indexOf(lastCombinedDataRound?.id ?? '')
 
   const remainingSubgraphRounds = graphResponse ? graphResponse.splice(lastCombinedDataRoundIndex + 1) : []
   const mergedResponse = [...nodeRoundsWithGraphData, ...remainingSubgraphRounds]
@@ -61,6 +61,7 @@ export const getGraphLotteries = async (
   skip = 0,
   where: LotteriesWhere = {},
 ): Promise<LotteryRoundGraphEntity[]> => {
+  if (!GRAPH_API_LOTTERY) return []
   try {
     const response = await request(
       GRAPH_API_LOTTERY,

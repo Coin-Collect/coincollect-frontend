@@ -5,7 +5,7 @@ import { SaleStatusEnum, UserStatusEnum } from '../../types'
 
 type EndEventProps = {
   t: ContextApi['t']
-  account: string
+  account?: string | null
   saleStatus: SaleStatusEnum
   userStatus: UserStatusEnum
   maxSupply: number

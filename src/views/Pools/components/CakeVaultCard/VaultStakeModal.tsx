@@ -31,7 +31,7 @@ import { getFullDisplayBalance, formatNumber, getDecimalAmount } from 'utils/for
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { fetchCakeVaultUserData } from 'state/pools'
-import { DeserializedPool, VaultKey } from 'state/types'
+import { DeserializedVaultPool, VaultKey } from 'state/types'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
 import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { ToastDescriptionWithTx } from 'components/Toast'
@@ -42,7 +42,7 @@ import FeeSummary from './FeeSummary'
 import { useCheckVaultApprovalStatus, useVaultApprove } from 'views/Pools/hooks/useApprove'
 
 interface VaultStakeModalProps {
-  pool: DeserializedPool
+  pool: DeserializedVaultPool
   stakingMax: BigNumber
   performanceFee?: number
   isRemovingStake?: boolean
@@ -211,6 +211,7 @@ const VaultStakeModal: React.FC<React.PropsWithChildren<VaultStakeModalProps>> =
   }
 
   const handleConfirmClick = async () => {
+    if (!account) return
     const convertedStakeAmount = getDecimalAmount(new BigNumber(stakeAmount), stakingToken.decimals)
     if (isRemovingStake) {
       // unstaking

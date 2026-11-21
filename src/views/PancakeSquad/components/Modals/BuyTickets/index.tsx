@@ -157,8 +157,10 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({
           </Flex>
           <Box px="16px">
             <Button
-              disabled={isCakeBalanceInsufficient}
-              onClick={() => buyTicketCallBack({ ticketsNumber })}
+              disabled={isCakeBalanceInsufficient || ticketsNumber == null}
+              onClick={() => {
+                if (ticketsNumber != null) buyTicketCallBack({ ticketsNumber })
+              }}
               width="100%"
             >
               {isCakeBalanceInsufficient ? t('Insufficient Balance') : t('Confirm')}

@@ -60,7 +60,7 @@ const ActivityRow: React.FC<ActivityRowProps> = ({
   const isPBCollection = nft ? nft.collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase() : false
   const tokenId =
     nft && isPBCollection
-      ? nft.attributes.find((attribute) => attribute.traitType === 'bunnyId')?.value
+      ? nft.attributes?.find((attribute) => attribute.traitType === 'bunnyId')?.value
       : nft
       ? nft.tokenId
       : null

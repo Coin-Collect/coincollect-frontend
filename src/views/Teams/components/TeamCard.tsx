@@ -78,6 +78,8 @@ const TeamCard: React.FC<TeamCardProps> = ({ id }) => {
   const idNumber = Number(id)
   const { data: team, status } = useSWR(['team', id], async () => getTeam(idNumber))
 
+  if (!team) return status === FetchStatus.Failed ? null : <Skeleton height="180px" />
+
   return (
     <Wrapper>
       <StyledCard>

@@ -828,13 +828,13 @@ const OnboardingHero: React.FC<OnboardingHeroProps> = ({ totalNfts, stakedPoolCo
         {heroCards.map((card, index) => (
           <HeroCard key={card.key} gradient={card.gradient}>
             <CardContent>
-              <Flex flexDirection="column" alignItems="center" gap="12px">
+              <Flex flexDirection="column" alignItems="center" style={{ gap: 12 }}>
                 <StepBadge>{t('Step %step%', { step: index + 1 })}</StepBadge>
                 <Heading scale="md" color="white" style={{ lineHeight: '130%', textAlign: 'center' }}>
                   {card.title}
                 </Heading>
               </Flex>
-              <Flex alignItems="center" justifyContent="center" gap="12px">
+              <Flex alignItems="center" justifyContent="center" style={{ gap: 12 }}>
                 <HeroIcon gradient={card.iconGradient}>{card.icon}</HeroIcon>
               </Flex>
               <Text color="rgba(226, 232, 240, 0.82)" fontSize="13px" lineHeight="150%" textAlign="center">

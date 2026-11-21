@@ -151,6 +151,7 @@ const StakeModal: React.FC<StakeModalProps> = ({
   }
 
   const handleConfirmClick = async () => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       if (isRemovingStake) {
         return onUnstake(stakeAmount, stakingToken.decimals)
@@ -193,6 +194,7 @@ const StakeModal: React.FC<StakeModalProps> = ({
   }, [singlePool, stakeAmount, pendingTx, isRemovingStake])
 
   const handleEnableApprove = async () => {
+    if (!account) return
     await handleApprove()
     dispatch(updateUserAllowance(sousId, account))
   }

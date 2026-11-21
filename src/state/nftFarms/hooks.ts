@@ -18,12 +18,12 @@ import { readNftPoolSchedules } from 'features/nftPoolManager/schedules'
 import { nftPoolRegistryRpcProvider } from 'utils/providers'
 import isArchivedPid from 'utils/farmHelpers'
 
-const deserializeNftFarmUserData = (farm: SerializedNftFarm): DeserializedNftFarmUserData => {
+const deserializeNftFarmUserData = (farm?: SerializedNftFarm): DeserializedNftFarmUserData => {
   return {
-    allowance: farm.userData ? farm.userData.allowance : [],
-    tokenBalance: farm.userData ? new BigNumber(farm.userData.tokenBalance) : BIG_ZERO,
-    stakedBalance: farm.userData ? new BigNumber(farm.userData.stakedBalance) : BIG_ZERO,
-    earnings: farm.userData ? new BigNumber(farm.userData.earnings) : BIG_ZERO,
+    allowance: farm?.userData ? farm.userData.allowance : [],
+    tokenBalance: farm?.userData ? new BigNumber(farm.userData.tokenBalance) : BIG_ZERO,
+    stakedBalance: farm?.userData ? new BigNumber(farm.userData.stakedBalance) : BIG_ZERO,
+    earnings: farm?.userData ? new BigNumber(farm.userData.earnings) : BIG_ZERO,
   }
 }
 
@@ -60,8 +60,8 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     participantThreshold,
     isFinished,
     stakingLimitEndTimestamp: (numberSecondsForUserLimit || 0) + (startTimestamp || 0),
-    stakingLimit: new BigNumber(stakingLimit),
-    earningToken: earningToken ? deserializeToken(earningToken) : null,
+    stakingLimit: new BigNumber(stakingLimit ?? NaN),
+    earningToken: earningToken ? deserializeToken(earningToken) : undefined,
     sideRewards: farm.sideRewards,
     performanceFee,
     userData: deserializeNftFarmUserData(farm),
@@ -72,7 +72,7 @@ const deserializeNftFarm = (farm: SerializedNftFarm): DeserializedNftFarm => {
     poolWeight: farm.poolWeight ? new BigNumber(farm.poolWeight) : BIG_ZERO,
     totalShares: farm.totalShares ? new BigNumber(farm.totalShares) : BIG_ZERO,
     supportedCollectionPids: farm.supportedCollectionPids ? farm.supportedCollectionPids : [],
-    collectionPowers: farm.collectionPowers ? farm.collectionPowers : null
+    collectionPowers: farm.collectionPowers
   }
 }
 
@@ -105,10 +105,11 @@ export const usePollFarmsWithUserData = (includeArchive = false, enabled = true)
  */
 export const usePollCoreFarmData = () => {
   const dispatch = useAppDispatch()
+  const { chainId } = useActiveChainId()
 
   useFastRefreshEffect((currentBlock) => {
-    dispatch(fetchFarmsPublicDataAsync({ pids: [1, 2], currentBlock }))
-  }, [dispatch])
+    dispatch(fetchFarmsPublicDataAsync({ pids: [1, 2], currentBlock, chainId }))
+  }, [dispatch, chainId])
 }
 
 export const useFarms = (): DeserializedNftFarmsState => {
@@ -125,8 +126,11 @@ export const useFarms = (): DeserializedNftFarmsState => {
   }
 }
 
-const configuredSmartFarms = nonArchivedFarms.filter((farm) => farm.contractAddresses?.[137])
-const configuredPoolAddresses = configuredSmartFarms.map((farm) => farm.contractAddresses[137].toLowerCase())
+const configuredSmartFarms = nonArchivedFarms.flatMap((farm) => {
+  const address = farm.contractAddresses?.[137]
+  return address ? [{ pid: farm.pid, address: address.toLowerCase() }] : []
+})
+const configuredPoolAddresses = configuredSmartFarms.map(({ address }) => address)
 
 async function fetchConfiguredPoolSchedules() {
   // The legacy configured contracts are not part of the isolated fork catalogue.
@@ -172,53 +176,32 @@ export function useScheduledNftFarms() {
   }
 }
 
-export const useFarmsPoolLength = (): number => {
+export const useFarmsPoolLength = () => {
   return useSelector((state: State) => state.nftFarms.poolLength)
 }
 
-export const useFarmFromPid = (pid: number): DeserializedNftFarm => {
+export const useFarmFromPid = (pid?: number) => {
   const farm = useSelector((state: State) => state.nftFarms.data.find((f) => f.pid === pid))
-  return deserializeNftFarm(farm)
+  return farm && deserializeNftFarm(farm)
 }
 
-export const useFarmFromLpSymbol = (lpSymbol: string): DeserializedNftFarm => {
+const useFarmFromLpSymbol = (lpSymbol?: string) => {
   const farm = useSelector((state: State) => state.nftFarms.data.find((f) => f.lpSymbol === lpSymbol))
-  return deserializeNftFarm(farm)
+  return farm && deserializeNftFarm(farm)
 }
 
-export const useFarmUser = (pid): DeserializedNftFarmUserData => {
-  const { userData } = useFarmFromPid(pid)
-  const { allowance, tokenBalance, stakedBalance, earnings } = userData
-  return {
-    allowance,
-    tokenBalance,
-    stakedBalance,
-    earnings,
-  }
+export const useFarmUser = (pid?: number): DeserializedNftFarmUserData => {
+  const farm = useSelector((state: State) => state.nftFarms.data.find((item) => item.pid === pid))
+  return deserializeNftFarmUserData(farm)
 }
 
-// Return the base token price for a farm, from a given pid
-export const useBusdPriceFromPid = (pid: number): BigNumber => {
-  const farm = useFarmFromPid(pid)
-  return farm && new BigNumber(farm.tokenPriceBusd)
-}
-
-export const useLpTokenPrice = (symbol: string) => {
+export const useLpTokenPrice = (symbol?: string): BigNumber => {
   const farm = useFarmFromLpSymbol(symbol)
-  const farmTokenPriceInUsd = useBusdPriceFromPid(farm.pid)
-  let lpTokenPrice = BIG_ZERO
+  if (!farm || !farm.lpTotalSupply.gt(0) || !farm.lpTotalInQuoteToken.gt(0)) return BIG_ZERO
 
-  if (farm.lpTotalSupply.gt(0) && farm.lpTotalInQuoteToken.gt(0)) {
-    // Total value of base token in LP
-    const valueOfBaseTokenInFarm = farmTokenPriceInUsd.times(farm.tokenAmountTotal)
-    // Double it to get overall value in LP
-    const overallValueOfAllTokensInFarm = valueOfBaseTokenInFarm.times(2)
-    // Divide total value of all tokens, by the number of LP tokens
-    const totalLpTokens = getBalanceAmount(farm.lpTotalSupply)
-    lpTokenPrice = overallValueOfAllTokensInFarm.div(totalLpTokens)
-  }
-
-  return lpTokenPrice
+  const farmTokenPriceInUsd = new BigNumber(farm.tokenPriceBusd ?? NaN)
+  const totalLpTokens = getBalanceAmount(farm.lpTotalSupply)
+  return farmTokenPriceInUsd.times(farm.tokenAmountTotal).times(2).div(totalLpTokens)
 }
 
 /**
@@ -227,10 +210,10 @@ export const useLpTokenPrice = (symbol: string) => {
 export const usePriceCakeBusd = (): BigNumber => {
   const cakeBnbFarm = useFarmFromPid(1)
 
-  const cakePriceBusdAsString = cakeBnbFarm.tokenPriceBusd
+  const cakePriceBusdAsString = cakeBnbFarm?.tokenPriceBusd
 
   const cakePriceBusd = useMemo(() => {
-    return new BigNumber(cakePriceBusdAsString)
+    return new BigNumber(cakePriceBusdAsString ?? NaN)
   }, [cakePriceBusdAsString])
 
   return cakePriceBusd

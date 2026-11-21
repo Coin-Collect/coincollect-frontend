@@ -17,7 +17,7 @@ import formatRewardAmount from 'utils/formatRewardAmount'
 
 interface AutoEarningsCellProps {
   pool: DeserializedPool
-  account: string
+  account?: string | null
 }
 
 const StyledCell = styled(BaseCell)`
@@ -40,7 +40,7 @@ const getAutoEarningsInterestBreakdown = (
   performanceFeeAsDecimal: number,
 ) => {
   const { stakingTokenPrice, earningTokenPrice, rawApr } = pool
-  const autoCompoundFrequency = vaultPoolConfig[pool.vaultKey]?.autoCompoundFrequency ?? 0
+  const autoCompoundFrequency = pool.vaultKey ? vaultPoolConfig[pool.vaultKey].autoCompoundFrequency : 0
 
   const { cakeAsBigNumber } = convertSharesToCake(userShares, pricePerFullShare)
   return getInterestBreakdown({

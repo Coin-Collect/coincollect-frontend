@@ -394,10 +394,11 @@ export default function RemoveLiquidity() {
   )
 
   const oneCurrencyIsETH = currencyA === ETHER || currencyB === ETHER
+  const wrappedNative = chainId ? WETH[chainId] : undefined
   const oneCurrencyIsWETH = Boolean(
-    chainId &&
-      ((currencyA && currencyEquals(WETH[chainId], currencyA)) ||
-        (currencyB && currencyEquals(WETH[chainId], currencyB))),
+    wrappedNative &&
+      ((currencyA && currencyEquals(wrappedNative, currencyA)) ||
+        (currencyB && currencyEquals(wrappedNative, currencyB))),
   )
 
   const handleSelectCurrencyA = useCallback(
@@ -531,12 +532,12 @@ export default function RemoveLiquidity() {
                     </Flex>
                     <Text small>{formattedAmounts[Field.CURRENCY_B] || '-'}</Text>
                   </Flex>
-                  {chainId && (oneCurrencyIsWETH || oneCurrencyIsETH) ? (
+                  {wrappedNative && (oneCurrencyIsWETH || oneCurrencyIsETH) ? (
                     <RowBetween style={{ justifyContent: 'flex-end', fontSize: '14px' }}>
                       {oneCurrencyIsETH ? (
                         <StyledInternalLink
-                          href={`/remove/${currencyA === ETHER ? WETH[chainId].address : currencyIdA}/${
-                            currencyB === ETHER ? WETH[chainId].address : currencyIdB
+                          href={`/remove/${currencyA === ETHER ? wrappedNative.address : currencyIdA}/${
+                            currencyB === ETHER ? wrappedNative.address : currencyIdB
                           }`}
                         >
                           {t('Receive WPOL')}

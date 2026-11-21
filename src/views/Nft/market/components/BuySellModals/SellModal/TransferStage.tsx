@@ -7,7 +7,7 @@ import { GreyedOutContainer } from './styles'
 
 interface TransferStageProps {
   nftToSell: NftToken
-  lowestPrice: number
+  lowestPrice?: number
   transferAddress: string
   setTransferAddress: React.Dispatch<React.SetStateAction<string>>
   isInvalidTransferAddress: boolean
@@ -24,7 +24,7 @@ const TransferStage: React.FC<TransferStageProps> = ({
 }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
-  const transferAddressEqualsConnectedAddress = transferAddress.toLowerCase() === account.toLowerCase()
+  const transferAddressEqualsConnectedAddress = transferAddress.toLowerCase() === account?.toLowerCase()
   const getErrorText = () => {
     if (isInvalidTransferAddress) {
       return t('That’s not a Pol wallet address.')

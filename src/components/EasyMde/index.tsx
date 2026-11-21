@@ -56,21 +56,19 @@ const defaultOptions: EasyMde.Options = {
 }
 
 const SimpleMde: React.FC<SimpleMdeProps> = ({ options, onTextChange, ...props }) => {
-  const ref = useRef()
+  const ref = useRef<HTMLTextAreaElement>(null)
   const onTextChangeHandler = useRef(onTextChange)
 
   useEffect(() => {
-    let simpleMde = new EasyMde(merge({ element: ref.current }, defaultOptions, options))
+    if (!ref.current) return undefined
+    const simpleMde = new EasyMde(merge({ element: ref.current }, defaultOptions, options))
 
     simpleMde.codemirror.on('change', () => {
       onTextChangeHandler.current(simpleMde.value())
     })
 
     return () => {
-      if (simpleMde) {
-        simpleMde.toTextArea()
-        simpleMde = null
-      }
+      simpleMde.toTextArea()
     }
   }, [options, onTextChangeHandler, ref])
 

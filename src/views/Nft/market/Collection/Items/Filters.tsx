@@ -101,13 +101,13 @@ const Filters: React.FC<FiltersProps> = ({ collection }) => {
   }
 
   const nftFilters = useGetNftFilters(address)
-  const attrsByType: Record<string, NftAttribute[]> = collection?.attributes?.reduce(
+  const attrsByType: Record<string, NftAttribute[]> = collection.attributes?.reduce<Record<string, NftAttribute[]>>(
     (accum, attr) => ({
       ...accum,
       [attr.traitType]: accum[attr.traitType] ? [...accum[attr.traitType], attr] : [attr],
     }),
     {},
-  )
+  ) ?? {}
   const uniqueTraitTypes = attrsByType ? Object.keys(attrsByType) : []
 
   return (

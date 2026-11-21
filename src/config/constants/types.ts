@@ -148,7 +148,7 @@ interface NftFarmConfigBaseProps {
   performanceFee?: string
   supportedCollectionPids?:number[]
   collectionPowers?:number[]
-  mainCollectionWeight?: number
+  mainCollectionWeight?: number | string
   banner?: string
   avatar?: string
   staticNftImage?: string
@@ -168,7 +168,7 @@ export interface SerializedNftFarmConfig extends NftFarmConfigBaseProps {
 
 // New type for NFT Stake config
 export interface DeserializedNftFarmConfig extends NftFarmConfigBaseProps {
-  earningToken: Token
+  earningToken?: Token
 }
 
 export interface PoolDeployedBlockNumber {
@@ -254,8 +254,10 @@ export interface LotteryTicket {
   cakeReward?: string
 }
 
+export type WinningLotteryTicket = LotteryTicket & { rewardBracket: number; roundId: string }
+
 export interface LotteryTicketClaimData {
-  ticketsWithUnclaimedRewards: LotteryTicket[]
+  ticketsWithUnclaimedRewards: WinningLotteryTicket[]
   allWinningTickets: LotteryTicket[]
   cakeTotal: BigNumber
   roundId: string

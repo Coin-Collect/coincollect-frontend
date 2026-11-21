@@ -83,8 +83,9 @@ export const useBnbPrices = (): BnbPrices | undefined => {
   const { blocks, error: blockError } = useBlocksFromTimestamps([t24, t48, tWeek])
 
   useEffect(() => {
+    const [block24, block48, blockWeek] = blocks ?? []
+    if (!block24 || !block48 || !blockWeek) return
     const fetch = async () => {
-      const [block24, block48, blockWeek] = blocks
       const { bnbPrices, error: fetchError } = await fetchBnbPrices(block24.number, block48.number, blockWeek.number)
       if (fetchError) {
         setError(true)

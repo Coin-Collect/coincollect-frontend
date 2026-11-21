@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { Card, Text, Skeleton, CardHeader, Box } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -36,16 +36,15 @@ const AllHistoryCard = () => {
     lotteriesData,
     currentRound: { status, isLoading },
   } = useLottery()
-  const [latestRoundId, setLatestRoundId] = useState(null)
+  const [latestRoundId, setLatestRoundId] = useState<number>(0)
   const [selectedRoundId, setSelectedRoundId] = useState('')
-  const [selectedLotteryNodeData, setSelectedLotteryNodeData] = useState(null)
-  const timer = useRef(null)
+  const [selectedLotteryNodeData, setSelectedLotteryNodeData] = useState<ReturnType<typeof processLotteryResponse> | null>(null)
 
   const numRoundsFetched = lotteriesData?.length
 
   useEffect(() => {
     if (currentLotteryId) {
-      const currentLotteryIdAsInt = currentLotteryId ? parseInt(currentLotteryId) : null
+      const currentLotteryIdAsInt = parseInt(currentLotteryId, 10)
       const mostRecentFinishedRoundId =
         status === LotteryStatus.CLAIMABLE ? currentLotteryIdAsInt : currentLotteryIdAsInt - 1
       setLatestRoundId(mostRecentFinishedRoundId)
@@ -62,14 +61,11 @@ const AllHistoryCard = () => {
       setSelectedLotteryNodeData(processedLotteryData)
     }
 
-    timer.current = setInterval(() => {
-      if (selectedRoundId) {
-        fetchLotteryData()
-      }
-      clearInterval(timer.current)
+    const timer = setTimeout(() => {
+      if (selectedRoundId) void fetchLotteryData()
     }, 1000)
 
-    return () => clearInterval(timer.current)
+    return () => clearTimeout(timer)
   }, [selectedRoundId, currentLotteryId, numRoundsFetched, dispatch])
 
   const handleInputChange = (event) => {
@@ -102,7 +98,7 @@ const AllHistoryCard = () => {
     <StyledCard>
       <StyledCardHeader>
         <RoundSwitcher
-          isLoading={isLoading}
+          isLoading={isLoading ?? false}
           selectedRoundId={selectedRoundId}
           mostRecentRound={latestRoundId}
           handleInputChange={handleInputChange}

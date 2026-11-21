@@ -41,7 +41,7 @@ const OwnerCard: React.FC<OwnerCardProps> = ({ nft, isOwnNft, onSuccess }) => {
 
   const { owner, isLoadingOwner } = useNftOwner(nft)
 
-  const priceInUsd = multiplyPriceByAmount(bnbBusdPrice, parseFloat(nft.marketData?.currentAskPrice))
+  const priceInUsd = multiplyPriceByAmount(bnbBusdPrice, parseFloat(nft.marketData?.currentAskPrice ?? ''))
 
   const [onPresentBuyModal] = useModal(<BuyModal nftToBuy={nft} />)
   const [onPresentAdjustPriceModal] = useModal(

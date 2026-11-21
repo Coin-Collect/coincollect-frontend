@@ -6,7 +6,6 @@ import GlobalCheckClaimStatus from 'components/GlobalCheckClaimStatus'
 import GlobalButtonSoundEffects from 'components/GlobalButtonSoundEffects'
 import SubgraphHealthIndicator from 'components/SubgraphHealthIndicator'
 import { ToastListener } from 'contexts/ToastsContext'
-import useEagerConnect from 'hooks/useEagerConnect'
 import { useAccountEventListener } from 'hooks/useAccountEventListener'
 import useSentryUser from 'hooks/useSentryUser'
 import useUserAgent from 'hooks/useUserAgent'
@@ -37,7 +36,6 @@ BigNumber.config({
 
 function GlobalHooks() {
   usePollBlockNumber()
-  //useEagerConnect()
   usePollCoreFarmData()
   useUserAgent()
   useAccountEventListener()
@@ -362,7 +360,6 @@ const FloatingWizard: React.FC<FloatingWizardProps> = ({ assistantUrl, targetRef
 
 function MyApp(props: AppProps) {
   const { pageProps } = props
-  // @ts-ignore
   const store = useStore(pageProps.initialReduxState)
   const router = useRouter()
 

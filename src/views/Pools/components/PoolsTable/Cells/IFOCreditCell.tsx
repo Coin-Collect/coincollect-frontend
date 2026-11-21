@@ -10,7 +10,7 @@ import { getBalanceNumber } from 'utils/formatBalance'
 import BaseCell, { CellContent } from './BaseCell'
 
 interface IFOCreditCellProps {
-  account: string
+  account?: string | null
 }
 
 const StyledCell = styled(BaseCell)`

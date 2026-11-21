@@ -31,7 +31,7 @@ const FarmsPoolsRow = () => {
   const { topFarms } = useGetTopFarmsByApr(isIntersecting)
   const { topPools } = useGetTopPoolsByApr(isIntersecting)
 
-  const timer = useRef<ReturnType<typeof setTimeout>>(null)
+  const timer = useRef<ReturnType<typeof setInterval>>()
   const isLoaded = topFarms[0] && topPools[0]
 
   const startTimer = useCallback(() => {
@@ -90,7 +90,7 @@ const FarmsPoolsRow = () => {
                 // eslint-disable-next-line react/no-array-index-key
                 key={index}
                 title={topFarm?.lpSymbol}
-                percentage={topFarm?.apr + topFarm?.lpRewardsApr}
+                percentage={topFarm ? (topFarm.apr ?? 0) + (topFarm.lpRewardsApr ?? 0) : 0}
                 index={index}
                 visible={showFarms}
               />
@@ -102,7 +102,7 @@ const FarmsPoolsRow = () => {
                 // eslint-disable-next-line react/no-array-index-key
                 key={index}
                 title={topPool && getPoolText(topPool)}
-                percentage={topPool?.apr}
+                percentage={topPool?.apr ?? NaN}
                 index={index}
                 visible={!showFarms}
               />

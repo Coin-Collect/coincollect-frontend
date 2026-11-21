@@ -19,11 +19,11 @@ export const getAchievementTitle = (campaign: Campaign): TranslatableText => {
       return {
         key: 'IFO Shopper: %title%',
         data: {
-          title: campaign.title as string,
+          title: typeof campaign.title === 'string' ? campaign.title : campaign.title?.key ?? '',
         },
       }
     default:
-      return campaign.title
+      return campaign.title ?? ''
   }
 }
 
@@ -33,11 +33,11 @@ export const getAchievementDescription = (campaign: Campaign): TranslatableText 
       return {
         key: 'Committed more than $5 worth of LP in the %title% IFO',
         data: {
-          title: campaign.title as string,
+          title: typeof campaign.title === 'string' ? campaign.title : campaign.title?.key ?? '',
         },
       }
     default:
-      return campaign.description
+      return campaign.description ?? ''
   }
 }
 
@@ -56,14 +56,14 @@ export const getClaimableIfoData = async (account: string): Promise<Achievement[
     }
   })
 
-  const claimStatuses = (await multicallv2(pointCenterIfoABI, claimStatusCalls, { requireSuccess: false })) as
-    | [boolean][]
-    | null
+  const claimStatuses = await multicallv2<([boolean] | null)[]>(pointCenterIfoABI, claimStatusCalls, {
+    requireSuccess: false,
+  })
 
   // Get IFO data for all IFO's that are eligible to claim
-  const claimableIfoData = (await multicallv2(
+  const claimableIfoData = await multicallv2<IfoMapResponse[]>(
     pointCenterIfoABI,
-    claimStatuses.reduce((accum, claimStatusArr, index) => {
+    claimStatuses.reduce<Parameters<typeof multicallv2>[1]>((accum, claimStatusArr, index) => {
       if (claimStatusArr === null) {
         return accum
       }
@@ -76,17 +76,15 @@ export const getClaimableIfoData = async (account: string): Promise<Achievement[
 
       return accum
     }, []),
-  )) as IfoMapResponse[]
+  )
 
   // Transform response to an Achievement
-  return claimableIfoData.reduce((accum, claimableIfoDataItem) => {
+  return claimableIfoData.reduce<Achievement[]>((accum, claimableIfoDataItem) => {
     const claimableCampaignId = claimableIfoDataItem.campaignId.toString()
-    if (!campaignMap.has(claimableCampaignId)) {
-      return accum
-    }
-
     const campaignMeta = campaignMap.get(claimableCampaignId)
-    const { address } = ifoCampaigns.find((ifoCampaign) => ifoCampaign.campaignId === claimableCampaignId)
+    const ifo = ifoCampaigns.find((ifoCampaign) => ifoCampaign.campaignId === claimableCampaignId)
+    if (!ifo || !campaignMeta) return accum
+    const { address } = ifo
 
     return [
       ...accum,

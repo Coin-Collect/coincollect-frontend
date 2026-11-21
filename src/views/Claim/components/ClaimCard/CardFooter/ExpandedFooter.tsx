@@ -29,7 +29,7 @@ import { BIG_ZERO } from 'utils/bigNumber'
 
 interface ExpandedFooterProps {
   claim: any
-  account: string
+  account: string | null | undefined
 }
 
 const ExpandedWrapper = styled(Flex)`

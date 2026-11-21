@@ -26,7 +26,7 @@ const VoteDetailsModal: React.FC<VoteDetailsModalProps> = ({ block, onDismiss })
 
   const handleDismiss = () => {
     setModalIsOpen(false)
-    onDismiss()
+    onDismiss?.()
   }
 
   return (

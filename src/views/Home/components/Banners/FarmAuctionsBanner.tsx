@@ -96,7 +96,10 @@ const FarmAuctionsBanner = () => {
     return farmAuctionContract.currentAuctionId()
   })
 
-  const { data: currentAuction } = useSWRMulticall(
+  const { data: currentAuction } = useSWRMulticall<[
+    Awaited<ReturnType<typeof farmAuctionContract.auctions>>,
+    Awaited<ReturnType<typeof farmAuctionContract.viewBidders>>,
+  ]>(
     farmAuctionAbi,
     currentAuctionId
       ? [
@@ -116,7 +119,7 @@ const FarmAuctionsBanner = () => {
 
   const isFarmAuctionAlive =
     currentBlock && currentAuction && currentAuction[0] ? currentAuction[0].endBlock.toNumber() > currentBlock : false
-  const contendersSize = isFarmAuctionAlive && currentAuction[1] ? currentAuction[1][0].length : 0
+  const contendersSize = isFarmAuctionAlive && currentAuction?.[1] ? currentAuction[1][0].length : 0
 
   return isFarmAuctionAlive && contendersSize ? (
     <Wrapper>

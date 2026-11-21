@@ -18,7 +18,7 @@ import useAuctionHistory from '../hooks/useAuctionHistory'
 import AuctionLeaderboardTable from './AuctionLeaderboard/AuctionLeaderboardTable'
 
 interface AuctionHistoryProps {
-  mostRecentClosedAuctionId: number
+  mostRecentClosedAuctionId: number | null
 }
 
 const StyledIconButton = styled(IconButton)`
@@ -37,7 +37,8 @@ const StyledIconButton = styled(IconButton)`
   }
 `
 
-const AuctionHistory: React.FC<AuctionHistoryProps> = ({ mostRecentClosedAuctionId }) => {
+const AuctionHistory: React.FC<AuctionHistoryProps> = ({ mostRecentClosedAuctionId: latestClosedId }) => {
+  const mostRecentClosedAuctionId = latestClosedId ?? 0
   const [historyAuctionId, setHistoryAuctionId] = useState(
     mostRecentClosedAuctionId ? mostRecentClosedAuctionId.toString() : '0',
   )

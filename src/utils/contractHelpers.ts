@@ -164,17 +164,20 @@ export const getCoinCollectNFTContract = (address: string, signer?: Signer | Pro
 }
 export const getSouschefContract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)
+  if (!config) throw new Error(`Syrup pool ${id} is unavailable`)
   const abi = config.poolCategory === PoolCategory.BINANCE ? sousChefBnb : sousChef
   return getContract(abi, getAddress(config.contractAddress), signer) as SousChef
 }
 export const getSouschefV2Contract = (id: number, signer?: Signer | Provider) => {
   const config = poolsConfig.find((pool) => pool.sousId === id)
+  if (!config) throw new Error(`Syrup pool ${id} is unavailable`)
   return getContract(sousChefV2, getAddress(config.contractAddress), signer) as SousChefV2
 }
 
 // -----
 export const getSmartNftStakeContract = (id: number, signer?: Signer | Provider) => {
   const config = nftFarmsConfig.find((farm) => farm.pid === id)
+  if (!config?.contractAddresses) throw new Error(`NFT pool ${id} has no configured staking contract`)
   return getContract(smartNftStake, getAddress(config.contractAddresses), signer) as SmartNftStake
 }
 
@@ -291,6 +294,6 @@ export const getNftSaleContract = (signer?: Signer | Provider) => {
 export const getPancakeSquadContract = (signer?: Signer | Provider) => {
   return getContract(pancakeSquadAbi, getPancakeSquadAddress(), signer) as PancakeSquad
 }
-export const getErc721CollectionContract = (signer?: Signer | Provider, address?: string) => {
+export const getErc721CollectionContract = (signer: Signer | Provider | undefined, address: string) => {
   return getContract(erc721CollectionAbi, address, signer) as Erc721collection
 }

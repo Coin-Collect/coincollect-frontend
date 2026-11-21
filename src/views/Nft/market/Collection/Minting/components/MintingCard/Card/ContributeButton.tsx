@@ -20,8 +20,8 @@ interface Props {
 const ContributeButton: React.FC<Props> = ({ poolId, ifo, publicIfoData, walletIfoData }) => {
   const publicPoolCharacteristics = publicIfoData[poolId]
   const userPoolCharacteristics = walletIfoData[poolId]
-  const { isPendingTx, amountTokenCommittedInLP } = userPoolCharacteristics
-  const { limitPerUserInLP } = publicPoolCharacteristics
+  const { isPendingTx, amountTokenCommittedInLP } = userPoolCharacteristics ?? {}
+  const { limitPerUserInLP } = publicPoolCharacteristics ?? {}
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const currentBlock = useCurrentBlock()
@@ -61,9 +61,9 @@ const ContributeButton: React.FC<Props> = ({ poolId, ifo, publicIfoData, walletI
     (!noNeedCredit &&
       walletIfoData.ifoCredit?.creditLeft &&
       walletIfoData.ifoCredit?.creditLeft.isLessThanOrEqualTo(0)) ||
-    (limitPerUserInLP.isGreaterThan(0) && amountTokenCommittedInLP.isGreaterThanOrEqualTo(limitPerUserInLP))
+    (limitPerUserInLP?.isGreaterThan(0) && amountTokenCommittedInLP?.isGreaterThanOrEqualTo(limitPerUserInLP))
 
-  const isDisabled = isPendingTx || isMaxCommitted || publicIfoData.status !== 'live'
+  const isDisabled = !publicPoolCharacteristics || !userPoolCharacteristics || Boolean(isPendingTx || isMaxCommitted) || publicIfoData.status !== 'live'
 
   return (
     <Button

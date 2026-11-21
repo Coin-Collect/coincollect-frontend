@@ -107,13 +107,13 @@ const ClaimButton: React.FC<Props> = ({ poolId, publicIfoData, walletIfoData, re
       <Button
         onClick={handleClaim}
         disabled={
-          userPoolCharacteristics.isPendingTx ||
+          userPoolCharacteristics?.isPendingTx ||
           needsNetworkSwitch ||
           (status !== 'live' && !(status === 'coming_soon' && isHolder))
         }
         width="100%"
-        isLoading={userPoolCharacteristics.isPendingTx}
-        endIcon={userPoolCharacteristics.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
+        isLoading={userPoolCharacteristics?.isPendingTx}
+        endIcon={userPoolCharacteristics?.isPendingTx ? <AutoRenewIcon spin color="currentColor" /> : null}
       >
         {t('Mint for ') + displayMintCost + ' POL'}
       </Button>

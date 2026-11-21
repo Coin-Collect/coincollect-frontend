@@ -3,6 +3,9 @@ import { GRAPH_API_PREDICTION } from 'config/constants/endpoints'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
   Bet,
+  BetWithRound,
+  NodeRound,
+  NodeLedger,
   LedgerData,
   BetPosition,
   PredictionsState,
@@ -39,16 +42,16 @@ export enum Result {
   LIVE = 'live',
 }
 
-export const numberOrNull = (value: string) => {
-  if (value === null) {
+export const numberOrNull = (value: string | null | undefined) => {
+  if (value == null) {
     return null
   }
 
   const valueNum = Number(value)
-  return Number.isNaN(valueNum) ? null : valueNum
+  return !Number.isFinite(valueNum) ? null : valueNum
 }
 
-const getRoundPosition = (positionResponse: string) => {
+const getRoundPosition = (positionResponse: string | null) => {
   if (positionResponse === 'Bull') {
     return BetPosition.BULL
   }
@@ -65,7 +68,7 @@ const getRoundPosition = (positionResponse: string) => {
 }
 
 export const transformBetResponse = (betResponse: BetResponse): Bet => {
-  const bet = {
+  const bet: Bet = {
     id: betResponse.id,
     hash: betResponse.hash,
     block: numberOrNull(betResponse.block),
@@ -79,7 +82,7 @@ export const transformBetResponse = (betResponse: BetResponse): Bet => {
     claimedNetBNB: betResponse.claimedNetBNB ? parseFloat(betResponse.claimedNetBNB) : 0,
     createdAt: numberOrNull(betResponse.createdAt),
     updatedAt: numberOrNull(betResponse.updatedAt),
-  } as Bet
+  }
 
   if (betResponse.user) {
     bet.user = transformUserResponse(betResponse.user)
@@ -116,13 +119,13 @@ export const transformUserResponse = (userResponse: UserResponse): PredictionUse
     createdAt: numberOrNull(createdAt),
     updatedAt: numberOrNull(updatedAt),
     block: numberOrNull(block),
-    totalBets: numberOrNull(totalBets),
-    totalBetsBull: numberOrNull(totalBetsBull),
-    totalBetsBear: numberOrNull(totalBetsBear),
+    totalBets: numberOrNull(totalBets) ?? 0,
+    totalBetsBull: numberOrNull(totalBetsBull) ?? 0,
+    totalBetsBear: numberOrNull(totalBetsBear) ?? 0,
     totalBNB: totalBNB ? parseFloat(totalBNB) : 0,
     totalBNBBull: totalBNBBull ? parseFloat(totalBNBBull) : 0,
     totalBNBBear: totalBNBBear ? parseFloat(totalBNBBear) : 0,
-    totalBetsClaimed: numberOrNull(totalBetsClaimed),
+    totalBetsClaimed: numberOrNull(totalBetsClaimed) ?? 0,
     totalBNBClaimed: totalBNBClaimed ? parseFloat(totalBNBClaimed) : 0,
     winRate: winRate ? parseFloat(winRate) : 0,
     averageBNB: averageBNB ? parseFloat(averageBNB) : 0,
@@ -167,7 +170,7 @@ export const transformRoundResponse = (roundResponse: RoundResponse): Round => {
     closeRoundId,
     closeHash,
     position: getRoundPosition(position),
-    epoch: numberOrNull(epoch),
+    epoch: Number(epoch),
     startAt: numberOrNull(startAt),
     startBlock: numberOrNull(startBlock),
     lockAt: numberOrNull(lockAt),
@@ -176,27 +179,30 @@ export const transformRoundResponse = (roundResponse: RoundResponse): Round => {
     closeAt: numberOrNull(closeAt),
     closeBlock: numberOrNull(closeBlock),
     closePrice: closePrice ? parseFloat(closePrice) : 0,
-    totalBets: numberOrNull(totalBets),
+    totalBets: numberOrNull(totalBets) ?? 0,
     totalAmount: totalAmount ? parseFloat(totalAmount) : 0,
-    bullBets: numberOrNull(bullBets),
+    bullBets: numberOrNull(bullBets) ?? 0,
     bullAmount: bullAmount ? parseFloat(bullAmount) : 0,
-    bearBets: numberOrNull(bearBets),
+    bearBets: numberOrNull(bearBets) ?? 0,
     bearAmount: bearAmount ? parseFloat(bearAmount) : 0,
     bets: bets.map(transformBetResponse),
   }
 }
 
-export const getRoundResult = (bet: Bet, currentEpoch: number): Result => {
+export const hasPredictionRound = (bet: Bet): bet is BetWithRound =>
+  bet.round != null && Number.isSafeInteger(bet.round.epoch) && bet.round.epoch > 0
+
+export const getRoundResult = (bet: BetWithRound, currentEpoch: number): Result => {
   const { round } = bet
   if (round.failed) {
     return Result.CANCELED
   }
 
-  if (round.epoch >= currentEpoch - 1) {
+  if (round.epoch >= currentEpoch - 1 || round.closePrice == null || round.lockPrice == null) {
     return Result.LIVE
   }
 
-  if (bet.round.position === BetPosition.HOUSE) {
+  if (round.position === BetPosition.HOUSE) {
     return Result.HOUSE
   }
 
@@ -205,7 +211,7 @@ export const getRoundResult = (bet: Bet, currentEpoch: number): Result => {
   return bet.position === roundResultPosition ? Result.WIN : Result.LOSE
 }
 
-export const getFilteredBets = (bets: Bet[], filter: HistoryFilter) => {
+export const getFilteredBets = (bets: BetWithRound[], filter: HistoryFilter) => {
   switch (filter) {
     case HistoryFilter.COLLECTED:
       return bets.filter((bet) => bet.claimed === true)
@@ -219,9 +225,14 @@ export const getFilteredBets = (bets: Bet[], filter: HistoryFilter) => {
   }
 }
 
+function getPredictionEndpoint(): string {
+  if (!GRAPH_API_PREDICTION) throw new Error('Prediction history is unavailable because its endpoint is not configured.')
+  return GRAPH_API_PREDICTION
+}
+
 export const getTotalWon = async (): Promise<number> => {
   const { market } = (await request(
-    GRAPH_API_PREDICTION,
+    getPredictionEndpoint(),
     gql`
       query getTotalWonData {
         market(id: 1) {
@@ -242,7 +253,7 @@ type WhereClause = Record<string, string | number | boolean | string[]>
 
 export const getBetHistory = async (where: WhereClause = {}, first = 1000, skip = 0): Promise<BetResponse[]> => {
   const response = await request(
-    GRAPH_API_PREDICTION,
+    getPredictionEndpoint(),
     gql`
       query getBetHistory($first: Int!, $skip: Int!, $where: Bet_filter) {
         bets(first: $first, skip: $skip, where: $where, order: createdAt, orderDirection: desc) {
@@ -263,7 +274,7 @@ export const getBetHistory = async (where: WhereClause = {}, first = 1000, skip 
 
 export const getBet = async (betId: string): Promise<BetResponse> => {
   const response = await request(
-    GRAPH_API_PREDICTION,
+    getPredictionEndpoint(),
     gql`
       query getBet($id: ID!) {
         bet(id: $id) {
@@ -315,7 +326,7 @@ const defaultPredictionUserOptions = {
 export const getPredictionUsers = async (options: GetPredictionUsersOptions = {}): Promise<UserResponse[]> => {
   const { first, skip, where, orderBy, orderDir } = { ...defaultPredictionUserOptions, ...options }
   const response = await request(
-    GRAPH_API_PREDICTION,
+    getPredictionEndpoint(),
     gql`
       query getUsers($first: Int!, $skip: Int!, $where: User_filter, $orderBy: User_orderBy, $orderDir: OrderDirection) {
         users(first: $first, skip: $skip, where: $where, orderBy: $orderBy, orderDirection: $orderDir) {
@@ -330,7 +341,7 @@ export const getPredictionUsers = async (options: GetPredictionUsersOptions = {}
 
 export const getPredictionUser = async (account: string): Promise<UserResponse> => {
   const response = await request(
-    GRAPH_API_PREDICTION,
+    getPredictionEndpoint(),
     gql`
       query getUser($id: ID!) {
         user(id: $id) {
@@ -499,26 +510,21 @@ export const serializePredictionsRoundsResponse = (response: PredictionsRoundsRe
   }
 }
 
-/**
- * Parse serialized values back into BigNumber
- * BigNumber values are stored with the "toJSON()" method, e.g  { type: "BigNumber", hex: string }
- */
-export const parseBigNumberObj = <T = Record<string, any>, K = Record<string, any>>(data: T): K => {
-  return Object.keys(data).reduce((accum, key) => {
-    const value = data[key]
+export function deserializePredictionRound(round: ReduxNodeRound): NodeRound {
+  return {
+    ...round,
+    lockPrice: round.lockPrice === null ? null : BigNumber.from(round.lockPrice),
+    closePrice: round.closePrice === null ? null : BigNumber.from(round.closePrice),
+    totalAmount: BigNumber.from(round.totalAmount),
+    bullAmount: BigNumber.from(round.bullAmount),
+    bearAmount: BigNumber.from(round.bearAmount),
+    rewardBaseCalAmount: BigNumber.from(round.rewardBaseCalAmount),
+    rewardAmount: BigNumber.from(round.rewardAmount),
+  }
+}
 
-    if (value && value?.type === 'BigNumber') {
-      return {
-        ...accum,
-        [key]: BigNumber.from(value),
-      }
-    }
-
-    return {
-      ...accum,
-      [key]: value,
-    }
-  }, {}) as K
+export function deserializePredictionLedger(ledger: ReduxNodeLedger): NodeLedger {
+  return { ...ledger, amount: BigNumber.from(ledger.amount) }
 }
 
 export const fetchUsersRoundsLength = async (account: string) => {
@@ -538,7 +544,7 @@ export const fetchUserRounds = async (
   account: string,
   cursor = 0,
   size = ROUNDS_PER_PAGE,
-): Promise<{ [key: string]: ReduxNodeLedger }> => {
+): Promise<Record<string, ReduxNodeLedger> | null> => {
   const contract = getPredictionsContract()
 
   try {

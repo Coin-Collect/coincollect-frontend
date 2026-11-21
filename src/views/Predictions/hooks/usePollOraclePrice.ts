@@ -13,7 +13,7 @@ const usePollOraclePrice = (seconds = 10) => {
     fallbackData: Zero,
   })
 
-  return price
+  return price ?? Zero
 }
 
 export default usePollOraclePrice

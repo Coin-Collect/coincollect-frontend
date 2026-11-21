@@ -16,7 +16,7 @@ const VoteRow: React.FC<VoteRowProps> = ({ vote, isVoter }) => {
   const { t } = useTranslation()
   const hasVotingPower = !!vote.metadata?.votingPower
   const votingPower = hasVotingPower
-    ? parseFloat(vote.metadata.votingPower).toLocaleString(undefined, {
+    ? parseFloat((vote.metadata?.votingPower ?? '0')).toLocaleString(undefined, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 3,
       })
@@ -41,7 +41,7 @@ const VoteRow: React.FC<VoteRowProps> = ({ vote, isVoter }) => {
       </ChoiceColumn>
       <VotingPowerColumn>
         <Flex alignItems="center" justifyContent="end">
-          <Text title={vote.metadata.votingPower}>{votingPower}</Text>
+          <Text title={(vote.metadata?.votingPower ?? '0')}>{votingPower}</Text>
           {hasVotingPower && <LinkExternal href={`${IPFS_GATEWAY}/${vote.id}`} />}
         </Flex>
       </VotingPowerColumn>

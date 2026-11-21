@@ -3,8 +3,8 @@ import { format, parseISO, isValid } from 'date-fns'
 import { MINIMUM_CHOICES } from './Choices'
 import { FormState } from './types'
 
-export const combineDateAndTime = (date: Date, time: Date) => {
-  if (!isValid(date) || !isValid(time)) {
+export const combineDateAndTime = (date: Date | null, time: Date | null) => {
+  if (!date || !time || !isValid(date) || !isValid(time)) {
     return null
   }
 
@@ -56,7 +56,7 @@ export const getFormErrors = (formData: FormState, t: ContextApi['t']) => {
   const startDateTimestamp = combineDateAndTime(startDate, startTime)
   const endDateTimestamp = combineDateAndTime(endDate, endTime)
 
-  if (endDateTimestamp < startDateTimestamp) {
+  if (endDateTimestamp != null && startDateTimestamp != null && endDateTimestamp < startDateTimestamp) {
     errors.endDate = Array.isArray(errors.endDate)
       ? [...errors.endDate, t('End date must be after the start date')]
       : (errors.endDate = [t('End date must be after the start date')])

@@ -1,9 +1,29 @@
 import request, { gql } from 'graphql-request'
-import flatten from 'lodash/flatten'
 import { GRAPH_API_PREDICTION_V1 } from 'config/constants/endpoints'
 
-export const getV1History = async (skip = 0, where = {}): Promise<Record<string, any>[]> => {
-  const response = await request(
+export interface V1Bet {
+  hash: string
+  amount: string
+  position: string
+  claimed: boolean
+  claimedAmount: string | null
+  claimedHash: string | null
+  round: {
+    epoch: string
+    position: string | null
+    failed: boolean
+    totalAmount: string
+    lockPrice: string | null
+    closePrice: string | null
+    totalBets: string
+  }
+}
+
+type V1BetFilter = { user?: string; claimed?: boolean }
+
+export const getV1History = async (skip = 0, where: V1BetFilter = {}): Promise<V1Bet[]> => {
+  if (!GRAPH_API_PREDICTION_V1) return []
+  const response = await request<{ bets: V1Bet[] }>(
     GRAPH_API_PREDICTION_V1,
     gql`
       query getV1BetHistory($skip: Int!, $where: Bet_filter) {
@@ -22,7 +42,6 @@ export const getV1History = async (skip = 0, where = {}): Promise<Record<string,
             lockPrice
             closePrice
             totalBets
-            totalAmount
           }
         }
       }
@@ -32,25 +51,12 @@ export const getV1History = async (skip = 0, where = {}): Promise<Record<string,
   return response.bets
 }
 
-export const getAllV1History = (where = {}): Promise<Record<string, any>[]> => {
-  return new Promise((resolve, reject) => {
-    const bets = {}
-
-    const getHistoryChunk = async (skip: number) => {
-      try {
-        const betHistory = await getV1History(skip, where)
-        bets[skip] = betHistory
-
-        if (betHistory.length === 0) {
-          resolve(flatten(Object.values(bets)))
-        } else {
-          getHistoryChunk(skip + 1000)
-        }
-      } catch (error) {
-        reject(error)
-      }
-    }
-
-    getHistoryChunk(0)
-  })
+export const getAllV1History = async (where: V1BetFilter = {}): Promise<V1Bet[]> => {
+  const bets: V1Bet[] = []
+  for (let skip = 0; ; skip += 1000) {
+    // eslint-disable-next-line no-await-in-loop
+    const page = await getV1History(skip, where)
+    bets.push(...page)
+    if (page.length < 1000) return bets
+  }
 }

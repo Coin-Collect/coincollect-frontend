@@ -17,8 +17,8 @@ import useHarvestFarm from '../../hooks/useHarvestFarm'
 import useAnimatedRewardValue from 'hooks/useAnimatedRewardValue'
 
 interface FarmCardActionsProps {
-  earnings?: BigNumber
-  pid?: number
+  earnings: BigNumber
+  pid: number
 }
 
 const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
@@ -46,6 +46,7 @@ const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid }) => {
       <Button
         disabled={rawEarningsBalance.eq(0) || pendingTx}
         onClick={async () => {
+            if (!account) return
           const receipt = await fetchWithCatchTxError(() => {
             return onReward()
           })

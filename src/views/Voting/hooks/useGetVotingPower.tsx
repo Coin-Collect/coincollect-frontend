@@ -32,6 +32,7 @@ const useGetVotingPower = (block?: number, isActive = true): State & { isLoading
 
   useEffect(() => {
     const fetchVotingPower = async () => {
+      if (!account) return
       setIsLoading(true)
 
       try {

@@ -1,27 +1,16 @@
 import { Token, Pair, ChainId } from '@coincollect/sdk'
 import { isAddress } from 'utils'
 
-const getLpAddress = (token1: string | Token, token2: string | Token) => {
-  let token1AsTokenInstance = token1
-  let token2AsTokenInstance = token2
-  if (!token1 || !token2) {
-    return null
-  }
-  if (typeof token1 === 'string' || token1 instanceof String) {
-    const checksummedToken1Address = isAddress(token1)
-    if (!checksummedToken1Address) {
-      return null
-    }
-    token1AsTokenInstance = new Token(ChainId.MAINNET, checksummedToken1Address, 18)
-  }
-  if (typeof token2 === 'string' || token2 instanceof String) {
-    const checksummedToken2Address = isAddress(token2)
-    if (!checksummedToken2Address) {
-      return null
-    }
-    token2AsTokenInstance = new Token(ChainId.MAINNET, checksummedToken2Address, 18)
-  }
-  return Pair.getAddress(token1AsTokenInstance as Token, token2AsTokenInstance as Token)
+const toToken = (value: string | Token | null | undefined): Token | null => {
+  if (typeof value !== 'string') return value ?? null
+  const address = isAddress(value)
+  return address ? new Token(ChainId.MAINNET, address, 18) : null
+}
+
+const getLpAddress = (token1?: string | Token | null, token2?: string | Token | null) => {
+  const first = toToken(token1)
+  const second = toToken(token2)
+  return first && second ? Pair.getAddress(first, second) : null
 }
 
 export default getLpAddress

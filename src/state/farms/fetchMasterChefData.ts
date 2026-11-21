@@ -37,6 +37,7 @@ export const fetchMasterChefData = async (farms: SerializedFarmConfig[]): Promis
   const masterChefAggregatedCalls = masterChefCalls
     .filter((masterChefCall) => masterChefCall[0] !== null && masterChefCall[1] !== null)
     .flat()
+    .filter((call) => call !== null)
 
   const masterChefMultiCallResult = await multicallPolygonv2(masterchefABI, masterChefAggregatedCalls)
   

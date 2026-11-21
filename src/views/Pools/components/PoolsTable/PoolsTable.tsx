@@ -8,7 +8,7 @@ import PoolRow from './PoolRow'
 interface PoolsTableProps {
   pools: DeserializedPool[]
   userDataLoaded: boolean
-  account: string
+  account?: string | null
 }
 
 const StyledTable = styled.div`
@@ -39,7 +39,7 @@ const PoolsTable: React.FC<PoolsTableProps> = ({ pools, userDataLoaded, account 
   const { t } = useTranslation()
   const tableWrapperEl = useRef<HTMLDivElement>(null)
   const scrollToTop = (): void => {
-    tableWrapperEl.current.scrollIntoView({
+    tableWrapperEl.current?.scrollIntoView({
       behavior: 'smooth',
     })
   }

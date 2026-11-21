@@ -100,7 +100,7 @@ export const usePoolDatas = (poolAddresses: string[]): PoolData[] => {
     .map((address) => {
       return allPoolData[address]?.data
     })
-    .filter((pool) => pool)
+    .filter((pool) => pool !== undefined)
 
   return poolsWithData
 }
@@ -141,6 +141,7 @@ export const usePoolTransactions = (address: string): Transaction[] | undefined 
       if (fetchError) {
         setError(true)
       } else {
+        if (!data) return
         dispatch(updatePoolTransactions({ poolAddress: address, transactions: data }))
       }
     }
@@ -175,26 +176,23 @@ export const useAddTokenKeys = (): ((addresses: string[]) => void) => {
   return useCallback((tokenAddresses: string[]) => dispatch(addTokenKeys({ tokenAddresses })), [dispatch])
 }
 
-export const useTokenDatas = (addresses?: string[]): TokenData[] | undefined => {
+export const useTokenDatas = (addresses: string[]): TokenData[] => {
   const allTokenData = useAllTokenData()
   const addNewTokenKeys = useAddTokenKeys()
 
   // if token not tracked yet track it
-  addresses?.forEach((a) => {
+  addresses.forEach((a) => {
     if (!allTokenData[a]) {
       addNewTokenKeys([a])
     }
   })
 
   const tokensWithData = useMemo(() => {
-    if (!addresses) {
-      return undefined
-    }
     return addresses
       .map((a) => {
         return allTokenData[a]?.data
       })
-      .filter((token) => token)
+      .filter((token) => token !== undefined)
   }, [addresses, allTokenData])
 
   return tokensWithData

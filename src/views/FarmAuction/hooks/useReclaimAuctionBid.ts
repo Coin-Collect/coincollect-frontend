@@ -9,7 +9,7 @@ import { processBidderAuctions, sortAuctionBidders } from '../helpers'
 interface ReclaimableAuction {
   id: number
   amount: BigNumber
-  position: number
+  position?: number
 }
 
 interface ReclaimReducerState {
@@ -96,6 +96,7 @@ const useReclaimAuctionBid = (): [ReclaimableAuction | null, () => void] => {
 
   // Fetch auction data for auctions account has participated
   useEffect(() => {
+    if (!account) return
     const fetchBidderAuctions = async () => {
       try {
         dispatch({ type: 'setLoading', payload: { loading: true } })
@@ -122,6 +123,7 @@ const useReclaimAuctionBid = (): [ReclaimableAuction | null, () => void] => {
   }, [account, state, farmAuctionContract])
 
   useEffect(() => {
+    if (!account) return
     const checkIfAuctionIsClaimable = async (auctionToCheck: BidderAuction) => {
       dispatch({ type: 'setLoading', payload: { loading: true } })
       try {

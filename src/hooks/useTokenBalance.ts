@@ -54,18 +54,14 @@ export const useBurnedBalance = (tokenAddress: string) => {
 
 export const useGetBnbBalance = () => {
   const { account } = useWeb3React()
-  const { status, data, mutate } = useSWR([account, 'bnbBalance'], async () => {
-    return simpleRpcProvider.getBalance(account)
-  })
+  const { status, data, mutate } = useSWR(account ? [account, 'bnbBalance'] : null, ([address]) => simpleRpcProvider.getBalance(address))
 
   return { balance: data || Zero, fetchStatus: status, refresh: mutate }
 }
 
 export const useGetMaticBalance = () => {
   const { account } = useWeb3React()
-  const { status, data, mutate } = useSWR([account, 'maticBalance'], async () => {
-    return simplePolygonRpcProvider.getBalance(account)
-  })
+  const { status, data, mutate } = useSWR(account ? [account, 'maticBalance'] : null, ([address]) => simplePolygonRpcProvider.getBalance(address))
 
   return { balance: data || Zero, fetchStatus: status, refresh: mutate }
 }

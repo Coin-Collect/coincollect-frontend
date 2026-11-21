@@ -84,7 +84,7 @@ const Wrapper: React.FC<TimerProps> = ({
   BodyTextComponent = DefaultBodyTextComponent,
 }) => {
   const { t } = useTranslation()
-  const { targetRef, tooltip, tooltipVisible } = useTooltip(<TooltipContent blockNumber={blockNumber} t={t} />, {
+  const { targetRef, tooltip, tooltipVisible } = useTooltip(blockNumber == null ? null : <TooltipContent blockNumber={blockNumber} t={t} />, {
     placement: 'bottom',
   })
   const shouldDisplayTooltip = showTooltip && tooltipVisible

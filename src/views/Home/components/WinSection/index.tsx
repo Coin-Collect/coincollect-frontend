@@ -235,7 +235,7 @@ const FeatureBox: React.FC<{
           <Image className="default" src={defaultImage} width={72} height={72} alt={title} />
           <Image className="hover" src={image} width={72} height={72} alt={title} />
         </ImageBox>
-        <Box flex="1">
+        <Box style={{ flex: 1 }}>
           <Text fontSize="18px" mb="8px" lineHeight="120%" fontWeight={600} color={theme.colors.text}>
             {title}
           </Text>

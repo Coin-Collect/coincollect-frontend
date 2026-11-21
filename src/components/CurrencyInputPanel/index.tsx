@@ -128,7 +128,7 @@ export default function CurrencyInputPanel({
           </Flex>
         </CurrencySelectButton>
         <Flex style={{ gap: '8px' }}>
-          {token && tokenAddress && library?.provider?.isMetaMask && (
+          {token && tokenAddress && library && 'provider' in library && library.provider.isMetaMask && (
             <MetamaskIcon
               style={{ cursor: 'pointer' }}
               width="16px"

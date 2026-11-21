@@ -23,7 +23,7 @@ type PreEventProps = {
 const MintButton: React.FC<PreEventProps> = ({ t, theme, saleStatus, numberTicketsOfUser, ticketsOfUser }) => {
   const { callWithGasPrice } = useCallWithGasPrice()
   const nftSaleContract = useNftSaleContract()
-  const [txHashMintingResult, setTxHashMintingResult] = useState(null)
+  const [txHashMintingResult, setTxHashMintingResult] = useState<string | null>(null)
   const canMintTickets = saleStatus === SaleStatusEnum.Claim && numberTicketsOfUser > 0
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: isLoading } = useCatchTxError()
@@ -37,7 +37,7 @@ const MintButton: React.FC<PreEventProps> = ({ t, theme, saleStatus, numberTicke
       title={t('Mint')}
       isLoading={isLoading}
       headerBackground={theme.colors.gradients.cardHeader}
-      txHash={txHashMintingResult}
+      txHash={txHashMintingResult ?? undefined}
       loadingText={t('Please confirm your transaction in wallet.')}
       loadingButtonLabel={t('Minting...')}
       successButtonLabel={t('Close')}
@@ -58,7 +58,9 @@ const MintButton: React.FC<PreEventProps> = ({ t, theme, saleStatus, numberTicke
     }
   }
 
-  useEffect(() => txHashMintingResult && !isLoading && onPresentConfirmModal(), [isLoading, txHashMintingResult])
+  useEffect(() => {
+    if (txHashMintingResult && !isLoading) onPresentConfirmModal()
+  }, [isLoading, txHashMintingResult])
 
   return (
     <>

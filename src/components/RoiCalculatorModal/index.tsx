@@ -27,10 +27,10 @@ interface RoiCalculatorModalProps {
   earningTokenPrice: number
   apr: number
   displayApr?: string
-  linkLabel: string
-  linkHref: string
+  linkLabel?: string
+  linkHref?: string
   stakingTokenBalance: BigNumber
-  stakingTokenSymbol: string
+  stakingTokenSymbol?: string
   stakingTokenPrice: number
   earningTokenSymbol?: string
   multiplier?: string
@@ -75,7 +75,7 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
   linkLabel,
   linkHref,
   stakingTokenBalance,
-  stakingTokenSymbol,
+  stakingTokenSymbol = '',
   stakingTokenPrice,
   multiplier,
   initialValue,
@@ -141,7 +141,7 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
     <StyledModal
       title={t('ROI Calculator')}
       onDismiss={onBack || onDismiss}
-      onBack={onBack ?? null}
+      onBack={onBack}
       headerBackground="gradients.cardHeader"
     >
       <ScrollableContainer>

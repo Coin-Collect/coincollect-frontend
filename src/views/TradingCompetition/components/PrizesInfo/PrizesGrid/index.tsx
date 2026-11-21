@@ -47,13 +47,6 @@ const tierStyleMap = {
     },
     color: COLOR_BRONZE,
   },
-  [Tiers.SILVER]: {
-    icon: MedalSilverIcon,
-    label: {
-      text: <Trans>Silver</Trans>,
-    },
-    color: COLOR_SILVER,
-  },
   [Tiers.PURPLE]: {
     icon: MedalPurpleIcon,
     label: {
@@ -116,7 +109,7 @@ const PrizesGrid = () => {
                   </BoldTd>
                   <Td>
                     <Flex alignItems="center" flexWrap="wrap" justifyContent="flex-start" width="100%">
-                      <Image src={`/images/achievements/${row.achievements.image}`} width={38} height={38} />
+                      <Image alt="" src={`/images/achievements/${row.achievements.image}`} width={38} height={38} />
                       <Text ml="8px" fontSize="12px" color="textSubtle">
                         {`+${row.achievements.points.toLocaleString(undefined, {
                           minimumFractionDigits: 0,

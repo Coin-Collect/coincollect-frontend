@@ -13,7 +13,7 @@ import BaseCell, { CellContent } from './BaseCell'
 
 interface StakedCellProps {
   pool: DeserializedPool
-  account: string
+  account?: string | null
   userDataLoaded: boolean
 }
 

@@ -55,12 +55,12 @@ export interface SerializedFarm extends SerializedFarmConfig {
 export interface DeserializedFarm extends DeserializedFarmConfig {
   tokenPriceBusd?: string
   quoteTokenPriceBusd?: string
-  tokenAmountTotal?: BigNumber
-  lpTotalInQuoteToken?: BigNumber
-  lpTotalSupply?: BigNumber
-  tokenPriceVsQuote?: BigNumber
-  poolWeight?: BigNumber
-  userData?: DeserializedFarmUserData
+  tokenAmountTotal: BigNumber
+  lpTotalInQuoteToken: BigNumber
+  lpTotalSupply: BigNumber
+  tokenPriceVsQuote: BigNumber
+  poolWeight: BigNumber
+  userData: DeserializedFarmUserData
 }
 
 // Types for NFT Stake
@@ -99,19 +99,19 @@ export interface SerializedNftFarm extends SerializedNftFarmConfig {
 export interface DeserializedNftFarm extends DeserializedNftFarmConfig {
   tokenPriceBusd?: string
   quoteTokenPriceBusd?: string
-  tokenAmountTotal?: BigNumber
-  lpTotalInQuoteToken?: BigNumber
-  lpTotalSupply?: BigNumber
-  totalStaked?: BigNumber
-  totalShares?: BigNumber
+  tokenAmountTotal: BigNumber
+  lpTotalInQuoteToken: BigNumber
+  lpTotalSupply: BigNumber
+  totalStaked: BigNumber
+  totalShares: BigNumber
   tokenPriceVsQuote?: BigNumber
-  poolWeight?: BigNumber
+  poolWeight: BigNumber
   startTimestamp?: number
   endTimestamp?: number
-  stakingLimitEndTimestamp?: number
-  stakingLimit?: BigNumber
+  stakingLimitEndTimestamp: number
+  stakingLimit: BigNumber
   sideRewards?: any
-  userData?: DeserializedNftFarmUserData
+  userData: DeserializedNftFarmUserData
 }
 
 export enum VaultKey {
@@ -130,6 +130,10 @@ interface CorePoolProps {
 }
 
 export interface DeserializedPool extends DeserializedPoolConfig, CorePoolProps {
+  apr: number
+  rawApr: number
+  earningTokenPrice: number
+  stakingTokenPrice: number
   totalStaked: BigNumber
   stakingLimit: BigNumber
   stakingLimitEndBlock: number
@@ -144,6 +148,8 @@ export interface DeserializedPool extends DeserializedPoolConfig, CorePoolProps 
     pendingReward: BigNumber
   }
 }
+
+export type DeserializedVaultPool = DeserializedPool & { vaultKey: VaultKey }
 
 export interface SerializedPool extends SerializedPoolConfig, CorePoolProps {
   totalStaked?: SerializedBigNumber
@@ -260,7 +266,7 @@ export interface Achievement {
   address: string
   title: TranslatableText
   description?: TranslatableText
-  badge: string
+  badge?: string
   points: number
 }
 
@@ -285,23 +291,23 @@ export enum PredictionsChartView {
 }
 
 export interface Round {
-  id: string
+  id: string | null
   epoch: number
-  position: BetPosition
-  failed: boolean
-  startAt: number
-  startBlock: number
-  startHash: string
-  lockAt: number
-  lockBlock: number
-  lockHash: string
-  lockPrice: number
-  lockRoundId: string
-  closeAt: number
-  closeBlock: number
-  closeHash: string
-  closePrice: number
-  closeRoundId: string
+  position: BetPosition | null
+  failed: boolean | null
+  startAt: number | null
+  startBlock: number | null
+  startHash: string | null
+  lockAt: number | null
+  lockBlock: number | null
+  lockHash: string | null
+  lockPrice: number | null
+  lockRoundId: string | null
+  closeAt: number | null
+  closeBlock: number | null
+  closeHash: string | null
+  closePrice: number | null
+  closeRoundId: string | null
   totalBets: number
   totalAmount: number
   bullBets: number
@@ -317,27 +323,30 @@ export interface Market {
 }
 
 export interface Bet {
-  id?: string
-  hash?: string
+  id?: string | null
+  hash?: string | null
   amount: number
+  block?: number | null
   position: BetPosition
   claimed: boolean
-  claimedAt: number
-  claimedBlock: number
-  claimedHash: string
+  claimedAt: number | null
+  claimedBlock?: number | null
+  claimedHash: string | null
   claimedBNB: number
   claimedNetBNB: number
-  createdAt: number
-  updatedAt: number
+  createdAt: number | null
+  updatedAt: number | null
   user?: PredictionUser
   round?: Round
 }
 
+export type BetWithRound = Bet & { round: Round }
+
 export interface PredictionUser {
   id: string
-  createdAt: number
-  updatedAt: number
-  block: number
+  createdAt: number | null
+  updatedAt: number | null
+  block: number | null
   totalBets: number
   totalBetsBull: number
   totalBetsBear: number
@@ -393,8 +402,8 @@ export interface ReduxNodeRound {
   rewardBaseCalAmount: BigNumberToJson
   rewardAmount: BigNumberToJson
   oracleCalled: boolean
-  lockOracleId: string
-  closeOracleId: string
+  lockOracleId: string | null
+  closeOracleId: string | null
 }
 
 export interface NodeRound {
@@ -410,14 +419,14 @@ export interface NodeRound {
   rewardBaseCalAmount: EthersBigNumber
   rewardAmount: EthersBigNumber
   oracleCalled: boolean
-  closeOracleId: string
-  lockOracleId: string
+  closeOracleId: string | null
+  lockOracleId: string | null
 }
 
 export type LeaderboardFilterTimePeriod = '1d' | '7d' | '1m' | 'all'
 
 export interface LeaderboardFilter {
-  address?: string
+  address?: string | null
   orderBy?: string
   timePeriod?: LeaderboardFilterTimePeriod
 }
@@ -434,23 +443,23 @@ export interface PredictionsState {
   intervalSeconds: number
   minBetAmount: string
   bufferSeconds: number
-  history: Bet[]
+  history: BetWithRound[]
   totalHistory: number
   currentHistoryPage: number
   hasHistoryLoaded: boolean
-  rounds?: RoundData
-  ledgers?: LedgerData
+  rounds: RoundData
+  ledgers: LedgerData
   claimableStatuses: {
     [key: string]: boolean
   }
   leaderboard: {
-    selectedAddress: string
+    selectedAddress: string | null
     loadingState: FetchStatus
     filters: LeaderboardFilter
     skip: number
     hasMoreResults: boolean
     addressResults: {
-      [key: string]: PredictionUser
+      [key: string]: PredictionUser | null | undefined
     }
     results: PredictionUser[]
   }
@@ -521,8 +530,8 @@ export interface Vote {
 }
 
 export interface LotteryRoundUserTickets {
-  isLoading?: boolean
-  tickets?: LotteryTicket[]
+  isLoading: boolean
+  tickets: LotteryTicket[]
 }
 
 interface LotteryRoundGenerics {
@@ -534,7 +543,7 @@ interface LotteryRoundGenerics {
   treasuryFee: string
   firstTicketId: string
   lastTicketId: string
-  finalNumber: number
+  finalNumber: number | null
 }
 
 export interface LotteryRound extends LotteryRoundGenerics {
@@ -560,9 +569,9 @@ export interface LotteryState {
   currentLotteryId: string
   maxNumberTicketsPerBuyOrClaim: string
   isTransitioning: boolean
-  currentRound: LotteryResponse & { userTickets?: LotteryRoundUserTickets }
-  lotteriesData?: LotteryRoundGraphEntity[]
-  userLotteryData?: LotteryUserGraphEntity
+  currentRound: LotteryResponse & { userTickets: LotteryRoundUserTickets }
+  lotteriesData: LotteryRoundGraphEntity[]
+  userLotteryData: LotteryUserGraphEntity
 }
 
 export interface LotteryRoundGraphEntity {

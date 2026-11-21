@@ -20,7 +20,7 @@ const WinningNumbers: React.FC<WinningNumbersProps> = ({
   rotateText,
   ...containerProps
 }) => {
-  const [rotationValues, setRotationValues] = useState([])
+  const [rotationValues, setRotationValues] = useState<number[]>([])
   const reversedNumber = parseRetrievedNumber(number)
   const numAsArray = reversedNumber.split('')
   const colors: BallColor[] = ['pink', 'lilac', 'teal', 'aqua', 'green', 'yellow']
@@ -37,7 +37,7 @@ const WinningNumbers: React.FC<WinningNumbersProps> = ({
         return (
           <BallWithNumber
             key={uniqueId()}
-            rotationTransform={rotateText && rotationValues[index]}
+            rotationTransform={rotateText ? rotationValues[index] : undefined}
             size={size}
             fontSize={fontSize}
             color={colors[index]}

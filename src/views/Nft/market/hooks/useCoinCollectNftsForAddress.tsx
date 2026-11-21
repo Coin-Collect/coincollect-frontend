@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import isEmpty from 'lodash/isEmpty'
 import { useGetCollections } from 'state/nftMarket/hooks'
-import { ApiCollections, NftLocation, NftToken, TokenIdWithCollectionAddress } from 'state/nftMarket/types'
+import { ApiCollections, NftAttribute, NftLocation, NftToken, TokenIdWithCollectionAddress } from 'state/nftMarket/types'
 import { Profile } from 'state/types'
 import { isAddress } from 'utils'
 import useSWR from 'swr'
@@ -16,23 +16,18 @@ import erc721ABI from 'config/abi/erc721.json'
 import nftFarms from 'config/constants/nftFarms'
 import { ChainId } from '@coincollect/sdk'
 
-const useNftsForAddress = (account: string, profile: Profile, isProfileFetching: boolean) => {
+const useNftsForAddress = (account: string, profile: Profile | undefined, isProfileFetching: boolean) => {
   const { data: collections } = useGetCollections()
 
-  const hasProfileNft = profile?.tokenId
-  const profileNftTokenId = profile?.tokenId?.toString()
-  const profileNftCollectionAddress = profile?.collectionAddress
+  const profileNftWithCollectionAddress = useMemo<TokenIdWithCollectionAddress | undefined>(() => {
+    if (!profile?.isActive) return undefined
 
-  const profileNftWithCollectionAddress = useMemo(() => {
-    if (hasProfileNft) {
-      return {
-        tokenId: profileNftTokenId,
-        collectionAddress: profileNftCollectionAddress,
-        nftLocation: NftLocation.PROFILE,
-      }
+    return {
+      tokenId: profile.tokenId.toString(),
+      collectionAddress: profile.collectionAddress,
+      nftLocation: NftLocation.PROFILE,
     }
-    return null
-  }, [profileNftTokenId, profileNftCollectionAddress, hasProfileNft])
+  }, [profile])
 
   const { status, data, mutate } = useSWR(
     !isProfileFetching && !isEmpty(collections) && isAddress(account) ? [account, 'userNfts'] : null,
@@ -174,7 +169,7 @@ export const fetchWalletTokenIdsForCollections = async (
     }
   })
 
-  let tokenIdResultRaw
+  let tokenIdResultRaw: ([{ toString(): string }[]] | undefined)[]
 
   try {
     tokenIdResultRaw = await multicallPolygonv2(coinCollectNftAbi, tokenIdCalls, { requireSuccess: false })
@@ -198,7 +193,7 @@ export const fetchWalletTokenIdsForCollections = async (
       return acc
     }
 
-    const [tokenIds] = tokenIdResult as [Array<{ toString(): string }>]
+    const [tokenIds] = tokenIdResult
 
     if (!Array.isArray(tokenIds) || tokenIds.length === 0) {
       const fallbackMeta = collectionList[index]
@@ -283,7 +278,7 @@ export const fetchWalletTokenIdsForCollections = async (
 }
 
 export const getNftsFromDifferentCollectionsApi = async (
-  from: { collectionAddress: string; tokenId: string }[],
+  from: WalletTokenWithCollectionAddress[],
 ): Promise<NftToken[]> => {
 
   const imageCalls = from.map((token) => {
@@ -305,7 +300,6 @@ export const getNftsFromDifferentCollectionsApi = async (
   
   const items = await Promise.all(from.map(async (token, index) => {
 
-    let meta = null;
     try {
       const tokenUriResult = rawTokenURIs?.[index]
       const tokenURI = Array.isArray(tokenUriResult) ? tokenUriResult[0] : null
@@ -315,17 +309,17 @@ export const getNftsFromDifferentCollectionsApi = async (
         throw new Error('Missing tokenURI')
       }
 
-      meta = await axios.get(metadataUrl)
+      const { data } = await axios.get<{ name?: string; description?: string; image?: string; attributes?: NftAttribute[] }>(metadataUrl)
       return {
         tokenId: token.tokenId,
-        name: meta.data.name,
-        collectionName: token.symbol,
+        name: data.name ?? `NFT #${token.tokenId}`,
+        collectionName: token.symbol ?? 'Unknown Collection',
         collectionAddress: token.collectionAddress,
-        description: meta.data.description,
-        attributes: meta.data.attributes ?? [],
+        description: data.description ?? '',
+        attributes: data.attributes ?? [],
         image: {
-          original: normalizeIpfsUri(meta.data.image) ?? meta.data.image,
-          thumbnail: normalizeIpfsUri(meta.data.image) ?? meta.data.image,
+          original: normalizeIpfsUri(data.image) ?? '/images/nfts/no-profile-md.png',
+          thumbnail: normalizeIpfsUri(data.image) ?? '/images/nfts/no-profile-md.png',
         }
       }
    } catch (error) {
@@ -333,7 +327,7 @@ export const getNftsFromDifferentCollectionsApi = async (
       return {
         tokenId: token.tokenId,
         name: "Name data cannot be fetched",
-        collectionName: token.symbol,
+        collectionName: token.symbol ?? 'Unknown Collection',
         collectionAddress: token.collectionAddress,
         description: "Description data cannot be fetched",
         attributes: [],

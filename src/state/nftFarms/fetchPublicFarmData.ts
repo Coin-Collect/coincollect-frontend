@@ -27,6 +27,7 @@ const fetchFarmCalls = (farm: SerializedNftFarm) => {
   if (supportedCollectionPids && supportedCollectionPids.length > 0) {
     for (const pid of supportedCollectionPids) {
       const supportedPool = nftFarmsConfig.find((farm) => farm.pid === pid);
+      if (!supportedPool) throw new Error(`NFT pool collection ${pid} is unavailable`)
       const supportedNftAddress = getAddress(supportedPool.nftAddresses);
       
       calls.push({
@@ -41,12 +42,11 @@ const fetchFarmCalls = (farm: SerializedNftFarm) => {
 };
 
 
-export const fetchPublicFarmsData = async (farms: SerializedNftFarmConfig[]): Promise<any[]> => {
+export const fetchPublicFarmsData = async (farms: SerializedNftFarmConfig[]): Promise<string[][]> => {
   const farmCalls = farms.flatMap((farm) => fetchFarmCalls(farm))
-  const chunkSize = farms.length / farms.length
   const farmMultiCallResult = await multicallPolygonv2(erc20, farmCalls)
 
-  const updatedfarmMultiCallResult= [];
+  const balances: string[] = []
   let currentIndex = 0
 
   for (const farm of farms) {
@@ -63,9 +63,9 @@ export const fetchPublicFarmsData = async (farms: SerializedNftFarmConfig[]): Pr
       }
     }
 
-    updatedfarmMultiCallResult.push(totalBalance.toHexString())
+    balances.push(totalBalance.toHexString())
 
   }
 
-  return chunk(updatedfarmMultiCallResult, chunkSize)
+  return chunk(balances, 1)
 }

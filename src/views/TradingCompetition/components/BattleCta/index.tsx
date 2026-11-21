@@ -7,10 +7,9 @@ import {
   LaurelRightIcon,
   Button,
   CheckmarkCircleIcon,
-  useWalletModal,
   useModal,
 } from '@pancakeswap/uikit'
-import useAuth from 'hooks/useAuth'
+import { useWeb3Modal, useWeb3ModalState } from '@web3modal/wagmi/react'
 import { useTranslation } from 'contexts/Localization'
 import { FINISHED, OVER } from 'config/constants/trading-competition/phases'
 import { useRouter } from 'next/router'
@@ -67,8 +66,8 @@ const BattleCta: React.FC<CompetitionProps> = ({
 }) => {
   const router = useRouter()
   const { t } = useTranslation()
-  const { login, logout } = useAuth()
-  const { onPresentConnectModal } = useWalletModal(login, logout, t)
+  const { open } = useWeb3Modal()
+  const { open: walletModalOpen } = useWeb3ModalState()
   const [onPresentRegisterModal] = useModal(
     <RegisterModal profile={profile} onRegisterSuccess={onRegisterSuccess} />,
     false,
@@ -159,7 +158,8 @@ const BattleCta: React.FC<CompetitionProps> = ({
 
     // No wallet connected
     if (!account) {
-      onPresentConnectModal()
+      if (!walletModalOpen) void open({ view: 'Connect' })
+      return
     }
     // Wallet connected but user not registered
     if (account && !hasRegistered) {

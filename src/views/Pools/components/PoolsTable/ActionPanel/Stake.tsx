@@ -12,7 +12,7 @@ import { DeserializedPool } from 'state/types'
 import styled from 'styled-components'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { convertSharesToCake } from 'views/Pools/helpers'
+import { convertSharesToCake, isVaultPool } from 'views/Pools/helpers'
 import { useProfileRequirement } from 'views/Pools/hooks/useProfileRequirement'
 import { useApprovePool, useCheckVaultApprovalStatus, useVaultApprove } from '../../../hooks/useApprove'
 import VaultStakeModal from '../../CakeVaultCard/VaultStakeModal'
@@ -98,7 +98,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({ pool, userDataLoa
     />,
   )
 
-  const [onPresentVaultStake] = useModal(<VaultStakeModal stakingMax={stakingTokenBalance} pool={pool} />)
+  const [onPresentVaultStake] = useModal(isVaultPool(pool) ? <VaultStakeModal stakingMax={stakingTokenBalance} pool={pool} /> : null)
 
   const [onPresentUnstake] = useModal(
     <StakeModal
@@ -110,7 +110,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({ pool, userDataLoa
     />,
   )
 
-  const [onPresentVaultUnstake] = useModal(<VaultStakeModal stakingMax={cakeAsBigNumber} pool={pool} isRemovingStake />)
+  const [onPresentVaultUnstake] = useModal(isVaultPool(pool) ? <VaultStakeModal stakingMax={cakeAsBigNumber} pool={pool} isRemovingStake /> : null)
 
   const { notMeetRequired, notMeetThreshold } = useProfileRequirement(profileRequirement)
 

@@ -21,7 +21,7 @@ const EndsInCell: React.FC<FinishCellProps> = ({ pool }) => {
   const currentBlock = useCurrentBlock()
   const { t } = useTranslation()
 
-  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
+  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay, countdownBlock } =
     getPoolBlockInfo(pool, currentBlock)
 
   const isCakePool = sousId === 0
@@ -37,7 +37,7 @@ const EndsInCell: React.FC<FinishCellProps> = ({ pool }) => {
       <Flex flex="1">
         <Link
           external
-          href={getPolygonScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}
+          href={countdownBlock === undefined ? undefined : getPolygonScanLink(countdownBlock, 'countdown')}
           onClick={(e) => e.stopPropagation()}
         >
           <TimerIcon ml="4px" />

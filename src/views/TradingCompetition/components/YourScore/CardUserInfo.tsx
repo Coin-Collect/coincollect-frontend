@@ -40,7 +40,7 @@ const RanksWrapper = styled(Flex)`
   }
 `
 
-const CardUserInfo: React.FC<YourScoreProps> = ({
+const CardUserInfo: React.FC<Pick<YourScoreProps, 'hasRegistered' | 'account' | 'profile' | 'userLeaderboardInformation' | 'currentPhase'>> = ({
   hasRegistered,
   account,
   profile,
@@ -52,10 +52,11 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
     <ShareImageModal profile={profile} userLeaderboardInformation={userLeaderboardInformation} />,
     false,
   )
-  const { global, team, volume, next_rank: nextRank } = userLeaderboardInformation
+  const { global, team, volume = 0, next_rank: nextRank = 0 } = userLeaderboardInformation ?? {}
   const shouldShowUserRanks = account && hasRegistered
 
-  const getMedal = (currentRank: ReactText) => {
+  const getMedal = (value: ReactText | undefined) => {
+    const currentRank = Number(value)
     if (currentRank === 1) {
       return {
         current: <MedalGoldIcon />,
@@ -92,7 +93,8 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
     }
   }
 
-  const getNextTier = (currentRank: ReactText) => {
+  const getNextTier = (value: ReactText | undefined) => {
+    const currentRank = Number(value)
     if (currentRank === 1) {
       return {
         color: null,
@@ -151,8 +153,8 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
 
   const headingText = getHeadingText()
   const subHeadingText = getSubHeadingText()
-  const nextTier = userLeaderboardInformation && getNextTier(team)
-  const medal = userLeaderboardInformation && getMedal(team)
+  const nextTier = getNextTier(team)
+  const medal = getMedal(team)
 
   return (
     <Flex flexDirection="column" alignItems="center" mt="16px">
@@ -175,7 +177,7 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
                 <UserRankBox
                   flex="1"
                   title={t('Rank in team').toUpperCase()}
-                  footer={userLeaderboardInformation ? t('#%global% Overall', { global: global.toLocaleString() }) : ''}
+                  footer={global == null ? '' : t('#%global% Overall', { global: global.toLocaleString() })}
                   mr={[0, '8px']}
                   mb={['8px', 0]}
                 >
@@ -226,7 +228,7 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
                   title={`${t('Next tier').toUpperCase()}: ${nextTier.color}`}
                   footer={t('to become #%rank% in team', { rank: nextTier.rank })}
                   currentMedal={medal.current}
-                  nextMedal={medal.next}
+                  nextMedal={medal.next ?? undefined}
                 >
                   <Heading scale="lg">+${userLeaderboardInformation && localiseTradingVolume(nextRank)}</Heading>
                 </NextRankBox>

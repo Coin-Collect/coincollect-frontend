@@ -19,19 +19,19 @@ import useUnstakeFarms from '../../hooks/useUnstakeFarms'
 import useStakeFarms from '../../hooks/useStakeFarms'
 
 interface FarmCardActionsProps {
-  stakedBalance?: BigNumber
-  tokenBalance?: BigNumber
-  stakingLimit?: BigNumber
+  stakedBalance: BigNumber
+  tokenBalance: BigNumber
+  stakingLimit: BigNumber
   tokenName?: string
-  pid?: number // pid can be id of pool of alternative collections
-  mainPid?: number // mainPid only keeps id of staking pool
+  pid: number // pid can be id of pool of alternative collections
+  mainPid: number // mainPid only keeps id of staking pool
   multiplier?: string
   apr?: number
   displayApr?: string
   addLiquidityUrl?: string
   cakePrice?: BigNumber
   lpLabel?: string
-  onClickStake?: any
+  onClickStake?: (() => void) | null
   pendingTx?: boolean
   isFinished?: boolean
 }
@@ -82,7 +82,8 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError } = useCatchTxError()
 
-  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
+  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: string }[]) => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
       const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);
@@ -100,7 +101,8 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   };
   
 
-  const handleUnstake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
+  const handleUnstake = async (selectedNftList: { collectionAddress: string; tokenId: string }[]) => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
       const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);

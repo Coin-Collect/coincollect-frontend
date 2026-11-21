@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Currency, CurrencyAmount, ETHER, JSBI, Token, TokenAmount } from '@coincollect/sdk'
 import { useMemo } from 'react'
 import useWeb3React from 'hooks/useWeb3React'

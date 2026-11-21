@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type {
   UnknownAsyncThunkFulfilledAction,
   UnknownAsyncThunkPendingAction,
@@ -9,10 +8,11 @@ import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit'
 import stringify from 'fast-json-stable-stringify'
 import farmsConfig from 'config/constants/nftFarms'
 import isArchivedPid from 'utils/farmHelpers'
+import type { ChainId } from '@coincollect/sdk'
+import type { AnyAction, PayloadAction, ThunkAction } from '@reduxjs/toolkit'
 import type { AppState } from 'state'
 import priceHelperLpsConfig from 'config/constants/priceHelperLps'
 import fetchFarms, { fetchNftPoolsStakingLimits } from './fetchFarms'
-import getFarmsPrices from './getFarmsPrices'
 import {
   fetchFarmUserEarnings,
   fetchFarmUserAllowances,
@@ -61,7 +61,6 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
 
     const farms = await fetchFarms(farmsToFetch, currentBlock, chainId)
 
-    // const farmsWithPrices = getFarmsPrices(farms) TODO: Remove related file
     
     // Filter out price helper LP config farms
     const farmsWithoutHelperLps = farms.filter((farm: SerializedNftFarm) => {   // farmsWithPrices --> farms
@@ -145,7 +144,7 @@ const serializeLoadingKey = (
 }
 
 // Copied from pool state
-export const fetchNftPoolsStakingLimitsAsync = (chainId: ChainId) => async (dispatch, getState) => {
+export const fetchNftPoolsStakingLimitsAsync = (chainId: ChainId): ThunkAction<Promise<void>, AppState, unknown, AnyAction> => async (dispatch, getState) => {
   const poolsWithStakingLimit = getState()
     .nftFarms.data.filter(({ stakingLimit }) => stakingLimit !== null && stakingLimit !== undefined)
     .map((pool) => pool.pid)
@@ -178,8 +177,8 @@ export const farmsSlice = createSlice({
   name: 'NFTFarms',
   initialState,
   reducers: {
-    setPoolsPublicData: (state, action) => {
-      const livePoolsData: SerializedPool[] = action.payload
+    setPoolsPublicData: (state, action: PayloadAction<Pick<SerializedNftFarm, 'pid' | 'stakingLimit' | 'numberSecondsForUserLimit'>[]>) => {
+      const livePoolsData = action.payload
       state.data = state.data.map((pool) => {
         const livePoolData = livePoolsData.find((entry) => entry.pid === pool.pid)
         return { ...pool, ...livePoolData }

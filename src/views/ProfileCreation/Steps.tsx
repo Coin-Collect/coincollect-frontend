@@ -1,8 +1,7 @@
-import { useContext } from 'react'
 import { useTranslation } from 'contexts/Localization'
 import useWeb3React from 'hooks/useWeb3React'
 import NoWalletConnected from './WalletNotConnected'
-import { ProfileCreationContext } from './contexts/ProfileCreationProvider'
+import useProfileCreation from './contexts/hook'
 import Mint from './Mint'
 import ProfilePicture from './ProfilePicture'
 import TeamSelection from './TeamSelection'
@@ -10,7 +9,7 @@ import UserName from './UserName'
 
 const Steps = () => {
   const { t } = useTranslation()
-  const { isInitialized, currentStep } = useContext(ProfileCreationContext)
+  const { isInitialized, currentStep } = useProfileCreation()
   const { account } = useWeb3React()
 
   if (!account) {

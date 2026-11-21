@@ -37,7 +37,7 @@ interface Props {
   publicIfoData: PublicIfoData
   walletIfoData: WalletIfoData
   userCurrencyBalance: BigNumber
-  creditLeft: BigNumber
+  creditLeft?: BigNumber
   onSuccess: (amount: BigNumber, txHash: string) => void
   onDismiss?: () => void
 }
@@ -76,8 +76,8 @@ const ContributeModal: React.FC<Props> = ({
 
   const { currency } = ifo
   const { toastSuccess } = useToast()
-  const { limitPerUserInLP } = publicPoolCharacteristics
-  const { amountTokenCommittedInLP } = userPoolCharacteristics
+  const limitPerUserInLP = publicPoolCharacteristics?.limitPerUserInLP ?? new BigNumber(0)
+  const amountTokenCommittedInLP = userPoolCharacteristics?.amountTokenCommittedInLP ?? new BigNumber(0)
   const { contract } = walletIfoData
   const [value, setValue] = useState('')
   const { account } = useWeb3React()
@@ -91,6 +91,7 @@ const ContributeModal: React.FC<Props> = ({
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
+        if (!account) return false
         try {
           const response = await raisingTokenContractReader.allowance(account, contract.address)
           const currentAllowance = new BigNumber(response.toString())
@@ -100,6 +101,7 @@ const ContributeModal: React.FC<Props> = ({
         }
       },
       onApprove: () => {
+        if (!account || !userPoolCharacteristics || !publicPoolCharacteristics) throw new Error('Pool data is unavailable')
         return callWithGasPrice(raisingTokenContractApprover, 'approve', [contract.address, MaxUint256], {
           gasPrice,
         })
@@ -113,6 +115,7 @@ const ContributeModal: React.FC<Props> = ({
         )
       },
       onConfirm: () => {
+        if (!account || !userPoolCharacteristics || !publicPoolCharacteristics) throw new Error('Pool data is unavailable')
         return callWithGasPrice(
           contract,
           'depositPool',
@@ -183,7 +186,7 @@ const ContributeModal: React.FC<Props> = ({
                 src={
                   ifo.currency.symbol === 'CAKE'
                     ? '/images/cake.svg'
-                    : `/images/farms/${currency.symbol.split(' ')[0].toLocaleLowerCase()}.svg`
+                    : `/images/farms/${(currency.symbol ?? '').split(' ')[0].toLocaleLowerCase()}.svg`
                 }
                 width={24}
                 height={24}

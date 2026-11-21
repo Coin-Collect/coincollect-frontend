@@ -15,9 +15,9 @@ const useNftOwn = (collectionAddress: string, tokenId: string, marketData?: Toke
   const { isInitialized: isProfileInitialized, profile } = useProfile()
   return useSWR(
     account && isProfileInitialized && collectionContract
-      ? ['nft', 'own', collectionAddress, tokenId, marketData?.currentSeller]
+      ? ['nft', 'own', account, collectionAddress, tokenId, marketData?.currentSeller] as const
       : null,
-    async () => {
+    async ([, , address]) => {
       const tokenOwner = await collectionContract.ownerOf(tokenId)
       let isOwn = false
       let nftIsProfilePic = false
@@ -26,13 +26,13 @@ const useNftOwn = (collectionAddress: string, tokenId: string, marketData?: Toke
       nftIsProfilePic = tokenId === profile?.tokenId?.toString() && collectionAddress === profile?.collectionAddress
       const nftIsOnSale = marketData ? marketData?.currentSeller !== NOT_ON_SALE_SELLER : false
       if (nftIsOnSale) {
-        isOwn = marketData?.currentSeller.toLowerCase() === account.toLowerCase()
+        isOwn = marketData?.currentSeller.toLowerCase() === address.toLowerCase()
         location = NftLocation.FORSALE
       } else if (nftIsProfilePic) {
         isOwn = true
         location = NftLocation.PROFILE
       } else {
-        isOwn = tokenOwner.toLowerCase() === account.toLowerCase()
+        isOwn = tokenOwner.toLowerCase() === address.toLowerCase()
         location = NftLocation.WALLET
       }
 

@@ -48,8 +48,8 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   const { t } = useTranslation()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
-  const [collectionOption, setCollectionOption] = useState(null)
-  const [task, setTask] = useState(null)
+  const [collectionOption, setCollectionOption] = useState<number | null>(null)
+  const [task, setTask] = useState<string | null>(null)
   const { account } = useWeb3React()
   const { allowance, tokenBalance, stakedBalance } = useFarmUser(pid)
   const smartNftPoolAddress = contractAddresses ? getAddress(contractAddresses) : null
@@ -74,7 +74,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
 
   }
 
-  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
+  const handleStake = async (selectedNftList: { collectionAddress: string; tokenId: string }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
       const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
       const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);
@@ -87,11 +87,11 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
           {t('Your NFTs have been staked in the pool')}
         </ToastDescriptionWithTx>
       );
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
+      if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }));
     }
   };
 
-  const handleUnstake = async (selectedNftList: { collectionAddress: string; tokenId: number }[]) => {
+  const handleUnstake = async (selectedNftList: { collectionAddress: string; tokenId: string }[]) => {
     const receipt = await fetchWithCatchTxError(() => {
       const tokenIds = selectedNftList.map((selectedNft) => selectedNft.tokenId);
       const collectionAddresses = selectedNftList.map((selectedNft) => selectedNft.collectionAddress);
@@ -104,7 +104,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
           {t('Your earnings have also been harvested to your wallet')}
         </ToastDescriptionWithTx>,
       )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
     }
   }
 
@@ -135,7 +135,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
   const nftContract = useErc721CollectionContract(nftAddress)
 
   const dispatch = useAppDispatch()
-  const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress)
+  const { onApprove } = useApproveNftFarm(nftContract, smartNftPoolAddress ?? undefined)
 
   const handleApprove = useCallback(async () => {
     const receipt = await fetchWithCatchTxError(() => {
@@ -143,7 +143,7 @@ const Staked: React.FunctionComponent<StackedActionProps> = ({
     })
     if (receipt?.status) {
       toastSuccess(t('Contract Enabled'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
+      if (account) dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
 
       if (smartNftPoolAddress) {
         // Open stake panel automatically

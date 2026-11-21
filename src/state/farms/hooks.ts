@@ -11,12 +11,12 @@ import { getBalanceAmount } from 'utils/formatBalance'
 import { fetchFarmsPublicDataAsync, fetchFarmUserDataAsync, nonArchivedFarms } from '.'
 import { DeserializedFarm, DeserializedFarmsState, DeserializedFarmUserData, SerializedFarm, State } from '../types'
 
-const deserializeFarmUserData = (farm: SerializedFarm): DeserializedFarmUserData => {
+const deserializeFarmUserData = (farm?: SerializedFarm): DeserializedFarmUserData => {
   return {
-    allowance: farm.userData ? new BigNumber(farm.userData.allowance) : BIG_ZERO,
-    tokenBalance: farm.userData ? new BigNumber(farm.userData.tokenBalance) : BIG_ZERO,
-    stakedBalance: farm.userData ? new BigNumber(farm.userData.stakedBalance) : BIG_ZERO,
-    earnings: farm.userData ? new BigNumber(farm.userData.earnings) : BIG_ZERO,
+    allowance: farm?.userData ? new BigNumber(farm.userData.allowance) : BIG_ZERO,
+    tokenBalance: farm?.userData ? new BigNumber(farm.userData.tokenBalance) : BIG_ZERO,
+    stakedBalance: farm?.userData ? new BigNumber(farm.userData.stakedBalance) : BIG_ZERO,
+    earnings: farm?.userData ? new BigNumber(farm.userData.earnings) : BIG_ZERO,
   }
 }
 
@@ -84,53 +84,32 @@ export const useFarms = (): DeserializedFarmsState => {
   }
 }
 
-export const useFarmsPoolLength = (): number => {
+export const useFarmsPoolLength = () => {
   return useSelector((state: State) => state.farms.poolLength)
 }
 
-export const useFarmFromPid = (pid: number): DeserializedFarm => {
+export const useFarmFromPid = (pid?: number) => {
   const farm = useSelector((state: State) => state.farms.data.find((f) => f.pid === pid))
-  return deserializeFarm(farm)
+  return farm && deserializeFarm(farm)
 }
 
-export const useFarmFromLpSymbol = (lpSymbol: string): DeserializedFarm => {
+const useFarmFromLpSymbol = (lpSymbol?: string) => {
   const farm = useSelector((state: State) => state.farms.data.find((f) => f.lpSymbol === lpSymbol))
-  return deserializeFarm(farm)
+  return farm && deserializeFarm(farm)
 }
 
-export const useFarmUser = (pid): DeserializedFarmUserData => {
-  const { userData } = useFarmFromPid(pid)
-  const { allowance, tokenBalance, stakedBalance, earnings } = userData
-  return {
-    allowance,
-    tokenBalance,
-    stakedBalance,
-    earnings,
-  }
+export const useFarmUser = (pid?: number): DeserializedFarmUserData => {
+  const farm = useSelector((state: State) => state.farms.data.find((item) => item.pid === pid))
+  return deserializeFarmUserData(farm)
 }
 
-// Return the base token price for a farm, from a given pid
-export const useBusdPriceFromPid = (pid: number): BigNumber => {
-  const farm = useFarmFromPid(pid)
-  return farm && new BigNumber(farm.tokenPriceBusd)
-}
-
-export const useLpTokenPrice = (symbol: string) => {
+export const useLpTokenPrice = (symbol?: string): BigNumber => {
   const farm = useFarmFromLpSymbol(symbol)
-  const farmTokenPriceInUsd = useBusdPriceFromPid(farm.pid)
-  let lpTokenPrice = BIG_ZERO
+  if (!farm || !farm.lpTotalSupply.gt(0) || !farm.lpTotalInQuoteToken.gt(0)) return BIG_ZERO
 
-  if (farm.lpTotalSupply.gt(0) && farm.lpTotalInQuoteToken.gt(0)) {
-    // Total value of base token in LP
-    const valueOfBaseTokenInFarm = farmTokenPriceInUsd.times(farm.tokenAmountTotal)
-    // Double it to get overall value in LP
-    const overallValueOfAllTokensInFarm = valueOfBaseTokenInFarm.times(2)
-    // Divide total value of all tokens, by the number of LP tokens
-    const totalLpTokens = getBalanceAmount(farm.lpTotalSupply)
-    lpTokenPrice = overallValueOfAllTokensInFarm.div(totalLpTokens)
-  }
-
-  return lpTokenPrice
+  const farmTokenPriceInUsd = new BigNumber(farm.tokenPriceBusd ?? NaN)
+  const totalLpTokens = getBalanceAmount(farm.lpTotalSupply)
+  return farmTokenPriceInUsd.times(farm.tokenAmountTotal).times(2).div(totalLpTokens)
 }
 
 /**
@@ -139,10 +118,10 @@ export const useLpTokenPrice = (symbol: string) => {
 export const usePriceCakeBusd = (): BigNumber => {
   const cakeBnbFarm = useFarmFromPid(1)
 
-  const cakePriceBusdAsString = cakeBnbFarm.tokenPriceBusd
+  const cakePriceBusdAsString = cakeBnbFarm?.tokenPriceBusd
 
   const cakePriceBusd = useMemo(() => {
-    return new BigNumber(cakePriceBusdAsString)
+    return new BigNumber(cakePriceBusdAsString ?? NaN)
   }, [cakePriceBusdAsString])
 
   return cakePriceBusd

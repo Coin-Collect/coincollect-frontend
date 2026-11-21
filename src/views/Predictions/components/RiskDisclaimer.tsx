@@ -40,7 +40,7 @@ const RiskDisclaimer: React.FC<RiskDisclaimerProps> = ({ onSuccess, onDismiss })
 
   const handleConfirm = () => {
     onSuccess()
-    onDismiss()
+    onDismiss?.()
   }
 
   return (

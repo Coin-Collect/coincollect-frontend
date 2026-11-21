@@ -23,16 +23,16 @@ export interface BetResponse {
   amount: string
   position: string
   claimed: boolean
-  claimedAt: string
-  claimedBlock: string
-  claimedHash: string
-  claimedBNB: string
-  claimedNetBNB: string
+  claimedAt: string | null
+  claimedBlock: string | null
+  claimedHash: string | null
+  claimedBNB: string | null
+  claimedNetBNB: string | null
   createdAt: string
   updatedAt: string
-  block: string
+  block?: string
   user?: UserResponse
-  round?: RoundResponse
+  round?: RoundResponse | null
 }
 
 export interface HistoricalBetResponse {
@@ -51,21 +51,21 @@ export interface HistoricalBetResponse {
 export interface RoundResponse {
   id: string
   epoch: string
-  position: string
-  failed: boolean
-  startAt: string
-  startBlock: string
-  startHash: string
-  lockAt: string
-  lockBlock: string
-  lockHash: string
-  lockPrice: string
-  lockRoundId: string
-  closeAt: string
-  closeBlock: string
-  closeHash: string
-  closePrice: string
-  closeRoundId: string
+  position: string | null
+  failed: boolean | null
+  startAt: string | null
+  startBlock: string | null
+  startHash: string | null
+  lockAt: string | null
+  lockBlock: string | null
+  lockHash: string | null
+  lockPrice: string | null
+  lockRoundId: string | null
+  closeAt: string | null
+  closeBlock: string | null
+  closeHash: string | null
+  closePrice: string | null
+  closeRoundId: string | null
   totalBets: string
   totalAmount: string
   bullBets: string

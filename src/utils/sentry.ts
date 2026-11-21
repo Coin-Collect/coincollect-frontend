@@ -38,7 +38,7 @@ export const logError = (error: Error | unknown) => {
     if (error instanceof Error) {
       Sentry.captureException(error)
     } else {
-      Sentry.captureException(assignError(error), error)
+      Sentry.captureException(assignError(error), { originalException: error })
     }
   }
   console.error(error)

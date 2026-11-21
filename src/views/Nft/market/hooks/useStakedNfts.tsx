@@ -56,9 +56,9 @@ export const useStakedNfts = (selectedPid: number) => {
 
       const rawTokens = await multicallPolygonv1(smartNftStakeAddress ? smartNftStakeABI : coinCollectNftStakeABI, calls)
 
-      const parsedTokenIds = rawTokens.map((token) => {
+      const parsedTokenIds: { tokenId: string; tokenAddress: string }[] = rawTokens.map((token) => {
         if (!smartNftStakeAddress) {
-          return { tokenId: new BigNumber(token).toJSON() };
+          return { tokenId: new BigNumber(token).toJSON(), tokenAddress: collectionAddress };
         } else {
           const [tokenAddress, tokenId] = token;
           return {
@@ -99,7 +99,6 @@ export const useStakedNfts = (selectedPid: number) => {
 
         let meta: any = null;
         try {
-          //@ts-ignore
           const tokenURI = rawTokenURIs[index][0];
           await new Promise(resolve => setTimeout(resolve, index * 300))
           meta = await axios(tokenURI.replace("ipfs://", `${IPFS_GATEWAY}/`));

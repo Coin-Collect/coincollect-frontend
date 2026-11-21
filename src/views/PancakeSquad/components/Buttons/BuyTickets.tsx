@@ -21,7 +21,7 @@ import { BuyButtonsEnum } from './types'
 
 type BuyTicketsProps = {
   t: ContextApi['t']
-  account: string
+  account?: string | null
   saleStatus: SaleStatusEnum
   userStatus: UserStatusEnum
   theme: DefaultTheme
@@ -52,8 +52,8 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
   pricePerTicket,
   startTimestamp,
 }) => {
-  const [txHashEnablingResult, setTxHashEnablingResult] = useState(null)
-  const [txHashBuyingResult, setTxHashBuyingResult] = useState(null)
+  const [txHashEnablingResult, setTxHashEnablingResult] = useState<string | null>(null)
+  const [txHashBuyingResult, setTxHashBuyingResult] = useState<string | null>(null)
   const { callWithGasPrice } = useCallWithGasPrice()
   const nftSaleContract = useNftSaleContract()
   const { toastSuccess } = useToast()
@@ -71,6 +71,7 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
   const { isApproving, isApproved, isConfirming, handleApprove, handleConfirm, hasApproveFailed, hasConfirmFailed } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
+        if (!account) return false
         try {
           const response = await cakeContract.allowance(account, nftSaleContract.address)
           const currentAllowance = ethersToBigNumber(response)
@@ -107,7 +108,7 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
       title={t('Confirm')}
       isLoading={isConfirming}
       headerBackground={theme.colors.gradients.cardHeader}
-      txHash={txHashBuyingResult}
+      txHash={txHashBuyingResult ?? undefined}
       loadingText={t('Please confirm your transaction in wallet.')}
       loadingButtonLabel={t('Confirming...')}
       successButtonLabel={t('Close')}
@@ -121,7 +122,7 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
       title={t('Enable')}
       isLoading={isApproving}
       headerBackground={theme.colors.gradients.cardHeader}
-      txHash={txHashEnablingResult}
+      txHash={txHashEnablingResult ?? undefined}
       loadingText={t('Please enable CAKE spending in your wallet')}
       loadingButtonLabel={t('Enabling...')}
       successButtonLabel={t('Close')}
@@ -146,11 +147,21 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
     />,
   )
 
-  useEffect(() => txHashEnablingResult && onPresentEnableModal(), [txHashEnablingResult])
-  useEffect(() => txHashBuyingResult && onPresentConfirmModal(), [txHashBuyingResult])
-  useEffect(() => hasApproveFailed && onDismissEnableModal(), [hasApproveFailed])
-  useEffect(() => hasConfirmFailed && onDismissBuyTicketsModal(), [hasConfirmFailed])
-  useEffect(() => isApproved && setIsUserEnabled && setIsUserEnabled(isApproved), [isApproved, setIsUserEnabled])
+  useEffect(() => {
+    if (txHashEnablingResult) onPresentEnableModal()
+  }, [txHashEnablingResult])
+  useEffect(() => {
+    if (txHashBuyingResult) onPresentConfirmModal()
+  }, [txHashBuyingResult])
+  useEffect(() => {
+    if (hasApproveFailed) onDismissEnableModal()
+  }, [hasApproveFailed])
+  useEffect(() => {
+    if (hasConfirmFailed) onDismissBuyTicketsModal()
+  }, [hasConfirmFailed])
+  useEffect(() => {
+    if (isApproved && setIsUserEnabled) setIsUserEnabled(isApproved)
+  }, [isApproved, setIsUserEnabled])
 
   const handleEnableClick = () => {
     onPresentEnableModal()

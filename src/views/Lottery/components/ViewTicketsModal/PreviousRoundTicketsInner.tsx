@@ -53,19 +53,19 @@ const TicketSkeleton = () => {
 }
 
 const PreviousRoundTicketsInner: React.FC<{ roundId: string }> = ({ roundId }) => {
-  const [lotteryInfo, setLotteryInfo] = useState<LotteryRound>(null)
-  const [allUserTickets, setAllUserTickets] = useState<LotteryTicket[]>(null)
+  const [lotteryInfo, setLotteryInfo] = useState<LotteryRound | null>(null)
+  const [allUserTickets, setAllUserTickets] = useState<LotteryTicket[] | null>(null)
   const [userWinningTickets, setUserWinningTickets] = useState<{
     allWinningTickets: LotteryTicket[]
     ticketsWithUnclaimedRewards: LotteryTicket[]
     isFetched: boolean
-    claimData: LotteryTicketClaimData
-  }>({ allWinningTickets: null, ticketsWithUnclaimedRewards: null, isFetched: false, claimData: null })
+    claimData: LotteryTicketClaimData | null
+  }>({ allWinningTickets: [], ticketsWithUnclaimedRewards: [], isFetched: false, claimData: null })
   const { t } = useTranslation()
   const { theme } = useTheme()
   const { account } = useWeb3React()
-  const { totalTickets } = useGetUserLotteryGraphRoundById(roundId)
-  const [onPresentClaimModal] = useModal(<ClaimPrizesModal roundsToClaim={[userWinningTickets.claimData]} />, false)
+  const { totalTickets } = useGetUserLotteryGraphRoundById(roundId) ?? {}
+  const [onPresentClaimModal] = useModal(<ClaimPrizesModal roundsToClaim={userWinningTickets.claimData ? [userWinningTickets.claimData] : []} />, false)
 
   const TooltipComponent = () => (
     <>
@@ -109,10 +109,11 @@ const PreviousRoundTicketsInner: React.FC<{ roundId: string }> = ({ roundId }) =
     }
 
     const fetchData = async () => {
+      if (!account) return
       const userTickets = await fetchUserTicketsForOneRound(account, roundId)
       const lotteryData = await fetchLottery(roundId)
       const processedLotteryData = processLotteryResponse(lotteryData)
-      const winningTickets = await getWinningTickets({
+      const winningTickets = processedLotteryData.finalNumber == null ? null : await getWinningTickets({
         roundId,
         userTickets,
         finalNumber: processedLotteryData.finalNumber.toString(),
@@ -120,8 +121,8 @@ const PreviousRoundTicketsInner: React.FC<{ roundId: string }> = ({ roundId }) =
 
       setUserWinningTickets({
         isFetched: true,
-        allWinningTickets: winningTickets?.allWinningTickets,
-        ticketsWithUnclaimedRewards: winningTickets?.ticketsWithUnclaimedRewards,
+        allWinningTickets: winningTickets?.allWinningTickets ?? [],
+        ticketsWithUnclaimedRewards: winningTickets?.ticketsWithUnclaimedRewards ?? [],
         claimData: winningTickets,
       })
       setLotteryInfo(processedLotteryData)
@@ -150,7 +151,7 @@ const PreviousRoundTicketsInner: React.FC<{ roundId: string }> = ({ roundId }) =
         </Button>
       )
     }
-    if (!userWinningTickets.allWinningTickets) {
+    if (userWinningTickets.allWinningTickets.length === 0) {
       return (
         <div ref={targetRef}>
           <Flex alignItems="center" justifyContent="center" mt="20px">

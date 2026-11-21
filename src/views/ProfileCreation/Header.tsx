@@ -1,10 +1,9 @@
-import { useContext } from 'react'
 import styled from 'styled-components'
 import { Breadcrumbs, Heading, Text, Link, Button } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { nftsBaseUrl } from 'views/Nft/market/constants'
 import { TranslateFunction } from 'contexts/Localization/types'
-import { ProfileCreationContext } from './contexts/ProfileCreationProvider'
+import useProfileCreation from './contexts/hook'
 
 const Wrapper = styled.div`
   border-bottom: 2px solid ${({ theme }) => theme.colors.textSubtle};
@@ -22,7 +21,7 @@ const steps = (t: TranslateFunction) => [
 
 const Header: React.FC = () => {
   const { t } = useTranslation()
-  const { currentStep } = useContext(ProfileCreationContext)
+  const { currentStep } = useProfileCreation()
 
   return (
     <Wrapper>

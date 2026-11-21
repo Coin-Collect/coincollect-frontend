@@ -47,7 +47,7 @@ const LocationIcons = {
 
 interface CollectibleRowProps {
   nft: NftToken
-  lowestPrice: string
+  lowestPrice?: string
   onSuccessSale: () => void
 }
 
@@ -76,7 +76,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice, onSuc
             </Text>
             <Flex justifySelf="flex-end" width="max-content">
               <BinanceIcon width="16px" height="16px" mr="4px" />
-              <Text small>{formatNumber(parseFloat(lowestPrice), 0, 5)}</Text>
+              <Text small>{formatNumber(parseFloat(lowestPrice ?? ''), 0, 5)}</Text>
             </Flex>
           </>
         )}
@@ -87,7 +87,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice, onSuc
             </Text>
             <Flex justifySelf="flex-end" width="max-content">
               <BinanceIcon width="16px" height="16px" mr="4px" />
-              <Text small>{nft.marketData.currentAskPrice}</Text>
+              <Text small>{nft.marketData?.currentAskPrice}</Text>
             </Flex>
           </>
         ) : (
@@ -103,7 +103,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice, onSuc
 interface CollectiblesByLocationProps {
   location: NftLocation
   nfts: NftToken[]
-  lowestPrice: string
+  lowestPrice?: string
   onSuccessSale: () => void
 }
 
@@ -145,13 +145,13 @@ const ManagePancakeBunniesCard: React.FC<ManagePancakeBunniesCardProps> = ({ bun
   const { nfts: userNfts, isLoading, refresh } = useNftsForAddress(account, profile, isProfileLoading)
 
   const bunniesInWallet = userNfts.filter(
-    (nft) => nft.attributes[0].value === bunnyId && nft.location === NftLocation.WALLET,
+    (nft) => nft.attributes?.[0]?.value === bunnyId && nft.location === NftLocation.WALLET,
   )
   const bunniesForSale = userNfts.filter(
-    (nft) => nft.attributes[0].value === bunnyId && nft.location === NftLocation.FORSALE,
+    (nft) => nft.attributes?.[0]?.value === bunnyId && nft.location === NftLocation.FORSALE,
   )
   const profilePicBunny = userNfts.filter(
-    (nft) => nft.attributes[0].value === bunnyId && nft.location === NftLocation.PROFILE,
+    (nft) => nft.attributes?.[0]?.value === bunnyId && nft.location === NftLocation.PROFILE,
   )
 
   const useHasNoBunnies =

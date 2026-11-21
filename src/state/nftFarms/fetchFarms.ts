@@ -1,4 +1,4 @@
-import { SerializedNftFarmConfig } from 'config/constants/types'
+import { Address, SerializedNftFarmConfig } from 'config/constants/types'
 import BigNumber from 'bignumber.js'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber'
 import { BIG_TEN, BIG_ZERO } from '../../utils/bigNumber'
@@ -7,34 +7,44 @@ import { fetchMasterChefData } from './fetchMasterChefData'
 import farmsConfig from 'config/constants/nftFarms'
 import { getAddress } from 'utils/addressHelpers'
 import { multicallPolygonv1, multicallPolygonv2 } from 'utils/multicall'
-import sousChefABI from 'config/abi/sousChef.json'
-import sousChefV2 from '../../config/abi/sousChefV2.json'
 import chunk from 'lodash/chunk'
 import { simplePolygonRpcProvider } from 'utils/providers'
-import { polygon } from 'wagmi/chains'
+import { getAddress as getViemAddress, parseAbi } from 'viem'
 import { getViemClients } from 'utils/viem'
 import { ChainId } from '@coincollect/sdk'
 import { CHAIN_ID } from 'config/constants/networks'
 import { POLYGON_BLOCK_TIME } from 'config'
 import fromPairs from 'lodash/fromPairs'
 
-const smartNftStakeFarms = farmsConfig.filter((f) => f.contractAddresses)
+const scheduleAbi = parseAbi([
+  'function startBlock() view returns (uint256)',
+  'function bonusEndBlock() view returns (uint256)',
+])
+const stakingLimitAbi = parseAbi([
+  'function hasUserLimit() view returns (bool)',
+  'function poolLimitPerUser() view returns (uint256)',
+  'function numberBlocksForUserLimit() view returns (uint256)',
+])
+
+const smartNftStakeFarms = farmsConfig.filter(
+  (farm): farm is SerializedNftFarmConfig & { contractAddresses: Address } => farm.contractAddresses !== undefined,
+)
 const startEndBlockCalls = smartNftStakeFarms.flatMap((nftFarmConfig) => {
   return [
     {
-      abi: sousChefABI,
-      address: getAddress(nftFarmConfig.contractAddresses),
+      abi: scheduleAbi,
+      address: getViemAddress(getAddress(nftFarmConfig.contractAddresses, ChainId.POLYGON)),
       functionName: 'startBlock',
     },
     {
-      abi: sousChefABI,
-      address: getAddress(nftFarmConfig.contractAddresses),
+      abi: scheduleAbi,
+      address: getViemAddress(getAddress(nftFarmConfig.contractAddresses, ChainId.POLYGON)),
       functionName: 'bonusEndBlock',
     },
   ]
 })
 
-export const fetchNftFarmsTimeLimits = async (chainId, provider) => {
+export const fetchNftFarmsTimeLimits = async (chainId: number, provider: typeof getViemClients) => {
   
   const client = provider({ chainId })
   const [block, startEndBlockRaw] = await Promise.all([
@@ -45,18 +55,7 @@ export const fetchNftFarmsTimeLimits = async (chainId, provider) => {
     }),
   ])
 
-  const startEndBlockResult = startEndBlockRaw.reduce((resultArray, item, index) => {
-    const chunkIndex = Math.floor(index / 2)
-
-    if (!resultArray[chunkIndex]) {
-      // eslint-disable-next-line no-param-reassign
-      resultArray[chunkIndex] = [] // start a new chunk
-    }
-
-    resultArray[chunkIndex].push(item)
-
-    return resultArray
-  }, [])
+  const startEndBlockResult = chunk(startEndBlockRaw, 2)
 
   const getTimestampFromBlock = (targetBlock: number) => {
     return Number(block.timestamp) + (targetBlock - Number(block.number)) * POLYGON_BLOCK_TIME
@@ -76,19 +75,21 @@ export const fetchNftPoolsStakingLimits = async ({
   poolsWithStakingLimit,
   chainId,
   provider,
-}): Promise<{ [key: string]: { stakingLimit: BigNumber; numberSecondsForUserLimit: number } }> => {
+}: { poolsWithStakingLimit: number[]; chainId: number; provider: typeof getViemClients }): Promise<{ [key: string]: { stakingLimit: BigNumber; numberSecondsForUserLimit: number } }> => {
   const validPools = smartNftStakeFarms
     .filter((p) => !p.isFinished)
     .filter((p) => !poolsWithStakingLimit.includes(p.pid))
 
+  if (validPools.length === 0) return {}
+
   // Get the staking limit for each valid pool
   const poolStakingCalls = validPools
     .map((validPool) => {
-      const contractAddress = getAddress(validPool.contractAddresses)
+      const contractAddress = getViemAddress(getAddress(validPool.contractAddresses, ChainId.POLYGON))
       return (['hasUserLimit', 'poolLimitPerUser', 'numberBlocksForUserLimit'] as const).map((method) => ({
         address: contractAddress,
         functionName: method,
-        abi: sousChefV2,
+        abi: stakingLimitAbi,
       } as const))
     })
     .flat()
@@ -100,14 +101,15 @@ export const fetchNftPoolsStakingLimits = async ({
     allowFailure: true,
   })
   
-  const chunkSize = poolStakingCalls.length / validPools.length
-  const poolStakingChunkedResultRaw = chunk(poolStakingResultRaw.flat(), chunkSize)
+  const poolStakingChunkedResultRaw = chunk(poolStakingResultRaw, 3)
   return fromPairs(
     poolStakingChunkedResultRaw.map((stakingLimitRaw, index) => {
-      const hasUserLimit = stakingLimitRaw[0]?.result as boolean
-      const stakingLimit =
-        hasUserLimit && stakingLimitRaw[1].result ? new BigNumber(stakingLimitRaw[1].result.toString()) : BIG_ZERO
-      const numberBlocksForUserLimit = stakingLimitRaw[2].result ? Number(stakingLimitRaw[2].result) : 0
+      const [enabled, limit, duration] = stakingLimitRaw
+      if (enabled.status !== 'success' || enabled.result !== true || limit.status !== 'success' || duration.status !== 'success') {
+        return [validPools[index].pid, { stakingLimit: BIG_ZERO, numberSecondsForUserLimit: 0 }]
+      }
+      const stakingLimit = typeof limit.result === 'bigint' ? new BigNumber(limit.result.toString()) : BIG_ZERO
+      const numberBlocksForUserLimit = typeof duration.result === 'bigint' ? Number(duration.result) : 0
       const numberSecondsForUserLimit = numberBlocksForUserLimit * POLYGON_BLOCK_TIME
       return [validPools[index].pid, { stakingLimit, numberSecondsForUserLimit }]
     }),

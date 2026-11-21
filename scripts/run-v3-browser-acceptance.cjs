@@ -1,6 +1,7 @@
 const { spawn, execFileSync } = require('node:child_process')
 const { once } = require('node:events')
 const { createServer } = require('node:net')
+const { createServer: createHttpServer } = require('node:http')
 const { setTimeout: delay } = require('node:timers/promises')
 const { randomBytes } = require('node:crypto')
 const { writeFileSync, mkdtempSync, openSync, closeSync, readFileSync, rmSync } = require('node:fs')
@@ -25,6 +26,7 @@ async function run() {
   const fork = await startLocalAnvil()
   let server
   let distDir
+  let sentry
   try {
     const logs = mkdtempSync(path.join(tmpdir(), 'coincollect-v3-browser-'))
     console.log('Isolated browser logs:', logs)
@@ -40,6 +42,34 @@ async function run() {
     const port = await localPort()
     const app = 'http://127.0.0.1:' + port
     const secret = randomBytes(32).toString('hex')
+    const sentryProbe = 'coincollect-browser-probe-' + randomBytes(12).toString('hex')
+    const sentryError = sentryProbe + '-expected'
+    const sentryRejection = sentryProbe + '-rejected'
+    const sentryEvents = []
+    sentry = createHttpServer(async (request, response) => {
+      response.setHeader('Access-Control-Allow-Origin', app)
+      response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+      response.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+      if (request.method === 'POST' && request.url.startsWith('/api/1/envelope/')) {
+        request.setEncoding('utf8')
+        let envelope = ''
+        for await (const chunk of request) {
+          if (envelope.length < 1_000_000) envelope += chunk
+        }
+        for (const event of [sentryError, sentryRejection]) {
+          if (envelope.includes(event)) sentryEvents.push(event)
+        }
+        response.writeHead(200).end('{}')
+      } else if (request.method === 'GET' && request.url === '/probe') {
+        response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(sentryEvents))
+      } else {
+        response.writeHead(request.method === 'OPTIONS' ? 204 : 404).end()
+      }
+    })
+    sentry.listen(0, '127.0.0.1')
+    await once(sentry, 'listening')
+    const sentryEndpoint = '127.0.0.1:' + sentry.address().port
+    const sentryDsn = 'http://test@' + sentryEndpoint + '/1'
     distDir = '.next-verification/v351-browser-' + port
     const env = {
       ...process.env,
@@ -52,8 +82,8 @@ async function run() {
       NEXT_PUBLIC_V3_LEDGER_CODE_HASH: fixture.runtimeHash,
       NEXT_TELEMETRY_DISABLED: '1',
       SENTRY_AUTH_TOKEN: '',
-      SENTRY_DSN: '',
-      NEXT_PUBLIC_SENTRY_DSN: '',
+      SENTRY_DSN: sentryDsn,
+      NEXT_PUBLIC_SENTRY_DSN: sentryDsn,
       COINCOLLECT_NEXT_DIST_DIR: distDir,
       COINCOLLECT_V3_AUTOMATION: 'isolated',
       COINCOLLECT_V3_AUTOMATION_FIRST_POOL: '1',
@@ -98,7 +128,14 @@ async function run() {
       await delay(300)
     }
     const test = spawn(process.execPath, ['scripts/verify-v3-browser.cjs', fixturePath], {
-      env: { ...env, V3_BROWSER_CRON_SECRET: secret, V3_BROWSER_APP: app, V3_BROWSER_RPC: fork.url },
+      env: {
+        ...env,
+        V3_BROWSER_CRON_SECRET: secret,
+        V3_BROWSER_APP: app,
+        V3_BROWSER_RPC: fork.url,
+        V3_BROWSER_SENTRY_PROBE: sentryProbe,
+        V3_BROWSER_SENTRY_URL: 'http://' + sentryEndpoint,
+      },
       stdio: 'inherit',
     })
     const [status] = await once(test, 'exit')
@@ -110,6 +147,7 @@ async function run() {
       await stopped
     }
     fork.close()
+    if (sentry?.listening) sentry.close()
     if (distDir) rmSync(distDir, { recursive: true, force: true, maxRetries: 3 })
   }
 }

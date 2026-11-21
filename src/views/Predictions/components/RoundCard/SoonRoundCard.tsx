@@ -16,7 +16,7 @@ interface SoonRoundCardProps {
 
 const SoonRoundCard: React.FC<SoonRoundCardProps> = ({ round }) => {
   const intervalSeconds = useGetIntervalSeconds()
-  const { secondsRemaining } = useCountdown(round.startTimestamp + intervalSeconds + ROUND_BUFFER)
+  const { secondsRemaining } = useCountdown(round.startTimestamp === null ? 0 : round.startTimestamp + intervalSeconds + ROUND_BUFFER)
   const countdown = formatRoundTime(secondsRemaining)
   const { t } = useTranslation()
   const { theme } = useTheme()

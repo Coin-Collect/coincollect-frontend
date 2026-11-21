@@ -34,7 +34,7 @@ const Farm: React.FunctionComponent<FarmProps> = ({label, pid, nftAddress}) => {
   const { stakedBalance } = useFarmUser(pid)
   const { t } = useTranslation()
 
-  const handleRenderFarming = (): JSX.Element => {
+  const handleRenderFarming = (): JSX.Element | null => {
     if (stakedBalance.toNumber()) {
       return (
         <Text color="secondary" fontSize="12px" bold textTransform="uppercase">

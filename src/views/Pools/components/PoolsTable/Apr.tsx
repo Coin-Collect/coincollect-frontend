@@ -49,7 +49,7 @@ const Apr: React.FC<AprProps> = ({ pool, showIcon, stakedBalance, performanceFee
       linkLabel={t('Get %symbol%', { symbol: stakingToken.symbol })}
       linkHref={apyModalLink}
       earningTokenSymbol={earningToken.symbol}
-      autoCompoundFrequency={vaultPoolConfig[vaultKey]?.autoCompoundFrequency ?? 0}
+      autoCompoundFrequency={vaultKey ? vaultPoolConfig[vaultKey].autoCompoundFrequency : 0}
       performanceFee={performanceFee}
     />,
   )

@@ -21,7 +21,7 @@ export const CurrencyLogo: React.FC<{
     if (checksummedAddress) {
       return `https://assets.trustwalletapp.com/blockchains/smartchain/assets/${checksummedAddress}/logo.png`
     }
-    return null
+    return undefined
   }, [address])
 
   return <StyledLogo size={size} src={src} alt="token logo" {...rest} />

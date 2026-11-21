@@ -62,6 +62,8 @@ const WalletStatsModal: React.FC<WalletStatsModalProps> = ({ account, onDismiss,
     onDismiss?.()
   }
 
+  if (!address) return null
+
   return (
     <ModalContainer minWidth="320px">
       <ModalHeader background={theme.colors.gradients.bubblegum}>
@@ -99,13 +101,13 @@ const WalletStatsModal: React.FC<WalletStatsModalProps> = ({ account, onDismiss,
               <Text as="h6" fontSize="12px" textTransform="uppercase" color="textSubtle" fontWeight="bold" mb="8px">
                 {t('Net Winnings')}
               </Text>
-              {isLoading ? (
+              {isLoading || !result ? (
                 <Skeleton />
               ) : (
                 <NetWinnings
-                  amount={result?.netBNB}
-                  textPrefix={result?.netBNB > 0 ? '+' : ''}
-                  textColor={result?.netBNB > 0 ? 'success' : 'failure'}
+                  amount={result.netBNB}
+                  textPrefix={result.netBNB > 0 ? '+' : ''}
+                  textColor={result.netBNB > 0 ? 'success' : 'failure'}
                   alignItems="flex-end"
                 />
               )}

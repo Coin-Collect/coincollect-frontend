@@ -36,7 +36,7 @@ const getTokenChartData = async (skip: number, address: string): Promise<{ data?
 }
 
 const fetchTokenChartData = async (address: string): Promise<{ data?: ChartEntry[]; error: boolean }> => {
-  return fetchChartData(getTokenChartData, address)
+  return fetchChartData((skip) => getTokenChartData(skip, address))
 }
 
 export default fetchTokenChartData

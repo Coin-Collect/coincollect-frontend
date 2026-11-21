@@ -25,7 +25,7 @@ import { getAddress, getVaultPoolAddress } from 'utils/addressHelpers'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { registerToken } from 'utils/wallet'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { convertSharesToCake, getPoolBlockInfo } from 'views/Pools/helpers'
+import { convertSharesToCake, getPoolBlockInfo, isVaultPool } from 'views/Pools/helpers'
 import { vaultPoolConfig } from 'config/constants/pools'
 import Harvest from './Harvest'
 import Stake from './Stake'
@@ -95,7 +95,7 @@ type MediaBreakpoints = {
 }
 
 interface ActionPanelProps {
-  account: string
+  account?: string | null
   pool: DeserializedPool
   userDataLoaded: boolean
   expanded: boolean
@@ -149,7 +149,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
   const { isXs, isSm, isMd } = breakpoints
   const showSubtitle = (isXs || isSm) && sousId === 0
 
-  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay } =
+  const { shouldShowBlockCountdown, blocksUntilStart, blocksRemaining, hasPoolStarted, blocksToDisplay, countdownBlock } =
     getPoolBlockInfo(pool, currentBlock)
 
   const isMetaMaskInScope = !!window.ethereum?.isMetaMask
@@ -212,10 +212,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
     profileRequirement && (profileRequirement.required || profileRequirement.thresholdPoints.gt(0)) ? (
       <RequirementSection mb="8px">
         <Text>{t('Requirement')}:</Text>
-        <Text textAlign={['right', , , , 'left']}>
+        <Text textAlign={['right', null, null, null, 'left']}>
           {profileRequirement.required && t('Pancake Profile')}{' '}
           {profileRequirement.required && profileRequirement.thresholdPoints.gt(0) && (
-            <Text as="span" display={['none', , , , 'inline']}>
+            <Text as="span" display={['none', null, null, null, 'inline']}>
               {' & '}
             </Text>
           )}
@@ -243,7 +243,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
       <Flex mb="8px" justifyContent="space-between">
         <Text>{hasPoolStarted ? t('Ends in') : t('Starts in')}:</Text>
         <Flex>
-          <Link external href={getPolygonScanLink(hasPoolStarted ? endBlock : startBlock, 'countdown')}>
+          <Link external href={countdownBlock === undefined ? undefined : getPolygonScanLink(countdownBlock, 'countdown')}>
             <Balance fontSize="16px" value={blocksToDisplay} decimals={0} color="primary" />
             <Text ml="4px" color="primary" textTransform="lowercase">
               {t('Blocks')}
@@ -344,7 +344,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ account, pool, userDataLoaded
               : `${t('Earn')} CAKE ${t('Stake').toLocaleLowerCase()} CAKE`}
           </Text>
         )}
-        {pool.vaultKey ? (
+        {isVaultPool(pool) ? (
           <AutoHarvest {...pool} userDataLoaded={userDataLoaded} />
         ) : (
           <Harvest {...pool} userDataLoaded={userDataLoaded} />

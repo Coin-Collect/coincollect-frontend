@@ -6,17 +6,13 @@ import random from 'lodash/random'
  */
 const generateTicketNumbers = (
   numberOfTickets: number,
-  userCurrentTickets?: LotteryTicket[],
+  userCurrentTickets?: Pick<LotteryTicket, 'number'>[] | null,
   minNumber = 1000000,
   maxNumber = 1999999,
 ): number[] => {
   // Populate array with existing tickets (if they have them) to ensure no duplicates when generating new numbers
   const existingTicketNumbers =
-    userCurrentTickets?.length > 0
-      ? userCurrentTickets.map((ticket) => {
-          return parseInt(ticket?.number)
-        })
-      : []
+    userCurrentTickets?.map((ticket) => parseInt(ticket.number, 10)) ?? []
   const generatedTicketNumbers = [...existingTicketNumbers]
 
   for (let count = 0; count < numberOfTickets; count++) {
@@ -30,7 +26,7 @@ const generateTicketNumbers = (
 
   // Filter out the users' existing tickets
   const ticketsToBuy =
-    userCurrentTickets?.length > 0
+    existingTicketNumbers.length > 0
       ? generatedTicketNumbers.filter((ticketNumber) => {
           return !existingTicketNumbers.includes(ticketNumber)
         })

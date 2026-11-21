@@ -13,7 +13,7 @@ export const RoundedImage = styled(Image)`
   overflow: hidden;
 `
 
-const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account: string }> = ({ claimId, claim, claimData, account }) => {
+const ClaimCard: React.FC<{ claimId: number; claim: any; claimData: any; account: string | null | undefined }> = ({ claimId, claim, claimData, account }) => {
   const { t } = useTranslation()
 
   return (

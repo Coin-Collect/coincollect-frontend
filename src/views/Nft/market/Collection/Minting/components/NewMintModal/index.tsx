@@ -55,10 +55,15 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
   const { t } = useTranslation()
   const { account, chainId } = useWeb3React()
   const { lastMintedNft, isLoading, error, isValidating } = useLastMintedNft(account, collectionAddress, chainId)
-  const isNftReady = !isLoading && !error && lastMintedNft && lastMintedNft.length > 0
-
-  const nft = { 'tokenId': 12, 'collectionAddress': "0xA", 'name': isNftReady ? lastMintedNft[0].name : null, 'collectionName': "My Name", 'image': { 'thumbnail': isNftReady ? lastMintedNft[0].image : null } }
-
+  const minted = lastMintedNft?.[0]
+  const nft = minted && !error ? {
+    tokenId: minted.tokenId,
+    collectionAddress,
+    name: minted.name,
+    collectionName: '',
+    description: minted.description,
+    image: { thumbnail: minted.image, original: minted.image },
+  } : null
 
   useEffect(() => {
     delay(showConfetti, 100)
@@ -81,7 +86,7 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
           <Flex alignItems="center" justifyContent="center">
             <Skeleton height={200} width={200} />
           </Flex>
-        ) : (
+        ) : nft ? (
           <>
             <Flex alignItems="center" justifyContent="center">
               <Text fontSize="14px" color="textSubtle">
@@ -101,7 +106,7 @@ const NewMintModal: React.FC<NewMintModalProps> = ({ onDismiss, collectionAddres
               />
             </Flex>
           </>
-        )}
+        ) : null}
 
 
 

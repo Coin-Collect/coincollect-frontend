@@ -9,7 +9,7 @@ type SummaryType = 'won' | 'lost' | 'entered'
 interface SummaryRowProps {
   type: SummaryType
   summary: any
-  bnbBusdPrice: Price
+  bnbBusdPrice?: Price
 }
 
 const summaryTypeColors = {

@@ -7,13 +7,15 @@ import { getAddress } from 'utils/addressHelpers'
 
 const useHarvestFarm = (farmPid: number) => {
   const farm = useFarmFromPid(farmPid)
-  const isSmartNftPool = farm.contractAddresses ? getAddress(farm.contractAddresses) : null
+  const isSmartNftPool = farm?.contractAddresses ? getAddress(farm.contractAddresses) : null
   const masterChefContract = useNftFarmActionContract(farmPid, Boolean(isSmartNftPool))
   const gasPrice = useGasPrice()
+  const hasPool = Boolean(farm)
 
   const handleHarvest = useCallback(async () => {
+    if (!hasPool || !masterChefContract) throw new Error('NFT pool or wallet is unavailable.')
     return harvestNftFarm(masterChefContract, farmPid, gasPrice, isSmartNftPool)
-  }, [farmPid, masterChefContract, gasPrice, isSmartNftPool])
+  }, [hasPool, farmPid, masterChefContract, gasPrice, isSmartNftPool])
 
   return { onReward: handleHarvest }
 }

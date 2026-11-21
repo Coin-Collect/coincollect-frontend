@@ -33,8 +33,8 @@ const SetPriceStage: React.FC<SetPriceStageProps> = ({
   continueToNextStage,
 }) => {
   const { t } = useTranslation()
-  const inputRef = useRef<HTMLInputElement>()
-  const adjustedPriceIsTheSame = variant === 'adjust' && parseFloat(currentPrice) === parseFloat(price)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const adjustedPriceIsTheSame = variant === 'adjust' && parseFloat(currentPrice ?? '') === parseFloat(price)
   const priceIsValid = !price || Number.isNaN(parseFloat(price)) || parseFloat(price) <= 0
 
   const { creatorFee = '', tradingFee = '' } = useGetCollection(nftToSell.collectionAddress) || {}

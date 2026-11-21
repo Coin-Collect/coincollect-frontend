@@ -42,7 +42,7 @@ const fetchTopTokens = async (timestamp24hAgo: number): Promise<string[]> => {
  * Fetch top addresses by volume
  */
 const useTopTokenAddresses = (): string[] => {
-  const [topTokenAddresses, setTopTokenAddresses] = useState([])
+  const [topTokenAddresses, setTopTokenAddresses] = useState<string[]>([])
   const [timestamp24hAgo] = getDeltaTimestamps()
 
   useEffect(() => {

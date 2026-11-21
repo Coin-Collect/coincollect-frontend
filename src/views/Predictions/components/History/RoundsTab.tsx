@@ -3,7 +3,7 @@ import orderBy from 'lodash/orderBy'
 import { Box, Button, Flex, Heading, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { useAppDispatch } from 'state'
-import { Bet } from 'state/types'
+import { BetWithRound } from 'state/types'
 import { fetchNodeHistory } from 'state/predictions'
 import { useGetCurrentHistoryPage, useGetHasHistoryLoaded, useGetIsFetchingHistory } from 'state/predictions/hooks'
 import HistoricalBet from './HistoricalBet'
@@ -11,7 +11,7 @@ import V1ClaimCheck from '../v1/V1ClaimCheck'
 
 interface RoundsTabProps {
   hasBetHistory: boolean
-  bets: Bet[]
+  bets: BetWithRound[]
 }
 
 const RoundsTab: React.FC<RoundsTabProps> = ({ hasBetHistory, bets }) => {
@@ -23,7 +23,7 @@ const RoundsTab: React.FC<RoundsTabProps> = ({ hasBetHistory, bets }) => {
   const isFetchingHistory = useGetIsFetchingHistory()
 
   const handleClick = () => {
-    dispatch(fetchNodeHistory({ account, page: currentHistoryPage + 1 }))
+    if (account) dispatch(fetchNodeHistory({ account, page: currentHistoryPage + 1 }))
   }
 
   return hasBetHistory ? (

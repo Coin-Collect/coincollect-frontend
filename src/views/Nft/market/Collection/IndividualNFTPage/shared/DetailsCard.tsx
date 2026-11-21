@@ -9,7 +9,7 @@ import ExpandableCard from './ExpandableCard'
 
 interface DetailsCardProps {
   contractAddress: string
-  ipfsJson: string
+  ipfsJson?: string
   count?: number
   rarity?: number
 }

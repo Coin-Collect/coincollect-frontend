@@ -20,7 +20,7 @@ import useWeb3React from 'hooks/useWeb3React'
 import { useAppDispatch } from 'state'
 import { REWARD_RATE } from 'state/predictions/config'
 import { fetchNodeHistory, markAsCollected } from 'state/predictions'
-import { Bet } from 'state/types'
+import { BetWithRound } from 'state/types'
 import { useTranslation } from 'contexts/Localization'
 import { useBNBBusdPrice } from 'hooks/useBUSDPrice'
 import useToast from 'hooks/useToast'
@@ -60,7 +60,7 @@ const calculateClaimableRounds = (history): ClaimableRounds => {
   }
 
   return history.reduce(
-    (accum: ClaimableRounds, bet: Bet) => {
+    (accum: ClaimableRounds, bet: BetWithRound) => {
       if (!bet.claimed && bet.position === bet.round.position) {
         const betPayout = getPayout(bet, REWARD_RATE)
         return {
@@ -94,7 +94,7 @@ const CollectRoundWinningsModal: React.FC<CollectRoundWinningsModalProps> = ({ o
   useEffect(() => {
     // Fetch history if they have not opened the history pane yet
     if (history.length === 0) {
-      dispatch(fetchNodeHistory({ account }))
+      if (account) dispatch(fetchNodeHistory({ account }))
     }
   }, [account, history, dispatch])
 
@@ -122,7 +122,7 @@ const CollectRoundWinningsModal: React.FC<CollectRoundWinningsModalProps> = ({ o
           {t('Your prizes have been sent to your wallet')}
         </ToastDescriptionWithTx>,
       )
-      onDismiss()
+      onDismiss?.()
     }
   }
 

@@ -23,7 +23,8 @@ export const getBalanceNumber = (balance: BigNumber, decimals = 18) => {
 }
 
 export const getFullDisplayBalance = (balance: BigNumber, decimals = 18, displayDecimals?: number) => {
-  return getBalanceAmount(balance, decimals).toFixed(displayDecimals)
+  const amount = getBalanceAmount(balance, decimals)
+  return displayDecimals === undefined ? amount.toFixed() : amount.toFixed(displayDecimals)
 }
 
 export const formatNumber = (number: number, minPrecision = 2, maxPrecision = 2) => {

@@ -20,7 +20,7 @@ import {
   fetchCakePoolPublicDataAsync,
   fetchCakePoolUserDataAsync,
 } from '.'
-import { State, DeserializedPool, VaultKey } from '../types'
+import { State, DeserializedPool, DeserializedVaultPool, VaultKey } from '../types'
 import { transformPool } from './helpers'
 import { fetchFarmsPublicDataAsync, nonArchivedFarms } from '../farms'
 import { useCurrentBlock } from '../block/hooks'
@@ -230,8 +230,7 @@ export const useIfoWithApr = () => {
   const { pool: poolZero } = usePool(0)
 
   const ifoPoolWithApr = useMemo(() => {
-    const ifoPool = { ...poolZero }
-    ifoPool.vaultKey = VaultKey.IfoPool
+    const ifoPool: DeserializedVaultPool = { ...poolZero, vaultKey: VaultKey.IfoPool }
     ifoPool.apr = getAprData(ifoPool, performanceFeeAsDecimal).apr
     ifoPool.rawApr = poolZero.apr
     return ifoPool

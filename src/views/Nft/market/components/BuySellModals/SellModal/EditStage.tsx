@@ -7,7 +7,7 @@ import { Divider, HorizontalDivider, RoundedImage } from '../shared/styles'
 
 interface EditStageProps {
   nftToSell: NftToken
-  lowestPrice: number
+  lowestPrice?: number
   continueToAdjustPriceStage: () => void
   continueToRemoveFromMarketStage: () => void
 }
@@ -22,7 +22,7 @@ const EditStage: React.FC<EditStageProps> = ({
   const { t } = useTranslation()
   const itemPageUrlId =
     nftToSell.collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase()
-      ? nftToSell.attributes[0].value
+      ? nftToSell.attributes?.[0]?.value ?? nftToSell.tokenId
       : nftToSell.tokenId
 
   return (
@@ -51,7 +51,7 @@ const EditStage: React.FC<EditStageProps> = ({
           </Text>
           <Flex alignItems="center" justifyContent="flex-end">
             <BinanceIcon width={16} height={16} mr="4px" />
-            <Text small>{nftToSell.marketData.currentAskPrice}</Text>
+            <Text small>{nftToSell.marketData?.currentAskPrice}</Text>
           </Flex>
         </Grid>
       </Flex>

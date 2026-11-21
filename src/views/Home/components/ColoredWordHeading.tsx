@@ -3,7 +3,7 @@ import useTheme from 'hooks/useTheme'
 
 interface HeadingProps extends TextProps {
   text: string
-  firstColor?: keyof Colors
+  firstColor?: Exclude<keyof Colors, 'gradients'>
 }
 
 const ColoredWordHeading: React.FC<HeadingProps> = ({ text, firstColor, mb = '24px', ...props }) => {
@@ -11,7 +11,7 @@ const ColoredWordHeading: React.FC<HeadingProps> = ({ text, firstColor, mb = '24
   const split = text.split(' ')
   const firstWord = split[0]
   const remainingWords = split.slice(1).join(' ')
-  const displayedColor = (theme.colors[firstColor] as string) ?? theme.colors.secondary
+  const displayedColor = theme.colors[firstColor ?? 'secondary']
 
   return (
     <Heading scale="xl" mb={mb} {...props}>

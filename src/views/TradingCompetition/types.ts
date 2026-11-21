@@ -2,9 +2,9 @@ import { ReactText } from 'react'
 import { Profile } from 'state/types'
 
 export interface CompetitionProps extends UserRewardsProps {
-  userTradingInformation?: UserTradingInformationProps
-  currentPhase?: CompetitionPhaseProps
-  account?: string
+  userTradingInformation: UserTradingInformationProps
+  currentPhase: CompetitionPhaseProps
+  account?: string | null
   profile?: Profile
   isCompetitionLive?: boolean
   hasCompetitionEnded?: boolean
@@ -18,34 +18,34 @@ export interface CompetitionProps extends UserRewardsProps {
 }
 
 export interface CompetitionStepProps {
-  index?: number
-  text?: string
+  index: number
+  text: string
 }
 
 export interface CompetitionPhaseProps {
-  state?: string
-  ends?: number | null
-  step?: CompetitionStepProps
+  state: string
+  ends: number | null
+  step: CompetitionStepProps
 }
 
 export interface CountdownProps {
   steps?: Array<{ text: string }>
-  activeStepIndex?: number
+  activeStepIndex: number
   stepText?: string
   index?: number
 }
 
-interface LeaderboardData {
+export interface LeaderboardData {
   total?: number
   volume?: number
   data?: LeaderboardDataItem[]
 }
 
 export interface LeaderboardDataItem {
-  rank?: number
-  address?: string
-  volume?: number
-  teamId?: number
+  rank: number
+  address: string
+  volume: number
+  teamId: number
 }
 
 export interface RibbonProps {
@@ -66,15 +66,15 @@ export interface SectionProps {
 }
 
 export interface TeamLeaderboardProps {
-  teamId?: number
-  leaderboardData?: LeaderboardData
+  teamId: number
+  leaderboardData: LeaderboardData | null
 }
 
 export interface TeamRanksProps {
-  team1LeaderboardInformation?: TeamLeaderboardProps
-  team2LeaderboardInformation?: TeamLeaderboardProps
-  team3LeaderboardInformation?: TeamLeaderboardProps
-  globalLeaderboardInformation?: LeaderboardData
+  team1LeaderboardInformation: TeamLeaderboardProps
+  team2LeaderboardInformation: TeamLeaderboardProps
+  team3LeaderboardInformation: TeamLeaderboardProps
+  globalLeaderboardInformation: LeaderboardData | null
   isGlobalLeaderboardDataComplete?: boolean
 }
 
@@ -87,15 +87,15 @@ export interface UserRewardsProps {
 }
 
 export interface UserTradingInformationProps {
-  hasRegistered?: boolean
-  hasUserClaimed?: boolean
-  userRewardGroup?: string
-  userCakeRewards?: string
-  userLazioRewards?: string
-  userPortoRewards?: string
-  userSantosRewards?: string
-  userPointReward?: string
-  canClaimNFT?: boolean
+  hasRegistered: boolean
+  hasUserClaimed: boolean
+  userRewardGroup: string
+  userCakeRewards: string
+  userLazioRewards: string
+  userPortoRewards: string
+  userSantosRewards: string
+  userPointReward: string
+  canClaimNFT: boolean
 }
 
 export interface YourScoreProps extends CompetitionProps {

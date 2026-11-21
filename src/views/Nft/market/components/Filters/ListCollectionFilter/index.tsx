@@ -30,8 +30,8 @@ export const ListCollectionFilter: React.FC = () => {
   const [query, setQuery] = useState('')
   const [orderState, setOrderState] = useState<ListOrderState>({ orderKey: 'label', orderDir: 'asc' })
   const { data: collections } = useGetCollections()
-  const wrapperRef = useRef(null)
-  const menuRef = useRef(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const dispatch = useAppDispatch()
 
   const { orderKey, orderDir } = orderState
@@ -89,6 +89,7 @@ export const ListCollectionFilter: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = ({ target }: Event) => {
       if (
+        target instanceof Node &&
         wrapperRef.current &&
         menuRef.current &&
         !menuRef.current.contains(target) &&

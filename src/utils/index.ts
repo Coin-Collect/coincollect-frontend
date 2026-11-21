@@ -3,7 +3,7 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import type { Provider } from '@ethersproject/providers'
 import { getAddress } from '@ethersproject/address'
 import { AddressZero } from '@ethersproject/constants'
-import { JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
+import { JsonRpcSigner, JsonRpcProvider } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import IPancakeRouter02ABI from 'config/abi/IPancakeRouter02.json'
 import { IPancakeRouter02 } from 'config/abi/types/IPancakeRouter02'
@@ -49,7 +49,7 @@ export function getBscScanLink(
 export function getPolygonScanLink(
   data: string | number,
   type: 'transaction' | 'token' | 'address' | 'block' | 'countdown',
-  chainId: string = process.env.NEXT_PUBLIC_CHAIN_ID,
+  chainId: string | number = process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON,
 ): string {
   switch (type) {
     case 'transaction': {
@@ -81,7 +81,7 @@ export function getBscScanLinkForNft(
 export function getPolygonScanLinkForNft(
   collectionAddress: string,
   tokenId: string,
-  chainId: string = process.env.NEXT_PUBLIC_CHAIN_ID,
+  chainId: string | number = process.env.NEXT_PUBLIC_CHAIN_ID ?? ChainId.POLYGON,
 ): string {
   return `${BASE_POLYGON_SCAN_URLS[chainId]}/token/${collectionAddress}?a=${tokenId}`
 }
@@ -107,12 +107,12 @@ export function calculateSlippageAmount(value: CurrencyAmount, slippage: number)
 }
 
 // account is not optional
-export function getSigner(library: Web3Provider, account: string): JsonRpcSigner {
+export function getSigner(library: JsonRpcProvider, account: string): JsonRpcSigner {
   return library.getSigner(account).connectUnchecked()
 }
 
 // account is optional
-export function getProviderOrSigner(library: Web3Provider, account?: string): Web3Provider | JsonRpcSigner {
+export function getProviderOrSigner(library: JsonRpcProvider, account?: string | null): JsonRpcProvider | JsonRpcSigner {
   return account ? getSigner(library, account) : library
 }
 
@@ -126,7 +126,7 @@ export function getContract(address: string, ABI: any, signer?: Signer | Provide
 }
 
 // account is optional
-export function getRouterContract(_: number, library: Web3Provider, account?: string) {
+export function getRouterContract(_: number, library: JsonRpcProvider, account?: string | null) {
   return getContract(ROUTER_ADDRESS, IPancakeRouter02ABI, getProviderOrSigner(library, account)) as IPancakeRouter02
 }
 

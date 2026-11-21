@@ -21,7 +21,7 @@ enum ChartView {
 
 interface ChartCardProps {
   variant: 'pool' | 'token'
-  chartData: ChartEntry[]
+  chartData?: ChartEntry[]
   tokenData?: TokenData
   tokenPriceData?: PriceChartEntry[]
 }
@@ -84,17 +84,19 @@ const ChartCard: React.FC<ChartCardProps> = ({ variant, chartData, tokenData, to
   return (
     <Card>
       <TabToggleGroup>
-        <TabToggle isActive={view === ChartView.VOLUME} onClick={() => setView(ChartView.VOLUME)}>
+        {[
+        <TabToggle key="volume" isActive={view === ChartView.VOLUME} onClick={() => setView(ChartView.VOLUME)}>
           <Text>{t('Volume')}</Text>
-        </TabToggle>
-        <TabToggle isActive={view === ChartView.LIQUIDITY} onClick={() => setView(ChartView.LIQUIDITY)}>
+        </TabToggle>,
+        <TabToggle key="liquidity" isActive={view === ChartView.LIQUIDITY} onClick={() => setView(ChartView.LIQUIDITY)}>
           <Text>{t('Liquidity')}</Text>
-        </TabToggle>
-        {variant === 'token' && (
-          <TabToggle isActive={view === ChartView.PRICE} onClick={() => setView(ChartView.PRICE)}>
-            <Text>{t('Price')}</Text>
-          </TabToggle>
-        )}
+        </TabToggle>,
+        ...(variant === 'token'
+          ? [<TabToggle key="price" isActive={view === ChartView.PRICE} onClick={() => setView(ChartView.PRICE)}>
+              <Text>{t('Price')}</Text>
+            </TabToggle>]
+          : []),
+        ]}
       </TabToggleGroup>
 
       <Flex flexDirection="column" px="24px" pt="24px">

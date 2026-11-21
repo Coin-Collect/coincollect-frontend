@@ -7,7 +7,7 @@ import { ContextApi } from 'contexts/Localization/types'
 import { useTranslation } from 'contexts/Localization'
 import { useBNBBusdPrice } from 'hooks/useBUSDPrice'
 import { multiplyPriceByAmount } from 'utils/prices'
-import { NftToken } from 'state/nftMarket/types'
+import { hasNftListing, NftListing, NftToken } from 'state/nftMarket/types'
 import BuyModal from 'views/Nft/market/components/BuySellModals/BuyModal'
 import SellModal from 'views/Nft/market/components/BuySellModals/SellModal'
 import ProfileCell from 'views/Nft/market/components/ProfileCell'
@@ -25,9 +25,9 @@ const OwnersTableRow = styled(Grid)`
 
 interface RowProps {
   t: ContextApi['t']
-  nft: NftToken
-  bnbBusdPrice: Price
-  account: string
+  nft: NftListing
+  bnbBusdPrice?: Price
+  account?: string | null
   onSuccessSale: () => void
 }
 
@@ -86,7 +86,7 @@ const ForSaleTableRow: React.FC<ForSaleTableRowsProps> = ({ nftsForSale, onSucce
   const bnbBusdPrice = useBNBBusdPrice()
   return (
     <OwnersTableRow>
-      {nftsForSale.map((nft) => (
+      {nftsForSale.filter(hasNftListing).map((nft) => (
         <Row
           key={nft.tokenId}
           t={t}

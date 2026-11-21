@@ -13,24 +13,27 @@ import GridPlaceholder from '../components/GridPlaceholder'
  * @returns Array of NftToken
  */
 const useNewestNfts = () => {
-  const [newestNfts, setNewestNfts] = useState<NftToken[]>(null)
+  const [newestNfts, setNewestNfts] = useState<NftToken[] | null>(null)
 
   useEffect(() => {
     const fetchNewestNfts = async () => {
       const nftsFromSg = await getLatestListedNfts(16)
       const nftsFromApi = await getNftsFromDifferentCollectionsApi(
-        nftsFromSg.map((nft) => ({ collectionAddress: nft.collection.id, tokenId: nft.tokenId })),
+        nftsFromSg.flatMap((nft) => nft.collection ? [{ collectionAddress: nft.collection.id, tokenId: nft.tokenId }] : []),
       )
 
       const nfts = nftsFromSg
         .map((nftFromSg) => {
-          const foundNftFromApi = nftsFromApi.find((nftFromApi) => nftFromApi.tokenId === nftFromSg.tokenId)
+          const foundNftFromApi = nftsFromApi.find(
+            (nft) => nft.tokenId === nftFromSg.tokenId &&
+              nft.collectionAddress.toLowerCase() === nftFromSg.collection?.id.toLowerCase(),
+          )
           if (foundNftFromApi) {
             return { ...foundNftFromApi, marketData: nftFromSg }
           }
           return null
         })
-        .filter(Boolean)
+        .filter((nft) => nft !== null)
       setNewestNfts(nfts)
     }
     fetchNewestNfts()

@@ -43,7 +43,7 @@ describe('retry', () => {
     await expect(promise).resolves.toEqual('abc')
   })
 
-  async function checkTime(fn: () => Promise<any>, min: number, max: number) {
+  async function checkTime(fn: () => Promise<unknown>, min: number, max: number) {
     const time = new Date().getTime()
     await fn()
     const diff = new Date().getTime() - time
@@ -52,7 +52,7 @@ describe('retry', () => {
   }
 
   it('waits random amount of time between min and max', async () => {
-    const promises = []
+    const promises: Promise<void>[] = []
     for (let i = 0; i < 10; i++) {
       promises.push(
         checkTime(

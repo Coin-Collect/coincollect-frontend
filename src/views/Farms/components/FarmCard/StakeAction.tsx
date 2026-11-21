@@ -19,10 +19,10 @@ import useUnstakeFarms from '../../hooks/useUnstakeFarms'
 import useStakeFarms from '../../hooks/useStakeFarms'
 
 interface FarmCardActionsProps {
-  stakedBalance?: BigNumber
-  tokenBalance?: BigNumber
+  stakedBalance: BigNumber
+  tokenBalance: BigNumber
   tokenName?: string
-  pid?: number
+  pid: number
   multiplier?: string
   apr?: number
   displayApr?: string
@@ -67,6 +67,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   const { fetchWithCatchTxError } = useCatchTxError()
 
   const handleStake = async (amount: string) => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       return onStake(amount)
     })
@@ -82,6 +83,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
   }
 
   const handleUnstake = async (amount: string) => {
+    if (!account) return
     const receipt = await fetchWithCatchTxError(() => {
       return onUnstake(amount)
     })

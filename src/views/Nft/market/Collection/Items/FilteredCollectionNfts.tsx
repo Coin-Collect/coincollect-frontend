@@ -44,7 +44,7 @@ const FilteredCollectionNfts: React.FC<FilteredCollectionNftsProps> = ({ collect
               ? parseFloat(nft.marketData?.currentAskPrice)
               : 0
             if (currentAskPriceAsNumber > 0) {
-              return parseFloat(nft.marketData.currentAskPrice)
+              return currentAskPriceAsNumber
             }
             return selectedOrder.direction === 'asc' ? Infinity : -Infinity
           }
@@ -78,7 +78,7 @@ const FilteredCollectionNfts: React.FC<FilteredCollectionNftsProps> = ({ collect
             alignItems="start"
           >
             {nftsToShow.map((nft) => {
-              const currentAskPriceAsNumber = nft.marketData && parseFloat(nft.marketData.currentAskPrice)
+              const currentAskPriceAsNumber = Number(nft.marketData?.currentAskPrice)
 
               return (
                 <CollectibleLinkCard

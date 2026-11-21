@@ -38,12 +38,12 @@ const Mint: React.FC = () => {
 
   useEffect(() => {
     const getStarterNfts = async () => {
-      const { data: allPbTokens } = await getNftsFromCollectionApi(pancakeBunniesAddress)
-      const nfts = STARTER_NFT_BUNNY_IDS.map((bunnyId) => {
+      const allPbTokens = (await getNftsFromCollectionApi(pancakeBunniesAddress))?.data
+      const nfts = STARTER_NFT_BUNNY_IDS.flatMap((bunnyId) => {
         if (allPbTokens && allPbTokens[bunnyId]) {
           return { ...allPbTokens[bunnyId], bunnyId }
         }
-        return undefined
+        return []
       })
       setStarterNfts(nfts)
     }
@@ -55,6 +55,7 @@ const Mint: React.FC = () => {
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
+        if (!account) return false
         // TODO: Move this to a helper, this check will be probably be used many times
         try {
           const response = await cakeContract.allowance(account, bunnyFactoryContract.address)
@@ -103,13 +104,14 @@ const Mint: React.FC = () => {
             {t('Cost: %num% CAKE', { num: formatUnits(MINT_COST) })}
           </Text>
           {starterNfts.map((nft) => {
+            if (nft.bunnyId === undefined) return null
             const handleChange = (value: string) => setSelectedBunnyId(value)
 
             return (
               <SelectionCard
                 key={nft?.name}
                 name="mintStarter"
-                value={nft?.bunnyId}
+                value={nft.bunnyId}
                 image={nft?.image.thumbnail}
                 isChecked={selectedBunnyId === nft?.bunnyId}
                 onChange={handleChange}

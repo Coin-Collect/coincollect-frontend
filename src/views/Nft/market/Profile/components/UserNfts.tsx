@@ -74,11 +74,11 @@ const UserNfts: React.FC<UserNftsProps> = ({
   const [clickedSellNft, setClickedSellNft] = useState<SellNftProps>({ nft: null, location: null, variant: null })
   const previousStakeAmount = useRef<string | null>(null)
   const [onPresentSellModal] = useModal(
-    <SellModal
+    clickedSellNft.variant && clickedSellNft.nft ? <SellModal
       variant={clickedSellNft.variant}
       nftToSell={clickedSellNft.nft}
       onSuccessSale={onSuccessSale}
-    />,
+    /> : null,
   )
   const { t } = useTranslation()
 
@@ -289,13 +289,12 @@ const UserNfts: React.FC<UserNftsProps> = ({
                       return (
                         <CollectibleActionCard
                           isUserNft
-                          onClick={() => handleCollectibleClick(nft, location)}
+                          onClick={() => handleCollectibleClick(nft, location ?? NftLocation.WALLET)}
                           key={`${group.key}-${nft.tokenId}`}
                           nft={nft}
                           currentAskPrice={
-                            marketData?.currentAskPrice &&
-                            marketData?.isTradable &&
-                            parseFloat(marketData.currentAskPrice)
+                            marketData?.isTradable && marketData.currentAskPrice
+                              ? Number(marketData.currentAskPrice) : undefined
                           }
                           nftLocation={location}
                         />
@@ -328,7 +327,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
           </Flex>
           {isStakedLoading ? (
             <Flex py="40px" flexDirection="column" alignItems="center">
-              <Spinner size={56} color="primary" />
+              <Spinner size={56} />
               <Text mt="16px" color="textSubtle">
                 {t('Loading your NFT pools...')}
               </Text>
@@ -340,13 +339,13 @@ const UserNfts: React.FC<UserNftsProps> = ({
                   key={farm.pid}
                   farm={farm}
                   displayApr={getDisplayApr(farm.apr)}
-                  removed={farm.isFinished}
+                  removed={Boolean(farm.isFinished)}
                   account={account}
                 />
               ))}
             </FlexLayout>
           ) : (
-            <Flex p="24px" flexDirection="column" alignItems="center" textAlign="center">
+            <Flex p="24px" flexDirection="column" alignItems="center" style={{ textAlign: 'center' }}>
               <NoNftsImage />
               <Text pt="8px" bold>
                 {t('You are not staking any NFTs yet')}
@@ -372,7 +371,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
           </Flex>
           {claimInfo.isLoading ? (
             <Flex py="40px" flexDirection="column" alignItems="center">
-              <Spinner size={56} color="primary" />
+              <Spinner size={56} />
               <Text mt="16px" color="textSubtle">
                 {t('Fetching your claimable rewards...')}
               </Text>
@@ -390,7 +389,7 @@ const UserNfts: React.FC<UserNftsProps> = ({
               ))}
             </FlexLayout>
           ) : (
-            <Flex p="24px" flexDirection="column" alignItems="center" textAlign="center">
+            <Flex p="24px" flexDirection="column" alignItems="center" style={{ textAlign: 'center' }}>
               <NoNftsImage />
               <Text pt="8px" bold>
                 {t('No claimable rewards at the moment')}

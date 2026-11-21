@@ -54,8 +54,8 @@ const YourHistoryCard: React.FC<YourHistoryCardProps> = ({ handleShowMoreClick, 
   } = useTranslation()
   const { account } = useWeb3React()
   const [shouldShowRoundDetail, setShouldShowRoundDetail] = useState(false)
-  const [selectedLotteryNodeData, setSelectedLotteryNodeData] = useState<LotteryRound>(null)
-  const [selectedLotteryId, setSelectedLotteryId] = useState<string>(null)
+  const [selectedLotteryNodeData, setSelectedLotteryNodeData] = useState<LotteryRound | null>(null)
+  const [selectedLotteryId, setSelectedLotteryId] = useState('')
 
   const {
     isTransitioning,
@@ -75,7 +75,7 @@ const YourHistoryCard: React.FC<YourHistoryCardProps> = ({ handleShowMoreClick, 
   const clearState = () => {
     setShouldShowRoundDetail(false)
     setSelectedLotteryNodeData(null)
-    setSelectedLotteryId(null)
+    setSelectedLotteryId('')
   }
 
   const getHeader = () => {

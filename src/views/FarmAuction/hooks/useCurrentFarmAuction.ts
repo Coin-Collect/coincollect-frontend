@@ -9,7 +9,7 @@ import { useFastRefreshEffect } from 'hooks/useRefreshEffect'
 import { BIG_ZERO } from 'utils/bigNumber'
 import { sortAuctionBidders, processAuctionData } from '../helpers'
 
-export const useCurrentFarmAuction = (account: string) => {
+export const useCurrentFarmAuction = (account: string | null | undefined) => {
   const [currentAuction, setCurrentAuction] = useState<Auction | null>(null)
   const [bidders, setBidders] = useState<Bidder[] | null>(null)
   const [connectedBidder, setConnectedBidder] = useState<ConnectedBidder | null>(null)
@@ -35,6 +35,7 @@ export const useCurrentFarmAuction = (account: string) => {
 
   // Fetch bidders for current auction
   useFastRefreshEffect(() => {
+    if (!currentAuction) return
     const fetchBidders = async () => {
       try {
         const [currentAuctionBidders] = await farmAuctionContract.viewBidsPerAuction(
@@ -55,6 +56,10 @@ export const useCurrentFarmAuction = (account: string) => {
 
   // Check if connected wallet is whitelisted
   useEffect(() => {
+    if (!account) {
+      setConnectedBidder(null)
+      return
+    }
     const checkAccount = async () => {
       try {
         const whitelistedStatus = await farmAuctionContract.whitelisted(account)
@@ -69,14 +74,11 @@ export const useCurrentFarmAuction = (account: string) => {
     if (account && (!connectedBidder || connectedBidder.account !== account)) {
       checkAccount()
     }
-    // Refresh UI if user logs out
-    if (!account) {
-      setConnectedBidder(null)
-    }
   }, [account, connectedBidder, farmAuctionContract])
 
   // Attach bidder data to connectedBidder object
   useEffect(() => {
+    if (!account || connectedBidder?.account !== account) return
     const getBidderData = () => {
       if (bidders && bidders.length > 0) {
         const bidderData = bidders.find((bidder) => bidder.account === account)
@@ -86,7 +88,7 @@ export const useCurrentFarmAuction = (account: string) => {
       }
       const bidderInfo = getBidderInfo(account)
       const defaultBidderData = {
-        position: null,
+        position: undefined,
         samePositionAsAbove: false,
         isTopPosition: false,
         amount: BIG_ZERO,

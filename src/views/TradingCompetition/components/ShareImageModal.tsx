@@ -33,18 +33,19 @@ const MobileText = styled(Text)`
   }
 `
 
-const ShareImageModal: React.FC<YourScoreProps> = ({ onDismiss, profile, userLeaderboardInformation }) => {
+const ShareImageModal: React.FC<Pick<YourScoreProps, 'onDismiss' | 'profile' | 'userLeaderboardInformation'>> = ({ onDismiss, profile, userLeaderboardInformation }) => {
   const { t } = useTranslation()
-  const { global, team, volume } = userLeaderboardInformation
-  const [bgImage, setBgImage] = useState(null)
-  const [profileImage, setProfileImage] = useState(null)
-  const [profileOverlayImage, setProfileOverlayImage] = useState(null)
-  const [medalImage, setMedalImage] = useState(null)
+  const { global, team, volume } = userLeaderboardInformation ?? {}
+  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
+  const [profileImage, setProfileImage] = useState<HTMLImageElement | null>(null)
+  const [profileOverlayImage, setProfileOverlayImage] = useState<HTMLImageElement | null>(null)
+  const [medalImage, setMedalImage] = useState<HTMLImageElement | null>(null)
 
-  const [imageFromCanvas, setImageFromCanvas] = useState(null)
-  const canvas = useRef(null)
+  const [imageFromCanvas, setImageFromCanvas] = useState<string | null>(null)
+  const canvas = useRef<HTMLCanvasElement>(null)
 
-  const getMedal = (rank: React.ReactText) => {
+  const getMedal = (value: React.ReactText | undefined) => {
+    const rank = Number(value)
     if (rank === 1) {
       return MedalGold
     }
@@ -84,12 +85,13 @@ const ShareImageModal: React.FC<YourScoreProps> = ({ onDismiss, profile, userLea
 
   useEffect(() => {
     const canvasEl = canvas.current
-    if (profile && canvasEl && bgImage && profileImage && profileOverlayImage && medalImage) {
+    if (profile && canvasEl && bgImage && profileImage && profileOverlayImage && medalImage && team != null && global != null && volume != null) {
       const canvasWidth = canvasEl.width
       canvasEl.height = canvasWidth * 0.5625
       const canvasHeight = canvasEl.height
 
       const ctx = canvasEl.getContext('2d')
+      if (!ctx) return
 
       ctx.drawImage(bgImage, 0, 0, canvasWidth, canvasHeight)
       ctx.drawImage(profileImage, canvasWidth * 0.0315, canvasHeight * 0.07, canvasWidth * 0.19, canvasWidth * 0.19)
@@ -110,6 +112,7 @@ const ShareImageModal: React.FC<YourScoreProps> = ({ onDismiss, profile, userLea
   }, [bgImage, profileImage, team, global, volume, profile, profileOverlayImage, medalImage])
 
   const downloadImage = () => {
+    if (!profile || !imageFromCanvas) return
     const link = document.createElement('a')
     link.download = `battle-${profile.username}.png`
     link.href = imageFromCanvas

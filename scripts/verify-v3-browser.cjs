@@ -43,10 +43,11 @@ async function rpc(method, params = []) {
   return result.result
 }
 
-function injectedWallet(account, node, announceProvider) {
+function injectedWallet(account, node, announceProvider, initialChain) {
   localStorage.setItem('wagmi.injected.connected', 'true')
   localStorage.setItem('wagmi.recentConnectorId', JSON.stringify('injected'))
   const listeners = new Map()
+  let chainId = initialChain
   window.ethereum = {
     isMetaMask: announceProvider,
     on(event, callback) {
@@ -57,13 +58,18 @@ function injectedWallet(account, node, announceProvider) {
     },
     async request({ method, params = [] }) {
       if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [account]
+      if (method === 'eth_chainId') return chainId
+      if (method === 'eth_sendTransaction' && chainId !== '0x7a69') {
+        throw Object.assign(new Error('The test wallet is on the wrong network.'), { code: 4901 })
+      }
       if (method === 'eth_sendTransaction' && window.__nextV3WalletError) {
         const { message, code } = window.__nextV3WalletError
         delete window.__nextV3WalletError
         throw Object.assign(new Error(message), { code })
       }
       if (method === 'wallet_switchEthereumChain' && params[0]?.chainId === '0x7a69') {
-        listeners.get('chainChanged')?.('0x7a69')
+        chainId = '0x7a69'
+        listeners.get('chainChanged')?.(chainId)
         return null
       }
       const response = await fetch(node, {
@@ -110,6 +116,13 @@ async function connect(url) {
     if (message.method === 'Runtime.exceptionThrown') {
       const details = message.params.exceptionDetails
       exceptions.push((details.exception?.description || details.text).split('\n')[0])
+    }
+    if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
+      for (const arg of message.params.args) {
+        if (arg.subtype === 'error' && arg.description) {
+          exceptions.push(arg.description.split('\n')[0])
+        }
+      }
     }
     const command = commands.get(message.id)
     if (!command) return
@@ -228,12 +241,12 @@ async function testBrowser() {
         'Browser did not reach ' + label + '\n' + JSON.stringify({ ...evidence, errors: cdp.exceptions.slice(-8) }),
       )
     }
-    const visit = async (route, account, announceProvider = false) => {
+    const visit = async (route, account, announceProvider = false, chainId = '0x7a69') => {
       if (injection) await command('Page.removeScriptToEvaluateOnNewDocument', { identifier: injection })
       injection = undefined
       if (account) {
         const expression =
-          '(' + injectedWallet.toString() + ')(...' + JSON.stringify([account, rpcUrl, announceProvider]) + ')'
+          '(' + injectedWallet.toString() + ')(...' + JSON.stringify([account, rpcUrl, announceProvider, chainId]) + ')'
         injection = (await command('Page.addScriptToEvaluateOnNewDocument', { source: expression })).identifier
       }
       await command('Page.navigate', { url: base + route }, 45_000)
@@ -293,6 +306,27 @@ async function testBrowser() {
     await visit('/swap')
     await has('Swap')
     await wait('swap amount input', () => Boolean(document.querySelector('input[inputmode="decimal"]')))
+    if (process.env.V3_BROWSER_SENTRY_PROBE && process.env.V3_BROWSER_SENTRY_URL) {
+      await wait('initialised production Sentry browser client', () => {
+        const carrier = window.__SENTRY__
+        const client = carrier?.[carrier.version]?.defaultCurrentScope?.getClient()
+        return client?.getOptions().environment === 'production'
+      })
+      const flushed = await evalPage(async (probe) => {
+        const carrier = window.__SENTRY__
+        const scope = carrier[carrier.version].defaultCurrentScope
+        scope.captureException(Object.assign(new Error(probe + '-rejected'), { code: 4001 }))
+        scope.captureException(new Error(probe + '-expected'))
+        return scope.getClient().flush(5000)
+      }, process.env.V3_BROWSER_SENTRY_PROBE)
+      assert.ok(flushed, 'Sentry did not flush the browser probe')
+      const response = await fetch(local(process.env.V3_BROWSER_SENTRY_URL) + '/probe', {
+        signal: AbortSignal.timeout(3000),
+      })
+      assert.ok(response.ok)
+      assert.deepEqual(await response.json(), [process.env.V3_BROWSER_SENTRY_PROBE + '-expected'])
+      console.log('PASS production Sentry sends an application exception and discards a rejected wallet request')
+    }
     await visit('/liquidity')
     await has('Connect to a wallet to view your liquidity.')
     await visit('/add')
@@ -313,6 +347,39 @@ async function testBrowser() {
         (button) => button.textContent.trim() === 'Connect Wallet',
       )
     })
+
+    for (const [route, selector] of [
+      ['/swap', '#swap-currency-output .open-currency-select-button'],
+      ['/add', '#add-liquidity-input-tokenb .open-currency-select-button'],
+    ]) {
+      await visit(route, fixture.participant)
+      await wait('token selector on ' + route, (target) => {
+        const button = document.querySelector(target)
+        if (!button || button.disabled) return false
+        button.click()
+        return true
+      }, selector)
+      await has('Select a Token')
+      await wait('token search input on ' + route, () => Boolean(document.querySelector('#token-search-input')))
+    }
+    await visit('/liquidity', fixture.participant)
+    await has('Your Liquidity')
+    await has('No liquidity found.')
+    await visit('/nfts/collections', fixture.participant)
+    await has('Stake community NFTs for FREE income streams')
+    console.log('PASS connected Swap and Add Liquidity token search, Liquidity positions and NFT Collections')
+
+    const walletNonceBeforeSwitch = await rpc('eth_getTransactionCount', [fixture.participant, 'latest'])
+    await visit('/nftpools/v3/' + fixture.poolId, fixture.participant, false, '0x1')
+    await has('Switch to the settlement network to send transactions.')
+    await click('button', 'Switch network')
+    await wait('wallet switches to the local settlement chain', async () =>
+      (await window.ethereum.request({ method: 'eth_chainId' })) === '0x7a69' &&
+      !document.body.innerText.includes('Switch to the settlement network to send transactions.'),
+    )
+    assert.equal(await rpc('eth_getTransactionCount', [fixture.participant, 'latest']), walletNonceBeforeSwitch)
+    console.log('PASS a wrong-network wallet switches to the isolated chain without submitting a transaction')
+
     await visit('/nftpools', fixture.participant)
     await has('Staked only')
     await has('Finished')

@@ -85,7 +85,7 @@ export interface UserState {
   gasPrice: string
   watchlistTokens: string[]
   watchlistPools: string[]
-  hideTimestampPhishingWarningBanner: number
+  hideTimestampPhishingWarningBanner: number | null
 }
 
 function pairKey(token0Address: string, token1Address: string) {

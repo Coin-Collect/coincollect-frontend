@@ -15,7 +15,7 @@ import Balance from 'components/Balance'
 
 interface EarningsCellProps {
   pool: DeserializedPool
-  account: string
+  account?: string | null
   userDataLoaded: boolean
 }
 
@@ -80,7 +80,7 @@ const EarningsCell: React.FC<EarningsCellProps> = ({ pool, account, userDataLoad
                   fontSize={isMobile ? '14px' : '16px'}
                   color={hasEarnings ? 'primary' : 'textDisabled'}
                 >
-                  <AnimatedValue $animate={hasEarnings && isAnimating}>
+                  <AnimatedValue $animate={Boolean(hasEarnings && isAnimating)}>
                     {hasEarnings ? displayValue : collapsedValue}
                   </AnimatedValue>
                 </Text>

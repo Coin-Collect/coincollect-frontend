@@ -26,8 +26,8 @@ const AuctionDetailsCard = styled(Card)`
 `
 
 interface AuctionDetailsProps {
-  auction: Auction
-  connectedBidder: ConnectedBidder
+  auction: Auction | null
+  connectedBidder: ConnectedBidder | null
   refreshBidders: () => void
 }
 
@@ -35,11 +35,11 @@ const AuctionDetails: React.FC<AuctionDetailsProps> = ({ auction, connectedBidde
   const { t } = useTranslation()
 
   const [onPresentPlaceBid] = useModal(
-    <PlaceBidModal
-      connectedBidder={connectedBidder}
+    connectedBidder?.bidderData && auction ? <PlaceBidModal
+      bidderData={connectedBidder.bidderData}
       refreshBidders={refreshBidders}
-      initialBidAmount={auction?.initialBidAmount}
-    />,
+      initialBidAmount={auction.initialBidAmount}
+    /> : null,
   )
 
   if (!auction) {
@@ -59,11 +59,10 @@ const AuctionDetails: React.FC<AuctionDetailsProps> = ({ auction, connectedBidde
 
   const getBidSection = () => {
     const notConnectedOrNotWhitelisted = !connectedBidder || (connectedBidder && !connectedBidder.isWhitelisted)
-    const whitelistedAndReadyToBid = !notConnectedOrNotWhitelisted && connectedBidder.bidderData
     if (notConnectedOrNotWhitelisted || auction.status !== AuctionStatus.Open) {
       return <CannotBidMessage />
     }
-    if (whitelistedAndReadyToBid) {
+    if (connectedBidder?.bidderData) {
       const { amount, position } = connectedBidder.bidderData
       return (
         <>

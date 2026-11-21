@@ -89,26 +89,27 @@ export default function CollectionSelectModal({
 
   const { data: nftFarms } = useFarms()
 
-  const mainNftStakeFarm = nftFarms.filter(
-    (farm) => farm.pid == pid
-  )
+  const mainNftStakeFarm = nftFarms.find((farm) => farm.pid === pid)
+  const mainCollectionAddress = mainNftStakeFarm?.nftAddresses?.[137]
 
   // This expression is used to access the avatar and other information of the main NFT of the pool.
   // Todo: In the future, I plan to add the mainNftPid value to supportedNfts.
   //const mainNftStakeFarmReplaced = notToListFarms.includes(mainNftStakeFarm[0].lpSymbol) ? nftFarms.filter((farm) => farm.pid == collectionPidOrigins[mainNftStakeFarm[0].pid]) : null
-  const mainNftStakeFarmReplaced = nftFarms.find((nftFarm) => nftFarm.nftAddresses?.[137] === mainNftStakeFarm[0].nftAddresses?.[137])
+  const mainNftStakeFarmReplaced = mainCollectionAddress
+    ? nftFarms.find((farm) => farm.nftAddresses?.[137] === mainCollectionAddress)
+    : undefined
 
 
-  const supportedCollectionPids = mainNftStakeFarm[0]["supportedCollectionPids"]
+  const supportedCollectionPids = mainNftStakeFarm?.supportedCollectionPids ?? []
   const supportedNftStakeFarms = supportedCollectionPids
   .map(pid => nftFarms.find(farm => farm.pid === pid))
   .filter(farm => farm !== undefined);
 
 
-  const collectionList = [mainNftStakeFarmReplaced, ...supportedNftStakeFarms]
+  const collectionList = mainNftStakeFarmReplaced ? [mainNftStakeFarmReplaced, ...supportedNftStakeFarms] : supportedNftStakeFarms
 
   // Todo: Duplicate with CardHeadingWithBanner
-  const collectionPowers = mainNftStakeFarm[0]["collectionPowers"] ?? collectionList.map((collection) => {
+  const collectionPowers = mainNftStakeFarm?.collectionPowers ?? collectionList.map((collection) => {
     switch (collection.pid) {
       case 1:
         return 1;

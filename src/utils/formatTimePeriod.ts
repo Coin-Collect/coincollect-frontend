@@ -5,8 +5,8 @@ import getTimePeriods from './getTimePeriods'
  * @param excludePeriods Key list for the object values of that exclude the periods
  * @return {string} '14h 3m 4s'
  */
-const formatTimePeriod = (periods: ReturnType<typeof getTimePeriods>, excludePeriods = []) => {
-  const textArr = []
+const formatTimePeriod = (periods: ReturnType<typeof getTimePeriods>, excludePeriods: string[] = []) => {
+  const textArr: string[] = []
 
   Object.keys(periods).forEach((period) => {
     if (periods[period] > 0 && !excludePeriods.includes(period)) {

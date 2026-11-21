@@ -9,21 +9,12 @@ import { EventStepsType } from './types'
 import { getStepperStatus } from './utils'
 
 const stepsConfigBuilder = ({ t, userInfos, eventInfos, userStatus, account, theme, cakeBalance }: EventStepsType) => {
-  const { maxPerAddress, maxPerTransaction, maxSupply, pricePerTicket } = eventInfos || {}
-  const {
-    canClaimForGen0,
-    ticketsOfUser,
-    numberTicketsUsedForGen0,
-    numberTicketsOfUser,
-    numberTicketsForGen0,
-    numberTokensOfUser,
-  } = userInfos || {}
-
-  const { saleStatus, totalTicketsDistributed, totalSupplyMinted, startTimestamp } = eventInfos || {}
+  const saleStatus = eventInfos?.saleStatus
+  const numberTicketsOfUser = userInfos?.numberTicketsOfUser
 
   const hasProfileActivated = [UserStatusEnum.PROFILE_ACTIVE, UserStatusEnum.PROFILE_ACTIVE_GEN0].includes(userStatus)
-  const isBuyPhaseFinished = totalTicketsDistributed === maxSupply
-  const isMintingFinished = totalSupplyMinted === maxSupply
+  const isBuyPhaseFinished = eventInfos?.totalTicketsDistributed === eventInfos?.maxSupply
+  const isMintingFinished = eventInfos?.totalSupplyMinted === eventInfos?.maxSupply
   const hasData = !!eventInfos && !!userInfos
 
   return [
@@ -90,16 +81,16 @@ const stepsConfigBuilder = ({ t, userInfos, eventInfos, userStatus, account, the
               account={account}
               theme={theme}
               userStatus={userStatus}
-              saleStatus={saleStatus}
-              canClaimForGen0={canClaimForGen0}
-              maxPerAddress={maxPerAddress}
-              numberTicketsOfUser={numberTicketsOfUser}
-              numberTicketsUsedForGen0={numberTicketsUsedForGen0}
+              saleStatus={eventInfos.saleStatus}
+              canClaimForGen0={userInfos.canClaimForGen0}
+              maxPerAddress={eventInfos.maxPerAddress}
+              numberTicketsOfUser={userInfos.numberTicketsOfUser}
+              numberTicketsUsedForGen0={userInfos.numberTicketsUsedForGen0}
               cakeBalance={cakeBalance}
-              maxPerTransaction={maxPerTransaction}
-              numberTicketsForGen0={numberTicketsForGen0}
-              pricePerTicket={pricePerTicket}
-              startTimestamp={startTimestamp}
+              maxPerTransaction={eventInfos.maxPerTransaction}
+              numberTicketsForGen0={userInfos.numberTicketsForGen0}
+              pricePerTicket={eventInfos.pricePerTicket}
+              startTimestamp={eventInfos.startTimestamp}
             />
           )}
           {isBuyPhaseFinished && hasData && <ReadyText mt="16px" text={t('Phase Complete!')} />}
@@ -124,10 +115,10 @@ const stepsConfigBuilder = ({ t, userInfos, eventInfos, userStatus, account, the
             <MintButton
               t={t}
               theme={theme}
-              saleStatus={saleStatus}
-              numberTicketsOfUser={numberTicketsOfUser}
-              numberTokensOfUser={numberTokensOfUser}
-              ticketsOfUser={ticketsOfUser}
+              saleStatus={eventInfos.saleStatus}
+              numberTicketsOfUser={userInfos.numberTicketsOfUser}
+              numberTokensOfUser={userInfos.numberTokensOfUser}
+              ticketsOfUser={userInfos.ticketsOfUser}
             />
           )}
           {isMintingFinished && hasData && <ReadyText mt="16px" text={t('Phase Complete!')} />}
@@ -152,11 +143,11 @@ const stepsConfigBuilder = ({ t, userInfos, eventInfos, userStatus, account, the
           {hasData && (
             <EndEventButtons
               t={t}
-              saleStatus={saleStatus}
+              saleStatus={eventInfos.saleStatus}
               userStatus={userStatus}
-              maxSupply={maxSupply}
-              totalSupplyMinted={totalSupplyMinted}
-              numberTokensOfUser={numberTokensOfUser}
+              maxSupply={eventInfos.maxSupply}
+              totalSupplyMinted={eventInfos.totalSupplyMinted}
+              numberTokensOfUser={userInfos.numberTokensOfUser}
               account={account}
             />
           )}

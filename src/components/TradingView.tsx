@@ -5,22 +5,34 @@ import { useEffect, useRef } from 'react'
 import { DefaultTheme, useTheme } from 'styled-components'
 import { ChartByLabel } from './Chart/ChartbyLabel'
 
+type TradingViewOptions = {
+  container_id: string
+  symbol: string
+  hide_side_toolbar?: boolean
+}
+
+type TradingViewApi = {
+  widget: new (options: TradingViewOptions & Record<string, string | boolean | string[]>) => object
+}
+
+type TradingViewWindow = Window & { tv?: TradingViewApi }
+
 /**
  * When the script tag is injected the TradingView object is not immediately
  * available on the window. So we listen for when it gets set
  */
 const tradingViewListener = async () =>
-  new Promise<void>((resolve) =>
+  new Promise<TradingViewApi>((resolve) =>
     Object.defineProperty(window, 'TradingView', {
       configurable: true,
-      set(value) {
-        this.tv = value
+      set(value: TradingViewApi) {
+        ;(window as TradingViewWindow).tv = value
         resolve(value)
       },
     }),
   )
 
-const initializeTradingView = (TradingViewObj: any, theme: DefaultTheme, localeCode: string, opts: any) => {
+const initializeTradingView = (TradingViewObj: TradingViewApi, theme: DefaultTheme, localeCode: string, opts: TradingViewOptions) => {
   let timezone = 'Etc/UTC'
   try {
     timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -29,14 +41,12 @@ const initializeTradingView = (TradingViewObj: any, theme: DefaultTheme, localeC
   }
   /* eslint-disable new-cap */
   /* eslint-disable no-new */
-  // @ts-ignore
   return new TradingViewObj.widget({
     // Advanced Chart Widget uses the legacy embedding scheme,
     // an id property should be specified in the settings object
     id: opts.container_id,
     autosize: true,
     height: '100%',
-    symbol: 'BINANCE:BNBBUSD',
     interval: '5',
     timezone,
     theme: theme.isDark ? 'dark' : 'light',
@@ -59,11 +69,11 @@ interface TradingViewProps {
 const TradingView = ({ id, symbol }: TradingViewProps) => {
   const { currentLanguage } = useTranslation()
   const theme = useTheme()
-  const widgetRef = useRef<any>()
+  const widgetRef = useRef<object>()
   const { isMobile } = useMatchBreakpoints()
 
   useEffect(() => {
-    const opts: any = {
+    const opts: TradingViewOptions = {
       container_id: id,
       symbol,
     }
@@ -72,10 +82,9 @@ const TradingView = ({ id, symbol }: TradingViewProps) => {
       opts.hide_side_toolbar = true
     }
 
-    // @ts-ignore
-    if (window.tv) {
-      // @ts-ignore
-      widgetRef.current = initializeTradingView(window.tv, theme, currentLanguage.code, opts)
+    const { tv } = window as TradingViewWindow
+    if (tv) {
+      widgetRef.current = initializeTradingView(tv, theme, currentLanguage.code, opts)
     } else {
       tradingViewListener().then((tv) => {
         widgetRef.current = initializeTradingView(tv, theme, currentLanguage.code, opts)

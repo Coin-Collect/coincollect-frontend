@@ -82,8 +82,9 @@ const SellModal: React.FC<SellModalProps> = ({
   onDismiss,
   onSuccessSale,
 }) => {
+  const listingPrice = nftToSell.marketData?.currentAskPrice ?? ''
   const [stage, setStage] = useState(variant === 'sell' ? SellingStage.SELL : SellingStage.EDIT)
-  const [price, setPrice] = useState(variant === 'sell' ? '' : nftToSell.marketData.currentAskPrice)
+  const [price, setPrice] = useState(variant === 'sell' ? '' : listingPrice)
   const [transferAddress, setTransferAddress] = useState('')
   const [confirmedTxHash, setConfirmedTxHash] = useState('')
   const { t } = useTranslation()
@@ -107,7 +108,7 @@ const SellModal: React.FC<SellModalProps> = ({
         setStage(SellingStage.SET_PRICE)
         break
       case SellingStage.ADJUST_PRICE:
-        setPrice(nftToSell.marketData.currentAskPrice)
+        setPrice(listingPrice)
         setStage(SellingStage.EDIT)
         break
       case SellingStage.CONFIRM_ADJUST_PRICE:
@@ -165,6 +166,7 @@ const SellModal: React.FC<SellModalProps> = ({
 
   const { isApproving, isApproved, isConfirming, handleApprove, handleConfirm } = useApproveConfirmTransaction({
     onRequiresApproval: async () => {
+      if (!account) return false
       try {
         const approvedForContract = await collectionContract.isApprovedForAll(account, nftMarketContract.address)
         return approvedForContract
@@ -173,6 +175,7 @@ const SellModal: React.FC<SellModalProps> = ({
       }
     },
     onApprove: () => {
+      if (!account) throw new Error('Connect your wallet to approve the NFT')
       return callWithGasPrice(collectionContract, 'setApprovalForAll', [nftMarketContract.address, true])
     },
     onApproveSuccess: async ({ receipt }) => {
@@ -182,6 +185,8 @@ const SellModal: React.FC<SellModalProps> = ({
       )
     },
     onConfirm: () => {
+      if (!account) throw new Error('Connect your wallet to confirm the NFT transaction')
+      if (variant === 'edit' && !listingPrice) throw new Error('This NFT listing is unavailable')
       if (stage === SellingStage.CONFIRM_REMOVE_FROM_MARKET) {
         return callWithGasPrice(nftMarketContract, 'cancelAskOrder', [nftToSell.collectionAddress, nftToSell.tokenId])
       }
@@ -211,13 +216,13 @@ const SellModal: React.FC<SellModalProps> = ({
       title={modalTitles(stage, t)}
       stage={stage}
       onDismiss={onDismiss}
-      onBack={showBackButton ? goBack : null}
+      onBack={showBackButton ? goBack : undefined}
       headerBackground={theme.colors.gradients.cardHeader}
     >
       {stage === SellingStage.SELL && (
         <SellStage
           nftToSell={nftToSell}
-          lowestPrice={lowestPrice}
+          lowestPrice={lowestPrice ?? undefined}
           continueToNextStage={continueToNextStage}
           continueToTransferStage={continueToTransferStage}
         />
@@ -227,7 +232,7 @@ const SellModal: React.FC<SellModalProps> = ({
           nftToSell={nftToSell}
           variant="set"
           continueToNextStage={continueToNextStage}
-          lowestPrice={lowestPrice}
+          lowestPrice={lowestPrice ?? undefined}
           price={price}
           setPrice={setPrice}
         />
@@ -246,7 +251,7 @@ const SellModal: React.FC<SellModalProps> = ({
       {stage === SellingStage.EDIT && (
         <EditStage
           nftToSell={nftToSell}
-          lowestPrice={lowestPrice}
+          lowestPrice={lowestPrice ?? undefined}
           continueToAdjustPriceStage={continueToNextStage}
           continueToRemoveFromMarketStage={continueToRemoveFromMarketStage}
         />
@@ -256,8 +261,8 @@ const SellModal: React.FC<SellModalProps> = ({
           nftToSell={nftToSell}
           variant="adjust"
           continueToNextStage={continueToNextStage}
-          currentPrice={nftToSell.marketData.currentAskPrice}
-          lowestPrice={lowestPrice}
+          currentPrice={listingPrice}
+          lowestPrice={lowestPrice ?? undefined}
           price={price}
           setPrice={setPrice}
         />
@@ -272,7 +277,7 @@ const SellModal: React.FC<SellModalProps> = ({
       {stage === SellingStage.TRANSFER && (
         <TransferStage
           nftToSell={nftToSell}
-          lowestPrice={lowestPrice}
+          lowestPrice={lowestPrice ?? undefined}
           continueToNextStage={continueToNextStage}
           transferAddress={transferAddress}
           setTransferAddress={setTransferAddress}

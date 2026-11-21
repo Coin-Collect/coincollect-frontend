@@ -21,7 +21,7 @@ const NextDrawWrapper = styled(Flex)`
   }
 `
 
-const PreviousRoundCardFooter: React.FC<{ lotteryNodeData: LotteryRound; lotteryId: string }> = ({
+const PreviousRoundCardFooter: React.FC<{ lotteryNodeData: LotteryRound | null; lotteryId: string }> = ({
   lotteryNodeData,
   lotteryId,
 }) => {
@@ -46,7 +46,7 @@ const PreviousRoundCardFooter: React.FC<{ lotteryNodeData: LotteryRound; lottery
     prizeInBusd = amountCollectedInCake.times(cakePriceBusd)
   }
 
-  const getTotalUsers = (): string => {
+  const getTotalUsers = (): string | null => {
     if (!lotteryGraphDataFromState && fetchedLotteryGraphData) {
       return fetchedLotteryGraphData?.totalUsers?.toLocaleString()
     }
@@ -75,7 +75,7 @@ const PreviousRoundCardFooter: React.FC<{ lotteryNodeData: LotteryRound; lottery
             fontSize="14px"
             color="textSubtle"
             unit=" CAKE"
-            value={getBalanceNumber(lotteryNodeData?.amountCollectedInCake)}
+            value={lotteryNodeData ? getBalanceNumber(lotteryNodeData.amountCollectedInCake) : 0}
             decimals={0}
           />
         )}

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Bet } from 'state/types'
+import { BetWithRound } from 'state/types'
 import { useTranslation } from 'contexts/Localization'
 import { getBscScanLink } from 'utils'
 import { Flex, Text, Link, Heading } from '@pancakeswap/uikit'
@@ -9,7 +9,7 @@ import BetResult from './BetResult'
 import { getMultiplier } from './helpers'
 
 interface BetDetailsProps {
-  bet: Bet
+  bet: BetWithRound
   result: Result
 }
 

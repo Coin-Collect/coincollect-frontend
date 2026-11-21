@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { BLOCKS_PER_YEAR, COLLECT_PER_YEAR_FARM, COLLECT_PER_YEAR_NFTFARM } from 'config'
 import lpAprs from 'config/constants/lpAprs.json'
-import { getBalanceNumber } from './formatBalance'
 
 /**
  * Get the APR value in %
@@ -12,11 +11,12 @@ import { getBalanceNumber } from './formatBalance'
  * @returns Null if the APR is NaN or infinite.
  */
 export const getPoolApr = (
-  stakingTokenPrice: number,
-  rewardTokenPrice: number,
-  totalStaked: number,
-  tokenPerBlock: number,
-): number => {
+  stakingTokenPrice: number | null | undefined,
+  rewardTokenPrice: number | null | undefined,
+  totalStaked: number | null | undefined,
+  tokenPerBlock: number | null | undefined,
+): number | null => {
+  if (stakingTokenPrice == null || rewardTokenPrice == null || totalStaked == null || tokenPerBlock == null) return null
   const totalRewardPricePerYear = new BigNumber(rewardTokenPrice).times(tokenPerBlock).times(BLOCKS_PER_YEAR)
   const totalStakingTokenInPool = new BigNumber(stakingTokenPrice).times(totalStaked)
   const apr = totalRewardPricePerYear.div(totalStakingTokenInPool).times(100)
@@ -32,19 +32,16 @@ export const getPoolApr = (
  * @returns Farm Apr
  */
 export const getFarmApr = (
-  poolWeight: BigNumber,
-  cakePriceUsd: BigNumber,
-  poolLiquidityUsd: BigNumber,
-  farmAddress: string,
-): { cakeRewardsApr: number; lpRewardsApr: number } => {
-  const yearlyCakeRewardAllocation = poolWeight ? poolWeight.times(COLLECT_PER_YEAR_FARM) : new BigNumber(NaN)
-  const cakeRewardsApr = yearlyCakeRewardAllocation.times(cakePriceUsd).div(poolLiquidityUsd).times(100)
-  let cakeRewardsAprAsNumber = null
-  if (!cakeRewardsApr.isNaN() && cakeRewardsApr.isFinite()) {
-    cakeRewardsAprAsNumber = cakeRewardsApr.toNumber()
-  }
-  const lpRewardsApr = lpAprs[farmAddress?.toLocaleLowerCase()] ?? 0
-  return { cakeRewardsApr: cakeRewardsAprAsNumber, lpRewardsApr }
+  poolWeight: BigNumber | null | undefined,
+  cakePriceUsd: BigNumber | null | undefined,
+  poolLiquidityUsd: BigNumber | null | undefined,
+  farmAddress: string | null | undefined,
+): { cakeRewardsApr: number | null; lpRewardsApr: number } => {
+  const apr = poolWeight && cakePriceUsd && poolLiquidityUsd
+    ? poolWeight.times(COLLECT_PER_YEAR_FARM).times(cakePriceUsd).div(poolLiquidityUsd).times(100)
+    : null
+  const lpRewardsApr = farmAddress ? lpAprs[farmAddress.toLowerCase()] ?? 0 : 0
+  return { cakeRewardsApr: apr?.isFinite() ? apr.toNumber() : null, lpRewardsApr }
 }
 
 /**
@@ -55,35 +52,22 @@ export const getFarmApr = (
  * @param farmAddress Farm Address
  * @returns Farm Apr
  */
- export const getNftFarmApr = (
+export const getNftFarmApr = (
   poolWeight: BigNumber,
-  tokenPerBlock: number,
+  tokenPerBlock: number | null,
   totalLiquidity: BigNumber,
   mainCollectionWeight?: number,
 ): { cakeRewardsApr: number; lpRewardsApr: number } => {
-  
-  
   const liquidity = totalLiquidity.toNumber()
-  const isSmartNftStake = tokenPerBlock
-
-  
-  const yearlyCakeRewardAllocation = poolWeight ? poolWeight.times(COLLECT_PER_YEAR_NFTFARM) : new BigNumber(NaN)
-  const cakeRewardsApr = yearlyCakeRewardAllocation.div(liquidity)
-
-  const yearlyCakeRewardAllocationForSmartNft = isSmartNftStake ? tokenPerBlock * BLOCKS_PER_YEAR : null
-
-  const cakeRewardsAprSmartNft = (yearlyCakeRewardAllocationForSmartNft / liquidity) * mainCollectionWeight
-
-  let cakeRewardsAprAsNumber = null
-  if (!cakeRewardsApr.isNaN() && cakeRewardsApr.isFinite()) {
-    cakeRewardsAprAsNumber = cakeRewardsApr.toNumber()
+  if (tokenPerBlock) {
+    const yearlyAllocation = tokenPerBlock * BLOCKS_PER_YEAR
+    const dailyRewards = (yearlyAllocation / liquidity) * (mainCollectionWeight ?? NaN) / 365
+    return { cakeRewardsApr: dailyRewards, lpRewardsApr: 0 }
   }
 
-  if (isSmartNftStake) {
-    cakeRewardsAprAsNumber = cakeRewardsAprSmartNft
-  }
-
-  return { cakeRewardsApr: cakeRewardsAprAsNumber / 365, lpRewardsApr: 0 }
+  const legacyRewards = poolWeight?.times(COLLECT_PER_YEAR_NFTFARM).div(liquidity)
+  const dailyRewards = legacyRewards?.isFinite() ? legacyRewards.toNumber() / 365 : 0
+  return { cakeRewardsApr: dailyRewards, lpRewardsApr: 0 }
 }
 
 export default null

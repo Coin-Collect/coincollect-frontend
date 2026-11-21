@@ -72,7 +72,7 @@ const Countdown: React.FC<{ currentPhase: CompetitionPhaseProps; hasCompetitionE
   const { t } = useTranslation()
   const finishMs = currentPhase.ends
   const currentMs = Date.now()
-  const secondsUntilNextEvent = (finishMs - currentMs) / 1000
+  const secondsUntilNextEvent = finishMs === null ? 0 : Math.max(0, (finishMs - currentMs) / 1000)
 
   const { minutes, hours, days } = getTimePeriods(secondsUntilNextEvent)
 
@@ -110,14 +110,14 @@ const Countdown: React.FC<{ currentPhase: CompetitionPhaseProps; hasCompetitionE
         <PocketWatchIcon />
       </PocketWatchWrapper>
       <Flex flexDirection="column" justifyContent="center">
-        {!secondsUntilNextEvent ? (
+        {!hasCompetitionEnded && finishMs === null ? (
           <Skeleton height={26} width={190} mb="24px" />
         ) : (
           <Flex mb="24px" justifyContent="center" alignItems="center">
             {renderTimer()}
           </Flex>
         )}
-        {!secondsUntilNextEvent ? (
+        {!hasCompetitionEnded && finishMs === null ? (
           <Skeleton height={42} width={190} />
         ) : (
           <ProgressStepper steps={CompetitionSteps} activeStepIndex={currentPhase.step.index} />

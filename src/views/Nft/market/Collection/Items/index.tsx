@@ -4,13 +4,15 @@ import { Box, Flex, Text } from '@pancakeswap/uikit'
 import { useGetCollection } from 'state/nftMarket/hooks'
 import { useTranslation } from 'contexts/Localization'
 import Select, { OptionProps } from 'components/Select/Select'
+import PageLoader from 'components/Loader/PageLoader'
 import Container from 'components/Layout/Container'
 import { pancakeBunniesAddress } from '../../constants'
 import PancakeBunniesCollectionNfts from './PancakeBunniesCollectionNfts'
 import CollectionWrapper from './CollectionWrapper'
 
 const Items = () => {
-  const collectionAddress = useRouter().query.collectionAddress as string
+  const { collectionAddress: routeAddress } = useRouter().query
+  const collectionAddress = typeof routeAddress === 'string' ? routeAddress : ''
   const [sortBy, setSortBy] = useState('updatedAt')
   const { t } = useTranslation()
   const collection = useGetCollection(collectionAddress)
@@ -24,6 +26,8 @@ const Items = () => {
   const handleChange = (newOption: OptionProps) => {
     setSortBy(newOption.value)
   }
+
+  if (!collection) return <PageLoader />
 
   return (
     <>

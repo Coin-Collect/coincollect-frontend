@@ -34,26 +34,6 @@ const PancakeSquadHeader: React.FC<PancakeSquadHeaderType> = ({
   const { theme, isDark } = useTheme()
   const { balance: cakeBalance } = useGetCakeBalance()
   const displayEventBlock = !!eventInfos || isLoading
-  const {
-    ticketsOfUser,
-    numberTicketsUsedForGen0,
-    numberTicketsOfUser,
-    numberTicketsForGen0,
-    canClaimForGen0,
-    numberTokensOfUser,
-  } = userInfos || {}
-
-  const {
-    maxPerAddress,
-    maxPerTransaction,
-    maxSupply,
-    pricePerTicket,
-    saleStatus,
-    totalTicketsDistributed,
-    totalSupplyMinted,
-    startTimestamp,
-  } = eventInfos || {}
-
   return (
     <StyledSquadHeaderContainer
       pt={['16px', null, null, '40px']}
@@ -96,8 +76,8 @@ const PancakeSquadHeader: React.FC<PancakeSquadHeaderType> = ({
                   <Timeline
                     events={nftSaleConfigBuilder({
                       t,
-                      saleStatus,
-                      startTimestamp,
+                      saleStatus: eventInfos.saleStatus,
+                      startTimestamp: eventInfos.startTimestamp,
                     })}
                     useDark={false}
                   />
@@ -106,22 +86,22 @@ const PancakeSquadHeader: React.FC<PancakeSquadHeaderType> = ({
               <Flex flexDirection="column">
                 {eventInfos && (
                   <>
-                    <PreEventText t={t} userStatus={userStatus} saleStatus={saleStatus} />
+                    <PreEventText t={t} userStatus={userStatus} saleStatus={eventInfos.saleStatus} />
                     <SaleProgress
                       t={t}
                       userStatus={userStatus}
-                      saleStatus={saleStatus}
-                      totalTicketsDistributed={totalTicketsDistributed}
-                      maxSupply={maxSupply}
-                      totalSupplyMinted={totalSupplyMinted}
+                      saleStatus={eventInfos.saleStatus}
+                      totalTicketsDistributed={eventInfos.totalTicketsDistributed}
+                      maxSupply={eventInfos.maxSupply}
+                      totalSupplyMinted={eventInfos.totalSupplyMinted}
                     />
                     {userInfos && (
                       <MintText
                         t={t}
                         userStatus={userStatus}
-                        saleStatus={saleStatus}
-                        numberTicketsOfUser={numberTicketsOfUser}
-                        numberTokensOfUser={numberTokensOfUser}
+                        saleStatus={eventInfos.saleStatus}
+                        numberTicketsOfUser={userInfos.numberTicketsOfUser}
+                        numberTokensOfUser={userInfos.numberTokensOfUser}
                       />
                     )}
                     {userInfos && (
@@ -130,20 +110,20 @@ const PancakeSquadHeader: React.FC<PancakeSquadHeaderType> = ({
                         account={account}
                         theme={theme}
                         userStatus={userStatus}
-                        saleStatus={saleStatus}
-                        numberTokensOfUser={numberTokensOfUser}
-                        canClaimForGen0={canClaimForGen0}
-                        maxPerAddress={maxPerAddress}
-                        maxSupply={maxSupply}
-                        numberTicketsOfUser={numberTicketsOfUser}
-                        numberTicketsUsedForGen0={numberTicketsUsedForGen0}
-                        totalSupplyMinted={totalSupplyMinted}
+                        saleStatus={eventInfos.saleStatus}
+                        numberTokensOfUser={userInfos.numberTokensOfUser}
+                        canClaimForGen0={userInfos.canClaimForGen0}
+                        maxPerAddress={eventInfos.maxPerAddress}
+                        maxSupply={eventInfos.maxSupply}
+                        numberTicketsOfUser={userInfos.numberTicketsOfUser}
+                        numberTicketsUsedForGen0={userInfos.numberTicketsUsedForGen0}
+                        totalSupplyMinted={eventInfos.totalSupplyMinted}
                         cakeBalance={cakeBalance}
-                        maxPerTransaction={maxPerTransaction}
-                        numberTicketsForGen0={numberTicketsForGen0}
-                        pricePerTicket={pricePerTicket}
-                        ticketsOfUser={ticketsOfUser}
-                        startTimestamp={startTimestamp}
+                        maxPerTransaction={eventInfos.maxPerTransaction}
+                        numberTicketsForGen0={userInfos.numberTicketsForGen0}
+                        pricePerTicket={eventInfos.pricePerTicket}
+                        ticketsOfUser={userInfos.ticketsOfUser}
+                        startTimestamp={eventInfos.startTimestamp}
                       />
                     )}
                   </>

@@ -47,7 +47,7 @@ const StyledCardRibbon = styled(CardRibbon)`
   }
 `
 
-const PreviousRoundCardBody: React.FC<{ lotteryNodeData: LotteryRound; lotteryId: string }> = ({
+const PreviousRoundCardBody: React.FC<{ lotteryNodeData: LotteryRound | null; lotteryId: string }> = ({
   lotteryNodeData,
   lotteryId,
 }) => {
@@ -70,7 +70,7 @@ const PreviousRoundCardBody: React.FC<{ lotteryNodeData: LotteryRound; lotteryId
     <ViewTicketsModal roundId={lotteryId} roundStatus={lotteryNodeData?.status} />,
   )
 
-  const totalTicketNumber = userDataForRound ? userDataForRound.totalTickets : 0
+  const totalTicketNumber = Number(userDataForRound?.totalTickets ?? 0)
   const ticketRoundText =
     totalTicketNumber > 1
       ? t('You had %amount% tickets this round', { amount: totalTicketNumber })
@@ -86,10 +86,10 @@ const PreviousRoundCardBody: React.FC<{ lotteryNodeData: LotteryRound; lotteryId
         </Flex>
         <Flex maxWidth={['240px', null, null, '100%']} justifyContent={['center', null, null, 'flex-start']}>
           {lotteryId ? (
-            lotteryNodeData ? (
+            lotteryNodeData?.finalNumber != null ? (
               <WinningNumbers
                 rotateText={isLargerScreen || false}
-                number={lotteryNodeData?.finalNumber.toString()}
+                number={lotteryNodeData.finalNumber.toString()}
                 mr={[null, null, null, '32px']}
                 size="100%"
                 fontSize={isLargerScreen ? '42px' : '16px'}
