@@ -3,7 +3,7 @@ import { getLocalForkBaseBlock } from 'config/localFork'
 import { managedNftCollectionAbi, ownershipVerifierAbi, universalRewardsAbi } from './abi'
 import { decodeV3Presentation } from './metadata'
 import { readManagedCollection, SETTLEMENT_SOURCE } from './managedNfts'
-import { readV3Capacity, readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { readV3BatchLimit, readV3Capacity, readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
 const erc721Abi = parseAbi([
   'function ownerOf(uint256 tokenId) view returns (address)',
@@ -30,6 +30,8 @@ export interface NftRef {
   collection: Address
   tokenId: bigint
 }
+
+type ClaimableNft = NftRef & { claimable: readonly bigint[] }
 
 export interface RewardSnapshot {
   token: Address
@@ -71,6 +73,7 @@ export async function readV3Pool(
     includeSettlement?: boolean
     claimPeriod?: ReturnType<typeof readV3ClaimPeriod>
     capacity?: Promise<number>
+    batchLimit?: Promise<number>
   } = {},
 ) {
   if (snapshot.number === null) throw new Error('A mined block reference is required for the pool view.')
@@ -82,6 +85,7 @@ export async function readV3Pool(
     funding,
     period,
     capacity,
+    batchLimit,
   ] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'poolState', args: [poolId] }),
     client.readContract({ ...ledger, functionName: 'collectionRules', args: [poolId] }),
@@ -89,6 +93,7 @@ export async function readV3Pool(
     client.readContract({ ...ledger, functionName: 'fundingState', args: [poolId] }),
     options.claimPeriod ?? readV3ClaimPeriod(client, deployment, ledger.blockNumber),
     options.capacity ?? readV3Capacity(client, deployment, ledger.blockNumber),
+    options.batchLimit ?? readV3BatchLimit(client, deployment, ledger.blockNumber),
   ])
   const collections = await Promise.all(
     rawCollections.map(async (rule) => ({
@@ -125,6 +130,7 @@ export async function readV3Pool(
     rewards,
     funding,
     capacity,
+    batchLimit,
     claimDeadline: period === undefined ? undefined : config.end + period,
     timestamp: snapshot.timestamp,
     blockNumber: ledger.blockNumber,
@@ -155,12 +161,13 @@ export async function readV3Catalogue(
   if (!ids.length) return { total, pools }
   const claimPeriod = readV3ClaimPeriod(client, deployment, snapshot.number)
   const capacity = readV3Capacity(client, deployment, snapshot.number)
+  const batchLimit = readV3BatchLimit(client, deployment, snapshot.number)
   // Four pool groups at a time limits the read pressure on the shared RPC.
   for (let i = 0; i < ids.length; i += 4) {
     const batch = await Promise.all(
       ids
         .slice(i, i + 4)
-        .map((id) => readV3Pool(client, deployment, id, snapshot, { claimPeriod, includeSettlement, capacity })),
+        .map((id) => readV3Pool(client, deployment, id, snapshot, { claimPeriod, includeSettlement, capacity, batchLimit })),
     )
     pools.push(...batch)
   }
@@ -325,10 +332,11 @@ function walletKeys(
   account: Address,
   offset: bigint,
   blockNumber: bigint,
+  wholePool = false,
 ) {
   const ledger = ledgerAt(deployment, blockNumber)
   const limit = BigInt(MAX_V3_PAGE)
-  return pool.capacity > 32
+  return pool.capacity > 32 && !wholePool
     ? client.readContract({
         ...ledger,
         functionName: 'walletPositionKeys',
@@ -344,6 +352,7 @@ export async function readV3CardPosition(
   account: Address,
   pageOffset = NIL,
   includeProjection = false,
+  wholePool = false,
 ) {
   const block = await client.getBlock()
   const amounts = pool.rewards.map(() => NIL)
@@ -352,7 +361,7 @@ export async function readV3CardPosition(
       count: 0,
       power: 0,
       amounts,
-      claimableNfts: [] as NftRef[],
+      claimableNfts: [] as ClaimableNft[],
       seatedNfts: [] as NftRef[],
       blockNumber: block.number,
       timestamp: block.timestamp,
@@ -364,15 +373,15 @@ export async function readV3CardPosition(
   const verifier = pool.collections.some(({ sourceChainId }) => sourceChainId !== BigInt(137))
     ? await verifierAt(client, deployment, block.number)
     : zeroAddress
-  const claimableNfts: NftRef[] = []
+  const claimableNfts: ClaimableNft[] = []
   const seatedNfts: NftRef[] = []
   let power = 0
-  const indexed = pool.capacity > 32
+  const indexed = pool.capacity > 32 && !wholePool
   let offset = indexed ? pageOffset : NIL
   let total: bigint
 
   do {
-    const [keys, nextTotal] = await walletKeys(client, deployment, pool, account, offset, block.number)
+    const [keys, nextTotal] = await walletKeys(client, deployment, pool, account, offset, block.number, wholePool)
     let candidates = keys
     // An NFT received by transfer may not be in this wallet's observed history yet.
     // Look at one bounded collection page. The detail view supports other collections and manual token IDs.
@@ -430,14 +439,14 @@ export async function readV3CardPosition(
         seatedNfts.push(position)
         power += position.weight
       }
-      if (claims.some((amount) => amount > NIL)) claimableNfts.push(position)
+      if (claims.some((amount) => amount > NIL)) claimableNfts.push({ ...position, claimable: claims })
       claims.forEach((amount, index) => {
         amounts[index] += amount
       })
     }
     total = nextTotal
     offset += BigInt(MAX_V3_PAGE)
-  } while (!indexed && offset < total)
+  } while (!indexed && offset < total && (!wholePool || claimableNfts.length <= pool.batchLimit))
 
   const recorded = indexed
     ? await client.readContract({ ...ledger, functionName: 'walletPositionStats', args: [pool.poolId, account] })

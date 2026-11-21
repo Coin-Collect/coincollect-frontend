@@ -12,7 +12,7 @@ import {
   type Hex,
 } from 'viem'
 import { getLocalForkRpcUrl, getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
-import { universalRewardsAbi } from './abi'
+import { universalRewardsAbi, universalRewardsV33Abi } from './abi'
 
 export interface V3Deployment {
   readonly address: Address
@@ -75,6 +75,20 @@ export async function readV3ClaimPeriod(client: V3Client, deployment: V3Deployme
   } catch (error) {
     // Older, already deployed ledgers do not implement this selector.
     if (isV3MissingSelector(error)) return undefined
+    throw error
+  }
+}
+
+export async function readV3BatchLimit(client: V3Client, deployment: V3Deployment, blockNumber: bigint) {
+  try {
+    return Number(await client.readContract({
+      address: deployment.address,
+      abi: universalRewardsV33Abi,
+      functionName: 'batchPositionLimit',
+      blockNumber,
+    }))
+  } catch (error) {
+    if (isV3MissingSelector(error)) return 0
     throw error
   }
 }

@@ -582,6 +582,13 @@ async function testBrowser() {
       }).then(async (connection) => {
         if (connection !== 'modal') return
         await wait('announced Studio wallet', () => {
+          const localWallet = [...document.querySelectorAll('dialog[open] button')].find(
+            (button) => ['MetaMask', 'Injected'].includes(button.textContent.trim()) && !button.disabled,
+          )
+          if (localWallet) {
+            localWallet.click()
+            return true
+          }
           function findWallet(root) {
             for (const element of root.querySelectorAll('*')) {
               if (element.localName === 'wui-list-wallet' && ['MetaMask', 'Browser Wallet'].includes(element.name))
@@ -616,6 +623,7 @@ async function testBrowser() {
     await wait('preview reopens', () => Boolean(document.querySelector('[aria-label="FarmCard preview"] article')))
     await click('button', 'Back to pools')
     await click('button', 'New pool')
+    await evalPage(() => document.querySelector('input[name="funding-source"][value="wallet"]')?.click())
     await editPoolName('Studio acceptance pool')
     await wait('editable collection avatar', () => {
       const button = document.querySelector('article button[aria-label="Edit NFT collections"]')
@@ -777,6 +785,7 @@ async function testBrowser() {
       'function deposit() payable',
       'function approve(address spender, uint256 amount) returns (bool)',
       'function poolCount() view returns (uint256)',
+      'function batchPositionLimit() pure returns (uint256)',
       'function createPool((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
       'function fundReward(uint256 poolId,address token,uint128 amount)',
       'function nftKey(uint256 sourceChainId,address collection,uint256 tokenId) view returns (bytes32)',
@@ -850,10 +859,13 @@ async function testBrowser() {
         },
       ])
     const beforeHarvest = await rpc('eth_blockNumber')
+    const hasPositionBatch = (await readBatchPool('batchPositionLimit').catch(() => 0n)) > 0n
     await click('article button', 'Harvest')
-    await has('3 of 3 transactions confirmed on the settlement network.')
+    await has(hasPositionBatch ? 'Confirmed on the settlement network.' : '3 of 3 transactions confirmed on the settlement network.')
     assert.equal(await evalPage(() => document.querySelector('dialog[open]') === null), true)
-    assert.deepEqual((await claimsSince(beforeHarvest)).map(({ topics }) => topics[2]).sort(), [...keys].sort())
+    const harvestClaims = await claimsSince(beforeHarvest)
+    assert.deepEqual(harvestClaims.map(({ topics }) => topics[2]).sort(), [...keys].sort())
+    assert.equal(new Set(harvestClaims.map(({ transactionHash }) => transactionHash)).size, hasPositionBatch ? 1 : 3)
     assert.equal(await readBatchPool('walletsNftCount', [batchId, fixture.participant]), 3n)
     await rpc('evm_increaseTime', [180])
     await rpc('evm_mine')
@@ -863,9 +875,11 @@ async function testBrowser() {
     await selectNft(batchIds[2])
     await has('2 NFTs selected')
     await click('dialog button', 'Unstake & Harvest')
-    await has('2 of 2 transactions confirmed on the settlement network.')
+    await has(hasPositionBatch ? 'Confirmed on the settlement network.' : '2 of 2 transactions confirmed on the settlement network.')
     await wait('selective Unstake dialog closes', () => document.querySelector('dialog[open]') === null)
-    assert.deepEqual((await claimsSince(beforeExit)).map(({ topics }) => topics[2]).sort(), [keys[0], keys[2]].sort())
+    const exitClaims = await claimsSince(beforeExit)
+    assert.deepEqual(exitClaims.map(({ topics }) => topics[2]).sort(), [keys[0], keys[2]].sort())
+    assert.equal(new Set(exitClaims.map(({ transactionHash }) => transactionHash)).size, hasPositionBatch ? 1 : 2)
     const seats = await Promise.all(keys.map((key) => readBatchPool('positionState', [batchId, key])))
     assert.equal(seats[0].seatOwner, '0x' + '0'.repeat(40))
     assert.equal(seats[1].seatOwner.toLowerCase(), fixture.participant.toLowerCase())
@@ -981,13 +995,15 @@ async function testBrowser() {
       await field('duration-days', '365')
       await click('dialog button', 'Done')
       await wait('Treasury schedule saved', () => !document.querySelector('dialog'))
-      await field('funding-source', 'treasury')
+      await wait('Treasury is the default funding source', () =>
+        document.querySelector('input[name="funding-source"][value="treasury"]')?.checked,
+      )
       await click('button', 'Review pool plan')
       await has('Lifetime purchase minimum')
       await has('Economic preflight')
       await has('Lifetime reward share by participation')
       await has('One purchase per reward asset')
-      await click('button', 'Create pool and reserve treasury budget')
+      await click('button', 'Create pool and reserve 10 V3R from Treasury')
       await has('Treasury budget fully reserved')
       const reserved = await available()
       assert.equal(reserved.available, parseEther('90'))

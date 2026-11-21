@@ -27,7 +27,7 @@ import { FarmCardEarned, FarmCardStakedPosition } from './PositionPanels'
 import { useV3Action, useV3Query, useV3Wallet } from 'features/universalRewards/hooks'
 import { MAX_V3_PAGE, readV3CardPosition } from 'features/universalRewards/reader'
 import { createV3Client } from 'features/universalRewards/runtime'
-import { manageV3Position } from 'features/universalRewards/transactions'
+import { manageV3Position, manageV3Positions } from 'features/universalRewards/transactions'
 import { V3Button } from 'features/universalRewards/styles'
 import V3NftActionModal, { type V3NftActionMode } from './V3NftActionModal'
 
@@ -139,9 +139,11 @@ export default function V3FarmCard({
     walletPosition && walletPosition.timestamp > pool.timestamp ? walletPosition.timestamp : pool.timestamp
   const claimMessage = claimPeriodMessage(pool, timestamp)
   const claimsExpired = isV3ClaimExpired(pool, timestamp)
+  const activeModal = !claimsExpired && address === modal?.account ? modal : undefined
   const count = walletPosition?.count ?? 0
   const amounts = walletPosition ? interpolateV3Rewards(pool, walletPosition, elapsed) : []
   const paged = pool.capacity > 32 && (walletPosition?.total ?? BigInt(0)) > BigInt(MAX_V3_PAGE)
+  const batchHarvest = pool.batchLimit > 0
   const claimableNfts = walletPosition?.claimableNfts ?? []
   const hasPosition = count > 0 || claimableNfts.length > 0
   const actionPending = action.busy || action.unconfirmed
@@ -166,13 +168,40 @@ export default function V3FarmCard({
     onPositionChange?.()
   }
   const harvest = async () => {
-    if (claimsExpired) return
+    if (!address || claimsExpired) return
     await action.runMany(async () => {
       if (chainId !== deployment.chainId) await switchChainAsync({ chainId: deployment.chainId })
-      const fresh = await loadPosition()
+      const fresh = batchHarvest
+        ? await readV3CardPosition(client, deployment, pool, address, BigInt(0), false, true)
+        : await loadPosition()
       if (isV3ClaimExpired(pool, fresh.timestamp)) throw new Error(t('Claim period ended'))
       if (!fresh.claimableNfts.length) throw new Error(t('No rewards are currently available to harvest.'))
-      return fresh.claimableNfts.map((ref) => manageV3Position(deployment, pool.poolId, ref, 'claim'))
+      if (batchHarvest) {
+        if (fresh.claimableNfts.length > pool.batchLimit) {
+          throw new Error(t('This pool has more than %count% claimable positions. Use the individual claims in pool details.', {
+            count: pool.batchLimit,
+          }))
+        }
+        const rewards = pool.rewards.filter((_, index) => fresh.amounts[index] > BigInt(0)).map(({ symbol }) => symbol)
+        return [{
+          ...manageV3Positions(deployment, pool.poolId, fresh.claimableNfts, 'claimBatch'),
+          confirmationLabel: `${t('Harvest')} · ${t('%count% NFT positions', { count: fresh.claimableNfts.length })} · ${rewards.join(' + ')}`,
+        }]
+      }
+      return fresh.claimableNfts.map((ref) => {
+        const rewardSymbols = pool.rewards
+          .filter((_, index) => ref.claimable[index] > BigInt(0))
+          .map(({ symbol }) => symbol)
+        const ruleIndex = pool.collections.findIndex(
+          ({ sourceChainId, collection }) =>
+            sourceChainId === ref.sourceChainId && collection.toLowerCase() === ref.collection.toLowerCase(),
+        )
+        const collectionName = collections[ruleIndex]?.name ?? ref.collection.slice(0, 8)
+        return {
+          ...manageV3Position(deployment, pool.poolId, ref, 'claim'),
+          confirmationLabel: `${t('Harvest')} · ${collectionName} #${ref.tokenId} · ${rewardSymbols.join(' + ')}`,
+        }
+      })
     })
     refreshPosition()
   }
@@ -278,7 +307,7 @@ export default function V3FarmCard({
                 canHarvest={claimableNfts.length > 0 && !actionPending}
                 harvesting={action.busy}
                 onHarvest={() => void harvest()}
-                harvestLabel={paged ? t('Harvest page') : undefined}
+                harvestLabel={paged && !batchHarvest ? t('Harvest page') : undefined}
               />
             )}
             {canProject && (
@@ -311,12 +340,23 @@ export default function V3FarmCard({
                 </Button>
               </Flex>
             )}
-            {!paged && claimableNfts.length > 1 && (
+            {batchHarvest && claimableNfts.length > 0 && (
+              <Text small color="textSubtle" mt="8px" mb="8px">
+                {t('Harvest collects the available rewards across this pool in one wallet confirmation.')}
+              </Text>
+            )}
+            {!batchHarvest && claimableNfts.length > 1 && (
               <Text small color="textSubtle" mt="8px" mb="8px">
                 {t(
-                  'Harvest claims all available rewards in this pool. Your wallet may ask for multiple confirmations.',
+                  '%count% wallet confirmations, one per NFT. Each includes all available rewards for that NFT.',
+                  { count: claimableNfts.length },
                 )}
               </Text>
+            )}
+            {detail && batchHarvest && !claimsExpired && !claimableNfts.length && (
+              <Button scale="sm" variant="text" disabled={actionPending} onClick={() => void harvest()}>
+                {t('Check and harvest pool rewards')}
+              </Button>
             )}
             {count > 0 ? (
               <FarmCardStakedPosition
@@ -336,17 +376,17 @@ export default function V3FarmCard({
                 {status === 'UPCOMING' ? t('Upcoming · staking opens when active') : t('Click to Stake Now')}
               </StyledActionButton>
             )}
-            {action.error && (
+            {!activeModal && action.error && (
               <Text small role="alert" color="failure">
                 {action.error}
               </Text>
             )}
-            {action.message && (
+            {!activeModal && action.message && (
               <Text small role="status">
                 {action.message}
               </Text>
             )}
-            {action.unconfirmed && (
+            {!activeModal && action.unconfirmed && (
               <Button
                 variant="secondary"
                 disabled={action.busy}
@@ -360,9 +400,9 @@ export default function V3FarmCard({
           </Flex>
         )}
       </Action>
-      {!claimsExpired && address && modal && address === modal.account && (
+      {address && activeModal && (
         <V3NftActionModal
-          mode={modal.mode}
+          mode={activeModal.mode}
           client={client}
           deployment={deployment}
           pool={pool}

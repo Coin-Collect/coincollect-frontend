@@ -67,7 +67,7 @@ export function useV3Wallet(chainId?: number) {
   return address && connector ? connect : undefined
 }
 
-type V3ActionStep = V3Call & { onConfirmed?: () => void }
+type V3ActionStep = V3Call & { confirmationLabel?: string; onConfirmed?: () => void }
 
 export function useV3Action(
   client: V3Client,
@@ -124,9 +124,10 @@ export function useV3Action(
         return undefined
       }
       let lastReceipt: Awaited<ReturnType<typeof readV3Receipt>> | undefined
-      for (const { onConfirmed, ...call } of calls) {
+      for (const { confirmationLabel, onConfirmed, ...call } of calls) {
         const progress = total > 1 ? `Transaction ${completed + 1} of ${total}. ` : ''
-        setMessage(`${progress}Confirm in your wallet.`)
+        const context = confirmationLabel ? `${progress}${confirmationLabel}. ` : progress
+        setMessage(`${context}Confirm in your wallet.`)
         const wallet = await getWallet()
         const transaction = await sendV3Call(client, deployment, wallet, account, call)
         setHash(transaction)
@@ -141,7 +142,7 @@ export function useV3Action(
             )
           },
         }
-        setMessage(`${progress}Waiting for confirmation…`)
+        setMessage(`${context}Waiting for confirmation…`)
         lastReceipt = await verify(transaction)
         if (!lastReceipt) return undefined
       }

@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 
-import { act, render } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import type { Address, Hex, WalletClient } from 'viem'
 import { useV3Action } from './hooks'
 import type { V3Client, V3Deployment } from './runtime'
@@ -45,6 +45,33 @@ function setup() {
 }
 
 beforeEach(() => jest.resetAllMocks())
+
+test('shows the current NFT and reward tokens while the wallet is open', async () => {
+  const { steps, action } = setup()
+  const confirmationLabel = 'Harvest · Neon Ronin #1 · COLLECT + SHIB'
+  let approve: (hash: Hex) => void
+  send.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        approve = resolve
+      }),
+  )
+  verify.mockResolvedValue(receipt)
+  let pending: ReturnType<ReturnType<typeof useV3Action>['runMany']>
+  act(() => {
+    pending = action().runMany(async () => [{ ...steps[0], confirmationLabel }, steps[1]])
+  })
+  await waitFor(() =>
+    expect(action().message).toBe(`Transaction 1 of 2. ${confirmationLabel}. Confirm in your wallet.`),
+  )
+  expect(send).toHaveBeenCalledWith(client, deployment, expect.anything(), account, { to: account, data: '0x01' })
+  send.mockResolvedValueOnce('0x02')
+  await act(async () => {
+    approve('0x01')
+    await pending
+  })
+  expect(action().message).toBe('2 of 2 transactions confirmed on the settlement network.')
+})
 
 test('stops at a wallet rejection and records only already confirmed NFT actions', async () => {
   const { start, steps, action } = setup()

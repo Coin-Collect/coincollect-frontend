@@ -18,7 +18,7 @@ import {
   type V3PoolSnapshot,
 } from 'features/universalRewards/reader'
 import type { V3Client, V3Deployment } from 'features/universalRewards/runtime'
-import { joinV3, manageV3Position } from 'features/universalRewards/transactions'
+import { joinV3, manageV3Position, manageV3Positions } from 'features/universalRewards/transactions'
 import { UINT256_MAX } from 'features/universalRewards/units'
 import { walletOfOwnerApi } from 'state/nftMarket/helpers'
 import NftSelectionModal, { NftSelectionLimit } from '../NftSelectionModal'
@@ -120,6 +120,7 @@ export default function V3NftActionModal({
   const wrongChain = chainId !== deployment.chainId
   const pending = action.busy || switching
   const selectedNfts = Object.values(selected)
+  const batchExit = mode === 'unstake' && pool.batchLimit > 0
 
   useEffect(() => {
     dialog.current?.showModal()
@@ -203,7 +204,8 @@ export default function V3NftActionModal({
   const options = useV3Query(`${mode}:${account}:${collectionIndex}:${offset}`, loadChoices)
   const max = pool.config.maxNftsPerWallet
   const currentCount = options.data?.count ?? 0
-  const overLimit = selectedNfts.length > 32 || (mode === 'stake' && currentCount + selectedNfts.length > max)
+  const selectionLimit = batchExit ? pool.batchLimit : 32
+  const overLimit = selectedNfts.length > selectionLimit || (mode === 'stake' && currentCount + selectedNfts.length > max)
   const addToken = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!/^\d{1,78}$/.test(typedId) || BigInt(typedId) > UINT256_MAX) {
@@ -260,15 +262,33 @@ export default function V3NftActionModal({
       if (checks.some(({ eligible, seated }) => !eligible || !seated)) {
         throw new Error(t('One or more selected NFTs are no longer in your pool position. Review your selection.'))
       }
-      return selectedNfts.map(({ ref }) => ({
-        ...manageV3Position(deployment, pool.poolId, ref, leave ? 'leave' : 'exit'),
-        onConfirmed: () =>
-          setSelected((previous) => {
-            const next = { ...previous }
-            delete next[nftRefKey(ref)]
-            return next
-          }),
-      }))
+      if (batchExit && !leave) {
+        const rewards = pool.rewards
+          .filter((_, index) => checks.some(({ claimable }) => claimable[index] > ZERO))
+          .map(({ symbol }) => symbol)
+        return [{
+          ...manageV3Positions(deployment, pool.poolId, selectedNfts.map(({ ref }) => ref), 'exitBatch'),
+          confirmationLabel: [t('Unstake & Harvest'), t('%count% NFT positions', { count: selectedNfts.length }), ...rewards].join(' · '),
+        }]
+      }
+      return selectedNfts.map(({ name, ref }, index) => {
+        const operation = leave ? t('Leave and keep claims') : t('Unstake & Harvest')
+        const rewardSymbols = leave
+          ? []
+          : pool.rewards
+              .filter((_, rewardIndex) => checks[index].claimable[rewardIndex] > ZERO)
+              .map(({ symbol }) => symbol)
+        return {
+          ...manageV3Position(deployment, pool.poolId, ref, leave ? 'leave' : 'exit'),
+          confirmationLabel: [operation, `${name} #${ref.tokenId}`, ...rewardSymbols].join(' · '),
+          onConfirmed: () =>
+            setSelected((previous) => {
+              const next = { ...previous }
+              delete next[nftRefKey(ref)]
+              return next
+            }),
+        }
+      })
     })
     if (receipt) done()
     else {
@@ -450,9 +470,9 @@ export default function V3NftActionModal({
             )}
             {mode === 'unstake' && (
               <>
-                {selectedNfts.length > 32 && (
+                {selectedNfts.length > selectionLimit && (
                   <Text small color="failure" role="alert">
-                    {t('Select up to 32 NFTs per batch.')}
+                    {t('Select up to %count% NFTs per batch.', { count: selectionLimit })}
                   </Text>
                 )}
                 <Text id={unstakeDescription} small color="textSubtle">
@@ -473,7 +493,11 @@ export default function V3NftActionModal({
                 )}
                 {selectedNfts.length > 1 && (
                   <Text small color="textSubtle">
-                    {t('Your wallet may ask you to confirm each NFT separately.')}
+                    {batchExit
+                      ? t('One wallet confirmation covers the selected NFTs and their available rewards.')
+                      : t('%count% wallet confirmations, one per NFT. Each includes all available rewards for that NFT.', {
+                          count: selectedNfts.length,
+                        })}
                   </Text>
                 )}
               </>

@@ -285,13 +285,17 @@ function FundingPanel({
               </V3Badge>
               <V3Metrics>
                 <div>
+                  <dt>Funding source</dt>
+                  <dd>{view.treasuryBacked ? 'Central Treasury' : 'Wallet deposit'}</dd>
+                </div>
+                <div>
                   <dt>Total lifetime budget</dt>
                   <dd>
                     {shortAmount(view.pool.funding.budget, view.token.decimals)} {view.token.symbol}
                   </dd>
                 </div>
                 <div>
-                  <dt>{view.treasuryBacked ? 'Reserved from treasury' : 'Deposited'}</dt>
+                  <dt>{view.treasuryBacked ? 'Reserved from Treasury' : 'Deposited from wallet'}</dt>
                   <dd>
                     {shortAmount(view.pool.funding.deposited, view.token.decimals)} {view.token.symbol}
                   </dd>
@@ -368,7 +372,7 @@ function FundingPanel({
                         ? `The contract wraps your POL into ${view.token.symbol} during the deposit. One wallet confirmation.`
                         : requiresApproval
                         ? `Confirm ${view.token.symbol} spending permission first, then confirm the deposit.`
-                        : `Confirm the ${view.token.symbol} deposit in your wallet.`}
+                        : `Confirm the ${view.token.symbol} deposit from your wallet.`}
                     </V3Muted>
                   )}
                   <FundingDisclosure>
@@ -609,6 +613,7 @@ export default function V3Studio({
   const studio = useV3Query(deployment?.address ?? '', loadStudio, 30_000)
   const allowed = Boolean(account && studio.data && isAddressEqual(account, studio.data.admin))
   const treasuryOwner = Boolean(account && studio.data?.treasury && isAddressEqual(account, studio.data.treasury.owner))
+  const fundingSource = draft.fundingSource ?? (studio.data?.treasury ? 'treasury' : 'wallet')
   const writeAllowed = Boolean(allowed && deployment && chainId === deployment.chainId)
   const transaction = useV3Action(client, deployment, getWallet, account)
   const locked = transaction.busy || transaction.unconfirmed || reviewing
@@ -649,7 +654,7 @@ export default function V3Studio({
     setReviewError('')
     setReviewing(true)
     try {
-      const planned = await buildV3Preview(client, deployment, draft)
+      const planned = await buildV3Preview(client, deployment, { ...draft, fundingSource })
       setPreview(planned)
       window.requestAnimationFrame(() => reviewHeading.current?.focus())
     } catch (error) {
@@ -797,26 +802,43 @@ export default function V3Studio({
                     <>
                       {studio.data.treasury && (
                         <>
-                          <V3Field>
-                            Funding source
-                            <select
-                              name="funding-source"
-                              value={draft.fundingSource ?? 'wallet'}
-                              onChange={(event) =>
-                                update({ fundingSource: event.target.value as V3StudioDraft['fundingSource'] })
-                              }
-                            >
-                              <option value="wallet">Wallet deposit</option>
-                              <option value="treasury">Available central Treasury balance</option>
-                            </select>
-                          </V3Field>
-                          {draft.fundingSource === 'treasury' && (
+                          <FundingMethod disabled={locked}>
+                            <legend>Funding source</legend>
+                            <label data-selected={fundingSource === 'treasury'}>
+                              <input
+                                type="radio"
+                                name="funding-source"
+                                value="treasury"
+                                checked={fundingSource === 'treasury'}
+                                onChange={() => update({ fundingSource: 'treasury' })}
+                              />
+                              <span>
+                                <strong>Central Treasury</strong>
+                                <small>Reserve the lifetime budget from Treasury when you create the pool.</small>
+                              </span>
+                            </label>
+                            <label data-selected={fundingSource === 'wallet'}>
+                              <input
+                                type="radio"
+                                name="funding-source"
+                                value="wallet"
+                                checked={fundingSource === 'wallet'}
+                                onChange={() => update({ fundingSource: 'wallet' })}
+                              />
+                              <span>
+                                <strong>Wallet deposit</strong>
+                                <small>Fund the pool from your wallet after creating it.</small>
+                              </span>
+                            </label>
+                          </FundingMethod>
+                          {fundingSource === 'treasury' && (
                             <>
                               <V3Field>
                                 Purchase strategy
                                 <select
                                   name="purchase-strategy"
                                   value={draft.purchaseMode ?? 'automatic'}
+                                  disabled={locked}
                                   onChange={(event) =>
                                     update({ purchaseMode: event.target.value as V3StudioDraft['purchaseMode'] })
                                   }
@@ -830,9 +852,6 @@ export default function V3Studio({
                                   <option value="adaptive">Adaptive · replenish when inventory is low</option>
                                 </select>
                               </V3Field>
-                              <V3Muted>
-                                Pool creation reserves the total lifetime budget in the same transaction.
-                              </V3Muted>
                             </>
                           )}
                         </>
@@ -854,6 +873,11 @@ export default function V3Studio({
                       <h2 ref={reviewHeading} tabIndex={-1}>
                         Review funding and rewards
                       </h2>
+                      <V3Muted>
+                        {preview.treasuryFunded
+                          ? 'This transaction reserves funds from Central Treasury. Your wallet pays the network fee.'
+                          : 'Create the pool now, then deposit the budget from your wallet in a separate transaction.'}
+                      </V3Muted>
                       {preview.usdPerDay !== undefined && (
                         <V3Muted>Reference daily budget · {shortAmount(preview.usdPerDay, 6)} USD</V3Muted>
                       )}
@@ -908,7 +932,9 @@ export default function V3Studio({
                       </V3Muted>
                       {preview.strategyNote && <V3Muted>Adaptive purchases selected · {preview.strategyNote}</V3Muted>}
                       <V3Button type="button" disabled={locked || !writeAllowed} onClick={() => void create()}>
-                        {preview.treasuryFunded ? 'Create pool and reserve treasury budget' : 'Create V3 pool'}
+                        {preview.treasuryFunded
+                          ? `Create pool and reserve ${formatUnits(preview.funding.budget, preview.fundingAsset.decimals)} ${preview.fundingAsset.symbol} from Treasury`
+                          : 'Create V3 pool'}
                       </V3Button>
                     </div>
                   </V3Card>

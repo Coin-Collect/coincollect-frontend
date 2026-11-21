@@ -1,18 +1,23 @@
 import {
   encodeFunctionData,
   isAddressEqual,
+  keccak256,
   parseEventLogs,
   toFunctionSelector,
   type Address,
   type Hex,
   type WalletClient,
 } from 'viem'
-import { universalRewardsAbi } from './abi'
+import { getCode } from 'viem/actions'
+import { universalRewardsAbi, universalRewardsV33Abi } from './abi'
 import { erc20Abi, type NftRef } from './reader'
 import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
 const expiredClaimError = toFunctionSelector('ClaimPeriodEnded()')
 const openClaimError = toFunctionSelector('ClaimPeriodOpen()')
+const positionBatchSelectors = ['claimBatch', 'exitBatch'].map((name) =>
+  toFunctionSelector(`${name}(uint256,(uint256,address,uint256)[])`),
+)
 
 export interface V3Call {
   to: Address
@@ -48,6 +53,13 @@ export async function sendV3Call(
     throw new Error('Your settlement wallet needs enough POL to cover this transaction.')
   }
   await assertWallet(wallet, account, deployment)
+  if (deployment.chainId === 31337 && positionBatchSelectors.some((selector) => call.data.startsWith(selector))) {
+    // Local previews can share a chain ID and contract address while pointing at different ledgers.
+    const walletCode = await getCode(wallet, { address: deployment.address })
+    if (!walletCode || keccak256(walletCode).toLowerCase() !== deployment.runtimeHash.toLowerCase()) {
+      throw new Error('Your wallet is connected to a different local RPC. Select the RPC for this preview.')
+    }
+  }
   return wallet.sendTransaction({ account, chain: wallet.chain ?? null, ...call, gas })
 }
 
@@ -96,6 +108,18 @@ export function manageV3Position(
     data: rewardToken
       ? encodeFunctionData({ abi: universalRewardsAbi, functionName: 'claimReward', args: [...args, rewardToken] })
       : encodeFunctionData({ abi: universalRewardsAbi, functionName: action, args }),
+  }
+}
+
+export function manageV3Positions(
+  deployment: V3Deployment,
+  poolId: bigint,
+  refs: readonly NftRef[],
+  action: 'claimBatch' | 'exitBatch',
+): V3Call {
+  return {
+    to: deployment.address,
+    data: encodeFunctionData({ abi: universalRewardsV33Abi, functionName: action, args: [poolId, refs] }),
   }
 }
 

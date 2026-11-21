@@ -3,6 +3,7 @@ import { MaxUint256 } from '@ethersproject/constants'
 import { Contract } from '@ethersproject/contracts'
 import { getAddress, isAddress } from '@ethersproject/address'
 import type { Provider } from '@ethersproject/providers'
+import { isLocalForkMode } from 'config/localFork'
 import { resolveNftAssetUrl } from '../assets'
 import { v2Erc721UserAbi } from './abi'
 import type { V2NftDiscoveryMethod, V2OwnedNfts } from './types'
@@ -171,7 +172,8 @@ export async function readV2NftMetadata(
 export async function readNftMetadataFromUri(uri: string): Promise<V2NftMetadata> {
   try {
     if (uri.startsWith('ipfs://')) uri = `https://ipfs.io/ipfs/${uri.slice('ipfs://'.length)}`
-    if (!/^https?:\/\//i.test(uri)) return {}
+    const inlineFixture = isLocalForkMode && uri.length <= 4096 && uri.startsWith('data:application/json;base64,')
+    if (!inlineFixture && !/^https?:\/\//i.test(uri)) return {}
     const response = await fetch(uri, { signal: AbortSignal.timeout(4_000) })
     if (!response.ok) return {}
     const json = await response.json()
