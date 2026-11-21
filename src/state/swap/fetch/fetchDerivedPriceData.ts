@@ -84,7 +84,7 @@ const fetchDerivedPriceData = async (
   const interval = getInterval(timeWindow)
   const endTimestamp = getUnixTime(new Date())
   const startTimestamp = getUnixTime(startOfHour(sub(endTimestamp * 1000, { days: getSkipDaysToStart(timeWindow) })))
-  const timestamps = []
+  const timestamps: number[] = []
   let time = startTimestamp
   while (time <= endTimestamp) {
     timestamps.push(time)

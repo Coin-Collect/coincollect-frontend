@@ -23,7 +23,7 @@ const RecentCakeProfitCountdownRow = ({ vaultKey }: { vaultKey: VaultKey }) => {
     cakePriceBusd.toNumber(),
   )
 
-  const lastActionInMs = lastUserActionTime && parseInt(lastUserActionTime) * 1000
+  const lastActionInMs = lastUserActionTime ? parseInt(lastUserActionTime) * 1000 : 0
   const dateTimeLastAction = new Date(lastActionInMs)
   const dateStringToDisplay = dateTimeLastAction.toLocaleString()
 

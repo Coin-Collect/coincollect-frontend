@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BigNumber } from '@ethersproject/bignumber'
-import { TransactionResponse } from '@ethersproject/providers'
+import { TransactionResponse, Web3Provider } from '@ethersproject/providers'
 import { Currency, currencyEquals, ETHER, TokenAmount, WETH } from '@coincollect/sdk'
 import { Button, Text, Flex, AddIcon, CardBody, Message, useModal } from '@pancakeswap/uikit'
 import { useIsTransactionUnsupported } from 'hooks/Trades'
@@ -127,7 +127,7 @@ export default function AddLiquidity() {
   const addTransaction = useTransactionAdder()
 
   async function onAdd() {
-    if (!chainId || !library || !account) return
+    if (!chainId || !(library instanceof Web3Provider) || !account) return
     const routerContract = getRouterContract(chainId, library, account)
 
     const { [Field.CURRENCY_A]: parsedAmountA, [Field.CURRENCY_B]: parsedAmountB } = parsedAmounts

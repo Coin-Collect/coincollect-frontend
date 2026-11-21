@@ -100,18 +100,19 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
   const { status, currencyPriceInUSD } = publicIfoData
   const poolCharacteristic = publicIfoData[poolId]
   const walletCharacteristic = walletIfoData[poolId]
+  const configuredPool = ifo[poolId]
+  if (!poolCharacteristic || !configuredPool) {
+    return <Box paddingTop="24px"><SkeletonCardDetails /></Box>
+  }
 
-  let version3MaxTokens = walletIfoData.ifoCredit?.creditLeft
-    ? // if creditLeft > limit show limit else show creditLeft
-      walletIfoData.ifoCredit.creditLeft.gt(
-        poolCharacteristic.limitPerUserInLP.minus(walletCharacteristic.amountTokenCommittedInLP),
-      )
-      ? poolCharacteristic.limitPerUserInLP.minus(walletCharacteristic.amountTokenCommittedInLP)
-      : walletIfoData.ifoCredit.creditLeft
-    : null
-
-  // unlimited pool just show the credit left
-  version3MaxTokens = poolId === PoolIds.poolUnlimited ? walletIfoData.ifoCredit?.creditLeft : version3MaxTokens
+  const credit = walletIfoData.ifoCredit?.creditLeft
+  const remainingLimit = walletCharacteristic
+    ? poolCharacteristic.limitPerUserInLP.minus(walletCharacteristic.amountTokenCommittedInLP)
+    : undefined
+  const version3MaxTokens =
+    poolId === PoolIds.poolUnlimited || !credit || !remainingLimit
+      ? credit
+      : credit.gt(remainingLimit) ? remainingLimit : credit
 
   /* Format start */
   const maxLpTokens =
@@ -151,8 +152,8 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
       return (
         <>
           {tokenEntry}
-          <FooterEntry label={t('Funds to raise:')} value={ifo[poolId].raiseAmount} />
-          {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
+          <FooterEntry label={t('Funds to raise:')} value={configuredPool.raiseAmount} />
+          {configuredPool.cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={configuredPool.cakeToBurn} />}
           <FooterEntry
             label={t('Price per %symbol%:', { symbol: ifo.token.symbol })}
             value={`$${ifo.tokenOfferingPrice}`}
@@ -187,8 +188,8 @@ const IfoCardDetails: React.FC<IfoCardDetailsProps> = ({ isEligible, poolId, ifo
           {(poolId === PoolIds.poolBasic || ifo.isActive) && tokenEntry}
           {poolId === PoolIds.poolUnlimited && <FooterEntry label={t('Additional fee:')} value={taxRate} />}
           <FooterEntry label={t('Total committed:')} value={currencyPriceInUSD.gt(0) ? totalCommitted : null} />
-          <FooterEntry label={t('Funds to raise:')} value={ifo[poolId].raiseAmount} />
-          {ifo[poolId].cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={ifo[poolId].cakeToBurn} />}
+          <FooterEntry label={t('Funds to raise:')} value={configuredPool.raiseAmount} />
+          {configuredPool.cakeToBurn !== '$0' && <FooterEntry label={t('CAKE to burn:')} value={configuredPool.cakeToBurn} />}
           {ifo.version > 1 && (
             <FooterEntry
               label={t('Price per %symbol%:', { symbol: ifo.token.symbol })}

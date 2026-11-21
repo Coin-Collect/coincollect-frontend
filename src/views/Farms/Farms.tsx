@@ -192,7 +192,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [numberOfFarmsVisible, setNumberOfFarmsVisible] = useState(NUMBER_OF_FARMS_VISIBLE)
 
   const chosenFarmsMemoized = useMemo(() => {
-    let chosenFarms = []
+    let chosenFarms: FarmWithStakedValue[] = []
 
     const sortFarms = (farms: FarmWithStakedValue[]): FarmWithStakedValue[] => {
       switch (sortOption) {
@@ -434,6 +434,6 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   )
 }
 
-export const FarmsContext = createContext({ chosenFarmsMemoized: [] })
+export const FarmsContext = createContext<{ chosenFarmsMemoized: FarmWithStakedValue[] }>({ chosenFarmsMemoized: [] })
 
 export default Farms

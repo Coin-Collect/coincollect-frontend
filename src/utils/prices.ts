@@ -84,7 +84,7 @@ export function formatExecutionPrice(trade?: Trade, inverted?: boolean): string 
 /**
  * Helper to multiply a Price object by an arbitrary amount
  */
-export const multiplyPriceByAmount = (price: Price, amount: number, significantDigits = 18) => {
+export const multiplyPriceByAmount = (price: Price | null | undefined, amount: number, significantDigits = 18) => {
   if (!price) {
     return 0
   }

@@ -1,8 +1,10 @@
+import type { Story } from "../../../.storybook/story";
 import React from "react";
 import Box from "../Box/Box";
 import Flex from "../Box/Flex";
 import Text from "../Text/Text";
 import Svg from "./Svg";
+import type { SvgProps } from "./types";
 import AnimatedIconComponent from "./AnimatedIconComponent";
 
 export default {
@@ -27,12 +29,19 @@ export const Default: React.FC = () => {
   );
 };
 
+declare const require: {
+  context: (directory: string, recursive: boolean, pattern: RegExp) => {
+    (path: string): { default: React.ComponentType<SvgProps> };
+    keys(): string[];
+  };
+};
+
 const context = require.context("./Icons", true, /.tsx$/);
-const components = context.keys().reduce((accum, path) => {
+const components = context.keys().reduce<Record<string, React.ComponentType<SvgProps>>>((accum, path) => {
   const file = path.substring(2).replace(".tsx", "");
   return {
     ...accum,
-    [file]: context(path),
+    [file]: context(path).default,
   };
 }, {});
 
@@ -40,7 +49,7 @@ export const Icons: React.FC = () => {
   return (
     <Flex justifyContent="start" alignItems="center" flexWrap="wrap">
       {Object.keys(components).map((file) => {
-        const Icon = components[file].default;
+        const Icon = components[file];
         return (
           <Flex
             key={file}
@@ -69,7 +78,7 @@ export const Icons: React.FC = () => {
   );
 };
 
-const AnimatedIconComponentTemplate: React.FC = (args) => {
+const AnimatedIconComponentTemplate: Story<Partial<React.ComponentProps<typeof AnimatedIconComponent>>> = (args) => {
   return (
     <Box background="white" height="48px" width="48px">
       <AnimatedIconComponent

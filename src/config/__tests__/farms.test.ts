@@ -1,48 +1,31 @@
+import { isAddress } from '@ethersproject/address'
+import { ChainId } from '@coincollect/sdk'
 import farms from 'config/constants/farms'
-import { SerializedFarm } from 'state/types'
-import { getLpContract } from 'utils/contractHelpers'
+import polygon from './fixtures/polygon-contracts.json'
 
-// Test only against the last 10 farms, for performance concern
-const farmsToTest: [number, SerializedFarm][] = farms
-  .filter((farm) => farm.pid !== 0)
-  .slice(0, 10)
-  .map((farm) => [farm.pid, farm])
+jest.mock('config/constants/networks', () => ({ CHAIN_ID: '137' }))
 
-describe('Config farms', () => {
-  it.each(farmsToTest)('Farm #%d has an unique pid', (pid) => {
-    const duplicates = farms.filter((f) => pid === f.pid)
-    expect(duplicates).toHaveLength(1)
+const polygonDexFactory = '0x2bc17223a99b6e2857796a5f64a1ed91067b5657'
+const pairs: Readonly<Record<string, { token0: string; token1: string; factory: string } | undefined>> = polygon.farms
+
+describe('Polygon farm configuration', () => {
+  it('assigns each configured farm a unique PID and pair contract', () => {
+    expect(farms.length).toBeGreaterThan(0)
+    expect(new Set(farms.map(({ pid }) => pid)).size).toBe(farms.length)
+    expect(new Set(farms.map(({ lpAddresses }) => lpAddresses[ChainId.POLYGON]?.toLowerCase())).size).toBe(farms.length)
   })
 
-  it.each(farmsToTest)('Farm #%d has an unique address', (pid, farm) => {
-    const duplicates = farms.filter((f) => farm.lpAddresses[137] === f.lpAddresses[137])
-    expect(duplicates).toHaveLength(1)
-  })
+  it.each(farms.map((farm) => [farm.pid, farm] as const))('matches the deployed LP pair and factory for farm %d', (_, farm) => {
+    const address = farm.lpAddresses[ChainId.POLYGON]
+    if (!address || !isAddress(address)) throw new Error(`Invalid LP address for farm ${farm.pid}`)
+    const pair = pairs[address.toLowerCase()]
+    if (!pair) throw new Error(`Missing Polygon LP fixture for ${address}`)
 
-  it.each(farmsToTest)('Farm %d has the correct token addresses', async (pid, farm) => {
-    const tokenAddress = farm.token.address
-    const quoteTokenAddress = farm.quoteToken.address
-    const lpContract = getLpContract(farm.lpAddresses[137])
-
-    const token0Address = (await lpContract.token0()).toLowerCase()
-    const token1Address = (await lpContract.token1()).toLowerCase()
-
-    expect(
-      token0Address === tokenAddress.toLowerCase() || token0Address === quoteTokenAddress.toLowerCase(),
-    ).toBeTruthy()
-    expect(
-      token1Address === tokenAddress.toLowerCase() || token1Address === quoteTokenAddress.toLowerCase(),
-    ).toBeTruthy()
-  })
-
-  // The first pid using the new factory
-  const START_PID = 365
-  const FACTORY_ADDRESS = '0xca143ce32fe78f1f7019d7d551a6402fc5350c73'
-  const newFarmsToTest = farmsToTest.filter((farmSet) => farmSet[0] >= START_PID)
-
-  it.each(newFarmsToTest)('farm %d is using correct factory address', async (pid, farm) => {
-    const lpContract = getLpContract(farm.lpAddresses[137])
-    const factory = await lpContract.factory()
-    expect(factory.toLowerCase()).toEqual(FACTORY_ADDRESS)
+    expect(farm.token.chainId).toBe(ChainId.POLYGON)
+    expect(farm.quoteToken.chainId).toBe(ChainId.POLYGON)
+    expect([pair.token0, pair.token1].sort()).toEqual(
+      [farm.token.address.toLowerCase(), farm.quoteToken.address.toLowerCase()].sort(),
+    )
+    expect(pair.factory).toBe(polygonDexFactory)
   })
 })

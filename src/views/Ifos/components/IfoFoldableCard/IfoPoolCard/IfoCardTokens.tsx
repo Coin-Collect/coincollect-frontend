@@ -136,8 +136,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
   const userPoolCharacteristics = walletIfoData[poolId]
 
   const { currency, token } = ifo
-  const { hasClaimed } = userPoolCharacteristics
-  const distributionRatio = ifo[poolId].distributionRatio * 100
+  const configuredPool = ifo[poolId]
 
   const ifoPoolVault = useIfoPoolVault()
   const { pool } = useIfoWithApr()
@@ -156,12 +155,17 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
   )
 
   const renderTokenSection = () => {
-    if (isLoading) {
+    if (isLoading || !configuredPool) {
       return <SkeletonCardTokens />
     }
+    const distributionRatio = configuredPool.distributionRatio * 100
     if (!account) {
-      return <OnSaleInfo token={token} distributionRatio={distributionRatio} saleAmount={ifo[poolId].saleAmount} />
+      return <OnSaleInfo token={token} distributionRatio={distributionRatio} saleAmount={configuredPool.saleAmount} />
     }
+    if (!publicPoolCharacteristics || !userPoolCharacteristics) {
+      return <SkeletonCardTokens />
+    }
+    const { hasClaimed } = userPoolCharacteristics
 
     let message
 
@@ -228,7 +232,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
     if (account && !hasProfile) {
       return (
         <>
-          <OnSaleInfo token={token} distributionRatio={distributionRatio} saleAmount={ifo[poolId].saleAmount} />
+          <OnSaleInfo token={token} distributionRatio={distributionRatio} saleAmount={configuredPool.saleAmount} />
           {message}
         </>
       )
@@ -241,7 +245,7 @@ const IfoCardTokens: React.FC<IfoCardTokensProps> = ({
         <>
           <TokenSection primaryToken={ifo.token}>
             <Label>{t('On sale')}</Label>
-            <Value>{ifo[poolId].saleAmount}</Value>
+            <Value>{configuredPool.saleAmount}</Value>
           </TokenSection>
           <Text fontSize="14px" color="textSubtle" pl="48px">
             {t('%ratio%% of total sale', { ratio: distributionRatio })}

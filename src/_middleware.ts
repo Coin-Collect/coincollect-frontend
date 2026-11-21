@@ -9,24 +9,16 @@ const BLOCK_REGIONS = ['UA-43']
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const { geo } = req
-  const { country, region } = geo
-
-  // Only track UA for debuggin purpose
-  if (country === 'UA') {
-    // eslint-disable-next-line no-console
-    console.log('country-region:', `${country}-${region}`)
-  }
+  const country = req.headers.get('x-vercel-ip-country')
+  const region = req.headers.get('x-vercel-ip-country-region')
 
   const shouldBlock: boolean =
     BLOCK_COUNTRIES.some((c) => c === country) || BLOCK_REGIONS.some((r) => r === `${country}-${region}`)
 
   if (shouldBlock) {
-    // @ts-ignore
-    res.cookie(BLOCK_COUNTRIES_COOKIE_NAME, String(shouldBlock))
+    res.cookies.set(BLOCK_COUNTRIES_COOKIE_NAME, String(shouldBlock))
   } else {
-    // @ts-ignore
-    res.clearCookie(BLOCK_COUNTRIES_COOKIE_NAME)
+    res.cookies.delete(BLOCK_COUNTRIES_COOKIE_NAME)
   }
 
   return res

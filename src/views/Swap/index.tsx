@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { CurrencyAmount, JSBI, Token, Trade } from '@coincollect/sdk'
+import { Currency, CurrencyAmount, JSBI, Token, Trade } from '@coincollect/sdk'
 import {
   Button,
   Text,
@@ -274,16 +274,13 @@ export default function Swap() {
   }, [attemptingTxn, swapErrorMessage, trade, txHash])
 
   // swap warning state
-  const [swapWarningCurrency, setSwapWarningCurrency] = useState(null)
+  const [swapWarningCurrency, setSwapWarningCurrency] = useState<Token | null>(null)
   const [onPresentSwapWarningModal] = useModal(<SwapWarningModal swapCurrency={swapWarningCurrency} />)
 
-  const shouldShowSwapWarning = (swapCurrency) => {
-    const isWarningToken = Object.entries(SwapWarningTokens).find((warningTokenConfig) => {
-      const warningTokenData = warningTokenConfig[1]
-      return swapCurrency.address === warningTokenData.address
-    })
-    return Boolean(isWarningToken)
-  }
+  const shouldShowSwapWarning = (swapCurrency: Currency): swapCurrency is Token =>
+    swapCurrency instanceof Token &&
+    Object.values(SwapWarningTokens).some(({ address }) => address === swapCurrency.address)
+
 
   useEffect(() => {
     if (swapWarningCurrency) {
@@ -296,8 +293,7 @@ export default function Swap() {
     (inputCurrency) => {
       setApprovalSubmitted(false) // reset 2 step UI for approvals
       onCurrencySelection(Field.INPUT, inputCurrency)
-      const showSwapWarning = shouldShowSwapWarning(inputCurrency)
-      if (showSwapWarning) {
+      if (shouldShowSwapWarning(inputCurrency)) {
         setSwapWarningCurrency(inputCurrency)
       } else {
         setSwapWarningCurrency(null)
@@ -315,8 +311,7 @@ export default function Swap() {
   const handleOutputSelect = useCallback(
     (outputCurrency) => {
       onCurrencySelection(Field.OUTPUT, outputCurrency)
-      const showSwapWarning = shouldShowSwapWarning(outputCurrency)
-      if (showSwapWarning) {
+      if (shouldShowSwapWarning(outputCurrency)) {
         setSwapWarningCurrency(outputCurrency)
       } else {
         setSwapWarningCurrency(null)

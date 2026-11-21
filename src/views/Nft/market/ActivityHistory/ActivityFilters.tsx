@@ -31,7 +31,7 @@ const ScrollableFlexContainer = styled(Flex)`
 `
 
 interface FiltersProps {
-  collection: Collection
+  collection?: Collection
 }
 
 const ActivityFilters: React.FC<FiltersProps> = ({ collection }) => {

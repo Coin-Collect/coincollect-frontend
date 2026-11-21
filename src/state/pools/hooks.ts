@@ -68,6 +68,7 @@ export const usePool = (sousId: number): { pool: DeserializedPool; userDataLoade
     pool: state.pools.data.find((p) => p.sousId === sousId),
     userDataLoaded: state.pools.userDataLoaded,
   }))
+  if (!pool) throw new Error(`Pool ${sousId} is missing from the configured pools.`)
   return { pool: transformPool(pool), userDataLoaded }
 }
 
@@ -80,7 +81,7 @@ export const useFetchCakeVault = () => {
   }, [dispatch])
 
   useFastRefreshEffect(() => {
-    dispatch(fetchCakeVaultUserData({ account }))
+    dispatch(fetchCakeVaultUserData({ account: account ?? undefined }))
   }, [dispatch, account])
 
   useEffect(() => {
@@ -129,7 +130,7 @@ export const useVaultPools = () => {
   }
 }
 
-export const useVaultPoolByKey = (key: VaultKey) => {
+export const useVaultPoolByKey = (key?: VaultKey) => {
   const {
     totalShares: totalSharesAsString,
     pricePerFullShare: pricePerFullShareAsString,
@@ -147,34 +148,34 @@ export const useVaultPoolByKey = (key: VaultKey) => {
   } = useSelector((state: State) => (key ? state.pools[key] : initialPoolVaultState))
 
   const estimatedCakeBountyReward = useMemo(() => {
-    return new BigNumber(estimatedCakeBountyRewardAsString)
+    return new BigNumber(estimatedCakeBountyRewardAsString ?? NaN)
   }, [estimatedCakeBountyRewardAsString])
 
   const totalPendingCakeHarvest = useMemo(() => {
-    return new BigNumber(totalPendingCakeHarvestAsString)
+    return new BigNumber(totalPendingCakeHarvestAsString ?? NaN)
   }, [totalPendingCakeHarvestAsString])
 
   const totalShares = useMemo(() => {
-    return new BigNumber(totalSharesAsString)
+    return new BigNumber(totalSharesAsString ?? NaN)
   }, [totalSharesAsString])
 
   const pricePerFullShare = useMemo(() => {
-    return new BigNumber(pricePerFullShareAsString)
+    return new BigNumber(pricePerFullShareAsString ?? NaN)
   }, [pricePerFullShareAsString])
 
   const totalCakeInVault = useMemo(() => {
-    return new BigNumber(totalCakeInVaultAsString)
+    return new BigNumber(totalCakeInVaultAsString ?? NaN)
   }, [totalCakeInVaultAsString])
 
   const userShares = useMemo(() => {
-    return new BigNumber(userSharesAsString)
+    return new BigNumber(userSharesAsString ?? NaN)
   }, [userSharesAsString])
 
   const cakeAtLastUserAction = useMemo(() => {
-    return new BigNumber(cakeAtLastUserActionAsString)
+    return new BigNumber(cakeAtLastUserActionAsString ?? NaN)
   }, [cakeAtLastUserActionAsString])
 
-  const performanceFeeAsDecimal = performanceFee && performanceFee / 100
+  const performanceFeeAsDecimal = (performanceFee ?? 0) / 100
 
   return {
     totalShares,
@@ -209,7 +210,7 @@ export const useIfoPoolCreditBlock = () => {
     creditStartBlock: state.pools.ifoPool.creditStartBlock,
     creditEndBlock: state.pools.ifoPool.creditEndBlock,
   }))
-  const hasEndBlockOver = currentBlock >= creditEndBlock
+  const hasEndBlockOver = creditEndBlock != null && currentBlock >= creditEndBlock
   return { creditStartBlock, creditEndBlock, hasEndBlockOver }
 }
 

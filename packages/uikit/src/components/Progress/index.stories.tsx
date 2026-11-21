@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React, { useState } from "react";
 import capitalize from "lodash/capitalize";
 import random from "lodash/random";
@@ -13,7 +14,7 @@ export default {
   argTypes: {},
 };
 
-const DefaultTemplate: React.FC = (args) => {
+const DefaultTemplate: Story<Partial<React.ComponentProps<typeof Progress>>> = (args) => {
   const [progress, setProgress] = useState(random(1, 100));
 
   const handleClick = () => setProgress(random(1, 100));

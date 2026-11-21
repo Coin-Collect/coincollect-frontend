@@ -20,7 +20,7 @@ const UnstakingFeeCountdownRow: React.FC<UnstakingFeeCountdownRowProps> = ({ isT
     userData: { lastDepositedTime, userShares },
     fees: { withdrawalFee, withdrawalFeePeriod },
   } = useVaultPoolByKey(vaultKey)
-  const feeAsDecimal = withdrawalFee / 100 || '-'
+  const feeAsDecimal = (withdrawalFee ?? 0) / 100 || '-'
   const withdrawalDayPeriod = withdrawalFeePeriod ? secondsToDay(withdrawalFeePeriod) : '-'
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <>
@@ -40,9 +40,9 @@ const UnstakingFeeCountdownRow: React.FC<UnstakingFeeCountdownRowProps> = ({ isT
   )
 
   const { secondsRemaining, hasUnstakingFee } = useWithdrawalFeeTimer(
-    parseInt(lastDepositedTime, 10),
+    parseInt(lastDepositedTime ?? "", 10),
     userShares,
-    withdrawalFeePeriod,
+    withdrawalFeePeriod ?? 0,
   )
 
   // The user has made a deposit, but has no fee

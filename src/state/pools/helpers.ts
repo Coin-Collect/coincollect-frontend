@@ -5,6 +5,7 @@ import { BIG_ZERO } from 'utils/bigNumber'
 
 type UserData =
   | DeserializedPool['userData']
+  | undefined
   | {
       allowance: number | string
       stakingTokenBalance: number | string
@@ -52,22 +53,22 @@ export const transformPool = (pool: SerializedPool): DeserializedPool => {
     stakingToken: deserializeToken(stakingToken),
     earningToken: deserializeToken(earningToken),
     userData: transformUserData(userData),
-    totalStaked: new BigNumber(totalStaked),
-    stakingLimit: new BigNumber(stakingLimit),
-    stakingLimitEndBlock: numberBlocksForUserLimit + startBlock,
+    totalStaked: new BigNumber(totalStaked ?? NaN),
+    stakingLimit: new BigNumber(stakingLimit ?? NaN),
+    stakingLimitEndBlock: (numberBlocksForUserLimit ?? NaN) + (startBlock ?? NaN),
   }
 }
 
 export const getTokenPricesFromFarm = (farms: SerializedFarm[]) => {
-  return farms.reduce((prices, farm) => {
+  return farms.reduce<Record<string, number>>((prices, farm) => {
     const quoteTokenAddress = farm.quoteToken.address.toLocaleLowerCase()
     const tokenAddress = farm.token.address.toLocaleLowerCase()
     /* eslint-disable no-param-reassign */
     if (!prices[quoteTokenAddress]) {
-      prices[quoteTokenAddress] = new BigNumber(farm.quoteTokenPriceBusd).toNumber()
+      prices[quoteTokenAddress] = new BigNumber(farm.quoteTokenPriceBusd ?? NaN).toNumber()
     }
     if (!prices[tokenAddress]) {
-      prices[tokenAddress] = new BigNumber(farm.tokenPriceBusd).toNumber()
+      prices[tokenAddress] = new BigNumber(farm.tokenPriceBusd ?? NaN).toNumber()
     }
     /* eslint-enable no-param-reassign */
     return prices

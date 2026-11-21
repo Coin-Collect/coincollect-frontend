@@ -26,7 +26,9 @@ export const getIdsByTimeWindow = ({
   if (timeWindow === PairDataTimeWindowEnum.DAY) {
     return []
   }
-  return times(idsCount, (value) => `${pairAddress}-${pairLastIdAsNumber - value * timeWindowGapMapping[timeWindow]}`)
+  const gap = timeWindowGapMapping[timeWindow]
+  if (gap === null) return []
+  return times(idsCount, (value) => `${pairAddress}-${pairLastIdAsNumber - value * gap}`)
 }
 
 export const pairHasEnoughLiquidity = (

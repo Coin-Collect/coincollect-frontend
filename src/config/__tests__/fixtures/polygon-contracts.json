@@ -1,0 +1,198 @@
+{
+  "chainId": 137,
+  "blockNumber": 97638790,
+  "blockHash": "0x9cf4791f6b4aab715d03aa5f66ad39e40676b80f00620927c6ddc6827db63419",
+  "pools": {
+    "0xf18aed154cb019ce4680cea97ff3241fd5a6a02d": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0x8c1245ba1714bd7a61a34cb63b95331fa3db497c",
+      "rewardPerBlock": "86000000000000"
+    },
+    "0xd043e7bb67b817a41afa5127945583b78e509348": {
+      "stakedToken": "0x8c1245ba1714bd7a61a34cb63b95331fa3db497c",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "3600000000000000"
+    },
+    "0xc5284c89d58de92b4ef1741cff6c77b942dc2d5e": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0x4e6d6d050beefd732344398ae20b23c245d6a59f",
+      "rewardPerBlock": "1280000000000000000"
+    },
+    "0xbf6523808f55a2139ee03804017dddb20b90ca91": {
+      "stakedToken": "0x4e6d6d050beefd732344398ae20b23c245d6a59f",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "6800000000000000"
+    },
+    "0x1be4dd1d02adb7a3cd092951150cb14c6c9289fc": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0x0d8550552a7f277e141331c2fe7798bb5c9359b9",
+      "rewardPerBlock": "28000000000000000000"
+    },
+    "0x9f70ff2555757bc1de99f8c3b0ce7dd38c523d9f": {
+      "stakedToken": "0x0d8550552a7f277e141331c2fe7798bb5c9359b9",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "6300000000000000"
+    },
+    "0x262199dbff7cc9860f9f12956f5442a30ecd847b": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0xeacde3e3c5aae81d435d9a592827803296e25aae",
+      "rewardPerBlock": "21000000000000000000"
+    },
+    "0x150ad667558c2667e294aa362ed9704cad635c38": {
+      "stakedToken": "0xeacde3e3c5aae81d435d9a592827803296e25aae",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "11600000000000000"
+    },
+    "0x563b0decbba56ec4d0c3fa65f3e24f99cf926af8": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0x7b6459369ff7eda42c1a8465c079d48ef95c1d75",
+      "rewardPerBlock": "2500000000000000000"
+    },
+    "0x2fe87d842b3994ca07130d76362ff504f3530ca8": {
+      "stakedToken": "0x7b6459369ff7eda42c1a8465c079d48ef95c1d75",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "3600000000000000"
+    },
+    "0x7199fec50451f5612df0392dbb74a6b91cd9e6c4": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0xdbc80878e4ffe6a4f87fb94db2ee58a642986816",
+      "rewardPerBlock": "820000000000000"
+    },
+    "0xe81076995da01c847b979b72dcf81c63067edca8": {
+      "stakedToken": "0xdbc80878e4ffe6a4f87fb94db2ee58a642986816",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "21000000000000000"
+    },
+    "0x5e35532dd33fa442488e8ce0e4d35d742c0307e5": {
+      "stakedToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardToken": "0x6ebd8f29ae4636e9b52b666af6e0fa0bb2fbb43a",
+      "rewardPerBlock": "49000000000000000"
+    },
+    "0x925f0ef1edf2f510cffb01102dca0d6d7f4e3e5a": {
+      "stakedToken": "0x6ebd8f29ae4636e9b52b666af6e0fa0bb2fbb43a",
+      "rewardToken": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "rewardPerBlock": "18000000000000000"
+    }
+  },
+  "farms": {
+    "0x0ccc84b6506003487aec687085e82c2f912e607b": {
+      "token0": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "token1": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0xfb09801b10298db9663d2790f5d5bc6afa354497": {
+      "token0": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "token1": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0x27307257ea70280da5692a2cd3c863d021127ac1": {
+      "token0": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "token1": "0x8c1245ba1714bd7a61a34cb63b95331fa3db497c",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0x244c4b75c83d38f1458e322996e09d9e60f55d77": {
+      "token0": "0x4e6d6d050beefd732344398ae20b23c245d6a59f",
+      "token1": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0x4e89778acd2975e998147d8e06053d714750ac2d": {
+      "token0": "0x0d8550552a7f277e141331c2fe7798bb5c9359b9",
+      "token1": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0xbff2b56188e606abf4b81a8dd782b515a8d097bd": {
+      "token0": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "token1": "0xeacde3e3c5aae81d435d9a592827803296e25aae",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0x9556c3c45333476e0d2466cfbbe8f001055bdc41": {
+      "token0": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "token1": "0x7b6459369ff7eda42c1a8465c079d48ef95c1d75",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0x94d979cebe0481eab8a1296818e81fc2636b0d2f": {
+      "token0": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "token1": "0xdbc80878e4ffe6a4f87fb94db2ee58a642986816",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    },
+    "0x3ad14c5fb4f8d2f09cdd1434473ed97fc8c7a62e": {
+      "token0": "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148",
+      "token1": "0x6ebd8f29ae4636e9b52b666af6e0fa0bb2fbb43a",
+      "factory": "0x2bc17223a99b6e2857796a5f64a1ed91067b5657"
+    }
+  },
+  "tokens": {
+    "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270": {
+      "symbol": "WPOL",
+      "decimals": 18
+    },
+    "0x56633733fc8baf9f730ad2b6b9956ae22c6d4148": {
+      "symbol": "COLLECT",
+      "decimals": 18
+    },
+    "0x8c1245ba1714bd7a61a34cb63b95331fa3db497c": {
+      "symbol": "LOT",
+      "decimals": 18
+    },
+    "0x4e6d6d050beefd732344398ae20b23c245d6a59f": {
+      "symbol": "BLITZ",
+      "decimals": 18
+    },
+    "0x0d8550552a7f277e141331c2fe7798bb5c9359b9": {
+      "symbol": "AVATAR",
+      "decimals": 18
+    },
+    "0xeacde3e3c5aae81d435d9a592827803296e25aae": {
+      "symbol": "HUNT",
+      "decimals": 18
+    },
+    "0x7b6459369ff7eda42c1a8465c079d48ef95c1d75": {
+      "symbol": "NITRO",
+      "decimals": 18
+    },
+    "0xdcb72ae4d5dc6ae274461d57e65db8d50d0a33ad": {
+      "symbol": "RADAR",
+      "decimals": 18
+    },
+    "0xb5c064f955d8e7f38fe0460c556a72987494ee17": {
+      "symbol": "QUICK",
+      "decimals": 18
+    },
+    "0xdbc80878e4ffe6a4f87fb94db2ee58a642986816": {
+      "symbol": "DJ",
+      "decimals": 18
+    },
+    "0x6ebd8f29ae4636e9b52b666af6e0fa0bb2fbb43a": {
+      "symbol": "Z",
+      "decimals": 18
+    },
+    "0xd93f7e271cb87c23aaa73edc008a79646d1f9912": {
+      "symbol": "SOL",
+      "decimals": 9
+    },
+    "0xbbba073c31bf03b8acf7c28ef0738decf3695683": {
+      "symbol": "SAND",
+      "decimals": 18
+    },
+    "0xd6df932a45c0f255f85145f286ea0b292b21c90b": {
+      "symbol": "AAVE",
+      "decimals": 18
+    },
+    "0xc2132d05d31c914a87c6611c10748aeb04b58e8f": {
+      "symbol": "USDT0",
+      "decimals": 6
+    },
+    "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619": {
+      "symbol": "WETH",
+      "decimals": 18
+    },
+    "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": {
+      "symbol": "USDC",
+      "decimals": 6
+    },
+    "0xb33eaad8d922b1083446dc23f610c2567fb5180f": {
+      "symbol": "UNI",
+      "decimals": 18
+    }
+  }
+}

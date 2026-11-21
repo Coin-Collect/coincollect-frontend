@@ -1,3 +1,4 @@
+import noop from "lodash/noop";
 import React, { useState } from "react";
 import styled from "styled-components";
 import Input from "../../components/Input/Input";
@@ -324,7 +325,7 @@ export const ThemeInversion: React.FC = () => {
     <>
       <Text>Tooltips have inverted theme</Text>
       <Toggle />
-      <BalanceInput value="1.0" currencyValue="~623.45 USD" placeholder="0.0" />
+      <BalanceInput onUserInput={noop} value="1.0" currencyValue="~623.45 USD" placeholder="0.0" />
     </>
   );
   const { targetRef, tooltip } = useTooltip(tooltipContent, { placement: "bottom" });
@@ -333,7 +334,7 @@ export const ThemeInversion: React.FC = () => {
       <div style={{ flex: "1" }}>
         <Text>Current theme looks like this</Text>
         <Toggle />
-        <BalanceInput value="1.0" currencyValue="~623.45 USD" placeholder="0.0" />
+        <BalanceInput onUserInput={noop} value="1.0" currencyValue="~623.45 USD" placeholder="0.0" />
       </div>
       <div style={{ flex: "1", textAlign: "center" }}>
         <span ref={targetRef}>

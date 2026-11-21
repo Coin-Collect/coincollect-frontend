@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React from "react";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { BrowserRouter } from "react-router-dom";
@@ -10,7 +11,7 @@ export default {
   component: BottomNavItem,
 };
 
-const Template: React.FC<BottomNavItemProps> = ({ ...args }) => {
+const Template: Story<BottomNavItemProps> = ({ ...args }) => {
   return (
     <BrowserRouter>
       <Flex p="10px">

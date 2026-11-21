@@ -39,6 +39,14 @@ import { fetchPublicVaultData, fetchVaultFees } from './fetchVaultPublic'
 import fetchVaultUser from './fetchVaultUser'
 import { getTokenPricesFromFarm } from './helpers'
 
+type PoolUserData = NonNullable<SerializedPool['userData']>
+const initialPoolUserData: PoolUserData = {
+  allowance: '0',
+  stakingTokenBalance: '0',
+  stakedBalance: '0',
+  pendingReward: '0',
+}
+
 export const initialPoolVaultState = Object.freeze({
   totalShares: null,
   pricePerFullShare: null,
@@ -70,7 +78,9 @@ const initialState: PoolsState = {
 }
 
 // Thunks
-const cakePool = poolsConfig.find((pool) => pool.sousId === 0)
+const configuredCakePool = poolsConfig.find((pool) => pool.sousId === 0)
+if (!configuredCakePool) throw new Error('The main COLLECT pool is missing from the configuration.')
+const cakePool = configuredCakePool
 const cakePoolAddress = getAddress(cakePool.contractAddress)
 const cakeContract = getCoinCollectContract()
 
@@ -129,7 +139,7 @@ export const fetchCakePoolUserDataAsync = (account: string) => async (dispatch) 
         allowance: new BigNumber(allowance.toString()).toJSON(),
         stakingTokenBalance: new BigNumber(stakingTokenBalance.toString()).toJSON(),
         pendingReward: new BigNumber(pendingReward.toString()).toJSON(),
-        stakedBalances: new BigNumber(masterPoolAmount.toString()).toJSON(),
+        stakedBalance: new BigNumber(masterPoolAmount.toString()).toJSON(),
       },
     }),
   )
@@ -164,7 +174,7 @@ export const fetchPoolsPublicDataAsync = (currentBlockNumber: number) => async (
       const earningTokenAddress = pool.earningToken.address ? pool.earningToken.address.toLowerCase() : null
   
       const earningTokenPrice = earningTokenAddress ? prices[earningTokenAddress] : 0
-      const apr = !isPoolFinished
+      const apr = !isPoolFinished && totalStaking
         ? getPoolApr(
             stakingTokenPrice,
             earningTokenPrice,
@@ -285,9 +295,10 @@ export const fetchCakeVaultFees = createAsyncThunk<VaultFees>('cakeVault/fetchFe
   return vaultFees
 })
 
-export const fetchCakeVaultUserData = createAsyncThunk<VaultUser, { account: string }>(
+export const fetchCakeVaultUserData = createAsyncThunk<VaultUser, { account?: string }>(
   'cakeVault/fetchUser',
   async ({ account }) => {
+    if (!account) return { ...initialPoolVaultState.userData }
     const userData = await fetchVaultUser(account)
     return userData
   },
@@ -315,17 +326,19 @@ export const PoolsSlice = createSlice({
   name: 'Pools',
   initialState,
   reducers: {
-    setPoolPublicData: (state, action) => {
+    setPoolPublicData: (state, action: PayloadAction<{ sousId: number; data: Partial<SerializedPool> }>) => {
       const { sousId } = action.payload
       const poolIndex = state.data.findIndex((pool) => pool.sousId === sousId)
+      if (poolIndex < 0) return
       state.data[poolIndex] = {
         ...state.data[poolIndex],
         ...action.payload.data,
       }
     },
-    setPoolUserData: (state, action) => {
+    setPoolUserData: (state, action: PayloadAction<{ sousId: number; data: PoolUserData }>) => {
       const { sousId } = action.payload
       const poolIndex = state.data.findIndex((pool) => pool.sousId === sousId)
+      if (poolIndex < 0) return
       state.data[poolIndex].userData = action.payload.data
     },
     setPoolsPublicData: (state, action) => {
@@ -343,12 +356,16 @@ export const PoolsSlice = createSlice({
       })
       state.userDataLoaded = true
     },
-    updatePoolsUserData: (state, action) => {
+    updatePoolsUserData: (
+      state,
+      action: PayloadAction<{ sousId: number; field: keyof PoolUserData; value: string | undefined }>,
+    ) => {
       const { field, value, sousId } = action.payload
       const index = state.data.findIndex((p) => p.sousId === sousId)
 
-      if (index >= 0) {
-        state.data[index] = { ...state.data[index], userData: { ...state.data[index].userData, [field]: value } }
+      if (index >= 0 && value !== undefined) {
+        const pool = state.data[index]
+        pool.userData = { ...(pool.userData ?? initialPoolUserData), [field]: value }
       }
     },
   },

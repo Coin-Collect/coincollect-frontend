@@ -11,6 +11,7 @@ import {
   REGISTER,
   REHYDRATE,
   createMigrate,
+  type PersistedState,
 } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import burn from './burn/reducer'
@@ -32,12 +33,13 @@ import user from './user/reducer'
 const PERSISTED_KEYS: string[] = ['user', 'transactions', 'lists']
 
 const migrations = {
-  0: (state) => {
-    // migration add userPredictionChainlinkChartDisclaimerShow
+  0: (state: PersistedState) => {
+    if (!state) return state
+    const userState = 'user' in state && typeof state.user === 'object' && state.user ? state.user : {}
     return {
       ...state,
       user: {
-        ...state?.user,
+        ...userState,
         userPredictionChainlinkChartDisclaimerShow: true,
       },
     }
@@ -76,9 +78,11 @@ const persistedReducer = persistReducer(
 )
 
 // eslint-disable-next-line import/no-mutable-exports
-let store: ReturnType<typeof makeStore>
+let store: ReturnType<typeof makeStore> | undefined
 
-function makeStore(preloadedState = undefined) {
+type PreloadedState = Parameters<typeof persistedReducer>[0]
+
+function makeStore(preloadedState?: PreloadedState) {
   return configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
@@ -93,7 +97,7 @@ function makeStore(preloadedState = undefined) {
   })
 }
 
-export const initializeStore = (preloadedState = undefined) => {
+export const initializeStore = (preloadedState?: PreloadedState) => {
   let _store = store ?? makeStore(preloadedState)
 
   // After navigating to a page with an initial Redux state, merge that state
@@ -124,14 +128,14 @@ store = initializeStore()
 /**
  * @see https://redux-toolkit.js.org/usage/usage-with-typescript#getting-the-dispatch-type
  */
-export type AppDispatch = typeof store.dispatch
-export type AppState = ReturnType<typeof store.getState>
-export const useAppDispatch = () => useDispatch()
+export type AppDispatch = ReturnType<typeof makeStore>['dispatch']
+export type AppState = ReturnType<ReturnType<typeof makeStore>['getState']>
+export const useAppDispatch = () => useDispatch<AppDispatch>()
 
 export default store
 
 export const persistor = persistStore(store)
 
-export function useStore(initialState) {
+export function useStore(initialState?: PreloadedState) {
   return useMemo(() => initializeStore(initialState), [initialState])
 }

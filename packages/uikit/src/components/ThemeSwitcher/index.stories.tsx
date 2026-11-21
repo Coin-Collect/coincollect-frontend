@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React from "react";
 import noop from "lodash/noop";
 import { Flex } from "../Box";
@@ -8,7 +9,7 @@ export default {
   component: ThemeSwitcher,
 };
 
-const Template: React.FC<ThemeSwitcherProps> = ({ ...args }) => {
+const Template: Story<ThemeSwitcherProps> = ({ ...args }) => {
   return (
     <Flex p="10px">
       <ThemeSwitcher {...args} />

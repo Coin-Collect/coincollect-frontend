@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React from "react";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { BrowserRouter } from "react-router-dom";
@@ -10,7 +11,7 @@ export default {
   component: MenuItems,
 };
 
-const Template: React.FC<MenuItemsProps> = (args) => {
+const Template: Story<MenuItemsProps> = (args) => {
   return (
     <BrowserRouter>
       <MenuItems {...args} />

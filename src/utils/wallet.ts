@@ -9,8 +9,8 @@ import { maticNodes, mumbaiNodes, nodes } from './getRpcUrl'
  */
 export const setupNetwork = async () => {
   const provider = window.ethereum
-  if (provider) {
-    const chainId = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID, 10)
+  const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)
+  if (provider?.request && Number.isInteger(chainId) && chainId > 0) {
     try {
       await provider.request({
         method: 'wallet_addEthereumChain',
@@ -43,10 +43,11 @@ export const setupNetwork = async () => {
  * Prompt the user to add Polygon as a network on Metamask, or switch to Polygon if the wallet is on a different network
  * @returns {boolean} true if the setup succeeded, false otherwise
  */
- export const setupNetworkforPolygon = async (connector) => {
-  const provider = connector === "okx" ? window.okxwallet : connector === "bitkeep" ? window.bitkeep.ethereum : window.ethereum;
-  if (provider) {
-    const chainId = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID, 10)
+export const setupNetworkforPolygon = async (connector?: string) => {
+  const provider =
+    connector === 'okx' ? window.okxwallet : connector === 'bitkeep' ? window.bitkeep?.ethereum : window.ethereum
+  const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID)
+  if (provider?.request && Number.isInteger(chainId) && chainId > 0) {
     try {
       await provider.request({
         method: 'wallet_addEthereumChain',
@@ -82,8 +83,10 @@ export const setupNetwork = async () => {
  * @param tokenDecimals
  * @returns {boolean} true if the token has been added, false otherwise
  */
-export const registerToken = async (tokenAddress: string, tokenSymbol: string, tokenDecimals: number) => {
-  const tokenAdded = await window.ethereum.request({
+export const registerToken = async (tokenAddress: string, tokenSymbol: string | undefined, tokenDecimals: number) => {
+  const provider = window.ethereum
+  if (!provider?.request || !tokenSymbol) return false
+  const tokenAdded = await provider.request({
     method: 'wallet_watchAsset',
     params: {
       type: 'ERC20',
@@ -96,5 +99,5 @@ export const registerToken = async (tokenAddress: string, tokenSymbol: string, t
     },
   })
 
-  return tokenAdded
+  return tokenAdded === true
 }

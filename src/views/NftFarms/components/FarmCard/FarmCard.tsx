@@ -548,7 +548,7 @@ const RewardChipIcon: React.FC<RewardChipIconProps> = ({ token, tokenMeta }) => 
 
 interface FarmCardProps {
   farm: NftFarmWithStakedValue
-  displayApr: string
+  displayApr: string | null
   removed: boolean
   cakePrice?: BigNumber
   account?: string

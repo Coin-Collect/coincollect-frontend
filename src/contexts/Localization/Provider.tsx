@@ -1,9 +1,9 @@
 import { createContext, useCallback, useEffect, useState } from 'react'
 import { Language } from '@pancakeswap/uikit'
-import { EN, languages } from 'config/localization/languages'
+import { EN, languageList } from 'config/localization/languages'
 import translations from 'config/localization/translations.json'
 import { ContextApi, ProviderState, TranslateFunction } from './types'
-import { LS_KEY, fetchLocale, getLanguageCodeFromLS } from './helpers'
+import { LS_KEY, fetchLocale, getLanguageCodeFromLS, resolveTranslation } from './helpers'
 
 const initialState: ProviderState = {
   isFetching: true,
@@ -14,7 +14,7 @@ const initialState: ProviderState = {
 export const languageMap = new Map<Language['locale'], Record<string, string>>()
 languageMap.set(EN.locale, translations)
 
-export const LanguageContext = createContext<ContextApi>(undefined)
+export const LanguageContext = createContext<ContextApi | undefined>(undefined)
 
 export const LanguageProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [state, setState] = useState<ProviderState>(() => {
@@ -22,7 +22,7 @@ export const LanguageProvider: React.FC<React.PropsWithChildren> = ({ children }
 
     return {
       ...initialState,
-      currentLanguage: languages[codeFromStorage],
+      currentLanguage: languageList.find((language) => language.locale === codeFromStorage) ?? EN,
     }
   })
   const { currentLanguage } = state
@@ -76,27 +76,7 @@ export const LanguageProvider: React.FC<React.PropsWithChildren> = ({ children }
   }, [])
 
   const translate: TranslateFunction = useCallback(
-    (key, data) => {
-      const translationSet = languageMap.has(currentLanguage.locale)
-        ? languageMap.get(currentLanguage.locale)
-        : languageMap.get(EN.locale)
-      const translatedText = translationSet[key] || key
-
-      // Check the existence of at least one combination of %%, separated by 1 or more non space characters
-      const includesVariable = translatedText.match(/%\S+?%/gm)
-
-      if (includesVariable && data) {
-        let interpolatedText = translatedText
-        Object.keys(data).forEach((dataKey) => {
-          const templateKey = new RegExp(`%${dataKey}%`, 'g')
-          interpolatedText = interpolatedText.replace(templateKey, data[dataKey].toString())
-        })
-
-        return interpolatedText
-      }
-
-      return translatedText
-    },
+    (key, data) => resolveTranslation(languageMap.get(currentLanguage.locale) ?? translations, key, data),
     [currentLanguage],
   )
 

@@ -180,8 +180,8 @@ const Menu: React.FC<NavProps> = ({
 
   const resolvedHomeHref = homeHref ?? "/";
 
-  const subLinksWithoutMobile = subLinks?.filter((subLink) => !subLink.isMobileOnly);
-  const subLinksMobileOnly = subLinks?.filter((subLink) => subLink.isMobileOnly);
+  const subLinksWithoutMobile = subLinks?.filter((subLink) => !subLink.isMobileOnly) ?? [];
+  const subLinksMobileOnly = subLinks?.filter((subLink) => subLink.isMobileOnly) ?? [];
 
   return (
     <MenuContext.Provider value={{ linkComponent }}>
@@ -225,7 +225,7 @@ const Menu: React.FC<NavProps> = ({
           <Flex justifyContent="space-around">
             <SubMenuItems items={subLinksWithoutMobile} mt={`${totalTopMenuHeight}px`} activeItem={activeSubItem} />
 
-            {subLinksMobileOnly?.length > 0 && (
+            {subLinksMobileOnly.length > 0 && (
               <SubMenuItems
                 items={subLinksMobileOnly}
                 mt={`${totalTopMenuHeight}px`}

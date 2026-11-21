@@ -164,10 +164,15 @@ const ActivityHistory: React.FC<ActivityHistoryProps> = ({ collection }) => {
                   <TableLoader />
                 ) : (
                   activitiesSlice.map((activity) => {
-                    const nftMeta = nftMetadata.find((metaNft) => metaNft.tokenId === activity.nft.tokenId)
+                    const token = activity.nft
+                    const collectionId = token?.collection?.id.toLowerCase()
+                    const nftMeta = nftMetadata.find(
+                      (metaNft) =>
+                        metaNft.tokenId === token?.tokenId && metaNft.collectionAddress.toLowerCase() === collectionId,
+                    )
                     return (
                       <ActivityRow
-                        key={`${activity.marketEvent}#${activity.nft.tokenId}#${activity.timestamp}#${activity.tx}`}
+                        key={`${activity.marketEvent}#${collectionId}#${token?.tokenId}#${activity.timestamp}#${activity.tx}`}
                         activity={activity}
                         nft={nftMeta}
                         bnbBusdPrice={bnbBusdPrice}

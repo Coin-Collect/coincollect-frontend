@@ -130,14 +130,14 @@ interface CorePoolProps {
 }
 
 export interface DeserializedPool extends DeserializedPoolConfig, CorePoolProps {
-  totalStaked?: BigNumber
-  stakingLimit?: BigNumber
-  stakingLimitEndBlock?: number
+  totalStaked: BigNumber
+  stakingLimit: BigNumber
+  stakingLimitEndBlock: number
   profileRequirement?: {
     required: boolean
     thresholdPoints: BigNumber
   }
-  userData?: {
+  userData: {
     allowance: BigNumber
     stakingTokenBalance: BigNumber
     stakedBalance: BigNumber
@@ -212,44 +212,41 @@ export interface DeserializedNftFarmsState {
 }
 
 export interface VaultFees {
-  performanceFee: number
-  callFee: number
-  withdrawalFee: number
-  withdrawalFeePeriod: number
+  performanceFee: number | null
+  callFee: number | null
+  withdrawalFee: number | null
+  withdrawalFeePeriod: number | null
 }
 
 export interface VaultUser {
   isLoading: boolean
-  userShares: string
-  cakeAtLastUserAction: string
-  lastDepositedTime: string
-  lastUserActionTime: string
+  userShares: string | null
+  cakeAtLastUserAction: string | null
+  lastDepositedTime: string | null
+  lastUserActionTime: string | null
 }
 
 export interface IfoVaultUser extends VaultUser {
-  credit: string
+  credit: string | null
 }
 
 export interface CakeVault {
-  totalShares?: string
-  pricePerFullShare?: string
-  totalCakeInVault?: string
-  estimatedCakeBountyReward?: string
-  totalPendingCakeHarvest?: string
-  fees?: VaultFees
-  userData?: VaultUser
+  totalShares: string | null
+  pricePerFullShare: string | null
+  totalCakeInVault: string | null
+  estimatedCakeBountyReward: string | null
+  totalPendingCakeHarvest: string | null
 }
 
-export interface IfoCakeVault extends Omit<CakeVault, 'userData'> {
-  userData?: IfoVaultUser
-  creditStartBlock?: number
-  creditEndBlock?: number
+export interface IfoCakeVault extends CakeVault {
+  creditStartBlock?: number | null
+  creditEndBlock?: number | null
 }
 
 export interface PoolsState {
   data: SerializedPool[]
-  cakeVault: CakeVault
-  ifoPool: IfoCakeVault
+  cakeVault: CakeVault & { fees: VaultFees; userData: VaultUser }
+  ifoPool: IfoCakeVault & { fees: VaultFees; userData: IfoVaultUser }
   userDataLoaded: boolean
 }
 

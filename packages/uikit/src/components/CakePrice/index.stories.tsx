@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React from "react";
 import { CakePrice, CakePriceProps } from ".";
 import { Flex } from "../Box";
@@ -7,7 +8,7 @@ export default {
   component: CakePrice,
 };
 
-const Template: React.FC<CakePriceProps> = ({ ...args }) => {
+const Template: Story<CakePriceProps> = ({ ...args }) => {
   return (
     <Flex p="10px">
       <CakePrice {...args} />

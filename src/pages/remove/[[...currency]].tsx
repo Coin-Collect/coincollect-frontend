@@ -13,7 +13,7 @@ export const getStaticPaths: GetStaticPaths = () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const currency = (params.currency as string[]) || []
+  const currency = Array.isArray(params?.currency) ? params.currency : []
 
   if (currency.length === 0) {
     return {

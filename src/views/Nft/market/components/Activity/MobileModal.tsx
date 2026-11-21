@@ -14,7 +14,7 @@ import NFTMedia from '../NFTMedia'
 interface MobileModalProps extends InjectedModalProps {
   activity: Activity
   nft: NftToken
-  bnbBusdPrice: Price
+  bnbBusdPrice?: Price
   localeTimestamp: string
   isUserActivity?: boolean
 }

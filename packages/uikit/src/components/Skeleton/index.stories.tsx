@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React, { useState, useEffect } from "react";
 import Skeleton from "./Skeleton";
 
@@ -10,7 +11,7 @@ export default {
   },
 };
 
-export const Default: React.FC = (args) => {
+export const Default: Story<React.ComponentProps<typeof Skeleton>> = (args) => {
   return <Skeleton {...args} />;
 };
 

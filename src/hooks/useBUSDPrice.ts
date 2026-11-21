@@ -79,7 +79,7 @@ export const useBUSDCurrencyAmount = (currency: Currency, amount: number): numbe
   const { chainId } = useActiveWeb3React()
   const busdPrice = useBUSDPrice(currency)
   const wrapped = wrappedCurrency(currency, chainId)
-  if (busdPrice) {
+  if (busdPrice && wrapped) {
     return multiplyPriceByAmount(busdPrice, amount, wrapped.decimals)
   }
   return undefined

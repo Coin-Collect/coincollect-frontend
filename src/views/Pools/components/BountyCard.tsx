@@ -65,7 +65,7 @@ const BountyCard = () => {
     <BountyModal
       estimatedCakeBountyReward={estimatedCakeBountyReward}
       totalPendingCakeHarvest={totalPendingCakeHarvest}
-      callFee={callFee}
+      callFee={callFee ?? 0}
       cakePriceBusd={cakePriceBusd}
       TooltipComponent={TooltipComponent}
     />,
@@ -74,7 +74,7 @@ const BountyCard = () => {
     'bountyModal',
   )
 
-  const { targetRef, tooltip, tooltipVisible } = useTooltip(<TooltipComponent fee={callFee} />, {
+  const { targetRef, tooltip, tooltipVisible } = useTooltip(<TooltipComponent fee={callFee ?? 0} />, {
     placement: 'bottom-end',
     tooltipOffset: [20, 10],
   })

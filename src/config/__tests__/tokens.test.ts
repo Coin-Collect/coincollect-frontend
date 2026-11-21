@@ -1,40 +1,40 @@
-import map from 'lodash/map'
-import omitBy from 'lodash/omitBy'
-import erc20ABI from 'config/abi/erc20.json'
-import tokens from 'config/constants/tokens'
-import { Token } from '@coincollect/sdk'
-import multicall from 'utils/multicall'
+import { isAddress } from '@ethersproject/address'
+import { AddressZero } from '@ethersproject/constants'
+import { ChainId } from '@coincollect/sdk'
+import { mainnetTokens } from 'config/constants/tokens'
+import { deserializeToken, serializeToken } from 'state/user/hooks/helpers'
+import polygon from './fixtures/polygon-contracts.json'
 
-// remove BNB because it's not a Bep20 token
-// remove ONE because there are two tokens with the symbol ONE (Harmony ONE and BigONE)
-// remove HERO because there are two tokens with the symbol HERO (StepHero and Hero)
-const tokensToTest = omitBy(
-  tokens,
-  (token) =>
-    token.symbol.toLowerCase() === 'bnb' ||
-    token.symbol.toLowerCase() === 'one' ||
-    token.symbol.toLowerCase() === 'bttold' ||
-    token.symbol.toLowerCase() === 'hero',
-)
+const polygonTokens: Readonly<Record<string, { symbol: string; decimals: number } | undefined>> = polygon.tokens
 
-describe('Config tokens', () => {
-  it.each(map(tokensToTest, (token, key) => [key, token]))(
-    'Token %s has the correct key, symbol, and decimal',
-    async (key, token: Token) => {
-      const [[symbol], [decimals]] = await multicall(erc20ABI, [
-        {
-          address: token.address,
-          name: 'symbol',
-        },
-        {
-          address: token.address,
-          name: 'decimals',
-        },
-      ])
+const polygonDisplayAliases: Readonly<Record<string, { onChain: string; display: string } | undefined>> = {
+  matic: { onChain: 'WPOL', display: 'POL' },
+  usdt: { onChain: 'USDT0', display: 'USDT' },
+  weth: { onChain: 'WETH', display: 'ETH' },
+}
 
-      expect(key).toBe(token.symbol.toLowerCase())
-      expect(token.symbol.toLowerCase()).toBe(symbol.toLowerCase())
-      expect(token.decimals).toBe(parseInt(decimals, 10))
+describe('Token configuration', () => {
+  it.each(Object.entries(mainnetTokens))('preserves valid token metadata through serialization for %s', (_, token) => {
+    expect(isAddress(token.address)).toBe(true)
+    expect(token.address).not.toBe(AddressZero)
+    expect([ChainId.POLYGON, ChainId.MAINNET]).toContain(token.chainId)
+    expect(token.symbol).toMatch(/\S/)
+    expect(Number.isInteger(token.decimals)).toBe(true)
+    expect(token.decimals).toBeGreaterThanOrEqual(0)
+    expect(token.decimals).toBeLessThanOrEqual(255)
+    expect(deserializeToken(serializeToken(token))).toEqual(token)
+  })
+
+  it.each(Object.entries(mainnetTokens).filter(([, token]) => token.chainId === ChainId.POLYGON))(
+    'matches the deployed Polygon metadata and configured display symbol for %s',
+    (key, token) => {
+      const deployed = polygonTokens[token.address.toLowerCase()]
+      if (!deployed) throw new Error(`Missing Polygon token fixture for ${token.address}`)
+      const alias = polygonDisplayAliases[key]
+
+      expect(token.decimals).toBe(deployed.decimals)
+      expect(token.symbol).toBe(alias?.display ?? deployed.symbol)
+      if (alias) expect(alias.onChain).toBe(deployed.symbol)
     },
   )
 })

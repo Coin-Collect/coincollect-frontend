@@ -1,7 +1,6 @@
 import React from "react";
 import styled, { useTheme } from "styled-components";
 /* eslint-disable import/no-unresolved */
-import { Meta } from "@storybook/react/types-6-0";
 import Box from "../Box/Box";
 import Heading from "../Heading/Heading";
 import CardRibbon from "./CardRibbon";
@@ -18,7 +17,7 @@ export default {
   title: "Components/Card",
   component: Card,
   argTypes: {},
-} as Meta;
+};
 
 export const Default: React.FC = () => {
   return (

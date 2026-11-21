@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import noop from "lodash/noop";
 import React, { useState } from "react";
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -42,7 +43,7 @@ const UserMenuComponent: React.FC<{ variant?: Variant; text?: string; account?: 
   text,
   account = "0x8b017905DC96B38f817473dc885F84D4C76bC113",
 }) => {
-  const accountEllipsis = account ? `${account.substring(0, 2)}...${account.substring(account.length - 4)}` : null;
+  const accountEllipsis = account ? `${account.substring(0, 2)}...${account.substring(account.length - 4)}` : undefined;
   return (
     <DropdownMenu items={userMenulinks} py="12px">
       <UserMenu account={text || accountEllipsis} avatarSrc="" variant={variant} />
@@ -73,13 +74,10 @@ const GlobalMenuComponent: React.FC = () => {
   );
 };
 
-const defaultProps = {
+const defaultProps: NavProps = {
   linkComponent: ({ href, ...props }) => {
     return <Link to={href} {...props} />;
   },
-  account: "0xbdda50183d817c3289f895a4472eb475967dc980",
-  login: noop,
-  logout: noop,
   isDark: false,
   toggleTheme: noop,
   langs,
@@ -87,9 +85,12 @@ const defaultProps = {
   currentLang: "EN",
   cakePriceUsd: 0.023158668932877668,
   links,
-  subLinks: links[0].items,
+  subLinks: links[0].items?.flatMap((item) =>
+    typeof item.label === "string" && item.href ? [{ ...item, label: item.label, href: item.href }] : []
+  ),
   footerLinks,
-  profile: null,
+  drawerLinks: links,
+  showPhishingWarningBanner: false,
   userMenu: <UserMenuComponent account="0xbdda50183d817c3289f895a4472eb475967dc980" />,
   globalMenu: <GlobalMenuComponent />,
   activeItem: "/swap",
@@ -97,7 +98,7 @@ const defaultProps = {
   buyCakeLabel: "Buy CAKE",
 };
 
-const ConnectedTemplate: React.FC<NavProps> = (args) => {
+const ConnectedTemplate: Story<NavProps> = (args) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -194,7 +195,10 @@ export const NotConnected: React.FC = () => {
         setLang={noop}
         currentLang="EN"
         links={links}
-        subLinks={subLinks}
+        subLinks={defaultProps.subLinks}
+        drawerLinks={links}
+        showPhishingWarningBanner={false}
+        buyCakeLabel={defaultProps.buyCakeLabel}
         footerLinks={footerLinks}
       >
         <div>
@@ -225,7 +229,10 @@ export const WithoutConnectButton: React.FC = () => {
         currentLang="EN"
         links={links}
         footerLinks={footerLinks}
-        subLinks={subLinks}
+        subLinks={defaultProps.subLinks}
+        drawerLinks={links}
+        showPhishingWarningBanner={false}
+        buyCakeLabel={defaultProps.buyCakeLabel}
       >
         <div>
           <h1>No connect button on top</h1>
@@ -247,7 +254,10 @@ export const WithSubmenuSelected: React.FC = () => {
         currentLang="EN"
         cakePriceUsd={0.23158668932877668}
         links={links}
-        subLinks={subLinks}
+        subLinks={defaultProps.subLinks}
+        drawerLinks={links}
+        showPhishingWarningBanner={false}
+        buyCakeLabel={defaultProps.buyCakeLabel}
         footerLinks={footerLinks}
       >
         <div>

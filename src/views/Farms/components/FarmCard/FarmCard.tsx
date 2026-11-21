@@ -44,7 +44,7 @@ const ExpandingWrapper = styled.div`
 
 interface FarmCardProps {
   farm: FarmWithStakedValue
-  displayApr: string
+  displayApr: string | null
   removed: boolean
   cakePrice?: BigNumber
   account?: string
@@ -95,7 +95,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm, displayApr, removed, cakePric
                   addLiquidityUrl={addLiquidityUrl}
                   cakePrice={cakePrice}
                   apr={farm.apr}
-                  displayApr={displayApr}
+                  displayApr={displayApr ?? undefined}
                 />
               ) : (
                 <Skeleton height={24} width={80} />

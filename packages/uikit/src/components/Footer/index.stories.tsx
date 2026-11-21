@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import noop from "lodash/noop";
 import React from "react";
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -11,7 +12,7 @@ export default {
   component: Footer,
 };
 
-const Template: React.FC<FooterProps> = ({ ...args }) => {
+const Template: Story<FooterProps> = ({ ...args }) => {
   return (
     <BrowserRouter>
       <Footer {...args} />

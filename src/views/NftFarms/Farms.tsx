@@ -634,7 +634,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [numberOfFarmsVisible, setNumberOfFarmsVisible] = useState(NUMBER_OF_FARMS_VISIBLE)
 
   const chosenFarmsMemoized = useMemo(() => {
-    let chosenFarms = []
+    let chosenFarms: NftFarmWithStakedValue[] = []
 
     const sortFarms = (farms: NftFarmWithStakedValue[]): NftFarmWithStakedValue[] => {
       switch (sortOption) {
@@ -1046,6 +1046,6 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   )
 }
 
-export const FarmsContext = createContext({ chosenFarmsMemoized: [] })
+export const FarmsContext = createContext<{ chosenFarmsMemoized: NftFarmWithStakedValue[] }>({ chosenFarmsMemoized: [] })
 
 export default Farms

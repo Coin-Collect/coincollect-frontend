@@ -12,6 +12,8 @@ describe('swap reducer', () => {
       typedValue: '',
       independentField: Field.INPUT,
       recipient: null,
+      pairDataById: {},
+      derivedPairDataById: {},
     })
   })
 
@@ -30,6 +32,8 @@ describe('swap reducer', () => {
         typedValue: '',
         independentField: Field.INPUT,
         recipient: null,
+        pairDataById: {},
+        derivedPairDataById: {},
       })
     })
   })

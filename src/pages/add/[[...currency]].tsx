@@ -13,7 +13,7 @@ export const getStaticPaths: GetStaticPaths = () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { currency = [] } = params
+  const currency = Array.isArray(params?.currency) ? params.currency : []
   const [currencyIdA, currencyIdB] = currency
   const match = currencyIdA?.match(OLD_PATH_STRUCTURE)
 

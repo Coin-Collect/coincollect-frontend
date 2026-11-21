@@ -7,16 +7,14 @@ import PriceChart from './PriceChart'
 import { getTokenAddress } from './utils'
 
 type PriceChartContainerProps = {
-  inputCurrencyId: string
-  inputCurrency: Currency
-  outputCurrencyId: string
-  outputCurrency: Currency
+  inputCurrencyId?: string
+  inputCurrency?: Currency
+  outputCurrencyId?: string
+  outputCurrency?: Currency
   isChartExpanded: boolean
   setIsChartExpanded: React.Dispatch<React.SetStateAction<boolean>>
   isChartDisplayed: boolean
-  currentSwapPrice: {
-    [key: string]: number
-  }
+  currentSwapPrice: Record<string, number> | null
   isMobile?: boolean
 }
 

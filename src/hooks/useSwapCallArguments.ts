@@ -1,6 +1,6 @@
 import { Contract } from '@ethersproject/contracts'
 import { JSBI, Percent, Router, SwapParameters, Trade, TradeType } from '@coincollect/sdk'
-import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import useWeb3React from 'hooks/useWeb3React'
 import { useMemo } from 'react'
 import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE } from '../config/constants'
 import { getRouterContract } from '../utils'
@@ -23,7 +23,7 @@ export function useSwapCallArguments(
   allowedSlippage: number = INITIAL_ALLOWED_SLIPPAGE, // in bips
   recipientAddressOrName: string | null, // the ENS name or address of the recipient of the trade, or null if swap should be returned to sender
 ): SwapCall[] {
-  const { account, chainId, library } = useActiveWeb3React()
+  const { account, chainId, library } = useWeb3React()
 
   const { address: recipientAddress } = useENS(recipientAddressOrName)
   const recipient = recipientAddressOrName === null ? account : recipientAddress
@@ -37,7 +37,7 @@ export function useSwapCallArguments(
       return []
     }
 
-    const swapMethods = []
+    const swapMethods: SwapParameters[] = []
 
     swapMethods.push(
       Router.swapCallParameters(trade, {

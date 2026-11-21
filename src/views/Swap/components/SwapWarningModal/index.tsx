@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { ModalBody, ModalContainer, Message, ModalHeader, Box, Heading } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
 import { useTranslation } from 'contexts/Localization'
-import { WrappedTokenInfo } from 'state/lists/hooks'
+import type { Token } from '@coincollect/sdk'
 import SwapWarningTokensConfig from 'config/constants/swapWarningTokens'
 import SafemoonWarning from './SafemoonWarning'
 import ItamWarning from './ItamWarning'
@@ -22,7 +22,7 @@ const MessageContainer = styled(Message)`
 `
 
 interface SwapWarningModalProps {
-  swapCurrency: WrappedTokenInfo
+  swapCurrency: Token | null
   onDismiss?: () => void
 }
 
@@ -75,7 +75,8 @@ const SwapWarningModal: React.FC<SwapWarningModalProps> = ({ swapCurrency, onDis
     },
   }
 
-  const SWAP_WARNING = TOKEN_WARNINGS[swapCurrency.address]
+  const SWAP_WARNING = swapCurrency ? TOKEN_WARNINGS[swapCurrency.address] : undefined
+  if (!SWAP_WARNING) return null
 
   return (
     <StyledModalContainer minWidth="280px">

@@ -19,7 +19,7 @@ const FarmsPage = () => {
           farm={farm}
           displayApr={getDisplayApr(farm.apr, farm.lpRewardsApr)}
           cakePrice={cakePrice}
-          account={account}
+          account={account ?? undefined}
           removed={false}
         />
       ))}

@@ -69,19 +69,23 @@ export const CreditCalcBlock = () => {
     { placement: 'auto' },
   )
 
+  const creditBlock = hasEndBlockOver ? creditEndBlock : creditStartBlock
+
   return (
     <Flex mt="8px" justifyContent="space-between">
       <Text fontSize="14px">{hasEndBlockOver ? t('Credit calculation ended:') : t('Credit calculation starts:')}</Text>
       <Flex mr="6px" alignItems="center">
-        <Link
-          external
-          href={getBscScanLink(hasEndBlockOver ? creditEndBlock : creditStartBlock, 'block')}
-          mr="4px"
-          color={hasEndBlockOver ? 'warning' : 'primary'}
-          fontSize="14px"
-        >
-          {hasEndBlockOver ? creditEndBlock : creditStartBlock}
-        </Link>
+        {creditBlock != null && (
+          <Link
+            external
+            href={getBscScanLink(creditBlock, 'block')}
+            mr="4px"
+            color={hasEndBlockOver ? 'warning' : 'primary'}
+            fontSize="14px"
+          >
+            {creditBlock}
+          </Link>
+        )}
         <span ref={targetRef}>
           <HelpIcon color="textSubtle" />
         </span>

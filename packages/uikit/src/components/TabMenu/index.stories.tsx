@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 /* eslint-disable import/no-unresolved */
-import { Meta } from "@storybook/react/types-6-0";
 import TabMenu from "./TabMenu";
 import Tab from "./Tab";
 
@@ -9,7 +8,7 @@ export default {
   title: "Components/Tab Menu",
   component: TabMenu,
   argTypes: {},
-} as Meta;
+};
 
 const Row = styled.div`
   margin-bottom: 32px;

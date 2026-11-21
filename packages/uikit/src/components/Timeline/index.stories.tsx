@@ -1,3 +1,4 @@
+import type { Story } from "../../../.storybook/story";
 import React from "react";
 import { Timeline } from ".";
 import { Box } from "../Box";
@@ -35,7 +36,7 @@ const eventsMock: Event[] = [
   },
 ];
 
-const Template: React.FC<TimelineProps> = (args) => {
+const Template: Story<TimelineProps> = (args) => {
   return (
     <Box p="20px">
       <Timeline {...args} />

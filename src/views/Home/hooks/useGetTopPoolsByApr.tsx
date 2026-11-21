@@ -4,61 +4,29 @@ import { useAppDispatch } from 'state'
 import orderBy from 'lodash/orderBy'
 import { VaultKey, DeserializedPool } from 'state/types'
 import { fetchCakeVaultFees, fetchPoolsPublicDataAsync } from 'state/pools'
-import { useCakeVault, useIfoPoolVault, usePools } from 'state/pools/hooks'
+import { useCakeVault, usePools } from 'state/pools/hooks'
 import { useInitialBlock } from 'state/block/hooks'
 import { getAprData } from 'views/Pools/helpers'
 import { FetchStatus } from 'config/constants/types'
 
 export function usePoolsWithVault() {
+  const { pools } = usePools()
+  const { fees: { performanceFeeAsDecimal } } = useCakeVault()
 
-  // Gets only non-vault pools
-  const { pools: poolsWithoutAutoVault } = usePools()
-  
+  return useMemo(() => {
+    const cakePool = pools.find((pool) => pool.sousId === 0 && !pool.isFinished)
+    if (!cakePool) return pools
 
-  const cakeVault = useCakeVault()
-  
-  
-  const ifoPool = useIfoPoolVault()
-  
-  const pools = useMemo(() => {
-    
-    
-    const activePools = poolsWithoutAutoVault.filter((pool) => !pool.isFinished)
-
-    
-    const cakePool = activePools.find((pool) => pool.sousId === 0)
-
-    // VaultKey switches between ifo or cake vault
-    const cakeAutoVault = { ...cakePool, vaultKey: VaultKey.CakeVault }
-    
-    const ifoPoolVault = { ...cakePool, vaultKey: VaultKey.IfoPool }
-    
-    // APY VAULT
-    const cakeAutoVaultWithApr = {
-      ...cakeAutoVault,
-      apr: getAprData(cakeAutoVault, cakeVault.fees.performanceFeeAsDecimal).apr,
-      rawApr: cakePool.apr,
-    }
-
-    const ifoPoolWithApr = {
-      ...ifoPoolVault,
-      apr: getAprData(ifoPoolVault, ifoPool.fees.performanceFeeAsDecimal).apr,
-      rawApr: cakePool.apr,
-    }
-
-    // ifoPoolWithApr excluded from array below
-    return [cakeAutoVaultWithApr, ...poolsWithoutAutoVault]
-    
-  }, [poolsWithoutAutoVault, cakeVault.fees.performanceFeeAsDecimal, ifoPool.fees.performanceFeeAsDecimal])
-
-  return pools
+    const cakeVault = { ...cakePool, vaultKey: VaultKey.CakeVault }
+    return [{ ...cakeVault, apr: getAprData(cakeVault, performanceFeeAsDecimal).apr, rawApr: cakePool.apr }, ...pools]
+  }, [pools, performanceFeeAsDecimal])
 }
 
 const useGetTopPoolsByApr = (isIntersecting: boolean) => {
   const dispatch = useAppDispatch()
 
   const [fetchStatus, setFetchStatus] = useState(FetchStatus.Idle)
-  const [topPools, setTopPools] = useState<DeserializedPool[]>([null, null, null, null, null])
+  const [topPools, setTopPools] = useState<(DeserializedPool | null)[]>([null, null, null, null, null])
   const initialBlock = useInitialBlock()
 
   const pools = usePoolsWithVault()

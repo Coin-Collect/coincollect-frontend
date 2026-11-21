@@ -18,7 +18,7 @@ const FeeSummary: React.FC<FeeSummaryProps> = ({ stakingTokenSymbol, stakeAmount
     fees: { withdrawalFee, withdrawalFeePeriod },
     userData: { lastDepositedTime },
   } = useVaultPoolByKey(vaultKey)
-  const feeAsDecimal = withdrawalFee / 100
+  const feeAsDecimal = (withdrawalFee ?? 0) / 100
   const feeInCake = (parseFloat(stakeAmount) * (feeAsDecimal / 100)).toFixed(4)
   const withdrawalDayPeriod = withdrawalFeePeriod ? secondsToDay(withdrawalFeePeriod) : '-'
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
@@ -38,7 +38,7 @@ const FeeSummary: React.FC<FeeSummaryProps> = ({ stakingTokenSymbol, stakeAmount
     { placement: 'top-start' },
   )
 
-  const hasFeeToPay = lastDepositedTime && getHasWithdrawFee(parseInt(lastDepositedTime, 10), withdrawalFeePeriod)
+  const hasFeeToPay = lastDepositedTime && getHasWithdrawFee(parseInt(lastDepositedTime, 10), withdrawalFeePeriod ?? 0)
 
   return (
     <>

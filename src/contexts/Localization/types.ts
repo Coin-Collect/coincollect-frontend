@@ -4,7 +4,7 @@ import { Language } from '@pancakeswap/uikit'
 import translations from 'config/localization/translations.json'
 
 export type ContextData = {
-  [key: string]: ReactText
+  [key: string]: ReactText | null | undefined
 }
 
 export interface ProviderState {

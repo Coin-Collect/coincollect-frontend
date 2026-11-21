@@ -105,7 +105,7 @@ const VaultStakeModal: React.FC<React.PropsWithChildren<VaultStakeModalProps>> =
   const [stakeAmount, setStakeAmount] = useState('')
   const [percent, setPercent] = useState(0)
   const [showRoiCalculator, setShowRoiCalculator] = useState(false)
-  const { hasUnstakingFee } = useWithdrawalFeeTimer(parseInt(lastDepositedTime, 10), userShares)
+  const { hasUnstakingFee } = useWithdrawalFeeTimer(parseInt(lastDepositedTime ?? "", 10), userShares)
   const cakePriceBusd = usePriceCakeBusd()
   const usdValueStaked = new BigNumber(stakeAmount).times(cakePriceBusd)
   const formattedUsdValueStaked = cakePriceBusd.gt(0) && stakeAmount ? formatNumber(usdValueStaked.toNumber()) : ''
@@ -187,7 +187,7 @@ const VaultStakeModal: React.FC<React.PropsWithChildren<VaultStakeModalProps>> =
         </ToastDescriptionWithTx>,
       )
       onDismiss?.()
-      dispatch(fetchCakeVaultUserData({ account }))
+      dispatch(fetchCakeVaultUserData({ account: account ?? undefined }))
     }
   }
 
@@ -206,7 +206,7 @@ const VaultStakeModal: React.FC<React.PropsWithChildren<VaultStakeModalProps>> =
         </ToastDescriptionWithTx>,
       )
       onDismiss?.()
-      dispatch(fetchCakeVaultUserData({ account }))
+      dispatch(fetchCakeVaultUserData({ account: account ?? undefined }))
     }
   }
 

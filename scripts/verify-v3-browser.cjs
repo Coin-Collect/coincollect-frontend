@@ -290,6 +290,20 @@ async function testBrowser() {
       ]).then(BigInt)
 
     await viewport(1360, 900)
+    await visit('/swap')
+    await has('Swap')
+    await wait('swap amount input', () => Boolean(document.querySelector('input[inputmode="decimal"]')))
+    await visit('/liquidity')
+    await has('Connect to a wallet to view your liquidity.')
+    await visit('/add')
+    await has('Add Liquidity')
+    await visit('/nfts/collections')
+    await has('Stake community NFTs for FREE income streams')
+    await wait('community collections link', () =>
+      Boolean(document.querySelector('a[href="/nftpools/community-collections"]')),
+    )
+    console.log('PASS disconnected Swap, Liquidity, Add Liquidity and NFT Collections routes')
+
     await visit('/nftpools')
     await wait('disconnected FarmCard CTA', () => {
       const card = [...document.querySelectorAll('article')].find(

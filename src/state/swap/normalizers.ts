@@ -55,14 +55,14 @@ export const normalizeDerivedChartData = (data: any) => {
 }
 
 type normalizePairDataByActiveTokenParams = {
-  pairData: PairDataNormalized
+  pairData: PairDataNormalized | undefined
   activeToken: string
 }
 
 export const normalizePairDataByActiveToken = ({
   pairData,
   activeToken,
-}: normalizePairDataByActiveTokenParams): PairPricesNormalized =>
+}: normalizePairDataByActiveTokenParams): PairPricesNormalized | undefined =>
   pairData
     ?.map((pairPrice) => ({
       time: fromUnixTime(pairPrice.time),
@@ -74,14 +74,14 @@ export const normalizePairDataByActiveToken = ({
     .reverse()
 
 type normalizeDerivedPairDataByActiveTokenParams = {
-  pairData: DerivedPairDataNormalized
+  pairData: DerivedPairDataNormalized | undefined
   activeToken: string
 }
 
 export const normalizeDerivedPairDataByActiveToken = ({
   pairData,
   activeToken,
-}: normalizeDerivedPairDataByActiveTokenParams): PairPricesNormalized =>
+}: normalizeDerivedPairDataByActiveTokenParams): PairPricesNormalized | undefined =>
   pairData?.map((pairPrice) => ({
     time: fromUnixTime(pairPrice.time),
     value:

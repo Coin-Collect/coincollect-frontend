@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 /* eslint-disable import/no-unresolved */
-import { Meta } from "@storybook/react/types-6-0";
 import Search from "../Svg/Icons/Search";
 import StarFill from "../Svg/Icons/StarFill";
 import Heading from "../Heading/Heading";
@@ -23,7 +22,7 @@ export default {
   title: "Components/Input",
   component: Input,
   argTypes: {},
-} as Meta;
+};
 
 export const Default: React.FC = () => {
   return (

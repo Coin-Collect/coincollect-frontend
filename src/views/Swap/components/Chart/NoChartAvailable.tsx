@@ -4,7 +4,7 @@ import { useTranslation } from 'contexts/Localization'
 interface NoChartAvailableProps {
   token0Address: string
   token1Address: string
-  pairAddress: string
+  pairAddress: string | null
   isMobile: boolean
 }
 
@@ -19,7 +19,7 @@ const NoChartAvailable: React.FC<NoChartAvailableProps> = ({ token0Address, toke
           mb={['8px', '8px', '0px']}
           color="textSubtle"
           small
-          style={isMobile && { wordSpacing: '100vw' }}
+          style={isMobile ? { wordSpacing: '100vw' } : undefined}
         >
           Token0: {token0Address ?? 'null'}
         </Text>
@@ -28,7 +28,7 @@ const NoChartAvailable: React.FC<NoChartAvailableProps> = ({ token0Address, toke
           mb={['8px', '8px', '0px']}
           color="textSubtle"
           small
-          style={isMobile && { wordSpacing: '100vw' }}
+          style={isMobile ? { wordSpacing: '100vw' } : undefined}
         >
           Token1: {token1Address ?? 'null'}
         </Text>
@@ -37,7 +37,7 @@ const NoChartAvailable: React.FC<NoChartAvailableProps> = ({ token0Address, toke
           mb={['8px', '8px', '0px']}
           color="textSubtle"
           small
-          style={isMobile && { wordSpacing: '100vw' }}
+          style={isMobile ? { wordSpacing: '100vw' } : undefined}
         >
           Pair: {pairAddress ?? 'null'}
         </Text>

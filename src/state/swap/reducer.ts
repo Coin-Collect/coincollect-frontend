@@ -9,7 +9,7 @@ import {
   updateDerivedPairData,
   updatePairData,
 } from './actions'
-import { DerivedPairDataNormalized, PairDataNormalized } from './types'
+import { DerivedPairDataNormalized, PairDataNormalized, PairDataTimeWindowEnum } from './types'
 
 export interface SwapState {
   readonly independentField: Field
@@ -22,8 +22,8 @@ export interface SwapState {
   }
   // the typed recipient address or ENS name, or null if swap should go to sender
   readonly recipient: string | null
-  readonly pairDataById: Record<number, Record<string, PairDataNormalized>> | null
-  readonly derivedPairDataById: Record<number, Record<string, DerivedPairDataNormalized>> | null
+  readonly pairDataById: Record<string, Partial<Record<PairDataTimeWindowEnum, PairDataNormalized>>>
+  readonly derivedPairDataById: Record<string, Partial<Record<PairDataTimeWindowEnum, DerivedPairDataNormalized>>>
 }
 
 const initialState: SwapState = {

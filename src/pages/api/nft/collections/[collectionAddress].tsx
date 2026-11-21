@@ -1,16 +1,14 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { getDefaultProvider, Network } from "@ethersproject/providers";
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Contract } from "ethers";
 import { getCoinCollectNftAddress } from "utils/addressHelpers";
 import { simplePolygonRpcProvider } from "utils/providers";
 import coinCollectNftAbi from 'config/abi/coinCollectNft.json'
 import { mintingConfig } from "config/constants";
 import { formatEther } from "@ethersproject/units";
-const axios = require('axios');
 
 
 
-const getDatas = async (contract: Contract) => {
+const getDatas = async (contract: Contract): Promise<[number, number, number, boolean]> => {
   try {
     const totalSupply = await contract.totalSupply()
     const maxSupply = await contract.maxSupply()
@@ -20,7 +18,7 @@ const getDatas = async (contract: Contract) => {
 
     return [totalSupply.toNumber(), maxSupply.toNumber(), formattedCost, isSaleActive]
 } catch(error) {
-  return [0, 0, 0, 0]
+  return [0, 0, 0, false]
 }
 }
 
@@ -29,14 +27,16 @@ const getDatas = async (contract: Contract) => {
 
 
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
 
-  let { collectionAddress } = req.query
+  const { collectionAddress } = req.query
+  if (typeof collectionAddress !== 'string') return res.status(400).json({ error: 'A collection address is required.' })
 
   const activeMinting = mintingConfig.find((minting) => minting.address === collectionAddress)
 
-  let { name, description, symbol, banner, avatar } = activeMinting
+  if (!activeMinting) return res.status(404).json({ error: 'Collection not found.' })
+  const { name, description, banner, avatar } = activeMinting
 
 
  const contract = new Contract(collectionAddress, coinCollectNftAbi, simplePolygonRpcProvider)

@@ -32,7 +32,7 @@ import {
   normalizeDerivedPairDataByActiveToken,
   normalizePairDataByActiveToken,
 } from './normalizers'
-import { PairDataTimeWindowEnum } from './types'
+import { PairDataTimeWindowEnum, PairPricesNormalized } from './types'
 import { derivedPairByDataIdSelector, pairByDataIdSelector } from './selectors'
 import { queryParametersToSwapState } from './queryState'
 import fetchDerivedPriceData from './fetch/fetchDerivedPriceData'
@@ -126,7 +126,7 @@ function involvesAddress(trade: Trade, checksummedAddress: string): boolean {
 }
 
 // Get swap price for single token disregarding slippage and price impact
-export function useSingleTokenSwapInfo(): { [key: string]: number } {
+export function useSingleTokenSwapInfo(): Record<string, number> | null {
   const {
     [Field.INPUT]: { currencyId: inputCurrencyId },
     [Field.OUTPUT]: { currencyId: outputCurrencyId },
@@ -282,9 +282,7 @@ type useFetchPairPricesParams = {
   token0Address: string
   token1Address: string
   timeWindow: PairDataTimeWindowEnum
-  currentSwapPrice: {
-    [key: string]: number
-  }
+  currentSwapPrice: Record<string, number> | null
 }
 
 export const useFetchPairPrices = ({
@@ -293,13 +291,15 @@ export const useFetchPairPrices = ({
   timeWindow,
   currentSwapPrice,
 }: useFetchPairPricesParams) => {
-  const [pairId, setPairId] = useState(null)
+  const [pairId, setPairId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const pairData = useSelector(pairByDataIdSelector({ pairId, timeWindow }))
   const derivedPairData = useSelector(derivedPairByDataIdSelector({ pairId, timeWindow }))
   const dispatch = useDispatch()
 
   useEffect(() => {
+    if (!pairId || pairData || derivedPairData || isLoading) return
+
     const fetchDerivedData = async () => {
       console.info(
         '[Price Chart]: Not possible to retrieve price data from single pool, trying to fetch derived prices',
@@ -346,9 +346,7 @@ export const useFetchPairPrices = ({
       }
     }
 
-    if (!pairData && !derivedPairData && pairId && !isLoading) {
-      fetchAndUpdatePairPrice()
-    }
+    fetchAndUpdatePairPrice()
   }, [
     pairId,
     timeWindow,
@@ -364,7 +362,7 @@ export const useFetchPairPrices = ({
   useEffect(() => {
     const updatePairId = () => {
       try {
-        const pairAddress = getLpAddress(token0Address, token1Address)?.toLowerCase()
+        const pairAddress = getLpAddress(token0Address, token1Address)?.toLowerCase() ?? null
         if (pairAddress !== pairId) {
           setPairId(pairAddress)
         }
@@ -386,16 +384,17 @@ export const useFetchPairPrices = ({
     [token0Address, derivedPairData],
   )
 
-  const hasSwapPrice = currentSwapPrice && currentSwapPrice[token0Address] > 0
+  const swapPrice = currentSwapPrice?.[token0Address]
+  const hasSwapPrice = swapPrice !== undefined && swapPrice > 0
 
   const normalizedPairDataWithCurrentSwapPrice =
-    normalizedPairData?.length > 0 && hasSwapPrice
-      ? [...normalizedPairData, { time: new Date(), value: currentSwapPrice[token0Address] }]
+    normalizedPairData && normalizedPairData.length > 0 && hasSwapPrice
+      ? [...normalizedPairData, { time: new Date(), value: swapPrice }]
       : normalizedPairData
 
   const normalizedDerivedPairDataWithCurrentSwapPrice =
-    normalizedDerivedPairData?.length > 0 && hasSwapPrice
-      ? [...normalizedDerivedPairData, { time: new Date(), value: currentSwapPrice[token0Address] }]
+    normalizedDerivedPairData && normalizedDerivedPairData.length > 0 && hasSwapPrice
+      ? [...normalizedDerivedPairData, { time: new Date(), value: swapPrice }]
       : normalizedDerivedPairData
 
   const hasNoDirectData = normalizedPairDataWithCurrentSwapPrice && normalizedPairDataWithCurrentSwapPrice?.length === 0
@@ -403,7 +402,7 @@ export const useFetchPairPrices = ({
     normalizedDerivedPairDataWithCurrentSwapPrice && normalizedDerivedPairDataWithCurrentSwapPrice?.length === 0
 
   // undefined is used for loading
-  let pairPrices = hasNoDirectData && hasNoDerivedData ? [] : undefined
+  let pairPrices: PairPricesNormalized | undefined = hasNoDirectData && hasNoDerivedData ? [] : undefined
   if (normalizedPairDataWithCurrentSwapPrice && normalizedPairDataWithCurrentSwapPrice?.length > 0) {
     pairPrices = normalizedPairDataWithCurrentSwapPrice
   } else if (

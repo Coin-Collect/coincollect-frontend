@@ -45,6 +45,7 @@ it("renders correctly", () => {
         footerLinks={footerLinks}
         activeItem="Trade"
         activeSubItem="Exchange"
+        showPhishingWarningBanner={false}
         buyCakeLabel="Buy CAKE"
       >
         body

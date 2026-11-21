@@ -73,9 +73,9 @@ const TradingViewChart = ({ outputSymbol, inputSymbol, isDark, onTwChartSymbol }
 
   useEffect(() => {
     if (!(isLoading || debouncedLoading) && !hasNoData && symbol) {
-      onTwChartSymbol(symbol)
+      onTwChartSymbol?.(symbol)
     } else {
-      onTwChartSymbol('')
+      onTwChartSymbol?.('')
     }
   }, [debouncedLoading, hasNoData, isLoading, onTwChartSymbol, symbol])
 

@@ -24,8 +24,8 @@ import NFTMedia from '../NFTMedia'
 
 interface ActivityRowProps {
   activity: Activity
-  nft: NftToken
-  bnbBusdPrice: Price
+  nft?: NftToken
+  bnbBusdPrice?: Price
   isUserActivity?: boolean
   isNftActivity?: boolean
 }
@@ -39,7 +39,7 @@ const ActivityRow: React.FC<ActivityRowProps> = ({
 }) => {
   const { chainId } = useActiveWeb3React()
   const { isXs, isSm } = useMatchBreakpoints()
-  const priceAsFloat = parseFloat(activity.price)
+  const priceAsFloat = parseFloat(activity.price ?? '')
   const timestampAsMs = parseFloat(activity.timestamp) * 1000
   const localeTimestamp = new Date(timestampAsMs).toLocaleString(undefined, {
     year: 'numeric',
@@ -49,13 +49,13 @@ const ActivityRow: React.FC<ActivityRowProps> = ({
     minute: 'numeric',
   })
   const [onPresentMobileModal] = useModal(
-    <MobileModal
+    nft ? <MobileModal
       nft={nft}
       activity={activity}
       localeTimestamp={localeTimestamp}
       bnbBusdPrice={bnbBusdPrice}
       isUserActivity={isUserActivity}
-    />,
+    /> : <></>,
   )
   const isPBCollection = nft ? nft.collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase() : false
   const tokenId =
@@ -66,7 +66,7 @@ const ActivityRow: React.FC<ActivityRowProps> = ({
       : null
 
   return (
-    <tr {...((isXs || isSm) && { onClick: onPresentMobileModal })} data-test="nft-activity-row">
+    <tr {...(nft && (isXs || isSm) && { onClick: onPresentMobileModal })} data-test="nft-activity-row">
       {!isNftActivity ? (
         <Td
           {...((isXs || isSm) && {

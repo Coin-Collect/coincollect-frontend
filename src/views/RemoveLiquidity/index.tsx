@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { splitSignature } from '@ethersproject/bytes'
 import { Contract } from '@ethersproject/contracts'
-import { TransactionResponse } from '@ethersproject/providers'
+import { TransactionResponse, Web3Provider } from '@ethersproject/providers'
 import { useRouter } from 'next/router'
 import { Currency, currencyEquals, ETHER, Percent, WETH } from '@coincollect/sdk'
 import { Button, Text, AddIcon, ArrowDownIcon, CardBody, Slider, Box, Flex, useModal } from '@pancakeswap/uikit'
@@ -174,7 +174,7 @@ export default function RemoveLiquidity() {
   // tx sending
   const addTransaction = useTransactionAdder()
   async function onRemove() {
-    if (!chainId || !library || !account || !deadline) throw new Error('missing dependencies')
+    if (!chainId || !(library instanceof Web3Provider) || !account || !deadline) throw new Error('missing dependencies')
     const { [Field.CURRENCY_A]: currencyAmountA, [Field.CURRENCY_B]: currencyAmountB } = parsedAmounts
     if (!currencyAmountA || !currencyAmountB) {
       throw new Error('missing currency amounts')
