@@ -332,6 +332,18 @@ async function testBrowser() {
     await visit('/swap')
     await has('Swap')
     await wait('swap amount input', () => Boolean(document.querySelector('input[inputmode="decimal"]')))
+    const rpcRead = await evalPage(async () => {
+      const result = await fetch('/api/rpc/polygon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 'isolated', method: 'eth_chainId', params: [] }),
+      })
+      return [result.status, result.headers.get('Content-Type'), await result.json()]
+    })
+    assert.equal(rpcRead[0], 200)
+    assert.match(rpcRead[1], /^application\/json/)
+    assert.deepEqual(rpcRead[2], { jsonrpc: '2.0', id: 'isolated', result: '0x7a69' })
+    console.log('PASS same-origin Polygon RPC returns a correlated JSON read from the isolated chain')
     if (process.env.V3_BROWSER_SENTRY_PROBE && process.env.V3_BROWSER_SENTRY_URL) {
       await wait('initialised production Sentry browser client', () => {
         const carrier = window.__SENTRY__
@@ -394,6 +406,13 @@ async function testBrowser() {
     await visit('/nfts/collections', fixture.participant)
     await has('Stake community NFTs for FREE income streams')
     console.log('PASS connected Swap and Add Liquidity token search, Liquidity positions and NFT Collections')
+    await visit('/nfts/profile/' + fixture.participant.toLowerCase(), fixture.participant)
+    await wait('connected profile inventory and rewards filters', () => {
+      const labels = [...document.querySelectorAll('button')].map((button) => button.textContent.trim())
+      return labels.some((label) => /^NFTs\s*\(\d+\)$/.test(label)) &&
+        labels.some((label) => /^Rewards\s*\(\d+\)$/.test(label))
+    })
+    console.log('PASS connected NFT profile renders the wallet inventory and rewards controls')
 
     const walletNonceBeforeSwitch = await rpc('eth_getTransactionCount', [fixture.participant, 'latest'])
     await visit('/nftpools/v3/' + fixture.poolId, fixture.participant, false, '0x1')

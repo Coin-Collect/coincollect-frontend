@@ -29,6 +29,15 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn lint:v3
+      - name: Audit dependency advisories
+        run: node scripts/audit-dependencies.cjs "$RUNNER_TEMP/coincollect-yarn-audit.jsonl"
+      - name: Upload complete dependency findings
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coincollect-yarn-audit
+          path: ${{ runner.temp }}/coincollect-yarn-audit.jsonl
+          if-no-files-found: error
       - run: yarn typecheck:v3
       - run: yarn test --runInBand --silent src/features/universalRewards src/features/nftPoolManager src/state/nftFarms
       - run: yarn typecheck

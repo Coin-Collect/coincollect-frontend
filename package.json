@@ -51,7 +51,6 @@
   },
   "dependencies": {
     "@binance-chain/bsc-connector": "^1.0.0",
-    "@blocto/blocto-connector": "^0.2.3",
     "@ethersproject/abi": "^5.0.0",
     "@ethersproject/address": "^5.0.0",
     "@ethersproject/bignumber": "^5.0.0",
@@ -85,7 +84,6 @@
     "lightweight-charts": "^3.5.0",
     "lint-staged": "^12.3.4",
     "lodash": "4.18.1",
-    "moralis": "^2.27.2",
     "multicodec": "^2.0.0",
     "multihashes": "^3.0.1",
     "next": "16.4.6",
@@ -150,8 +148,20 @@
     "elliptic": "6.6.1",
     "lodash": "4.18.1",
     "**/@ethersproject/providers/ws": "8.23.0",
-    "**/@moralisweb3/common-core/axios": "1.21.1",
     "**/axios/form-data": "4.0.6",
-    "**/@cypress/request/form-data": "2.5.6"
+    "**/@cypress/request/form-data": "2.5.6",
+    "**/@wagmi/connectors/@coinbase/wallet-sdk": "4.3.0",
+    "**/eciesjs/secp256k1": "5.0.2",
+    "**/viem/ws": "8.23.0",
+    "**/engine.io-client/ws": "8.23.0",
+    "**/graphql-request/form-data": "3.0.5",
+    "**/@web3modal/base/bs58/base-x": "4.0.1",
+    "**/listhen/node-forge": "1.4.3",
+    "**/unstorage/h3": "1.15.6",
+    "**/listhen/h3": "1.15.6",
+    "**/h3/defu": "6.1.7",
+    "**/socket.io-client/socket.io-parser": "4.2.7",
+    "**/ajv/fast-uri": "3.1.9",
+    "**/micromatch/picomatch": "2.3.2"
   }
 }
