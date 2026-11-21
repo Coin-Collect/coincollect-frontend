@@ -9,12 +9,14 @@ import {
   type WalletClient,
 } from 'viem'
 import { getCode } from 'viem/actions'
-import { universalRewardsAbi, universalRewardsV33Abi } from './abi'
+import { universalRewardsAbi } from './abi'
+import { allowsLocalPositionBatch, localPositionBatchAbi } from './localPositionBatch'
 import { erc20Abi, type NftRef } from './reader'
 import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
 const expiredClaimError = toFunctionSelector('ClaimPeriodEnded()')
 const openClaimError = toFunctionSelector('ClaimPeriodOpen()')
+const individualConfirmations = 'This deployment uses individual NFT confirmations for Harvest and Unstake.'
 const positionBatchSelectors = ['claimBatch', 'exitBatch'].map((name) =>
   toFunctionSelector(`${name}(uint256,(uint256,address,uint256)[])`),
 )
@@ -45,6 +47,12 @@ export async function sendV3Call(
   account: Address,
   call: V3Call,
 ) {
+  const isPositionBatch =
+    isAddressEqual(call.to, deployment.address) &&
+    positionBatchSelectors.some((selector) => call.data.startsWith(selector))
+  if (isPositionBatch && !allowsLocalPositionBatch(deployment)) {
+    throw new Error(individualConfirmations)
+  }
   await Promise.all([validateV3Deployment(client, deployment), assertWallet(wallet, account, deployment)])
   await client.call({ account, ...call })
   const gas = withV3GasHeadroom(await client.estimateGas({ account, ...call }))
@@ -53,7 +61,7 @@ export async function sendV3Call(
     throw new Error('Your settlement wallet needs enough POL to cover this transaction.')
   }
   await assertWallet(wallet, account, deployment)
-  if (deployment.chainId === 31337 && positionBatchSelectors.some((selector) => call.data.startsWith(selector))) {
+  if (isPositionBatch) {
     // Local previews can share a chain ID and contract address while pointing at different ledgers.
     const walletCode = await getCode(wallet, { address: deployment.address })
     if (!walletCode || keccak256(walletCode).toLowerCase() !== deployment.runtimeHash.toLowerCase()) {
@@ -117,9 +125,12 @@ export function manageV3Positions(
   refs: readonly NftRef[],
   action: 'claimBatch' | 'exitBatch',
 ): V3Call {
+  if (!allowsLocalPositionBatch(deployment)) {
+    throw new Error(individualConfirmations)
+  }
   return {
     to: deployment.address,
-    data: encodeFunctionData({ abi: universalRewardsV33Abi, functionName: action, args: [poolId, refs] }),
+    data: encodeFunctionData({ abi: localPositionBatchAbi, functionName: action, args: [poolId, refs] }),
   }
 }
 

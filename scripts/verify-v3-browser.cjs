@@ -785,7 +785,6 @@ async function testBrowser() {
       'function deposit() payable',
       'function approve(address spender, uint256 amount) returns (bool)',
       'function poolCount() view returns (uint256)',
-      'function batchPositionLimit() pure returns (uint256)',
       'function createPool((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
       'function fundReward(uint256 poolId,address token,uint128 amount)',
       'function nftKey(uint256 sourceChainId,address collection,uint256 tokenId) view returns (bytes32)',
@@ -859,13 +858,12 @@ async function testBrowser() {
         },
       ])
     const beforeHarvest = await rpc('eth_blockNumber')
-    const hasPositionBatch = (await readBatchPool('batchPositionLimit').catch(() => 0n)) > 0n
     await click('article button', 'Harvest')
-    await has(hasPositionBatch ? 'Confirmed on the settlement network.' : '3 of 3 transactions confirmed on the settlement network.')
+    await has('3 of 3 transactions confirmed on the settlement network.')
     assert.equal(await evalPage(() => document.querySelector('dialog[open]') === null), true)
     const harvestClaims = await claimsSince(beforeHarvest)
     assert.deepEqual(harvestClaims.map(({ topics }) => topics[2]).sort(), [...keys].sort())
-    assert.equal(new Set(harvestClaims.map(({ transactionHash }) => transactionHash)).size, hasPositionBatch ? 1 : 3)
+    assert.equal(new Set(harvestClaims.map(({ transactionHash }) => transactionHash)).size, 3)
     assert.equal(await readBatchPool('walletsNftCount', [batchId, fixture.participant]), 3n)
     await rpc('evm_increaseTime', [180])
     await rpc('evm_mine')
@@ -875,11 +873,11 @@ async function testBrowser() {
     await selectNft(batchIds[2])
     await has('2 NFTs selected')
     await click('dialog button', 'Unstake & Harvest')
-    await has(hasPositionBatch ? 'Confirmed on the settlement network.' : '2 of 2 transactions confirmed on the settlement network.')
+    await has('2 of 2 transactions confirmed on the settlement network.')
     await wait('selective Unstake dialog closes', () => document.querySelector('dialog[open]') === null)
     const exitClaims = await claimsSince(beforeExit)
     assert.deepEqual(exitClaims.map(({ topics }) => topics[2]).sort(), [keys[0], keys[2]].sort())
-    assert.equal(new Set(exitClaims.map(({ transactionHash }) => transactionHash)).size, hasPositionBatch ? 1 : 2)
+    assert.equal(new Set(exitClaims.map(({ transactionHash }) => transactionHash)).size, 2)
     const seats = await Promise.all(keys.map((key) => readBatchPool('positionState', [batchId, key])))
     assert.equal(seats[0].seatOwner, '0x' + '0'.repeat(40))
     assert.equal(seats[1].seatOwner.toLowerCase(), fixture.participant.toLowerCase())

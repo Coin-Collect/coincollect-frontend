@@ -12,7 +12,8 @@ import {
   type Hex,
 } from 'viem'
 import { getLocalForkRpcUrl, getPolygonRuntimeChainId, isLocalForkMode } from 'config/localFork'
-import { universalRewardsAbi, universalRewardsV33Abi } from './abi'
+import { universalRewardsAbi } from './abi'
+import { allowsLocalPositionBatch, localPositionBatchAbi } from './localPositionBatch'
 
 export interface V3Deployment {
   readonly address: Address
@@ -80,13 +81,15 @@ export async function readV3ClaimPeriod(client: V3Client, deployment: V3Deployme
 }
 
 export async function readV3BatchLimit(client: V3Client, deployment: V3Deployment, blockNumber: bigint) {
+  if (!allowsLocalPositionBatch(deployment)) return 0
   try {
-    return Number(await client.readContract({
+    const limit = await client.readContract({
       address: deployment.address,
-      abi: universalRewardsV33Abi,
+      abi: localPositionBatchAbi,
       functionName: 'batchPositionLimit',
       blockNumber,
-    }))
+    })
+    return limit > BigInt(0) && limit <= BigInt(32) ? Number(limit) : 0
   } catch (error) {
     if (isV3MissingSelector(error)) return 0
     throw error
