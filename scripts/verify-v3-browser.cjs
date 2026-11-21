@@ -194,6 +194,7 @@ async function testBrowser() {
   browser.stderr.setEncoding('utf8').on('data', (chunk) => {
     chromeLog = (chromeLog + chunk).slice(-3000)
   })
+  const browserClosed = once(browser, 'close').catch(() => undefined)
   let worker
   let browserError
   browser.on('error', (error) => {
@@ -1154,16 +1155,17 @@ async function testBrowser() {
     )
   } finally {
     worker?.kill()
+    if (cdp && browser.exitCode === null && browser.signalCode === null) {
+      await Promise.race([cdp.command('Browser.close', {}, 2000).catch(() => undefined), browserClosed])
+    }
     cdp?.close()
-    browser.kill()
-    await new Promise((resolve) => {
-      if (browser.exitCode !== null || browser.signalCode !== null || browserError) resolve()
-      else {
-        browser.once('exit', resolve)
-        setTimeout(resolve, 2000).unref()
-      }
-    })
-    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 3 })
+    await Promise.race([browserClosed, delay(2000, undefined, { ref: false })])
+    if (browser.exitCode === null && browser.signalCode === null && !browserError) {
+      browser.kill()
+      await Promise.race([browserClosed, delay(2000, undefined, { ref: false })])
+    }
+    // Chrome's children can still finish writing the profile after the main process exits.
+    await fs.promises.rm(profile, { recursive: true, force: true, maxRetries: 12, retryDelay: 250 })
   }
 }
 
