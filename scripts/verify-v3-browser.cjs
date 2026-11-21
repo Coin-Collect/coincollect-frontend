@@ -296,6 +296,25 @@ async function testBrowser() {
         name,
         value,
       )
+    const editPoolName = async (name) => {
+      await wait('FarmCard name editor', () => {
+        const card = document.querySelector('[aria-label="Editable FarmCard"]')
+        if (card?.querySelector('input[name="pool-name"]')) return true
+        const button = card?.querySelector('button[aria-label="Edit pool name"]')
+        if (button && !button.disabled) button.click()
+        return false
+      })
+      await field('pool-name', name)
+      await evalPage(() => {
+        const input = document.querySelector('input[name="pool-name"]')
+        if (!input) throw new Error('The FarmCard name editor closed before confirmation.')
+        input.focus()
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+      })
+      await wait('FarmCard name saved', (expected) =>
+        document.querySelector('[aria-label="Editable FarmCard"] article h3')?.textContent.includes(expected),
+      name)
+    }
 
     const pad = (hex) => hex.slice(2).padStart(64, '0')
     const tokenId = pad('0x' + Number(fixture.tokenId).toString(16))
@@ -597,22 +616,7 @@ async function testBrowser() {
     await wait('preview reopens', () => Boolean(document.querySelector('[aria-label="FarmCard preview"] article')))
     await click('button', 'Back to pools')
     await click('button', 'New pool')
-    await wait('inline FarmCard name', () => {
-      const action = document.querySelector('article button[aria-label="Edit pool name"]')
-      if (!action || action.disabled) return false
-      action.focus()
-      action.click()
-      return true
-    })
-    await field('pool-name', 'Studio acceptance pool')
-    await evalPage(() => {
-      const title = document.querySelector('[name="pool-name"]')
-      title.focus()
-      title.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
-    })
-    await wait('inline name committed to the card', () =>
-      document.querySelector('article h3')?.innerText.includes('Studio acceptance pool'),
-    )
+    await editPoolName('Studio acceptance pool')
     await wait('editable collection avatar', () => {
       const button = document.querySelector('article button[aria-label="Edit NFT collections"]')
       if (!button) return false
@@ -950,17 +954,7 @@ async function testBrowser() {
       assert.equal((await available()).available, parseEther('100'))
       await openStudio()
       await click('button', 'New pool')
-      await wait('Treasury pool name editor', () => {
-        const entry = document.querySelector('article button[aria-label="Edit pool name"]')
-        if (!entry) return false
-        entry.click()
-        return true
-      })
-      await field('pool-name', 'Treasury lifetime pool')
-      await evalPage(() => {
-        const title = document.querySelector('[name="pool-name"]')
-        title.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
-      })
+      await editPoolName('Treasury lifetime pool')
       await wait('Treasury pool collection editor', () => {
         const entry = document.querySelector('article button[aria-label="Edit NFT collections"]')
         if (!entry) return false
