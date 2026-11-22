@@ -69,6 +69,7 @@ export default function V3Treasury({
   const [submitting, setSubmitting] = useState(false)
   const action = useV3Action(client, deployment, getWallet, account)
   const treasury = studio.treasury
+  const treasuryAddress = treasury?.address
   const selected = studio.supported.find((token) => token.address === asset) ?? studio.supported[0]
   const owner = Boolean(account && treasury && isAddressEqual(account, treasury.owner))
   const locked = !owner || !rightNetwork || action.busy || action.unconfirmed || submitting
@@ -76,11 +77,11 @@ export default function V3Treasury({
   const load = useCallback(() => readV3Catalogue(client, deployment, offset, true), [client, deployment, offset])
   const liabilities = useV3Query(treasury ? `${treasury.address}:liabilities:${offset}` : '', load, 45_000)
   const loadRecent = useCallback(async () => {
-    if (!treasury) return undefined
-    const toBlock = historyEnd ?? (await client.getBlockNumber())
+    if (!treasuryAddress) return undefined
+    const toBlock = historyEnd ?? (await client.getBlockNumber({ cacheTime: 0 }))
     const fromBlock = toBlock > BigInt(2000) ? toBlock - BigInt(2000) : ZERO
     const logs = await client.getContractEvents({
-      address: treasury.address,
+      address: treasuryAddress,
       abi: treasuryVaultV36Abi,
       fromBlock,
       toBlock,
@@ -94,7 +95,7 @@ export default function V3Treasury({
       toBlock,
       logs: logs.filter((log) => log.eventName !== 'Withdrawn' || !unwrapped.has(log.transactionHash)).reverse(),
     }
-  }, [client, treasury, historyEnd])
+  }, [client, treasuryAddress, historyEnd])
   const recent = useV3Query(
     treasury ? `${treasury.address}:activity:${historyEnd ?? 'latest'}` : '',
     loadRecent,

@@ -27,9 +27,9 @@
         "action": "MetaMask local Join confirmed while the NFT remained in the wallet",
         "transactions": [
           {
-            "hash": "0x75ac9ccb969cdf34dedb68357e1c02306f4dcd417e47006a1d7454405d08db8a",
+            "hash": "0x66acea00b2ef1559d7e3a49af0b65c098595c9df3302dad2a24266af0951c347",
             "block": 46,
-            "from": "0x2878aca062b2238aeae1bf3b0a4110219214580f",
+            "from": "0xa83129638c5ae58991d134c062f805f0205e4cf7",
             "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
             "status": "success"
           }
@@ -39,9 +39,9 @@
         "action": "MetaMask local Harvest confirmed with an increased on-chain reward token balance",
         "transactions": [
           {
-            "hash": "0xf7944622016f6720e52c4a5603eb123143fc5efddd82b21918304d983543e9c3",
+            "hash": "0x30b35033c8bc5b448b4dc63358b040a7e1dd003b1eef2ec44b61a43adf547eb1",
             "block": 48,
-            "from": "0x2878aca062b2238aeae1bf3b0a4110219214580f",
+            "from": "0xa83129638c5ae58991d134c062f805f0205e4cf7",
             "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
             "status": "success"
           }
@@ -51,16 +51,16 @@
         "action": "genuine MetaMask ERC-721 Unstake receipt",
         "transactions": [
           {
-            "hash": "0xa9543c01f21ca4a28a78012d2c1b3c77723f0fdad0f9570336ba560c0829444f",
+            "hash": "0x275cc5436c8a58302e8b72fc9a2fcd3a7ca47b96f45221a130c13647fc735b40",
             "block": 49,
-            "from": "0xb5d7f27faf8a94462b680f16e31adfdecfca4ad8",
+            "from": "0xa83129638c5ae58991d134c062f805f0205e4cf7",
             "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
             "status": "success"
           }
         ]
       }
     ],
-    "limits": "Each transaction below was signed through the genuine extension on a disposable chain. Record help and adoption status per method in the acceptance matrix."
+    "limits": "Each transaction below was signed through the genuine extension on a disposable chain. See the acceptance matrix for the scope of each check."
   },
   "uniswap": {
     "status": "BLOCKED",

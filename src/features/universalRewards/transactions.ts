@@ -20,6 +20,11 @@ const individualConfirmations = 'This deployment uses individual NFT confirmatio
 const positionBatchSelectors = ['claimBatch', 'exitBatch'].map((name) =>
   toFunctionSelector(`${name}(uint256,(uint256,address,uint256)[])`),
 )
+const payoutSelectors = new Set<string>([
+  toFunctionSelector('claim(uint256,uint256,address,uint256)'),
+  toFunctionSelector('claimReward(uint256,uint256,address,uint256,address)'),
+  toFunctionSelector('exit(uint256,uint256,address,uint256)'),
+])
 
 export interface V3Call {
   to: Address
@@ -27,9 +32,14 @@ export interface V3Call {
   value?: bigint
 }
 
-export function withV3GasHeadroom(estimate: bigint) {
-  // The mined block can settle another interval between estimation and inclusion.
-  return estimate + estimate / BigInt(5) + BigInt(25_000)
+export function withV3GasHeadroom(estimate: bigint, execution?: { ledger: Address; call: V3Call }) {
+  // A quote immediately after Harvest may estimate the no-payout branch. The mined block
+  // can accrue rewards and execute up to four ERC-20 payments before the next estimate.
+  const canStartPayout =
+    execution &&
+    isAddressEqual(execution.call.to, execution.ledger) &&
+    payoutSelectors.has(execution.call.data.slice(0, 10))
+  return estimate + estimate / BigInt(5) + BigInt(canStartPayout ? 175_000 : 25_000)
 }
 
 async function assertWallet(wallet: WalletClient, account: Address, deployment: V3Deployment) {
@@ -67,7 +77,7 @@ export async function sendV3Call(
   }
   await Promise.all([validateV3Deployment(client, deployment), assertWallet(wallet, account, deployment)])
   await client.call({ account, ...call })
-  const gas = withV3GasHeadroom(await client.estimateGas({ account, ...call }))
+  const gas = withV3GasHeadroom(await client.estimateGas({ account, ...call }), { ledger: deployment.address, call })
   const [balance, gasPrice] = await Promise.all([client.getBalance({ address: account }), client.getGasPrice()])
   if (balance < (call.value ?? BigInt(0)) + gas * gasPrice) {
     throw new Error('Your settlement wallet needs enough POL to cover this transaction.')

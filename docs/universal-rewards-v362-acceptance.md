@@ -2,6 +2,16 @@
 
 The Solidity audit candidate remains V3.6.1. Use the [contract handoff](https://github.com/Coin-Collect/coincollect-smart-contracts/blob/a68421dc32b69a71d4625a9ffb69f0cd79788c03/projects/universal-rewards-v3/V3.6.2-audit-handoff.md), the [dependency risk register](universal-rewards-v362-dependencies.md) and the [wallet evidence](universal-rewards-v362-wallet-evidence.json). The V3.6 browser job uploads the pair of exact source commits, the compiler-input hash, and desktop and mobile Treasury screenshots.
 
+## Production acceptance findings
+
+On Chrome for Testing with MetaMask 13.57.0.0, the disposable account connected, stayed authorized after reload, and switched from Ethereum to the isolated network. A rejected transaction left the nonce unchanged. The retry produced an ERC-721 Join receipt and ownership stayed with the wallet. Harvest increased the on-chain reward balance. ERC-721 Unstake confirmed with a deliberate delay between estimate and signature.
+
+The app rejected a wallet RPC pointing to a different history at the same chain ID and block height, before requesting a signature. Returning the RPC proxy to its first upstream did not immediately restore the wallet session. Reject and retry were verified separately with a stable RPC. Record an explicit app disconnect and reconnect separately from reload when signing off.
+
+During genuine Unstake testing, an estimate taken just after Harvest missed the cost of a reward transfer at the later execution block. One local transaction reverted. The frontend now budgets additional gas for ledger `claim`, `claimReward` and `exit`. The delayed Unstake passed after the correction. In controlled-provider Chrome, a confirmed native POL withdrawal reached the correct balance before Treasury history caught up. History refresh now reads the latest block without reusing the previous block-number cache.
+
+Uniswap Wallet 1.87.0.5 stopped in `onboarding.html` with “Something went wrong” before connecting to the app. The extension's registration requests aborted. Its public support list omits chain 31337. Treat this acceptance as BLOCKED and follow the founder checklist before signing off. [Uniswap supported networks](https://support.uniswap.org/hc/en-us/articles/40074184880525-Networks-on-Uniswap/)
+
 ## Isolated production wallet session
 
 Use a clean paired checkout and a fresh Chrome profile for each wallet. The role accounts are the first two funded accounts of a disposable Anvil instance. Import only accounts created for this isolated instance. Never use an everyday wallet or a mainnet RPC for these steps.
