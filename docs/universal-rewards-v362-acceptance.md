@@ -12,6 +12,17 @@ During genuine Unstake testing, an estimate taken just after Harvest missed the 
 
 Uniswap Wallet 1.87.0.5 stopped in `onboarding.html` with “Something went wrong” before connecting to the app. The extension's registration requests aborted. Its public support list omits chain 31337. Treat this acceptance as BLOCKED and follow the founder checklist before signing off. [Uniswap supported networks](https://support.uniswap.org/hc/en-us/articles/40074184880525-Networks-on-Uniswap/)
 
+| Genuine wallet check | Result | Evidence or next acceptance step |
+| --- | --- | --- |
+| MetaMask connect, reload, Ethereum to local switch | PASS | Approved the actual site and network prompts. Verified the authorized account and settlement chain. |
+| MetaMask explicit disconnect and reconnect | BLOCKED | Reload preserved the session. Disconnect through the app and verify the next connection in founder step 1. |
+| MetaMask two independent histories on chain 31337 | PASS for rejection | App detected the wrong history before signing. Confirm same-origin session recovery after restoring the production test RPC in founder step 3. |
+| MetaMask rejection and retry | PASS | Cancel left the nonce unchanged. A subsequent approval produced the Join receipt. |
+| MetaMask ERC-721 Join, Harvest, Unstake | PASS | Three successful receipts, unchanged NFT ownership after Join, and reward balance increased after Harvest. |
+| MetaMask Treasury deposit, token registration and permissions, protected swap, WPOL and POL withdrawals, pool creation and funding | BLOCKED | Genuine session reached the local network, but the scripted Studio handoff could not obtain the admin action. Follow founder steps 4–7. The controlled-provider run checks these operations separately. |
+| MetaMask ERC-1155 quantity, partial transfer, Harvest, partial exit and recovery | BLOCKED | Isolated setup hit a receipt timing error in one run. Another attempt was stopped at MetaMask's local `Review alert` screen. Use founder step 8 and record each receipt. |
+| Uniswap Wallet on chain 31337 | BLOCKED | The extension stopped during onboarding. Verify a supported local RPC and complete founder step 9. |
+
 ## Isolated production wallet session
 
 Use a clean paired checkout and a fresh Chrome profile for each wallet. The role accounts are the first two funded accounts of a disposable Anvil instance. Import only accounts created for this isolated instance. Never use an everyday wallet or a mainnet RPC for these steps.

@@ -43,6 +43,17 @@ async function rpc(method, params = []) {
   return result.result
 }
 
+async function minedReceipt(hash, operation) {
+  assert.match(hash ?? '', /^0x[0-9a-f]{64}$/i, operation)
+  const deadline = Date.now() + 10_000
+  do {
+    const receipt = await rpc('eth_getTransactionReceipt', [hash])
+    if (receipt) return receipt
+    await delay(50)
+  } while (Date.now() < deadline)
+  throw new Error(`${operation} did not produce a mined receipt: ${hash}`)
+}
+
 function injectedWallet(account, node, announceProvider, initialChain) {
   localStorage.setItem('wagmi.injected.connected', 'true')
   localStorage.setItem('wagmi.recentConnectorId', JSON.stringify('injected'))
@@ -774,7 +785,7 @@ async function testBrowser() {
         value: toHex(parseEther('8')),
       },
     ])
-    assert.equal((await rpc('eth_getTransactionReceipt', [wrap])).status, '0x1')
+    assert.equal((await minedReceipt(wrap, 'Fund the ERC-20 fixture')).status, '0x1')
     await evalPage(() => document.dispatchEvent(new Event('visibilitychange')))
     await payment('token')
     await has('Confirm V3R spending permission first, then confirm the deposit.')
@@ -857,15 +868,7 @@ async function testBrowser() {
     const sendFixture = async (to, functionName, args = [], value, from = fixture.operator) => {
       const data = encodeFunctionData({ abi: batchAbi, functionName, args })
       const hash = await rpc('eth_sendTransaction', [{ from, to, data, value, gas: '0x7a1200' }])
-      for (let attempt = 0; attempt < 200; attempt++) {
-        const receipt = await rpc('eth_getTransactionReceipt', [hash])
-        if (receipt) {
-          assert.equal(receipt.status, '0x1', functionName)
-          return
-        }
-        await new Promise((resolve) => setTimeout(resolve, 50))
-      }
-      throw Error(`${functionName} did not produce a mined receipt: ${hash}`)
+      assert.equal((await minedReceipt(hash, functionName)).status, '0x1', functionName)
     }
     const readBatchPool = async (functionName, args = []) => {
       const calldata = encodeFunctionData({ abi: batchAbi, functionName, args })
@@ -1294,7 +1297,7 @@ async function testBrowser() {
       await click('button', 'Confirm Treasury swap')
       await has('The transaction reverted on the settlement network.')
       const revertedHash = await evalPage(() => window.__nextV3RevertedHash)
-      assert.equal((await rpc('eth_getTransactionReceipt', [revertedHash])).status, '0x0')
+      assert.equal((await minedReceipt(revertedHash, 'Deliberately reverted Treasury swap')).status, '0x0')
       assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
       await rpc('evm_increaseTime', [121])
       await rpc('evm_mine')

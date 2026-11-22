@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Coin-Collect/coincollect-smart-contracts
-          ref: ad08c99dfed6e123d2a7bc8fdae7466a08c60250
+          ref: 39dca890de4c5c304de3fbfc32385ff9c56455a2
           path: contracts
       - uses: actions/setup-node@v4
         with:
