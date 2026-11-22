@@ -4,11 +4,8 @@ const fs = require('node:fs')
 const { spawnSync } = require('node:child_process')
 const { dependencies, optionalDependencies } = require('../package.json')
 
-// Existing high findings and reachability are tracked in docs/universal-rewards-v354-security.md.
+// The remaining reviewed exception is tracked in docs/universal-rewards-v362-dependencies.md.
 const acceptedHighRoots = {
-  'GHSA-qr28-fpjm-wq7f': ['wagmi', '@web3modal/wagmi'],
-  'GHSA-c2c7-rcm5-vvqj': ['wagmi', '@web3modal/wagmi'],
-  'GHSA-p6mc-m468-83gw': ['@snapshot-labs/snapshot.js'],
   'GHSA-mrhx-c7xc-m3w5': ['@web3modal/wagmi'],
 }
 

@@ -29,6 +29,8 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn lint:v3
+      - name: Verify WalletConnect URL decoder compatibility
+        run: node scripts/verify-wallet-url-decoder.cjs
       - name: Audit dependency advisories
         run: node scripts/audit-dependencies.cjs "$RUNNER_TEMP/coincollect-yarn-audit.jsonl"
       - name: Upload complete dependency findings
@@ -67,7 +69,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Coin-Collect/coincollect-smart-contracts
-          ref: 31ff0617b60aaafcbe155f4a266eab9e62455c8a
+          ref: a68421dc32b69a71d4625a9ffb69f0cd79788c03
           path: contracts
       - uses: actions/setup-node@v4
         with:
@@ -92,10 +94,32 @@ jobs:
           COINCOLLECT_V36_FIXTURE: ${{ matrix.ledger == 'v36' && '1' || '0' }}
           V3_BROWSER_TREASURY_SCREENSHOT: ${{ runner.temp }}/v361-treasury-mobile.png
           V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT: ${{ runner.temp }}/v361-treasury-desktop.png
+      - name: Record exact audit pairing
+        if: ${{ success() && matrix.ledger == 'v36' }}
+        working-directory: frontend
+        run: |
+          node - <<'NODE'
+          const { execFileSync } = require('node:child_process')
+          const { createHash } = require('node:crypto')
+          const fs = require('node:fs')
+          const path = require('node:path')
+          const contractRepo = '../contracts'
+          const manifest = fs.readFileSync(contractRepo + '/projects/universal-rewards-v3/release-manifest-v361.json')
+          const evidence = {
+            frontendCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+            contractHandoffCommit: execFileSync('git', ['-C', contractRepo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+            contractsReleaseSourceCommit: '31ff0617b60aaafcbe155f4a266eab9e62455c8a',
+            contractsReleaseManifestSha256: createHash('sha256').update(manifest).digest('hex'),
+            standardInputSha256: JSON.parse(manifest).standardInputSha256,
+          }
+          fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'audit-pairing.json'), JSON.stringify(evidence, null, 2) + '\n')
+          NODE
       - name: Upload Treasury Chrome screenshots
         if: ${{ success() && matrix.ledger == 'v36' }}
         uses: actions/upload-artifact@v4
         with:
           name: v361-treasury-chrome
-          path: ${{ runner.temp }}/v361-treasury-*.png
+          path: |
+            ${{ runner.temp }}/v361-treasury-*.png
+            ${{ runner.temp }}/audit-pairing.json
           if-no-files-found: error

@@ -1,0 +1,75 @@
+{
+  "environment": {
+    "release": "3.6.2 acceptance for 3.6.1-rc",
+    "browser": "Google Chrome for Testing 159.0.8154.6",
+    "framework": "Next.js 16 production build and next start",
+    "settlementChainId": 31337,
+    "localFeeFlags": [
+      "--base-fee 1000000000",
+      "--gas-price 1500000000"
+    ],
+    "metamask": "13.57.0.0",
+    "uniswap": "1.87.0.5"
+  },
+  "metamask": {
+    "checks": [
+      "production /nftpools detects genuine MetaMask EIP-6963",
+      "production MetaMask connection approval and address after reload",
+      "production MetaMask switch to isolated chain 31337",
+      "genuine MetaMask rejection left nonce unchanged",
+      "MetaMask local Join confirmed while the NFT remained in the wallet",
+      "MetaMask local Harvest confirmed with an increased on-chain reward token balance",
+      "genuine MetaMask ERC-721 Unstake receipt",
+      "real MetaMask rejected different RPC histories on chain 31337"
+    ],
+    "receipts": [
+      {
+        "action": "MetaMask local Join confirmed while the NFT remained in the wallet",
+        "transactions": [
+          {
+            "hash": "0x75ac9ccb969cdf34dedb68357e1c02306f4dcd417e47006a1d7454405d08db8a",
+            "block": 46,
+            "from": "0x2878aca062b2238aeae1bf3b0a4110219214580f",
+            "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "MetaMask local Harvest confirmed with an increased on-chain reward token balance",
+        "transactions": [
+          {
+            "hash": "0xf7944622016f6720e52c4a5603eb123143fc5efddd82b21918304d983543e9c3",
+            "block": 48,
+            "from": "0x2878aca062b2238aeae1bf3b0a4110219214580f",
+            "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask ERC-721 Unstake receipt",
+        "transactions": [
+          {
+            "hash": "0xa9543c01f21ca4a28a78012d2c1b3c77723f0fdad0f9570336ba560c0829444f",
+            "block": 49,
+            "from": "0xb5d7f27faf8a94462b680f16e31adfdecfca4ad8",
+            "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          }
+        ]
+      }
+    ],
+    "limits": "Each transaction below was signed through the genuine extension on a disposable chain. Record help and adoption status per method in the acceptance matrix."
+  },
+  "uniswap": {
+    "status": "BLOCKED",
+    "stage": "Extension onboarding before CoinCollect navigation",
+    "observed": [
+      "Something went wrong in onboarding.html",
+      "The extension-side Statsig initialize and registration requests aborted",
+      "No authorization or receipt was observed on 31337"
+    ],
+    "support": "Chain 31337 is absent from the public Uniswap Labs supported networks list."
+  }
+}

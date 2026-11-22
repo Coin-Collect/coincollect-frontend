@@ -1,4 +1,3 @@
-import snapshot from '@snapshot-labs/snapshot.js'
 import BigNumber from 'bignumber.js'
 import { simpleRpcProvider } from 'utils/providers'
 import { SNAPSHOT_HUB_API } from 'config/constants/endpoints'
@@ -6,6 +5,7 @@ import tokens from 'config/constants/tokens'
 import { Proposal, ProposalState, ProposalType, Vote } from 'state/types'
 import { snapshotStrategies, createPoolStrategy } from 'config/constants/snapshot'
 import { ADMINS, PANCAKE_SPACE, SNAPSHOT_VERSION } from './config'
+import { fetchSnapshotScores } from './snapshotScores'
 
 export const isCoreProposal = (proposal: Proposal) => {
   return ADMINS.includes(proposal.author.toLowerCase())
@@ -286,7 +286,7 @@ export async function getVotingPowerList(voters: string[], poolAddresses: string
 
   const strategies = [...defaultStrategy, ...poolsStrategyList]
   const network = '56'
-  const strategyResponse = await snapshot.utils.getScores(PANCAKE_SPACE, strategies, network, voters, blockNumber)
+  const strategyResponse = await fetchSnapshotScores(PANCAKE_SPACE, strategies, network, voters, blockNumber)
   const votingPowerList = calculateVotingPower(strategyResponse, voters, scoresListIndex)
   return votingPowerList
 }
