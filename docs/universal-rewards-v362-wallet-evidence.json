@@ -20,16 +20,28 @@
       "MetaMask local Join confirmed while the NFT remained in the wallet",
       "MetaMask local Harvest confirmed with an increased on-chain reward token balance",
       "genuine MetaMask ERC-721 Unstake receipt",
-      "real MetaMask rejected different RPC histories on chain 31337"
+      "genuine MetaMask managed ERC-1155 Join receipt",
+      "genuine MetaMask ERC-1155 partial ownership transfer receipt",
+      "genuine MetaMask partial ERC-1155 exit receipt and retained units",
+      "genuine MetaMask ERC-1155 Harvest receipts and balance gain",
+      "genuine MetaMask expiry recovery receipt",
+      "real MetaMask rejected different RPC histories on chain 31337",
+      "genuine MetaMask native Treasury deposit",
+      "genuine MetaMask WPOL withdrawal",
+      "genuine MetaMask native POL withdrawal",
+      "genuine MetaMask protected Treasury swap",
+      "genuine MetaMask review token with exact approval",
+      "genuine MetaMask ERC-20 Treasury deposit with approval",
+      "genuine MetaMask pool creation and atomic Treasury funding"
     ],
     "receipts": [
       {
         "action": "MetaMask local Join confirmed while the NFT remained in the wallet",
         "transactions": [
           {
-            "hash": "0xefe9456a93a45240a484677da78b3ad0d369e4249978060bdac95268637e4112",
+            "hash": "0xc6b473f64889baaa2e8ecbf7171b0289e8976df58924488aa546e69afae904c4",
             "block": 46,
-            "from": "0x2da73d0a4c03970018dcefa42c3a4adb397c034d",
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
             "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
             "status": "success"
           }
@@ -39,9 +51,9 @@
         "action": "MetaMask local Harvest confirmed with an increased on-chain reward token balance",
         "transactions": [
           {
-            "hash": "0x031b41ca7af99edc8239af7cc5066a1227eeb2d009408fdd4c7598244a68037e",
+            "hash": "0x91d7ca41f641987ae7613a1055ab843007dd6bc0eeb51cce2e7407c21156ac17",
             "block": 48,
-            "from": "0x2da73d0a4c03970018dcefa42c3a4adb397c034d",
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
             "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
             "status": "success"
           }
@@ -51,15 +63,186 @@
         "action": "genuine MetaMask ERC-721 Unstake receipt",
         "transactions": [
           {
-            "hash": "0x1633f21e747f5896abd0cf7b1e2fa5e64cdb87325e86abb1e485ea673aba0d23",
+            "hash": "0xcf5ae4a3a4fd379a5d3d617ab0ee3d92f86fe1d62bab3485119e39b69f386d75",
             "block": 49,
-            "from": "0x2da73d0a4c03970018dcefa42c3a4adb397c034d",
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
             "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask managed ERC-1155 Join receipt",
+        "transactions": [
+          {
+            "hash": "0x045b78bbc6087999ea22496dd3980470ef1bfc4d25a1692b2938710d62186c7e",
+            "block": 57,
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
+            "to": "0x84ea74d481ee0a5332c457a4d796187f6ba67feb",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask ERC-1155 partial ownership transfer receipt",
+        "transactions": [
+          {
+            "hash": "0xb854f38e58c51184f52d61ed9f4ea5c61d327748fd13be8ff5c901cf0e9dba03",
+            "block": 59,
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
+            "to": "0xc3e53f4d16ae77db1c982e75a937b9f60fe63690",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask partial ERC-1155 exit receipt and retained units",
+        "transactions": [
+          {
+            "hash": "0xbb6181c3e5cd195975ee7b2bf47e75cf31d98ab26048eed5617009d1e8cea622",
+            "block": 60,
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
+            "to": "0x84ea74d481ee0a5332c457a4d796187f6ba67feb",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask ERC-1155 Harvest receipts and balance gain",
+        "transactions": [
+          {
+            "hash": "0x148557bc761d10f2b67347a28a5d15e5304214b6a0bb843170c500da220ecc3f",
+            "block": 61,
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
+            "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          },
+          {
+            "hash": "0xa5ae8eae70ac9b14640ec4336ecee32362b7a1a218a26e143f570fe01cff132d",
+            "block": 62,
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
+            "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask expiry recovery receipt",
+        "transactions": [
+          {
+            "hash": "0x4fe54da16990be698fa36ca320fa49b8445d725e1e01d1125a05ecbd9430df38",
+            "block": 64,
+            "from": "0x225055a087f70b4e175185aa765b179815b21786",
+            "to": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask native Treasury deposit",
+        "transactions": [
+          {
+            "hash": "0xa8a9d1ca6ae6251f674353fcf0bd608007767f18449845d072fcb953879aa6e9",
+            "block": 44,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x28ba0da7eaac9efb2fb9fa09d503cdac7d62cfa1",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask WPOL withdrawal",
+        "transactions": [
+          {
+            "hash": "0xf020cc6d89e9def470689844ea107fbfa9d68429cb1367d2a82a6fc852f4118a",
+            "block": 45,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x28ba0da7eaac9efb2fb9fa09d503cdac7d62cfa1",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask native POL withdrawal",
+        "transactions": [
+          {
+            "hash": "0xf378e57db748d073e8a0df2b719818c5e89985b86115c3d58c04ebb724750f8e",
+            "block": 46,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x28ba0da7eaac9efb2fb9fa09d503cdac7d62cfa1",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask protected Treasury swap",
+        "transactions": [
+          {
+            "hash": "0x3b0f834ae1b94189d4598a16584ba941c7a0885a571a234a2132a3f7c0ca9a33",
+            "block": 50,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x28ba0da7eaac9efb2fb9fa09d503cdac7d62cfa1",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask review token with exact approval",
+        "transactions": [
+          {
+            "hash": "0xf54f35d8dd800bee9ac6a2e6a0849785682dc6343f1147c6b8bdc6139f3c73f1",
+            "block": 51,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x04267be991a3717af36b9253d523c9fb6f85b046",
+            "status": "success"
+          },
+          {
+            "hash": "0x7a89659bed8353d3604a6447b343925063644827d62cb05a264ca1eed2bf7156",
+            "block": 52,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x06c03caa654f4a2fd0196d6eefba396c23c5c275",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask ERC-20 Treasury deposit with approval",
+        "transactions": [
+          {
+            "hash": "0x45d995bc673adc689f69f838429ff694a4f40b44d47a137217aca4a50ff650b7",
+            "block": 53,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x04267be991a3717af36b9253d523c9fb6f85b046",
+            "status": "success"
+          },
+          {
+            "hash": "0xf54fbbeb5cf5d48232988666b8a40b3272506586e19cf3ca4c4a11d9459c7f9a",
+            "block": 54,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x28ba0da7eaac9efb2fb9fa09d503cdac7d62cfa1",
+            "status": "success"
+          }
+        ]
+      },
+      {
+        "action": "genuine MetaMask pool creation and atomic Treasury funding",
+        "transactions": [
+          {
+            "hash": "0x062781fa9fa4b532f6d05c337e72229557b3c6805a2451a31612d42c5bae6b5a",
+            "block": 55,
+            "from": "0xf08090dbbd82aad2bdf7dc16c3479c640b2f9d9c",
+            "to": "0x8e82d1197eb6c1129493a12239ab4c3efbacea00",
             "status": "success"
           }
         ]
       }
     ],
+    "expiredClaim": {
+      "receipt": "0xf9946af3e5865eeffeae69f899e505a675d2fdff63314f40585444ae0832689f",
+      "status": "reverted",
+      "reason": "ClaimPeriodEnded()",
+      "observation": "A second pending Harvest confirmation mined after the isolated clock was advanced to the claim deadline."
+    },
     "limits": "Each transaction below was signed through the genuine extension on a disposable chain. See the acceptance matrix for the scope of each check."
   },
   "uniswap": {
