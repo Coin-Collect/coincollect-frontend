@@ -17,6 +17,7 @@ import { estimateV3Economics } from './economics'
 import { isV3MissingSelector, readV3Capacity, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import type { V3Call } from './transactions'
 import { tokenScale, UINT128_MAX } from './units'
+import { readV36Asset, readV36Treasury, treasuryPermission } from './treasuryV36'
 
 const ZERO = BigInt(0)
 const BPS = BigInt(10_000)
@@ -56,11 +57,12 @@ export async function readV3Treasury(client: V3Client, deployment: V3Deployment,
     })
     if (address === zeroAddress) return undefined
     const vault = { address, abi: treasuryVaultAbi, blockNumber } as const
-    const [owner, paused] = await Promise.all([
+    const [owner, paused, v36] = await Promise.all([
       client.readContract({ ...vault, functionName: 'owner' }),
       client.readContract({ ...vault, functionName: 'paused' }),
+      readV36Treasury(client, deployment, address, blockNumber),
     ])
-    return { address, owner, paused }
+    return { address, owner, paused, v36 }
   } catch (error) {
     if (isV3MissingSelector(error)) return undefined
     throw error
@@ -81,22 +83,35 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
     readV3Capacity(client, deployment, block.number),
     readManagedAdapter(client, deployment, SETTLEMENT_SOURCE, zeroAddress, block.number),
   ])
-  const supported = await Promise.all(
-    assets.map(async (address) => {
-      const [details, balance] = await Promise.all([
-        tokenDetails(client, address, block.number),
-        treasury &&
-          client.readContract({
-            address: treasury.address,
-            abi: treasuryVaultAbi,
-            functionName: 'balance',
-            args: [address],
-            blockNumber: block.number,
-          }),
-      ])
-      return { address, ...details, balance }
-    }),
-  )
+  const readAsset = async (address: Address) => {
+    const [details, balance, review] = await Promise.all([
+      tokenDetails(client, address, block.number),
+      treasury &&
+        client.readContract({
+          address: treasury.address,
+          abi: treasuryVaultAbi,
+          functionName: 'balance',
+          args: [address],
+          blockNumber: block.number,
+        }),
+      treasury?.v36 && readV36Asset(client, treasury.address, treasury.v36.registry, address, block.number),
+    ])
+    const flags = review ? (review.valid ? review.permissions : 0) : treasury?.v36 ? 0 : 7
+    return {
+      address,
+      ...details,
+      decimals: review?.review.decimals ?? details.decimals,
+      balance,
+      review,
+      canDeposit: Boolean(flags & treasuryPermission.deposit),
+      canReward: Boolean(flags & treasuryPermission.reward),
+      canSwap: Boolean(flags & treasuryPermission.swap),
+    }
+  }
+  const supported: Awaited<ReturnType<typeof readAsset>>[] = []
+  for (let index = 0; index < assets.length; index += 8) {
+    supported.push(...(await Promise.all(assets.slice(index, index + 8).map(readAsset))))
+  }
   return {
     admin,
     wrappedNative,
@@ -260,7 +275,8 @@ export async function inspectStudioCollection(
 export async function buildV3Preview(client: V3Client, deployment: V3Deployment, draft: V3StudioDraft) {
   const studio = await readV3Studio(client, deployment)
   const funding = studio.supported.find(({ address }) => address.toLowerCase() === draft.fundAsset.toLowerCase())
-  if (!funding || funding.decimals === null) throw new Error('Choose a supported funding asset with readable decimals.')
+  if (!funding?.canDeposit || funding.decimals === null)
+    throw new Error('Choose a supported funding asset with readable decimals.')
   const budget = parseV3Amount(draft.budget, funding.decimals, 'funding budget')
   const treasuryFunded = draft.fundingSource === 'treasury'
   if (treasuryFunded && (!studio.treasury || studio.treasury.paused || (funding.balance?.available ?? ZERO) < budget)) {
@@ -319,7 +335,8 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   if (new Set(assetKeys).size !== assetKeys.length) throw new Error('Each reward asset can be selected once.')
   const lanes = draft.rewards.map(({ address }, index) => {
     const asset = studio.supported.find((candidate) => candidate.address.toLowerCase() === address.toLowerCase())
-    if (!asset || asset.decimals === null) throw new Error('Choose a supported reward asset with readable decimals.')
+    if (!asset?.canReward || asset.decimals === null)
+      throw new Error('Choose a supported reward asset with readable decimals.')
     const allocation = (budget * BigInt(allocations[index])) / BPS
     if (allocation <= ZERO) throw new Error('A reward share is smaller than the funding asset base unit.')
     return { asset, allocation }

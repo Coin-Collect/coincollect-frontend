@@ -565,7 +565,7 @@ async function testBrowser() {
       poolPath,
     )
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
-    await has(['3.2', '3.3', '3.4'].includes(fixture.version) ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
+    await has(['3.2', '3.3', '3.4', '3.6'].includes(fixture.version) ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -804,6 +804,7 @@ async function testBrowser() {
       'function deposit() payable',
       'function approve(address spender, uint256 amount) returns (bool)',
       'function poolCount() view returns (uint256)',
+      'function observe(address input,address output)',
       'function createPool((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
       'function fundReward(uint256 poolId,address token,uint128 amount)',
       'function nftKey(uint256 sourceChainId,address collection,uint256 tokenId) view returns (bytes32)',
@@ -1176,6 +1177,126 @@ async function testBrowser() {
       await has('Confirmed on the settlement network.')
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
       console.log('PASS managed mobile ERC-1155 unit cap, quantity join, partial transfer, partial exit and Harvest')
+    }
+    if (fixture.dynamic) {
+      const dynamic = fixture.dynamic
+      const treasuryAbi = parseAbi([
+        'function balance(address token) view returns ((uint256 available,uint256 deposited,uint256 allocated,uint256 spent,uint256 fundingReturned,uint256 rewardsReturned,uint256 withdrawn))',
+        'function swapTotals(address token) view returns (uint256 swappedIn,uint256 swappedOut)',
+        'function permitted(address token,uint8 permissions) view returns (bool)',
+        'function observe(address input,address output)',
+        'function rewardsOf(uint256 poolId) view returns (address[])',
+      ])
+      const read = async (to, functionName, args) => {
+        const data = await rpc('eth_call', [{ to, data: encodeFunctionData({ abi: treasuryAbi, functionName, args }) }, 'latest'])
+        return decodeFunctionResult({ abi: treasuryAbi, functionName, data })
+      }
+      const observe = () => sendFixture(dynamic.adapter, 'observe', [fixture.token, dynamic.stable])
+      await openStudio()
+      await click('button', 'Treasury')
+      await has('Manage token permissions')
+      await field('treasury-sell', fixture.token)
+      await field('treasury-buy', dynamic.stable)
+      await field('treasury-swap-amount', '1')
+      await click('button', 'Get protected quote')
+      await has('TWAP observations are missing or stale')
+      assert.equal(await evalPage(() =>
+        [...document.querySelectorAll('button')].some((button) => button.textContent === 'Confirm Treasury swap'),
+      ), false)
+      await observe()
+      await rpc('evm_increaseTime', [1801])
+      await rpc('evm_mine')
+      await observe()
+      await click('button', 'Get protected quote')
+      await has('Minimum received')
+      await has('Impact incl. DEX fees')
+      await has('Estimated network fee')
+      await viewport(390, 844, true)
+      assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
+      if (process.env.V3_BROWSER_TREASURY_SCREENSHOT) {
+        const screenshot = await command('Page.captureScreenshot', { captureBeyondViewport: true })
+        fs.writeFileSync(process.env.V3_BROWSER_TREASURY_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
+      }
+      const beforeSwap = await read(fixture.treasuryVault, 'balance', [fixture.token])
+      await click('button', 'Confirm Treasury swap')
+      await has('Swap 1 V3R →')
+      const afterSwap = await read(fixture.treasuryVault, 'balance', [fixture.token])
+      assert.equal(afterSwap.available, beforeSwap.available - parseEther('1'))
+      assert.equal(afterSwap.allocated, beforeSwap.allocated)
+      assert.equal((await read(fixture.treasuryVault, 'swapTotals', [fixture.token]))[1], parseEther('1'))
+      assert.ok((await read(fixture.treasuryVault, 'swapTotals', [dynamic.stable]))[0] > 0n)
+      await field('treasury-amount', '1')
+      await click('button', 'Withdraw as native POL')
+      await has('Withdrawn as native POL · 1 POL')
+      assert.equal((await read(fixture.treasuryVault, 'balance', [fixture.token])).available, afterSwap.available - parseEther('1'))
+      await click('summary', 'Add or re-review a token')
+      await field('token-contract', dynamic.nextToken)
+      await click('button', 'Check token contract')
+      await has('8 decimals')
+      await field('token-review-hash', '0x' + '12'.repeat(32))
+      await field('token-probe', '0.00000001')
+      await evalPage(() => {
+        document.querySelector('input[name="permission-1"]').click()
+        document.querySelector('input[name="permission-2"]').click()
+      })
+      await click('button', 'Register reviewed token')
+      await wait('registered Treasury asset appears', () =>
+        [...document.querySelectorAll('[aria-label="Treasury balances by asset"] th')].some((cell) =>
+          cell.textContent.includes('V3BTC')))
+      assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 3]), true)
+      assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 4]), false)
+      await field('treasury-asset', dynamic.nextToken)
+      await field('treasury-amount', '15')
+      await click('button', 'Deposit')
+      await wait('new token deposit appears in Treasury history', () => document.body.innerText.includes('Deposited · 15 V3BTC'))
+      await viewport(1200, 900)
+      await openStudio()
+      await click('button', 'New pool')
+      await editPoolName('New V3BTC Rewards')
+      await wait('dynamic pool collection editor', () => {
+        const editor = document.querySelector('article button[aria-label="Edit NFT collections"]')
+        if (!editor) return false
+        editor.click()
+        return true
+      })
+      await field('collection-address', fixture.nft)
+      await click('dialog button', 'Add collection')
+      await has('Polygon ERC-721 · direct ownership check')
+      await click('dialog button', 'Done')
+      await click('article button', 'Set funding budget')
+      await click('dialog button', 'V3BTC')
+      await field('funding-budget', '10')
+      await click('dialog button', 'Done')
+      await wait('dynamic pool schedule editor', () => {
+        const editor = document.querySelector('article button[aria-label="Edit reward schedule"]')
+        if (!editor) return false
+        editor.click()
+        return true
+      })
+      await click('dialog button', 'In 1 hour')
+      await field('duration-days', '2')
+      await click('dialog button', 'Done')
+      await click('button', 'Review pool plan')
+      await click('button', 'Create pool and reserve 10 V3BTC from Treasury')
+      await has('Treasury budget fully reserved')
+      const created = await readBatchPool('poolCount')
+      assert.deepEqual((await read(fixture.ledger, 'rewardsOf', [created])).map((token) => token.toLowerCase()),
+        [dynamic.nextToken.toLowerCase()])
+      const tokenBook = await read(fixture.treasuryVault, 'balance', [dynamic.nextToken])
+      assert.equal(tokenBook.available, 500000000n)
+      assert.equal(tokenBook.allocated, 1000000000n)
+      await openStudio()
+      await click('button', 'Treasury')
+      await click('summary', 'Manage token permissions')
+      await field('registered-asset', dynamic.nextToken)
+      await evalPage(() => document.querySelector('form[aria-labelledby] select[name="registered-asset"]').form
+        .querySelector('input[name="permission-2"]').click())
+      await click('button', 'Save permissions')
+      await has('Confirmed on the settlement network.')
+      assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 2]), false)
+      assert.deepEqual((await read(fixture.ledger, 'rewardsOf', [created])).map((token) => token.toLowerCase()),
+        [dynamic.nextToken.toLowerCase()])
+      console.log('PASS V3.6 Treasury review, independent permissions, stale quote rejection, protected swap, native withdrawal and new token pool')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

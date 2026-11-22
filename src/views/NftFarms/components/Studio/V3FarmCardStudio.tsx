@@ -119,7 +119,9 @@ export default function V3FarmCardStudio({
   const [shareEntry, setShareEntry] = useState<{ address: string; text: string }>()
   const assets = studio.supported.filter(({ decimals }) => decimals !== null)
   const assetFor = (address: string) => assets.find((asset) => asset.address.toLowerCase() === address.toLowerCase())
-  const funding = assetFor(draft.fundAsset)
+  const funding = assets.find(
+    (asset) => asset.canDeposit && asset.address.toLowerCase() === draft.fundAsset.toLowerCase(),
+  )
   const hasSwap = !isAddressEqual(studio.swap, zeroAddress)
   const hasRemote =
     (studio.managedCollections && deployment.chainId === 31337) || !isAddressEqual(studio.verifier, zeroAddress)
@@ -296,7 +298,9 @@ export default function V3FarmCardStudio({
   const setFunding = (address: Address) => {
     onChange({
       fundAsset: address,
-      ...((!hasSwap || !draft.rewards.length) && { rewards: [{ address, sharePercent: '100' }] }),
+      ...((!hasSwap || !draft.rewards.length) && {
+        rewards: assetFor(address)?.canReward ? [{ address, sharePercent: '100' }] : [],
+      }),
     })
   }
 
@@ -534,17 +538,19 @@ export default function V3FarmCardStudio({
         return (
           <>
             <EditorGrid aria-label="Funding assets">
-              {assets.map((asset) => (
-                <Choice
-                  type="button"
-                  key={asset.address}
-                  $selected={funding?.address === asset.address}
-                  aria-pressed={funding?.address === asset.address}
-                  onClick={() => setFunding(asset.address)}
-                >
-                  {asset.symbol}
-                </Choice>
-              ))}
+              {assets
+                .filter((asset) => asset.canDeposit)
+                .map((asset) => (
+                  <Choice
+                    type="button"
+                    key={asset.address}
+                    $selected={funding?.address === asset.address}
+                    aria-pressed={funding?.address === asset.address}
+                    onClick={() => setFunding(asset.address)}
+                  >
+                    {asset.symbol}
+                  </Choice>
+                ))}
             </EditorGrid>
             <V3Field>
               Total budget{funding ? ` · ${funding.symbol}` : ''}
@@ -579,29 +585,31 @@ export default function V3FarmCardStudio({
         return (
           <>
             <EditorGrid aria-label="Available reward tokens">
-              {assets.map((asset) => {
-                const selected = draft.rewards.some(({ address }) => address === asset.address)
-                const disabled =
-                  !selected &&
-                  (draft.rewards.length >= 4 ||
-                    (!hasSwap && !!funding && !isAddressEqual(funding.address, asset.address)))
-                return (
-                  <Choice
-                    key={asset.address}
-                    type="button"
-                    $selected={selected}
-                    aria-pressed={selected}
-                    disabled={disabled}
-                    onClick={() => {
-                      if (!funding && !selected) setFunding(asset.address)
-                      if (funding || hasSwap) toggleReward(asset.address)
-                    }}
-                  >
-                    <strong>{asset.symbol}</strong>
-                    <small>{selected ? 'Included' : 'Add reward'}</small>
-                  </Choice>
-                )
-              })}
+              {assets
+                .filter((asset) => asset.canReward || draft.rewards.some(({ address }) => address === asset.address))
+                .map((asset) => {
+                  const selected = draft.rewards.some(({ address }) => address === asset.address)
+                  const disabled =
+                    !selected &&
+                    (draft.rewards.length >= 4 ||
+                      (!hasSwap && !!funding && !isAddressEqual(funding.address, asset.address)))
+                  return (
+                    <Choice
+                      key={asset.address}
+                      type="button"
+                      $selected={selected}
+                      aria-pressed={selected}
+                      disabled={disabled}
+                      onClick={() => {
+                        if (!funding && !selected && asset.canDeposit) setFunding(asset.address)
+                        if (funding || hasSwap) toggleReward(asset.address)
+                      }}
+                    >
+                      <strong>{asset.symbol}</strong>
+                      <small>{selected ? 'Included' : 'Add reward'}</small>
+                    </Choice>
+                  )
+                })}
             </EditorGrid>
             {!hasSwap && <V3Muted>This deployment funds rewards in the same token as the budget.</V3Muted>}
             {draft.rewards.length > 0 && (

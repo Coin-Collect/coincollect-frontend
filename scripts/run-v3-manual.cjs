@@ -92,8 +92,16 @@ async function run() {
     console.log('ERC-721 ' + fixture.nft + ' #23 | Wrapped POL ' + fixture.token)
     console.log('Managed ERC-1155 ' + fixture.managed.collection + ' #25 | adapter ' + fixture.managed.adapter)
     console.log('Unsupported ERC-1155 fixture ' + fixture.managed.plainCollection)
-    const help = 'Commands: wallets, tick, advance <seconds>, pool-time <id> <end|before|deadline>, transfer1155 <units>, quit'
+    if (fixture.dynamic) {
+      console.log('V3.6 registered swap token V3USD ' + fixture.dynamic.stable)
+      console.log('V3.6 unregistered 8-decimal test token V3BTC ' + fixture.dynamic.nextToken)
+    }
+    const help = 'Commands: wallets, tick, advance <seconds>, pool-time <id> <end|before|deadline>, transfer1155 <units>'
+      + (fixture.dynamic ? ', observe36' : '') + ', quit'
     console.log(help)
+    const leaf = fixture.dynamic && new Contract(fixture.dynamic.adapter, [
+      'function observe(address input,address output)',
+    ], provider.getSigner(fixture.operator))
 
     const ledger = new Contract(fixture.ledger, [
       'function poolState(uint256 id) view returns ((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI),uint64,uint16,uint64,uint256)',
@@ -120,6 +128,10 @@ async function run() {
               signal: AbortSignal.timeout(70_000),
             })
             console.log('Worker HTTP ' + response.status, await response.json())
+          } else if (command === 'observe36' && leaf) {
+            const first = await (await leaf.observe(fixture.token, fixture.dynamic.stable)).wait()
+            await (await leaf.observe(fixture.dynamic.stable, fixture.token)).wait()
+            console.log('Local route observations confirmed (' + first.transactionHash + ').')
           } else if (command === 'advance' && /^[1-9]\d{0,7}$/.test(argument)) {
             await provider.send('evm_increaseTime', [Number(argument)])
             await provider.send('evm_mine', [])

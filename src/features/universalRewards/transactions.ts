@@ -9,6 +9,7 @@ import {
   type WalletClient,
 } from 'viem'
 import { getCode } from 'viem/actions'
+import { isLocalForkMode } from 'config/localFork'
 import { universalRewardsAbi } from './abi'
 import { allowsLocalPositionBatch, localPositionBatchAbi } from './localPositionBatch'
 import { erc20Abi, type NftRef } from './reader'
@@ -25,6 +26,7 @@ export interface V3Call {
   to: Address
   data: Hex
   value?: bigint
+  verifyLocalDeployment?: boolean
 }
 
 export function withV3GasHeadroom(estimate: bigint) {
@@ -45,7 +47,7 @@ export async function sendV3Call(
   deployment: V3Deployment,
   wallet: WalletClient,
   account: Address,
-  call: V3Call,
+  { verifyLocalDeployment, ...call }: V3Call,
 ) {
   const isPositionBatch =
     isAddressEqual(call.to, deployment.address) &&
@@ -61,7 +63,7 @@ export async function sendV3Call(
     throw new Error('Your settlement wallet needs enough POL to cover this transaction.')
   }
   await assertWallet(wallet, account, deployment)
-  if (isPositionBatch) {
+  if (isPositionBatch || (verifyLocalDeployment && isLocalForkMode)) {
     // Local previews can share a chain ID and contract address while pointing at different ledgers.
     const walletCode = await getCode(wallet, { address: deployment.address })
     if (!walletCode || keccak256(walletCode).toLowerCase() !== deployment.runtimeHash.toLowerCase()) {
