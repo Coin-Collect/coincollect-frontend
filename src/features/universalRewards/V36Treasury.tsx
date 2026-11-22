@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react'
 import styled from 'styled-components'
 import {
   encodeFunctionData,
@@ -18,7 +18,7 @@ import { shortAmount } from './presentation'
 import { erc20Abi } from './reader'
 import type { V3Client, V3Deployment } from './runtime'
 import { parseV3Amount, type V3StudioSnapshot } from './studio'
-import { inspectTreasuryToken, quoteTreasurySwap, treasuryPermission } from './treasuryV36'
+import { inspectTreasuryToken, quoteTreasurySwap, revalidateTreasuryQuote, treasuryPermission } from './treasuryV36'
 import { describeV3Error, type V3Call } from './transactions'
 import { tokenScale } from './units'
 import { V3Actions, V3Badge, V3Button, V3Card, V3Error, V3Field, V3Link, V3Muted } from './styles'
@@ -54,7 +54,7 @@ const Form = styled.form`
   summary:focus-visible,
   input:focus-visible,
   select:focus-visible {
-    outline: 2px solid ({theme}) => theme.colors.primary;
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
     outline-offset: 2px;
   }
   fieldset {
@@ -139,6 +139,14 @@ const QuotePanel = styled.dl`
     text-align: end;
     overflow-wrap: anywhere;
     font-weight: 700;
+  }
+`
+
+const QuoteStatus = styled(V3Muted)<{ $failure: boolean }>`
+  color: ${({ $failure, theme }) => ($failure ? theme.colors.failure : theme.colors.textSubtle)};
+
+  &:empty {
+    margin: 0;
   }
 `
 
@@ -228,7 +236,6 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
         })
         const approval = (value: bigint): V3Call => ({
           to: inspected.token,
-          verifyLocalDeployment: true,
           data: encodeFunctionData({ abi: erc20Abi, functionName: 'approve', args: [registry, value] }),
         })
         if (allowance !== amount) {
@@ -237,7 +244,6 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
         }
         calls.push({
           to: registry,
-          verifyLocalDeployment: true,
           confirmationLabel: `Register ${inspected.symbol}`,
           data: encodeFunctionData({
             abi: treasuryAssetsV36Abi,
@@ -370,7 +376,6 @@ function ManagePermissions({ studio, treasury, action, locked, refresh }: Props)
           if (!asset || locked || nextFlags === currentFlags) return
           const receipt = await action.run({
             to: treasury.v36.registry,
-            verifyLocalDeployment: true,
             data: encodeFunctionData({
               abi: treasuryAssetsV36Abi,
               functionName: 'setPermissions',
@@ -426,7 +431,21 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
   const [amount, setAmount] = useState('')
   const [failure, setFailure] = useState('')
   const [quoting, setQuoting] = useState(false)
-  const [quote, setQuote] = useState<Awaited<ReturnType<typeof quoteTreasurySwap>>>()
+  const [quote, setQuote] = useState<{
+    details: Awaited<ReturnType<typeof quoteTreasurySwap>>
+    requestedAt: number
+  }>()
+  const quoteDetails = quote?.details
+  const statusId = useId()
+  useEffect(() => {
+    if (!quote) return undefined
+    const remaining = Math.max(0, quote.requestedAt + 120_000 - Date.now())
+    const timer = window.setTimeout(() => {
+      setQuote(undefined)
+      setFailure('This quote expired. Request a fresh quote.')
+    }, remaining)
+    return () => window.clearTimeout(timer)
+  }, [quote])
   const tokens = studio.supported.filter((token) => token.canSwap && token.decimals !== null)
   const sell = tokens.find(({ address }) => address === input)
   const buy = tokens.find(({ address }) => address === output)
@@ -447,8 +466,10 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
       const value = parseV3Amount(amount, sell.decimals, 'swap amount')
       if (value > (sell.balance?.available ?? ZERO))
         throw new Error('This amount exceeds the available Treasury balance.')
-      setQuote(
-        await quoteTreasurySwap(
+      const requestedAt = Date.now()
+      setQuote({
+        requestedAt,
+        details: await quoteTreasurySwap(
           client,
           deployment,
           treasury.address,
@@ -458,7 +479,7 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
           buy.address,
           value,
         ),
-      )
+      })
     } catch (error) {
       setFailure(describeV3Error(error))
     } finally {
@@ -467,27 +488,32 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
   }
 
   const confirm = async () => {
-    if (!quote || busy || !sell || !buy) return
+    if (!quoteDetails || busy || !sell || !buy) return
     const receipt = await action.runMany(async () => {
-      const block = await client.getBlock()
-      if (block.timestamp >= quote.deadline) throw new Error('This quote expired. Request a fresh quote.')
+      try {
+        await revalidateTreasuryQuote(client, treasury.v36.planner, quoteDetails)
+      } catch (error) {
+        setQuote(undefined)
+        setFailure(describeV3Error(error))
+        throw error
+      }
       return [
         {
           to: treasury.address,
-          data: quote.data,
-          verifyLocalDeployment: true,
-          confirmationLabel: `Swap ${format(quote.amount, sell)} for ${buy.symbol}`,
+          data: quoteDetails.data,
+          confirmationLabel: `Swap ${format(quoteDetails.amount, sell)} for ${buy.symbol}`,
+          onConfirmed: () => {
+            invalidate()
+            setAmount('')
+          },
         },
       ]
     })
-    if (receipt) {
-      invalidate()
-      setAmount('')
-      refresh()
-    }
+    if (receipt) refresh()
   }
 
-  const middle = quote && studio.supported.find((token) => isAddressEqual(token.address, quote.route.intermediate))
+  const middle =
+    quoteDetails && studio.supported.find((token) => isAddressEqual(token.address, quoteDetails.route.intermediate))
   return (
     <V3Card>
       <div>
@@ -523,6 +549,7 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
               <input
                 required
                 name="treasury-swap-amount"
+                aria-describedby={statusId}
                 inputMode="decimal"
                 disabled={busy}
                 value={amount}
@@ -554,54 +581,57 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
                   ))}
               </select>
             </V3Field>
-            {failure && <V3Error role="alert">{failure}</V3Error>}
-            {quote && sell && buy && (
+            <QuoteStatus id={statusId} role="status" $failure={Boolean(failure)}>
+              {failure || (quoting ? 'Checking the protected route…' : '')}
+            </QuoteStatus>
+            {quoteDetails && sell && buy && (
               <QuotePanel aria-label="Protected Treasury quote">
                 <div>
                   <dt>Route</dt>
                   <dd>
                     {sell.symbol} →{' '}
-                    {quote.route.intermediate === zeroAddress
+                    {quoteDetails.route.intermediate === zeroAddress
                       ? ''
-                      : `${middle?.symbol ?? quote.route.intermediate.slice(0, 8)} → `}
+                      : `${middle?.symbol ?? quoteDetails.route.intermediate.slice(0, 8)} → `}
                     {buy.symbol}
                   </dd>
                 </div>
                 <div>
                   <dt>Estimated output</dt>
-                  <dd>{format(quote.quoted, buy)}</dd>
+                  <dd>{format(quoteDetails.quoted, buy)}</dd>
                 </div>
                 <div>
                   <dt>Minimum received</dt>
                   <dd>
-                    {formatUnits(quote.minimum, buy.decimals ?? 0)} {buy.symbol}
+                    {formatUnits(quoteDetails.minimum, buy.decimals ?? 0)} {buy.symbol}
                   </dd>
                 </div>
                 <div>
                   <dt>Rate</dt>
                   <dd>
-                    1 {sell.symbol} ≈ {format((quote.quoted * tokenScale(sell.decimals ?? 0)) / quote.amount, buy)}
+                    1 {sell.symbol} ≈{' '}
+                    {format((quoteDetails.quoted * tokenScale(sell.decimals ?? 0)) / quoteDetails.amount, buy)}
                   </dd>
                 </div>
                 <div>
                   <dt>Impact incl. DEX fees</dt>
-                  <dd>{formatUnits(quote.impactBps, 2)}%</dd>
+                  <dd>{formatUnits(quoteDetails.impactBps, 2)}%</dd>
                 </div>
                 <div>
                   <dt>Estimated network fee</dt>
-                  <dd>{shortAmount(quote.fee, 18)} POL</dd>
+                  <dd>{shortAmount(quoteDetails.fee, 18)} POL</dd>
                 </div>
                 <div>
                   <dt>Deadline</dt>
-                  <dd>{new Date(Number(quote.deadline) * 1000).toLocaleTimeString()}</dd>
+                  <dd>{new Date(Number(quoteDetails.deadline) * 1000).toLocaleTimeString()}</dd>
                 </div>
               </QuotePanel>
             )}
             <SwapActions>
-              <V3Button type="submit" $secondary={Boolean(quote)} disabled={busy}>
+              <V3Button type="submit" $secondary={Boolean(quoteDetails)} disabled={busy}>
                 {quoting ? 'Checking route…' : 'Get protected quote'}
               </V3Button>
-              {quote && (
+              {quoteDetails && (
                 <V3Button type="button" disabled={busy} onClick={confirm}>
                   Confirm Treasury swap
                 </V3Button>

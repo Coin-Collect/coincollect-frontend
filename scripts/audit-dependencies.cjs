@@ -8,7 +8,6 @@ const { dependencies, optionalDependencies } = require('../package.json')
 const acceptedHighRoots = {
   'GHSA-qr28-fpjm-wq7f': ['wagmi', '@web3modal/wagmi'],
   'GHSA-c2c7-rcm5-vvqj': ['wagmi', '@web3modal/wagmi'],
-  'GHSA-96hv-2xvq-fx4p': ['@next/bundle-analyzer'],
   'GHSA-p6mc-m468-83gw': ['@snapshot-labs/snapshot.js'],
   'GHSA-mrhx-c7xc-m3w5': ['@web3modal/wagmi'],
 }

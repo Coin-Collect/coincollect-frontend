@@ -1,7 +1,7 @@
 import { decodeFunctionData, keccak256, stringToHex, toHex, zeroAddress, type Address } from 'viem'
 import { treasuryVaultV36Abi } from './abiV36'
 import type { V3Client, V3Deployment } from './runtime'
-import { inspectTreasuryToken, quoteTreasurySwap } from './treasuryV36'
+import { inspectTreasuryToken, quoteTreasurySwap, revalidateTreasuryQuote } from './treasuryV36'
 
 const address = (suffix: string): Address => `0x${suffix.padStart(40, '0')}`
 const code = '0x6000'
@@ -79,4 +79,25 @@ it.each([
     functionName: 'swapTreasury',
     args: [sell, buy, 0, BigInt(100), expected, BigInt(5120)],
   })
+  await expect(revalidateTreasuryQuote(client as unknown as V3Client, planner, quote)).resolves.toBeUndefined()
+
+  const expired = { ...client, getBlock: async () => ({ number: BigInt(43), timestamp: quote.deadline }) }
+  await expect(revalidateTreasuryQuote(expired as unknown as V3Client, planner, quote)).rejects.toThrow('quote expired')
+
+  const originalPaths = values.routeOptions
+  values.routeOptions = [{ enabled: true, first: address('9'), intermediate: zeroAddress, second: zeroAddress }]
+  await expect(revalidateTreasuryQuote(client as unknown as V3Client, planner, quote)).rejects.toThrow(
+    'approved route changed',
+  )
+  values.routeOptions = originalPaths
+  const movedPrice = {
+    ...client,
+    readContract: async (params: { functionName: string }) => {
+      if (params.functionName === 'quotePath') throw new Error('Minimum not met')
+      return client.readContract(params)
+    },
+  }
+  await expect(revalidateTreasuryQuote(movedPrice as unknown as V3Client, planner, quote)).rejects.toThrow(
+    'route no longer supports this minimum',
+  )
 })

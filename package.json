@@ -162,6 +162,9 @@
     "**/h3/defu": "6.1.7",
     "**/socket.io-client/socket.io-parser": "4.2.7",
     "**/ajv/fast-uri": "3.1.9",
-    "**/micromatch/picomatch": "2.3.2"
+    "**/micromatch/picomatch": "2.3.2",
+    "**/webpack-bundle-analyzer/ws": "7.5.14",
+    "**/@walletconnect/jsonrpc-ws-connection/ws": "7.5.14",
+    "**/jsdom/ws": "7.5.14"
   }
 }

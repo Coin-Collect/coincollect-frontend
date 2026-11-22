@@ -37,6 +37,12 @@ const TableRegion = styled.div`
   }
 `
 
+const LiabilityTableRegion = styled(TableRegion)`
+  thead th {
+    white-space: normal;
+  }
+`
+
 export default function V3Treasury({
   client,
   deployment,
@@ -129,7 +135,7 @@ export default function V3Treasury({
         if (value > balance) throw new Error('The treasury owner does not have enough of this token.')
         if (allowance < value) {
           const data = encodeFunctionData({ abi: erc20Abi, functionName: 'approve', args: [treasury.address, value] })
-          if (!(await action.run({ to: selected.address, data, verifyLocalDeployment: Boolean(treasury.v36) }))) return
+          if (!(await action.run({ to: selected.address, data }))) return
         }
       }
       if (operation === 'withdraw-native' && (!treasury.v36 || !validNative)) return
@@ -146,7 +152,6 @@ export default function V3Treasury({
           to: treasury.address,
           data,
           value: payNative ? value : ZERO,
-          verifyLocalDeployment: Boolean(treasury.v36),
         })
       )
         setAmount('')
@@ -227,8 +232,7 @@ export default function V3Treasury({
                   functionName: 'setPaused',
                   args: [!treasury.paused],
                 })
-                if (await action.run({ to: treasury.address, data, verifyLocalDeployment: Boolean(treasury.v36) }))
-                  refresh()
+                if (await action.run({ to: treasury.address, data })) refresh()
               }}
             >
               {treasury.paused ? 'Resume treasury' : 'Pause treasury'}
@@ -320,7 +324,7 @@ export default function V3Treasury({
           <h2>Reward inventory and NFT liabilities by pool</h2>
           {liabilities.loading && !liabilities.data && <V3Muted role="status">Reading pool reserves…</V3Muted>}
           {liabilities.error && <V3Error role="alert">{liabilities.error}</V3Error>}
-          <TableRegion role="region" aria-label="Pool reward liabilities" tabIndex={0}>
+          <LiabilityTableRegion role="region" aria-label="Pool reward liabilities" tabIndex={0}>
             <table>
               <thead>
                 <tr>
@@ -345,7 +349,7 @@ export default function V3Treasury({
                 )}
               </tbody>
             </table>
-          </TableRegion>
+          </LiabilityTableRegion>
           <V3Actions>
             {offset > 0 && (
               <V3Button type="button" $secondary onClick={() => setOffset(offset - MAX_V3_PAGE)}>

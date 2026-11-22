@@ -57,7 +57,9 @@ function injectedWallet(account, node, announceProvider, initialChain) {
       listeners.delete(event)
     },
     async request({ method, params = [] }) {
-      if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [account]
+      if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
+        return [window.__nextV3WalletAccount || account]
+      }
       if (method === 'eth_chainId') return chainId
       if (method === 'eth_sendTransaction' && chainId !== '0x7a69') {
         throw Object.assign(new Error('The test wallet is on the wrong network.'), { code: 4901 })
@@ -72,6 +74,11 @@ function injectedWallet(account, node, announceProvider, initialChain) {
         listeners.get('chainChanged')?.(chainId)
         return null
       }
+      const forceRevert = method === 'eth_sendTransaction' && window.__nextV3WalletLowGas
+      if (forceRevert) {
+        window.__nextV3WalletLowGas = false
+        params = [{ ...params[0], gas: '0x7530' }]
+      }
       const response = await fetch(node, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -79,6 +86,10 @@ function injectedWallet(account, node, announceProvider, initialChain) {
       })
       const result = await response.json()
       if (result.error) throw Object.assign(new Error(result.error.message), result.error)
+      if (method === 'eth_getBlockByNumber' && window.__nextV3DifferentFork && result.result) {
+        return { ...result.result, hash: '0x' + '00'.repeat(32) }
+      }
+      if (forceRevert) window.__nextV3RevertedHash = result.result
       return result.result
     },
   }
@@ -1211,13 +1222,50 @@ async function testBrowser() {
       await has('Minimum received')
       await has('Impact incl. DEX fees')
       await has('Estimated network fee')
+      if (process.env.V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT) {
+        const screenshot = await command('Page.captureScreenshot', { captureBeyondViewport: true })
+        fs.writeFileSync(process.env.V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
+      }
       await viewport(390, 844, true)
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
+      assert.ok(await evalPage(() => {
+        const liabilities = document.querySelector('[aria-label="Pool reward liabilities"]')
+        return liabilities && liabilities.scrollWidth <= liabilities.clientWidth
+      }))
       if (process.env.V3_BROWSER_TREASURY_SCREENSHOT) {
         const screenshot = await command('Page.captureScreenshot', { captureBeyondViewport: true })
         fs.writeFileSync(process.env.V3_BROWSER_TREASURY_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
       }
       const beforeSwap = await read(fixture.treasuryVault, 'balance', [fixture.token])
+      await evalPage((walletAccount) => { window.__nextV3WalletAccount = walletAccount }, fixture.participant)
+      await click('button', 'Confirm Treasury swap')
+      await has('The wallet account changed.')
+      await evalPage(() => { delete window.__nextV3WalletAccount })
+      assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
+      await evalPage(() => { window.__nextV3DifferentFork = true })
+      await click('button', 'Confirm Treasury swap')
+      await has('different or behind local RPC')
+      await evalPage(() => { window.__nextV3DifferentFork = false })
+      assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
+      await evalPage(() => {
+        window.__nextV3WalletError = { message: 'User rejected the request.', code: 4001 }
+      })
+      await click('button', 'Confirm Treasury swap')
+      await has('rejected')
+      assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
+      await evalPage(() => { window.__nextV3WalletLowGas = true })
+      await click('button', 'Confirm Treasury swap')
+      await has('The transaction reverted on the settlement network.')
+      const revertedHash = await evalPage(() => window.__nextV3RevertedHash)
+      assert.equal((await rpc('eth_getTransactionReceipt', [revertedHash])).status, '0x0')
+      assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
+      await rpc('evm_increaseTime', [121])
+      await rpc('evm_mine')
+      await click('button', 'Confirm Treasury swap')
+      await has('This quote expired. Request a fresh quote.')
+      assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
+      await click('button', 'Get protected quote')
+      await has('Minimum received')
       await click('button', 'Confirm Treasury swap')
       await has('Swap 1 V3R →')
       const afterSwap = await read(fixture.treasuryVault, 'balance', [fixture.token])
@@ -1296,7 +1344,7 @@ async function testBrowser() {
       assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 2]), false)
       assert.deepEqual((await read(fixture.ledger, 'rewardsOf', [created])).map((token) => token.toLowerCase()),
         [dynamic.nextToken.toLowerCase()])
-      console.log('PASS V3.6 Treasury review, independent permissions, stale quote rejection, protected swap, native withdrawal and new token pool')
+      console.log('PASS V3.6 Treasury permissions, account change, same-chain RPC mismatch, wallet rejection, failed receipt, stale quote, swap, native withdrawal and new token pool')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

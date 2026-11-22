@@ -1,14 +1,13 @@
 import {
   encodeFunctionData,
   isAddressEqual,
-  keccak256,
   parseEventLogs,
   toFunctionSelector,
   type Address,
   type Hex,
   type WalletClient,
 } from 'viem'
-import { getCode } from 'viem/actions'
+import { getBlock } from 'viem/actions'
 import { isLocalForkMode } from 'config/localFork'
 import { universalRewardsAbi } from './abi'
 import { allowsLocalPositionBatch, localPositionBatchAbi } from './localPositionBatch'
@@ -26,7 +25,6 @@ export interface V3Call {
   to: Address
   data: Hex
   value?: bigint
-  verifyLocalDeployment?: boolean
 }
 
 export function withV3GasHeadroom(estimate: bigint) {
@@ -42,12 +40,24 @@ async function assertWallet(wallet: WalletClient, account: Address, deployment: 
   }
 }
 
+export async function assertLocalFork(wallet: WalletClient, client: V3Client) {
+  const expected = await client.getBlock()
+  // Cloned forks may have the same chain ID, deployer, address and runtime. Compare their block histories.
+  const observed =
+    expected.number === null
+      ? undefined
+      : await getBlock(wallet, { blockNumber: expected.number }).catch(() => undefined)
+  if (!expected.hash || observed?.hash !== expected.hash) {
+    throw new Error('Your wallet is connected to a different or behind local RPC. Select the RPC for this preview.')
+  }
+}
+
 export async function sendV3Call(
   client: V3Client,
   deployment: V3Deployment,
   wallet: WalletClient,
   account: Address,
-  { verifyLocalDeployment, ...call }: V3Call,
+  call: V3Call,
 ) {
   const isPositionBatch =
     isAddressEqual(call.to, deployment.address) &&
@@ -62,14 +72,8 @@ export async function sendV3Call(
   if (balance < (call.value ?? BigInt(0)) + gas * gasPrice) {
     throw new Error('Your settlement wallet needs enough POL to cover this transaction.')
   }
+  if (isLocalForkMode) await assertLocalFork(wallet, client)
   await assertWallet(wallet, account, deployment)
-  if (isPositionBatch || (verifyLocalDeployment && isLocalForkMode)) {
-    // Local previews can share a chain ID and contract address while pointing at different ledgers.
-    const walletCode = await getCode(wallet, { address: deployment.address })
-    if (!walletCode || keccak256(walletCode).toLowerCase() !== deployment.runtimeHash.toLowerCase()) {
-      throw new Error('Your wallet is connected to a different local RPC. Select the RPC for this preview.')
-    }
-  }
   return wallet.sendTransaction({ account, chain: wallet.chain ?? null, ...call, gas })
 }
 
@@ -163,6 +167,9 @@ export function recoverV3ExpiredRewards(deployment: V3Deployment, poolId: bigint
 
 export function describeV3Error(error: unknown): string {
   if (typeof error !== 'object' || error === null) return 'The V3 request failed.'
+  if ('name' in error && error.name === 'ConnectorAccountNotFoundError') {
+    return 'The wallet account changed. Verify your selection again.'
+  }
   const message =
     'shortMessage' in error && typeof error.shortMessage === 'string'
       ? error.shortMessage

@@ -12,7 +12,7 @@ import {
   type Hex,
 } from 'viem'
 import { rewardSwapAbi } from './abi'
-import { treasuryAssetsV36Abi, treasuryVaultV36Abi, universalRewardsV36Abi } from './abiV36'
+import { rewardRoutePlannerV36Abi, treasuryAssetsV36Abi, treasuryVaultV36Abi, universalRewardsV36Abi } from './abiV36'
 import { erc20Abi, tokenDetails } from './reader'
 import { quoteV3Route, readV3RouteOptions, v3SwapLegs } from './routes'
 import { isV3MissingSelector, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
@@ -232,6 +232,7 @@ export async function quoteTreasurySwap(
     input,
     output,
     amount,
+    index,
     quoted,
     minimum,
     deadline,
@@ -240,4 +241,32 @@ export async function quoteTreasurySwap(
     route,
     fee: withV3GasHeadroom(estimatedGas) * gasPrice,
   }
+}
+
+export type TreasuryQuote = Awaited<ReturnType<typeof quoteTreasurySwap>>
+
+export async function revalidateTreasuryQuote(client: V3Client, planner: Address, quote: TreasuryQuote) {
+  const current = await client.getBlock()
+  if (current.timestamp >= quote.deadline) throw new Error('This quote expired. Request a fresh quote.')
+  const paths = await readV3RouteOptions(client, planner, quote.input, quote.output, current.number)
+  const route = paths?.[quote.index]
+  if (
+    !route?.enabled ||
+    !isAddressEqual(route.first, quote.route.first) ||
+    !isAddressEqual(route.second, quote.route.second) ||
+    !isAddressEqual(route.intermediate, quote.route.intermediate)
+  ) {
+    throw new Error('The approved route changed. Request a fresh quote.')
+  }
+  await client
+    .readContract({
+      address: planner,
+      abi: rewardRoutePlannerV36Abi,
+      functionName: 'quotePath',
+      args: [quote.input, quote.output, quote.index, quote.amount, quote.minimum],
+      blockNumber: current.number,
+    })
+    .catch(() => {
+      throw new Error('The route no longer supports this minimum. Request a fresh quote.')
+    })
 }
