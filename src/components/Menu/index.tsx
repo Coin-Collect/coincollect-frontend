@@ -29,8 +29,6 @@ const LocalForkNotice = () => (
   <div
     role="status"
     style={{
-      position: 'relative',
-      zIndex: 1100,
       padding: '8px 16px',
       background: '#5b1a2b',
       color: '#fff',
@@ -44,7 +42,7 @@ const LocalForkNotice = () => (
   </div>
 )
 
-const Menu = (props) => {
+const Menu = ({ children, ...props }) => {
   const { isDark, toggleTheme } = useTheme()
   const cakePriceUsd = usePriceCakeBusd()
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -85,15 +83,12 @@ const Menu = (props) => {
     : undefined
 
   return (
-    <>
-      {isLocalForkMode ? <LocalForkNotice /> : null}
-      <UikitMenu
+    <UikitMenu
       linkComponent={(linkProps) => {
         return <NextLinkFromReactRouter to={linkProps.href} {...linkProps} prefetch={false} />
       }}
       userMenu={<UserMenu />}
       globalMenu={<GlobalSettings />}
-      banner={false}
       isDark={isDark}
       showPhishingWarningBanner={false}
       toggleTheme={toggleTheme}
@@ -110,9 +105,11 @@ const Menu = (props) => {
       homeHref="/"
       buyCakeLabel={t('Buy COLLECT')}
       panelFooterActions={<FooterControls />}
-        {...props}
-      />
-    </>
+      {...props}
+    >
+      {isLocalForkMode ? <LocalForkNotice /> : null}
+      {children}
+    </UikitMenu>
   )
 }
 

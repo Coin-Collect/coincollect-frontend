@@ -388,6 +388,30 @@ async function testBrowser() {
     console.log('PASS disconnected Swap, Liquidity, Add Liquidity and NFT Collections routes')
 
     await visit('/nftpools')
+    for (const [width, height, mobile] of [[1200, 900, false], [390, 844, true]]) {
+      await viewport(width, height, mobile)
+      const point = await wait('wallet button visible clear of the local fork notice', () => {
+        const button = [...document.querySelectorAll('nav button')].find(
+          (candidate) => candidate.textContent.trim() === 'Connect Wallet',
+        )
+        if (!button) return false
+        const { left, top, width, height } = button.getBoundingClientRect()
+        const x = left + width / 2
+        const y = top + height / 2
+        return button.contains(document.elementFromPoint(x, y)) ? { x, y } : false
+      })
+      // A server-rendered header may be visible before React installs its click handler.
+      for (let attempt = 0; attempt < 10; attempt++) {
+        if (await evalPage(() => Boolean(document.querySelector('dialog[open]')))) break
+        await command('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 })
+        await command('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 })
+        await delay(250)
+      }
+      await has('Connect a browser wallet')
+      await click('dialog button', 'Close')
+      console.log(`PASS ${width}px local fork header opens the wallet picker by pointer`)
+    }
+    await viewport(1200, 900)
     await wait('disconnected FarmCard CTA', () => {
       const card = [...document.querySelectorAll('article')].find(
         (item) => item.querySelector('h3')?.textContent === 'V3 Browser Fixture',

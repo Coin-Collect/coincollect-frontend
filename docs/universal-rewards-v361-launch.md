@@ -6,7 +6,7 @@ The contracts workflow builds the candidate from [31ff0617b60aaafcbe155f4a266eab
 
 Treasury quotes expire on the chain deadline or after two minutes in the UI. Confirmation rechecks the selected path and its original minimum against the latest block. An expired quote or changed route requires a new quote. Transaction preparation verifies the settlement address, chain, ledger runtime, simulation, gas reserve and wallet account. In local mode, the wallet RPC must also agree on a numbered block hash with the selected fork. The UI waits for a successful receipt before clearing a confirmed swap.
 
-The acceptance harness serves `next build` with `next start`, a local Sentry capture endpoint and a disposable 31337 chain. Its controlled EIP-1193 provider covers account change, wrong network, another 31337 history, rejection, a reverted receipt and retry. Verify Treasury review and permissions, stale quotes, protected swap, native withdrawal, newly approved reward selection, Auto-Swap and recovery. Check FarmCard and Treasury at 390 px, dialog focus, wallet reconnection, NFT Marketplace, Swap and Liquidity. The V2 real-factory test runs separately on an isolated Polygon fork. Registry references and runtime hashes are absent from unreviewed mainnet deployment configuration.
+The acceptance harness serves `next build` with `next start`, a local Sentry capture endpoint and a disposable 31337 chain. Its controlled EIP-1193 provider covers account change, wrong network, another 31337 history, rejection, a reverted receipt and retry. Verify Treasury review and permissions, stale quotes, protected swap, native withdrawal, newly approved reward selection, Auto-Swap and recovery. Check FarmCard and Treasury at 390 px, dialog focus, wallet reconnection, NFT Marketplace, Swap and Liquidity. A genuine MetaMask test uncovered a local-only notice intercepting clicks on the fixed Connect Wallet button. The notice now sits in page content, and Chrome tests click the header by pointer at desktop and mobile widths. The V2 real-factory test runs separately on an isolated Polygon fork. Registry references and runtime hashes are absent from unreviewed mainnet deployment configuration.
 
 ```sh
 corepack yarn install --frozen-lockfile
@@ -35,6 +35,8 @@ Sign off each extension version in a fresh profile using disposable wallets fund
 6. Repeat at mobile width. Record browser and wallet versions, route, local chain ID, screenshot of the confirmation and local receipt hash. Redact secrets and omit profile data. Confirm the gas-only executor cannot perform admin writes.
 
 Real extension screens count only for the portions executed through the genuine provider. Injected-provider browser acceptance is its own check. Neither result substitutes for independent security review of the intended Polygon deployment.
+
+On a fresh Chrome for Testing profile, MetaMask 13.57 detected CoinCollect, approved its connection, retained the authorized account after reload and switched to the loopback chain 31337. Uniswap Wallet 1.86 and 1.87 stopped at an onboarding error in fresh profiles. Uniswap and the remaining extension-specific journeys require the manual checks above.
 
 ## Dependency disposition
 
