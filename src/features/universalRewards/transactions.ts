@@ -176,6 +176,9 @@ export function describeV3Error(error: unknown): string {
       : error instanceof Error
       ? error.message
       : 'The V3 request failed.'
+  if (/requested (?:method and\/or account|account and\/or method) has not been authorized/i.test(message)) {
+    return 'Your wallet has not authorized this account or network for CoinCollect. Review the site permissions in your wallet, then retry.'
+  }
   if (/\b(?:0xe450d38c|ERC20InsufficientBalance)\b/i.test(message)) {
     return 'Your wallet does not have enough of the selected token. Check the balance before trying again.'
   }

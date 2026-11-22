@@ -1281,6 +1281,15 @@ async function testBrowser() {
       await click('button', 'Confirm Treasury swap')
       await has('rejected')
       assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
+      await evalPage(() => {
+        window.__nextV3WalletError = {
+          message: 'The requested method and/or account has not been authorized by the user.',
+          code: 4100,
+        }
+      })
+      await click('button', 'Confirm Treasury swap')
+      await has('Review the site permissions in your wallet')
+      assert.deepEqual(await read(fixture.treasuryVault, 'balance', [fixture.token]), beforeSwap)
       await evalPage(() => { window.__nextV3WalletLowGas = true })
       await click('button', 'Confirm Treasury swap')
       await has('The transaction reverted on the settlement network.')
