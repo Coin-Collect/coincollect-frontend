@@ -1246,7 +1246,9 @@ async function testBrowser() {
       await has('Minimum received')
       await has('Impact incl. DEX fees')
       await has('Estimated network fee')
+      await viewport(1200, 900)
       if (process.env.V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT) {
+        assert.equal(await evalPage(() => window.innerWidth), 1200)
         const screenshot = await command('Page.captureScreenshot', { captureBeyondViewport: true })
         fs.writeFileSync(process.env.V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
       }
@@ -1257,6 +1259,7 @@ async function testBrowser() {
         return liabilities && liabilities.scrollWidth <= liabilities.clientWidth
       }))
       if (process.env.V3_BROWSER_TREASURY_SCREENSHOT) {
+        assert.equal(await evalPage(() => window.innerWidth), 390)
         const screenshot = await command('Page.captureScreenshot', { captureBeyondViewport: true })
         fs.writeFileSync(process.env.V3_BROWSER_TREASURY_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
       }
