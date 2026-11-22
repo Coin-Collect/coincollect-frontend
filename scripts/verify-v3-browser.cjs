@@ -1253,11 +1253,12 @@ async function testBrowser() {
         fs.writeFileSync(process.env.V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
       }
       await viewport(390, 844, true)
-      assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
-      assert.ok(await evalPage(() => {
+      await wait('Treasury and liabilities fit the mobile viewport after resize', () => {
+        const page = document.documentElement
         const liabilities = document.querySelector('[aria-label="Pool reward liabilities"]')
-        return liabilities && liabilities.scrollWidth <= liabilities.clientWidth
-      }))
+        return page.scrollWidth <= page.clientWidth &&
+          liabilities && liabilities.scrollWidth <= liabilities.clientWidth
+      })
       if (process.env.V3_BROWSER_TREASURY_SCREENSHOT) {
         assert.equal(await evalPage(() => window.innerWidth), 390)
         const screenshot = await command('Page.captureScreenshot', { captureBeyondViewport: true })
