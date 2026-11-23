@@ -12,7 +12,9 @@ import {
   type Address,
   type Hex,
 } from 'viem'
+import RewardTokenIcon from 'views/NftFarms/components/FarmCard/RewardTokenIcon'
 import { treasuryAssetsV36Abi } from './abiV36'
+import { preferStudioTokens, studioTokens } from './assetCatalog'
 import type { useV3Action } from './hooks'
 import { shortAmount } from './presentation'
 import { erc20Abi } from './reader'
@@ -118,6 +120,12 @@ const AssetTable = styled.div`
   }
 `
 
+const TokenLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+`
+
 const QuotePanel = styled.dl`
   display: grid;
   gap: 8px;
@@ -202,6 +210,17 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
   const [failure, setFailure] = useState('')
   const existing = inspected && studio.supported.find((token) => token.address === inspected.token)?.review
   const blocked = !account || locked || checking
+  const suggestedTokens = studioTokens.filter(
+    (token) => !studio.supported.some((asset) => isAddressEqual(token.address as Address, asset.address)),
+  )
+
+  const chooseAddress = (value: string) => {
+    setAddress(value)
+    setInspected(undefined)
+    setEvidence('')
+    setFlags(0)
+    setFailure('')
+  }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -271,6 +290,25 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
     <Review>
       <summary id={title}>Add or re-review a token</summary>
       <Form onSubmit={submit} aria-labelledby={title}>
+        {suggestedTokens.length > 0 && (
+          <V3Actions role="group" aria-label="CoinCollect and partner tokens">
+            {suggestedTokens.map((token) => (
+              <V3Button
+                type="button"
+                key={token.address}
+                $secondary
+                aria-pressed={address === token.address}
+                disabled={blocked}
+                onClick={() => chooseAddress(token.address)}
+              >
+                <TokenLabel>
+                  <RewardTokenIcon token={token.symbol ?? 'Token'} tokenMeta={token} size={20} />
+                  {token.symbol}
+                </TokenLabel>
+              </V3Button>
+            ))}
+          </V3Actions>
+        )}
         <V3Field>
           Polygon token contract
           <input
@@ -280,17 +318,17 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
             autoComplete="off"
             spellCheck={false}
             value={address}
-            onChange={(event) => {
-              setAddress(event.target.value)
-              setInspected(undefined)
-              setFailure('')
-            }}
+            onChange={(event) => chooseAddress(event.target.value)}
           />
         </V3Field>
         {inspected && (
           <>
             <V3Muted>
-              <strong>{inspected.symbol}</strong> · {inspected.review.decimals} decimals ·{' '}
+              <TokenLabel>
+                <RewardTokenIcon token={inspected.symbol} tokenMeta={{ address: inspected.token }} size={20} />
+                <strong>{inspected.symbol}</strong>
+              </TokenLabel>{' '}
+              · {inspected.review.decimals} decimals ·{' '}
               {inspected.review.implementation === zeroAddress
                 ? 'No proxy detected in supported checks'
                 : 'Observable proxy'}
@@ -665,10 +703,13 @@ export default function V36Treasury({ controls, ...props }: Props & { controls: 
                 </tr>
               </thead>
               <tbody>
-                {studio.supported.map((token) => (
+                {preferStudioTokens(studio.supported).map((token) => (
                   <tr key={token.address}>
                     <th scope="row">
-                      {token.symbol}
+                      <TokenLabel>
+                        <RewardTokenIcon token={token.symbol} tokenMeta={token} size={20} />
+                        {token.symbol}
+                      </TokenLabel>
                       <small>{token.review?.valid ? token.address.slice(0, 8) : 'Review required'}</small>
                     </th>
                     {[

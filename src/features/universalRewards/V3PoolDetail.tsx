@@ -1,3 +1,4 @@
+import { studioCollection } from './assetCatalog'
 import V33CollectionActions from './V33CollectionActions'
 import { withV3Presentation } from './poolPresentation'
 import { useCallback, useEffect, useMemo, useState, type ComponentType, type FormEvent } from 'react'
@@ -307,7 +308,9 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
     <V3Page>
       <V3Section aria-label="Universal Rewards pool">
         <header>
-          <V3Link as={Link} href="/nftpools/v3">All V3 pools</V3Link>
+          <V3Link as={Link} href="/nftpools/v3">
+            All V3 pools
+          </V3Link>
         </header>
         {!deployment && <V3Muted role="status">V3 is unavailable in this environment.</V3Muted>}
         {result.error && (
@@ -415,13 +418,17 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
                             setInputError('')
                           }}
                         >
-                          {pool.collections.map((item, index) => (
-                            <option key={`${item.sourceChainId}:${item.collection}`} value={index}>
-                              {sourceName(item.managed?.sourceChainId ?? item.sourceChainId)} ·
-                              {item.managed ? ` ERC-${item.managed.standard} ·` : ''}{' '}
-                              {(item.managed?.collection ?? item.collection).slice(0, 10)}… · {item.weight} power
-                            </option>
-                          ))}
+                          {pool.collections.map((item, index) => {
+                            const source = item.managed?.sourceChainId ?? item.sourceChainId
+                            const address = item.managed?.collection ?? item.collection
+                            const name = studioCollection(source, address)?.name ?? `${address.slice(0, 10)}…`
+                            return (
+                              <option key={`${item.sourceChainId}:${item.collection}`} value={index}>
+                                {sourceName(source)} · {item.managed ? `ERC-${item.managed.standard} · ` : ''}
+                                {name} · {item.weight} power
+                              </option>
+                            )
+                          })}
                         </select>
                       </V3Field>
                       {rule?.managed ? (

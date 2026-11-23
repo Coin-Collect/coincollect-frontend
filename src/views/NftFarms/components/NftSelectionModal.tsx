@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import {
   AutoRenewIcon,
   Button,
@@ -17,25 +17,18 @@ import useTheme from 'hooks/useTheme'
 import NoNftsImage from 'views/Nft/market/components/Activity/NoNftsImage'
 import { RoundedImage } from 'views/Nft/market/Collection/IndividualNFTPage/shared/styles'
 
-export const NftBox = styled(RoundedImage)`
-  width: 90px;
-  height: 90px;
-  border-radius: 6px;
-  background-color: #ffffff;
-  &:hover {
-    border: 2px solid #cac7c8;
-  }
-`
-export const SelectedNftBox = styled(RoundedImage)`
-  width: 90px;
-  height: 90px;
+const selectedImageStyle = css`
   position: relative;
-  border-radius: 6px;
   background-color: #f8bbd0;
   border: 2px solid #e91e63;
 
-  &:after {
+  &:hover {
+    border-color: #e91e63;
+  }
+
+  &::after {
     content: '✔';
+    content: '✔' / '';
     position: absolute;
     top: 20%;
     left: 80%;
@@ -47,6 +40,21 @@ export const SelectedNftBox = styled(RoundedImage)`
     padding: 5px;
   }
 `
+
+export const NftBox = styled(RoundedImage)<{ $selected?: boolean }>`
+  width: 90px;
+  height: 90px;
+  border-radius: 6px;
+  background-color: #ffffff;
+
+  &:hover {
+    border: 2px solid #cac7c8;
+  }
+
+  ${({ $selected }) => $selected && selectedImageStyle}
+`
+
+export const SelectedNftBox = styled(NftBox).attrs({ $selected: true })``
 
 export const NftOption = styled(Flex)`
   border: 0;
@@ -180,7 +188,6 @@ export default function NftSelectionModal({
           {options.length > 0 ? (
             <Flex flexWrap="wrap" justifyContent="center">
               {options.map(({ key, label, image, selected, accessibleLabel, onSelect, disabled: optionDisabled }) => {
-                const Image = selected ? SelectedNftBox : NftBox
                 return (
                   <NftOption
                     as="button"
@@ -191,7 +198,13 @@ export default function NftSelectionModal({
                     aria-label={accessibleLabel || label}
                     disabled={optionDisabled || pending}
                   >
-                    <Image src={image || '/images/nfts/no-profile-md.png'} height={90} width={90} />
+                    <NftBox
+                      $selected={selected}
+                      src={image || '/images/nfts/no-profile-md.png'}
+                      alt=""
+                      height={90}
+                      width={90}
+                    />
                     <Text
                       fontSize="11px"
                       color="textSubtle"

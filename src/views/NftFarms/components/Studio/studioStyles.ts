@@ -216,6 +216,28 @@ export const Choice = styled.button<{ $selected?: boolean }>`
   }
 `
 
+export const AssetChoice = styled(Choice)`
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 54px;
+
+  img {
+    width: 30px;
+    height: 30px;
+    aspect-ratio: 1;
+  }
+
+  small {
+    display: block;
+    margin-top: 3px;
+  }
+
+  strong {
+    overflow-wrap: anywhere;
+  }
+`
+
 export const Distribution = styled.div`
   display: flex;
   height: 8px;

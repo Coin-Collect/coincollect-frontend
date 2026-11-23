@@ -325,7 +325,7 @@ export default function V3NftActionModal({
           const label = `${choice.name} #${choice.ref.tokenId}`
           return {
             key,
-            label: mode === 'unstake' ? `#${choice.ref.tokenId} · ${choice.name}` : label,
+            label: `#${choice.ref.tokenId} · ${choice.name}`,
             accessibleLabel: label,
             image: choice.image,
             selected: Boolean(selected[key]),
@@ -495,9 +495,12 @@ export default function V3NftActionModal({
                   <Text small color="textSubtle">
                     {batchExit
                       ? t('One wallet confirmation covers the selected NFTs and their available rewards.')
-                      : t('%count% wallet confirmations, one per NFT. Each includes all available rewards for that NFT.', {
-                          count: selectedNfts.length,
-                        })}
+                      : t(
+                          '%count% wallet confirmations, one per NFT. Each includes all available rewards for that NFT.',
+                          {
+                            count: selectedNfts.length,
+                          },
+                        )}
                   </Text>
                 )}
               </>

@@ -39,6 +39,7 @@ import { getV2FullPositionReadPolicy, usePublishedV2UserPosition } from 'feature
 import type { V2UserPositionSummary } from 'features/nftPoolManager/user/types'
 import useNearViewport from 'hooks/useNearViewport'
 import V2PoolControls from 'features/nftPoolManager/user/components/V2PoolControls'
+import RewardTokenIcon from './RewardTokenIcon'
 
 export interface NftFarmWithStakedValue extends DeserializedNftFarm {
   apr?: number
@@ -492,59 +493,6 @@ const RewardChipAmount = styled.span`
   font-weight: 600;
 `
 
-const RewardTokenImage = styled.img`
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  min-height: 16px;
-  border-radius: 50%;
-  object-fit: cover;
-`
-
-const RewardTokenFallbackIcon = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 5px;
-  background: ${({ theme }) => `${theme.colors.textSubtle}22`};
-  color: ${({ theme }) => theme.colors.textSubtle};
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-`
-
-const REWARD_SYMBOL_ICON_MAP: Record<string, string> = {
-  SHIB: '/images/games/tokens/shib-min.png',
-  ELON: '/images/games/tokens/elon-min.png',
-  BONK: '/images/games/tokens/bonk.png',
-  RADAR: '/images/tokens/0xdCb72AE4d5dc6Ae274461d57E65dB8D50d0a33AD.png',
-}
-
-interface RewardChipIconProps {
-  token: string
-  tokenMeta?: Pick<Token, 'address' | 'symbol'>
-}
-
-const RewardChipIcon: React.FC<RewardChipIconProps> = ({ token, tokenMeta }) => {
-  const tokenSymbol = String(token).toUpperCase()
-  const tokenAddress = tokenMeta?.address
-  const iconCandidates = [
-    REWARD_SYMBOL_ICON_MAP[tokenSymbol],
-    tokenAddress ? `/images/tokens/${tokenAddress}.svg` : '',
-    tokenAddress ? `/images/tokens/${tokenAddress}.png` : '',
-  ].filter(Boolean)
-  const [iconIndex, setIconIndex] = useState(0)
-  const iconSrc = iconCandidates[iconIndex]
-
-  if (iconSrc) {
-    return <RewardTokenImage src={iconSrc} alt={`${token} icon`} onError={() => setIconIndex((prev) => prev + 1)} />
-  }
-
-  return <RewardTokenFallbackIcon>{String(token).slice(0, 1)}</RewardTokenFallbackIcon>
-}
-
 interface FarmCardProps {
   farm: NftFarmWithStakedValue
   displayApr: string | null
@@ -601,7 +549,7 @@ function DailyRewards({
                 $primary={chip.primary}
                 aria-hidden={index >= chips.length || undefined}
               >
-                <RewardChipIcon token={chip.token} tokenMeta={chip.tokenMeta} />
+                <RewardTokenIcon token={chip.token} tokenMeta={chip.tokenMeta} size={16} />
                 {chip.token}
                 <RewardChipAmount>{chip.amount}</RewardChipAmount>
               </RewardChip>

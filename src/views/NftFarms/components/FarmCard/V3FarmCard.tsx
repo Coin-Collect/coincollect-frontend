@@ -19,6 +19,7 @@ import {
   sourceName,
   type V3PoolCardProps,
 } from 'features/universalRewards/presentation'
+import { studioCollection } from 'features/universalRewards/assetCatalog'
 import type { V3CatalogueCardsProps } from 'features/universalRewards/V3Catalogue'
 import CardHeadingWithBanner from './CardHeadingWithBanner'
 import { NftFarmCardLayout } from './FarmCard'
@@ -78,6 +79,7 @@ export default function V3FarmCard({
         const collection = rule.managed?.collection ?? rule.collection
         const polygon = source === BigInt(137)
         const collectionAddress = collection.toLowerCase()
+        const featured = studioCollection(source, collection)
         const farm = polygon
           ? nftFarmsConfig.find((item) => item.nftAddresses?.[137]?.toLowerCase() === collectionAddress)
           : undefined
@@ -87,8 +89,8 @@ export default function V3FarmCard({
         const link =
           polygon && deployment.chainId === 137 ? `/nfts/collections/${collection}` : `${poolUrl}#eligible-nfts`
         return {
-          name: farm?.lpSymbol || `${sourceName(source)} · ${collection.slice(0, 8)}…`,
-          image: minting?.avatar || farm?.avatar,
+          name: featured?.name || farm?.lpSymbol || `${sourceName(source)} · ${collection.slice(0, 8)}…`,
+          image: featured?.image || minting?.avatar || farm?.avatar,
           weight: String(rule.weight),
           link,
           farm,

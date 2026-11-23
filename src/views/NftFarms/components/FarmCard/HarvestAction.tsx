@@ -7,7 +7,8 @@ import { ToastDescriptionWithTx } from 'components/Toast'
 import useToast from 'hooks/useToast'
 import useCatchTxError from 'hooks/useCatchTxError'
 import AnimatedValue from 'components/AnimatedValue'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import RewardTokenIcon from './RewardTokenIcon'
 
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/nftFarms'
@@ -80,29 +81,6 @@ export const TokenLabel = styled(Flex)`
   gap: 6px;
 `
 
-const RewardTokenImage = styled.img`
-  width: 14px;
-  height: 14px;
-  min-width: 14px;
-  min-height: 14px;
-  border-radius: 50%;
-  object-fit: cover;
-`
-
-const RewardTokenFallbackIcon = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  background: ${({ theme }) => (theme.isDark ? 'rgba(255, 255, 255, 0.14)' : theme.colors.backgroundDisabled)};
-  color: ${({ theme }) => theme.colors.textSubtle};
-  font-size: 8px;
-  font-weight: 800;
-  text-transform: uppercase;
-`
-
 export const RewardsHeader = styled(Flex)`
   width: 100%;
   justify-content: center;
@@ -116,37 +94,14 @@ export const HarvestButton = styled(Button)`
   font-weight: 700;
 `
 
-const REWARD_SYMBOL_ICON_MAP: Record<string, string> = {
-  SHIB: '/images/games/tokens/shib-min.png',
-  ELON: '/images/games/tokens/elon-min.png',
-  BONK: '/images/games/tokens/bonk.png',
-  RADAR: '/images/tokens/0xdCb72AE4d5dc6Ae274461d57E65dB8D50d0a33AD.png',
-}
-
-interface RewardTokenIconProps {
-  token: string
-  tokenMeta?: Pick<Token, 'address' | 'symbol'>
-}
-
-export const RewardTokenIcon: React.FC<RewardTokenIconProps> = ({ token, tokenMeta }) => {
-  const tokenSymbol = String(token).toUpperCase()
-  const tokenAddress = tokenMeta?.address
-  const iconCandidates = [
-    REWARD_SYMBOL_ICON_MAP[tokenSymbol],
-    tokenAddress ? `/images/tokens/${tokenAddress}.svg` : '',
-    tokenAddress ? `/images/tokens/${tokenAddress}.png` : '',
-  ].filter(Boolean)
-  const [iconIndex, setIconIndex] = useState(0)
-  const iconSrc = iconCandidates[iconIndex]
-
-  if (iconSrc) {
-    return <RewardTokenImage src={iconSrc} alt={`${token} icon`} onError={() => setIconIndex((prev) => prev + 1)} />
-  }
-
-  return <RewardTokenFallbackIcon>{String(token).slice(0, 1)}</RewardTokenFallbackIcon>
-}
-
-const HarvestAction: React.FC<FarmCardActionsProps> = ({ earnings, pid, earnLabel, sideRewards, earningToken, header }) => {
+const HarvestAction: React.FC<FarmCardActionsProps> = ({
+  earnings,
+  pid,
+  earnLabel,
+  sideRewards,
+  earningToken,
+  header,
+}) => {
   const { account } = useWeb3React()
   const { toastSuccess } = useToast()
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()

@@ -5,6 +5,8 @@ import { AddIcon, ChevronRightIcon, CloseIcon, Flex } from '@pancakeswap/uikit'
 import { getAddress, isAddress, isAddressEqual, parseAbi, zeroAddress, type Address } from 'viem'
 import { poolArtworkRegistry } from 'features/nftPoolManager/studio/artworkRegistry'
 import { universalRewardsAbi } from 'features/universalRewards/abi'
+import { preferStudioTokens, studioCollection, studioCollections } from 'features/universalRewards/assetCatalog'
+import RewardTokenIcon from '../FarmCard/RewardTokenIcon'
 import { useV3Query } from 'features/universalRewards/hooks'
 import { safeArtwork } from 'features/universalRewards/metadata'
 import { shortAmount } from 'features/universalRewards/presentation'
@@ -21,6 +23,7 @@ import { Action, StyledActionButton } from '../FarmCard/CardActionsContainer'
 import CardHeadingWithBanner from '../FarmCard/CardHeadingWithBanner'
 import { NftFarmCardLayout } from '../FarmCard/FarmCard'
 import {
+  AssetChoice,
   Choice,
   DetailButton,
   Distribution,
@@ -107,6 +110,7 @@ export default function V3FarmCardStudio({
   const [title, setTitle] = useState('')
   const [artworkInput, setArtworkInput] = useState('')
   const [artworkError, setArtworkError] = useState('')
+  const [collectionFilter, setCollectionFilter] = useState('')
   const [collectionInput, setCollectionInput] = useState('')
   const [collectionChain, setCollectionChain] = useState('137')
   const [collectionError, setCollectionError] = useState('')
@@ -117,7 +121,7 @@ export default function V3FarmCardStudio({
   const [collectionLabels, setCollectionLabels] = useState<Record<string, string>>({})
   const [quote, setQuote] = useState<{ key: string; amounts: Record<string, string> }>()
   const [shareEntry, setShareEntry] = useState<{ address: string; text: string }>()
-  const assets = studio.supported.filter(({ decimals }) => decimals !== null)
+  const assets = preferStudioTokens(studio.supported.filter(({ decimals }) => decimals !== null))
   const assetFor = (address: string) => assets.find((asset) => asset.address.toLowerCase() === address.toLowerCase())
   const funding = assets.find(
     (asset) => asset.canDeposit && asset.address.toLowerCase() === draft.fundAsset.toLowerCase(),
@@ -148,7 +152,10 @@ export default function V3FarmCardStudio({
       setArtworkInput(draft.artwork || '')
       setArtworkError('')
     }
-    if (next === 'collections') setCollectionError('')
+    if (next === 'collections') {
+      setCollectionFilter('')
+      setCollectionError('')
+    }
     setPanel(next)
   }
 
@@ -305,8 +312,10 @@ export default function V3FarmCardStudio({
   }
 
   const collectionName = ({ address, sourceChain }: CollectionRule) =>
-    collectionNames[`${sourceChain}:${address.toLowerCase()}`] || `${address.slice(0, 8)}…${address.slice(-4)}`
-  const addCollection = async (value: string, sourceChain: string, power = '1') => {
+    studioCollection(sourceChain, address)?.name ||
+    collectionNames[`${sourceChain}:${address.toLowerCase()}`] ||
+    `${address.slice(0, 8)}…${address.slice(-4)}`
+  const addCollection = async (value: string, sourceChain: string, power?: string) => {
     if (collectionCheck.current || draft.collections.length >= 16) return
     const address = value.trim()
     if (!isAddress(address) || isAddressEqual(address, zeroAddress)) {
@@ -332,7 +341,16 @@ export default function V3FarmCardStudio({
         getAddress(address),
       )
       setCollectionLabels((current) => ({ ...current, [key]: checked.label }))
-      onChange({ collections: [...draft.collections, { address: getAddress(address), sourceChain, power }] })
+      onChange({
+        collections: [
+          ...draft.collections,
+          {
+            address: getAddress(address),
+            sourceChain,
+            power: power ?? studioCollection(sourceChain, address)?.power ?? '1',
+          },
+        ],
+      })
       setCollectionInput('')
     } catch (error) {
       setCollectionError(
@@ -419,21 +437,112 @@ export default function V3FarmCardStudio({
             />
           </V3Field>
         )
-      case 'collections':
+      case 'collections': {
+        const query = collectionFilter.trim().toLowerCase()
+        const matches = ({ name, address }: { name?: string; address: string }) =>
+          !query || address.toLowerCase().includes(query) || name?.toLowerCase().includes(query)
+        const featured = studioCollections.filter(matches)
+        const recent = knownCollections.data?.filter(
+          (rule) => !studioCollection(rule.sourceChain, rule.address) && matches(rule),
+        )
+        const isIncluded = ({ sourceChain, address }: CollectionRule) =>
+          draft.collections.some(
+            (rule) => rule.sourceChain === sourceChain && address.toLowerCase() === rule.address.toLowerCase(),
+          )
         return (
           <>
+            <V3Field>
+              Search collections
+              <input
+                data-studio-focus
+                type="search"
+                value={collectionFilter}
+                onChange={(event) => setCollectionFilter(event.target.value)}
+                placeholder="Name or contract address"
+              />
+            </V3Field>
+            <div role="status">
+              {checkingCollection && <V3Muted>Checking collection compatibility…</V3Muted>}
+              {collectionError && <V3Error id={collectionErrorId}>{collectionError}</V3Error>}
+            </div>
+            {draft.collections.map((rule, index) => (
+              <V3Fields key={`${rule.sourceChain}:${rule.address}`}>
+                <legend>{collectionName(rule)}</legend>
+                {collectionLabels[`${rule.sourceChain}:${rule.address.toLowerCase()}`] && (
+                  <V3Muted>{collectionLabels[`${rule.sourceChain}:${rule.address.toLowerCase()}`]}</V3Muted>
+                )}
+                <EditorGrid>
+                  <V3Field>
+                    NFT power
+                    <input
+                      type="number"
+                      name={`collection-power-${index}`}
+                      min={1}
+                      max={1000000000}
+                      value={rule.power}
+                      onChange={(event) =>
+                        onChange({
+                          collections: draft.collections.map((current, i) =>
+                            i === index ? { ...current, power: event.target.value } : current,
+                          ),
+                        })
+                      }
+                    />
+                  </V3Field>
+                  <V3Button
+                    type="button"
+                    $secondary
+                    onClick={() => onChange({ collections: draft.collections.filter((_, i) => i !== index) })}
+                  >
+                    Remove collection
+                  </V3Button>
+                </EditorGrid>
+              </V3Fields>
+            ))}
+            <EditorGrid aria-label="CoinCollect and partner collections">
+              {featured.map((rule) => {
+                const selected = isIncluded(rule)
+                return (
+                  <AssetChoice
+                    type="button"
+                    key={rule.address}
+                    $selected={selected}
+                    disabled={
+                      selected ||
+                      checkingCollection ||
+                      Boolean(rule.requiresCompatibility) ||
+                      draft.collections.length >= 16
+                    }
+                    onClick={() => void addCollection(rule.address, rule.sourceChain)}
+                  >
+                    <img src={rule.image} alt="" width="30" height="30" loading="lazy" />
+                    <span>
+                      <strong>{rule.name}</strong>
+                      <small>
+                        {rule.requiresCompatibility
+                          ? 'Compatibility required'
+                          : selected
+                          ? 'Included'
+                          : `Power ${rule.power}`}
+                      </small>
+                    </span>
+                  </AssetChoice>
+                )
+              })}
+            </EditorGrid>
             {knownCollections.loading && !knownCollections.data && <V3Muted>Finding recent V3 collections…</V3Muted>}
-            {knownCollections.data?.length ? (
+            {!featured.length && !recent?.length && !knownCollections.loading && (
+              <V3Muted>No matching collections. Check the name or add a contract below.</V3Muted>
+            )}
+            {Boolean(recent?.length) && (
               <EditorGrid aria-label="Recent pool collections">
-                {knownCollections.data.map((rule) => {
-                  const selected = draft.collections.some(
-                    (entry) =>
-                      entry.sourceChain === rule.sourceChain && isAddressEqual(entry.address as Address, rule.address),
-                  )
+                {recent?.map((rule) => {
+                  const selected = isIncluded(rule)
                   return (
                     <Choice
                       type="button"
                       key={`${rule.sourceChain}:${rule.address}`}
+                      $selected={selected}
                       disabled={selected || checkingCollection || draft.collections.length >= 16}
                       onClick={() => void addCollection(rule.address, rule.sourceChain, rule.power)}
                     >
@@ -443,7 +552,7 @@ export default function V3FarmCardStudio({
                   )
                 })}
               </EditorGrid>
-            ) : null}
+            )}
             <form
               onSubmit={(event) => {
                 event.preventDefault()
@@ -454,7 +563,6 @@ export default function V3FarmCardStudio({
                 <V3Field>
                   Collection address
                   <input
-                    data-studio-focus
                     name="collection-address"
                     ref={collectionField}
                     value={collectionInput}
@@ -494,46 +602,9 @@ export default function V3FarmCardStudio({
                 before the pool starts.
               </V3Muted>
             )}
-            <div role="status">
-              {checkingCollection && <V3Muted>Checking collection compatibility…</V3Muted>}
-              {collectionError && <V3Error id={collectionErrorId}>{collectionError}</V3Error>}
-            </div>
-            {draft.collections.map((rule, index) => (
-              <V3Fields key={`${rule.sourceChain}:${rule.address}`}>
-                <legend>{collectionName(rule)}</legend>
-                {collectionLabels[`${rule.sourceChain}:${rule.address.toLowerCase()}`] && (
-                  <V3Muted>{collectionLabels[`${rule.sourceChain}:${rule.address.toLowerCase()}`]}</V3Muted>
-                )}
-                <EditorGrid>
-                  <V3Field>
-                    NFT power
-                    <input
-                      type="number"
-                      name={`collection-power-${index}`}
-                      min={1}
-                      max={1000000000}
-                      value={rule.power}
-                      onChange={(event) =>
-                        onChange({
-                          collections: draft.collections.map((current, i) =>
-                            i === index ? { ...current, power: event.target.value } : current,
-                          ),
-                        })
-                      }
-                    />
-                  </V3Field>
-                  <V3Button
-                    type="button"
-                    $secondary
-                    onClick={() => onChange({ collections: draft.collections.filter((_, i) => i !== index) })}
-                  >
-                    Remove collection
-                  </V3Button>
-                </EditorGrid>
-              </V3Fields>
-            ))}
           </>
         )
+      }
       case 'budget':
         return (
           <>
@@ -541,15 +612,16 @@ export default function V3FarmCardStudio({
               {assets
                 .filter((asset) => asset.canDeposit)
                 .map((asset) => (
-                  <Choice
+                  <AssetChoice
                     type="button"
                     key={asset.address}
                     $selected={funding?.address === asset.address}
                     aria-pressed={funding?.address === asset.address}
                     onClick={() => setFunding(asset.address)}
                   >
-                    {asset.symbol}
-                  </Choice>
+                    <RewardTokenIcon token={asset.symbol} tokenMeta={asset} size={30} />
+                    <strong>{asset.symbol}</strong>
+                  </AssetChoice>
                 ))}
             </EditorGrid>
             <V3Field>
@@ -594,7 +666,7 @@ export default function V3FarmCardStudio({
                     (draft.rewards.length >= 4 ||
                       (!hasSwap && !!funding && !isAddressEqual(funding.address, asset.address)))
                   return (
-                    <Choice
+                    <AssetChoice
                       key={asset.address}
                       type="button"
                       $selected={selected}
@@ -605,9 +677,12 @@ export default function V3FarmCardStudio({
                         if (funding || hasSwap) toggleReward(asset.address)
                       }}
                     >
-                      <strong>{asset.symbol}</strong>
-                      <small>{selected ? 'Included' : 'Add reward'}</small>
-                    </Choice>
+                      <RewardTokenIcon token={asset.symbol} tokenMeta={asset} size={30} />
+                      <span>
+                        <strong>{asset.symbol}</strong>
+                        <small>{selected ? 'Included' : 'Add reward'}</small>
+                      </span>
+                    </AssetChoice>
                   )
                 })}
             </EditorGrid>
@@ -645,7 +720,10 @@ export default function V3FarmCardStudio({
                 <RewardLane key={address}>
                   <Flex justifyContent="space-between" alignItems="center" style={{ gap: 10 }}>
                     <label htmlFor={draft.rewards.length > 1 ? `studio-share-${index}` : `studio-percent-${index}`}>
-                      {reward.symbol} share
+                      <Flex as="span" alignItems="center" style={{ gap: 6 }}>
+                        <RewardTokenIcon token={reward.symbol} tokenMeta={reward} size={20} />
+                        {reward.symbol} share
+                      </Flex>
                     </label>
                     <Flex alignItems="center" style={{ gap: 5 }}>
                       <ShareInput
@@ -822,7 +900,11 @@ export default function V3FarmCardStudio({
               publishedPool={{
                 banner: draft.artwork,
                 status: 'UPCOMING',
-                collections: draft.collections.map((rule) => ({ name: collectionName(rule), weight: rule.power })),
+                collections: draft.collections.map((rule) => ({
+                  name: collectionName(rule),
+                  image: studioCollection(rule.sourceChain, rule.address)?.image,
+                  weight: rule.power,
+                })),
               }}
               editor={{
                 onArtwork: () => open('artwork'),

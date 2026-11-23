@@ -1,3 +1,4 @@
+import RewardTokenIcon from './RewardTokenIcon'
 import { AddIcon, Flex, Heading, MinusIcon, Text } from '@pancakeswap/uikit'
 import { formatUnits } from '@ethersproject/units'
 import Decimal from 'bignumber.js'
@@ -12,7 +13,6 @@ import {
   RewardRow,
   TokenLabel,
   RewardValue,
-  RewardTokenIcon,
   HarvestButton,
 } from './HarvestAction'
 
