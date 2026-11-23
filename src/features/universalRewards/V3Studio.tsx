@@ -611,6 +611,7 @@ export default function V3Studio({
     return readV3Studio(client, deployment)
   }, [client, deployment])
   const studio = useV3Query(deployment?.address ?? '', loadStudio, 30_000)
+  const treasuryWorkspace = mode === 'treasury' && Boolean(studio.data?.treasury?.v36)
   const allowed = Boolean(account && studio.data && isAddressEqual(account, studio.data.admin))
   const treasuryOwner = Boolean(account && studio.data?.treasury && isAddressEqual(account, studio.data.treasury.owner))
   const fundingSource = draft.fundingSource ?? (studio.data?.treasury ? 'treasury' : 'wallet')
@@ -686,15 +687,24 @@ export default function V3Studio({
 
   return (
     <V3Page>
-      <V3Section aria-label="Pool Studio V3">
+      <V3Section aria-label={treasuryWorkspace ? 'V3 Treasury workspace' : 'Pool Studio V3'}>
         <StudioBar>
           <div>
-            <h1 ref={mode === 'dashboard' ? workspace : undefined} tabIndex={-1}>
-              Pool Studio V3
+            <h1 ref={mode === 'dashboard' || treasuryWorkspace ? workspace : undefined} tabIndex={-1}>
+              {treasuryWorkspace ? 'Central Treasury' : 'Pool Studio V3'}
             </h1>
-            <V3Muted>Create and manage your NFT reward pools.</V3Muted>
+            <V3Muted>
+              {treasuryWorkspace
+                ? 'Manage the assets that fund your reward pools.'
+                : 'Create and manage your NFT reward pools.'}
+            </V3Muted>
           </div>
           <V3Actions>
+            {treasuryWorkspace && (
+              <WorkspaceBack type="button" $secondary onClick={() => navigate('dashboard')}>
+                Back to pools
+              </WorkspaceBack>
+            )}
             {mode === 'dashboard' && studio.data?.treasury && (allowed || treasuryOwner) && (
               <V3Button type="button" $secondary onClick={() => navigate('treasury')}>
                 Treasury
@@ -750,9 +760,11 @@ export default function V3Studio({
         )}
         {mode === 'treasury' && studio.data?.treasury && deployment && (allowed || treasuryOwner) && (
           <>
-            <WorkspaceBack type="button" $secondary onClick={() => navigate('dashboard')}>
-              Back to pools
-            </WorkspaceBack>
+            {!treasuryWorkspace && (
+              <WorkspaceBack type="button" $secondary onClick={() => navigate('dashboard')}>
+                Back to pools
+              </WorkspaceBack>
+            )}
             <V3Treasury
               client={client}
               deployment={deployment}

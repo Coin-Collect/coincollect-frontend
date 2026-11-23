@@ -1,6 +1,17 @@
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react'
 import styled from 'styled-components'
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ChevronRightIcon,
+  CogIcon,
+  HistoryIcon,
+  ListViewIcon,
+  SearchIcon,
+  SwapIcon,
+  WalletIcon,
+} from '@pancakeswap/uikit'
+import {
   encodeFunctionData,
   formatUnits,
   getAddress,
@@ -23,7 +34,18 @@ import { parseV3Amount, type V3StudioSnapshot } from './studio'
 import { inspectTreasuryToken, quoteTreasurySwap, revalidateTreasuryQuote, treasuryPermission } from './treasuryV36'
 import { describeV3Error, type V3Call } from './transactions'
 import { tokenScale } from './units'
-import { V3Actions, V3Badge, V3Button, V3Card, V3Error, V3Field, V3Link, V3Muted } from './styles'
+import { V3Actions, V3Button, V3Error, V3Field, V3Link, V3Muted } from './styles'
+import {
+  PanelBody,
+  PanelHeading,
+  TabPanel,
+  TreasuryPanel,
+  TreasuryTable,
+  TreasuryTabs,
+  treasuryBalance,
+  wrappedPolArtwork,
+  type TreasuryOperation,
+} from './treasuryLayout'
 
 const ZERO = BigInt(0)
 const one = BigInt(1)
@@ -35,10 +57,126 @@ const permissions = [
 
 const Workspace = styled.div`
   display: grid;
-  gap: 16px;
+  gap: 18px;
+  min-width: 0;
+`
+
+const WorkspaceHeader = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  min-width: 0;
+
+  @media (max-width: 560px) {
+    > [role='tablist'] {
+      order: 2;
+    }
+  }
+`
+
+const TreasuryStatus = styled.span<{ $paused: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  font-size: 0.8125rem;
+  font-weight: 650;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: ${({ $paused, theme }) => ($paused ? theme.colors.warning : theme.colors.success)};
+  }
+`
+
+const OverviewGrid = styled.div`
+  display: grid;
   align-items: start;
-  @media (min-width: 1020px) {
+  gap: 18px;
+
+  @media (min-width: 970px) {
     grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  }
+`
+
+const ActionPanel = styled(TreasuryPanel)`
+  scroll-margin-top: 86px;
+  background: linear-gradient(
+    155deg,
+    ${({ theme }) => (theme.isDark ? '#2b2233' : '#f8f3fd')},
+    ${({ theme }) => theme.colors.backgroundAlt} 240px
+  );
+
+  @media (min-width: 970px) {
+    position: sticky;
+    top: 76px;
+  }
+`
+
+const AssetSearch = styled.label`
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 10px;
+  border-radius: 10px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.textSubtle};
+
+  &:focus-within {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 1px;
+  }
+
+  input {
+    background: transparent;
+    border: 0;
+    padding: 6px 0;
+    color: ${({ theme }) => theme.colors.text};
+    width: 100%;
+    min-width: 0;
+    font: inherit;
+    outline: 0;
+  }
+
+  svg {
+    flex: none;
+  }
+`
+
+const AssetHeader = styled(PanelBody)`
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 0.75fr);
+  align-items: center;
+  gap: 12px;
+
+  @media (max-width: 540px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+const JumpToFunds = styled.a`
+  display: none;
+
+  @media (max-width: 969px) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 3px;
   }
 `
 
@@ -73,7 +211,7 @@ const Form = styled.form`
 `
 
 const Review = styled.details`
-  border-top: 1px solid ({theme}) => theme.colors.cardBorder;
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
   padding-top: 10px;
   summary {
     cursor: pointer;
@@ -88,35 +226,127 @@ const Review = styled.details`
   }
 `
 
-const AssetTable = styled.div`
-  overflow: auto;
-  max-inline-size: 100%;
+const AssetTable = styled(TreasuryTable)`
   table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    table-layout: fixed;
   }
   th,
   td {
-    padding: 12px 10px;
-    text-align: start;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-  tbody th,
-  tbody td {
-    border-top: 1px solid ({theme}) => theme.colors.cardBorder;
+    vertical-align: middle;
   }
   tbody th {
-    position: sticky;
-    z-index: 1;
-    inset-inline-start: 0;
-    background: ({theme}) => theme.colors.backgroundAlt;
+    padding-block: 3px;
   }
+
+  tbody td:nth-child(2) {
+    font-weight: 750;
+  }
+  tbody td:nth-child(3),
+  tbody td:nth-child(4) {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+  tbody tr[data-selected='true'] {
+    background: ${({ theme }) => theme.colors.input};
+  }
+
+  @media (min-width: 541px) {
+    th:first-child {
+      width: 33%;
+    }
+  }
+
+  @media (max-width: 540px) {
+    th:first-child {
+      width: 35%;
+    }
+  }
+`
+
+const AssetButton = styled.button`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+  padding: 4px 0;
+  gap: 9px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+    border-radius: 5px;
+  }
+
+  strong {
+    font-size: 0.9375rem;
+  }
+
   small {
     display: block;
+    margin-top: 2px;
+    font-size: 0.75rem;
     font-weight: 500;
-    color: ({theme}) => theme.colors.textSubtle;
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+
+  @media (max-width: 540px) {
+    gap: 6px;
+    strong {
+      font-size: 0.8125rem;
+    }
+    small {
+      font-size: 0.6875rem;
+    }
+  }
+`
+
+const AssetFooter = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 16px;
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
+
+  p {
+    margin: 0;
+  }
+`
+
+const TextButton = styled.button`
+  min-height: 44px;
+  padding: 4px 0;
+  color: ${({ theme }) => theme.colors.text};
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+  }
+`
+
+const SettingsGrid = styled.div`
+  display: grid;
+  gap: 18px;
+  align-items: start;
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   }
 `
 
@@ -131,7 +361,7 @@ const QuotePanel = styled.dl`
   gap: 8px;
   margin: 0;
   padding: 14px;
-  background: ({theme}) => theme.colors.background;
+  background: ${({ theme }) => theme.colors.background};
   border-radius: 14px;
   font-variant-numeric: tabular-nums;
   > div {
@@ -140,7 +370,7 @@ const QuotePanel = styled.dl`
     gap: 8px;
   }
   dt {
-    color: ({theme}) => theme.colors.textSubtle;
+    color: ${({ theme }) => theme.colors.textSubtle};
   }
   dd {
     margin: 0;
@@ -553,214 +783,426 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
   const middle =
     quoteDetails && studio.supported.find((token) => isAddressEqual(token.address, quoteDetails.route.intermediate))
   return (
-    <V3Card>
-      <div>
-        <h2 id={heading}>Swap</h2>
-        <V3Muted>Trade from available Treasury funds through approved routes.</V3Muted>
-        {tokens.length < 2 ? (
-          <V3Muted>Enable swaps for two reviewed assets to request a quote.</V3Muted>
-        ) : (
-          <Form onSubmit={requestQuote} aria-labelledby={heading}>
-            <V3Field>
-              Sell
-              <select
-                required
-                name="treasury-sell"
-                disabled={busy}
-                value={input}
-                onChange={(event) => {
-                  setInput(event.target.value)
-                  if (event.target.value === output) setOutput('')
-                  invalidate()
-                }}
-              >
-                <option value="">Choose sell token</option>
-                {tokens.map((token) => (
+    <>
+      <PanelHeading>
+        <div>
+          <h3 id={heading}>Protected swap</h3>
+          <p>Trade available funds through approved routes.</p>
+        </div>
+      </PanelHeading>
+      {tokens.length < 2 ? (
+        <V3Muted>Enable swaps for two reviewed assets to request a quote.</V3Muted>
+      ) : (
+        <Form onSubmit={requestQuote} aria-labelledby={heading}>
+          <V3Field>
+            Sell
+            <select
+              required
+              name="treasury-sell"
+              disabled={busy}
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value)
+                if (event.target.value === output) setOutput('')
+                invalidate()
+              }}
+            >
+              <option value="">Choose sell token</option>
+              {tokens.map((token) => (
+                <option key={token.address} value={token.address}>
+                  {token.symbol} · {format(token.balance?.available ?? ZERO, token)}
+                </option>
+              ))}
+            </select>
+          </V3Field>
+          <V3Field>
+            Amount
+            <input
+              required
+              name="treasury-swap-amount"
+              aria-describedby={statusId}
+              inputMode="decimal"
+              disabled={busy}
+              value={amount}
+              onChange={(event) => {
+                setAmount(event.target.value)
+                invalidate()
+              }}
+            />
+          </V3Field>
+          <V3Field>
+            Buy
+            <select
+              required
+              name="treasury-buy"
+              disabled={busy}
+              value={output}
+              onChange={(event) => {
+                setOutput(event.target.value)
+                invalidate()
+              }}
+            >
+              <option value="">Choose buy token</option>
+              {tokens
+                .filter((token) => token.address !== input)
+                .map((token) => (
                   <option key={token.address} value={token.address}>
-                    {token.symbol} · {format(token.balance?.available ?? ZERO, token)}
+                    {token.symbol}
                   </option>
                 ))}
-              </select>
-            </V3Field>
-            <V3Field>
-              Amount
-              <input
-                required
-                name="treasury-swap-amount"
-                aria-describedby={statusId}
-                inputMode="decimal"
-                disabled={busy}
-                value={amount}
-                onChange={(event) => {
-                  setAmount(event.target.value)
-                  invalidate()
-                }}
-              />
-            </V3Field>
-            <V3Field>
-              Buy
-              <select
-                required
-                name="treasury-buy"
-                disabled={busy}
-                value={output}
-                onChange={(event) => {
-                  setOutput(event.target.value)
-                  invalidate()
-                }}
-              >
-                <option value="">Choose buy token</option>
-                {tokens
-                  .filter((token) => token.address !== input)
-                  .map((token) => (
-                    <option key={token.address} value={token.address}>
-                      {token.symbol}
-                    </option>
-                  ))}
-              </select>
-            </V3Field>
-            <QuoteStatus id={statusId} role="status" $failure={Boolean(failure)}>
-              {failure || (quoting ? 'Checking the protected route…' : '')}
-            </QuoteStatus>
-            {quoteDetails && sell && buy && (
-              <QuotePanel aria-label="Protected Treasury quote">
-                <div>
-                  <dt>Route</dt>
-                  <dd>
-                    {sell.symbol} →{' '}
-                    {quoteDetails.route.intermediate === zeroAddress
-                      ? ''
-                      : `${middle?.symbol ?? quoteDetails.route.intermediate.slice(0, 8)} → `}
-                    {buy.symbol}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Estimated output</dt>
-                  <dd>{format(quoteDetails.quoted, buy)}</dd>
-                </div>
-                <div>
-                  <dt>Minimum received</dt>
-                  <dd>
-                    {formatUnits(quoteDetails.minimum, buy.decimals ?? 0)} {buy.symbol}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Rate</dt>
-                  <dd>
-                    1 {sell.symbol} ≈{' '}
-                    {format((quoteDetails.quoted * tokenScale(sell.decimals ?? 0)) / quoteDetails.amount, buy)}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Impact incl. DEX fees</dt>
-                  <dd>{formatUnits(quoteDetails.impactBps, 2)}%</dd>
-                </div>
-                <div>
-                  <dt>Estimated network fee</dt>
-                  <dd>{shortAmount(quoteDetails.fee, 18)} POL</dd>
-                </div>
-                <div>
-                  <dt>Deadline</dt>
-                  <dd>{new Date(Number(quoteDetails.deadline) * 1000).toLocaleTimeString()}</dd>
-                </div>
-              </QuotePanel>
-            )}
-            <SwapActions>
-              <V3Button type="submit" $secondary={Boolean(quoteDetails)} disabled={busy}>
-                {quoting ? 'Checking route…' : 'Get protected quote'}
+            </select>
+          </V3Field>
+          <QuoteStatus id={statusId} role="status" $failure={Boolean(failure)}>
+            {failure || (quoting ? 'Checking the protected route…' : '')}
+          </QuoteStatus>
+          {quoteDetails && sell && buy && (
+            <QuotePanel aria-label="Protected Treasury quote">
+              <div>
+                <dt>Route</dt>
+                <dd>
+                  {sell.symbol} →{' '}
+                  {quoteDetails.route.intermediate === zeroAddress
+                    ? ''
+                    : `${middle?.symbol ?? quoteDetails.route.intermediate.slice(0, 8)} → `}
+                  {buy.symbol}
+                </dd>
+              </div>
+              <div>
+                <dt>Estimated output</dt>
+                <dd>{format(quoteDetails.quoted, buy)}</dd>
+              </div>
+              <div>
+                <dt>Minimum received</dt>
+                <dd>
+                  {formatUnits(quoteDetails.minimum, buy.decimals ?? 0)} {buy.symbol}
+                </dd>
+              </div>
+              <div>
+                <dt>Rate</dt>
+                <dd>
+                  1 {sell.symbol} ≈{' '}
+                  {format((quoteDetails.quoted * tokenScale(sell.decimals ?? 0)) / quoteDetails.amount, buy)}
+                </dd>
+              </div>
+              <div>
+                <dt>Impact incl. DEX fees</dt>
+                <dd>{formatUnits(quoteDetails.impactBps, 2)}%</dd>
+              </div>
+              <div>
+                <dt>Estimated network fee</dt>
+                <dd>{shortAmount(quoteDetails.fee, 18)} POL</dd>
+              </div>
+              <div>
+                <dt>Deadline</dt>
+                <dd>{new Date(Number(quoteDetails.deadline) * 1000).toLocaleTimeString()}</dd>
+              </div>
+            </QuotePanel>
+          )}
+          <SwapActions>
+            <V3Button type="submit" $secondary={Boolean(quoteDetails)} disabled={busy}>
+              {quoting ? 'Checking route…' : 'Get protected quote'}
+            </V3Button>
+            {quoteDetails && (
+              <V3Button type="button" disabled={busy} onClick={confirm}>
+                Confirm Treasury swap
               </V3Button>
-              {quoteDetails && (
-                <V3Button type="button" disabled={busy} onClick={confirm}>
-                  Confirm Treasury swap
-                </V3Button>
-              )}
-            </SwapActions>
-          </Form>
-        )}
-      </div>
-    </V3Card>
+            )}
+          </SwapActions>
+        </Form>
+      )}
+    </>
   )
 }
 
-export default function V36Treasury({ controls, ...props }: Props & { controls: ReactNode }) {
+const sections = [
+  { value: 'overview', label: 'Overview', icon: <WalletIcon width="18px" aria-hidden="true" /> },
+  { value: 'activity', label: 'Activity', icon: <HistoryIcon width="18px" aria-hidden="true" /> },
+  { value: 'reserves', label: 'Pool reserves', icon: <ListViewIcon width="18px" aria-hidden="true" /> },
+  { value: 'settings', label: 'Asset settings', icon: <CogIcon width="18px" aria-hidden="true" /> },
+] as const
+
+const operations = [
+  { value: 'deposit', label: 'Deposit', icon: <ArrowDownIcon width="17px" aria-hidden="true" /> },
+  { value: 'withdraw', label: 'Withdraw', icon: <ArrowUpIcon width="17px" aria-hidden="true" /> },
+  { value: 'swap', label: 'Swap', icon: <SwapIcon width="17px" aria-hidden="true" /> },
+] as const
+
+const INITIAL_ASSETS = 6
+
+export default function V36Treasury({
+  operation,
+  onOperationChange,
+  selectedAsset,
+  onSelectAsset,
+  transfer,
+  status,
+  pause,
+  reserves,
+  activity,
+  ...props
+}: Props & {
+  operation: TreasuryOperation
+  onOperationChange: (value: TreasuryOperation) => void
+  selectedAsset?: Address
+  onSelectAsset: (address: Address) => void
+  transfer: ReactNode
+  status: ReactNode
+  pause: ReactNode
+  reserves: ReactNode
+  activity: ReactNode
+}) {
   const { studio, treasury, account } = props
   const owner = Boolean(account && isAddressEqual(account, treasury.owner))
+  const [section, setSection] = useState<(typeof sections)[number]['value']>('overview')
+  const [sectionPointer, setSectionPointer] = useState(false)
+  const [operationPointer, setOperationPointer] = useState(false)
+  const [search, setSearch] = useState('')
+  const [expanded, setExpanded] = useState(false)
+  const tabId = useId()
+  const operationId = useId()
+  const fundsId = useId()
+  const assets = preferStudioTokens(studio.supported)
+  const query = search.trim().toLowerCase()
+  const matching = assets.filter((token) =>
+    [token.symbol, token.address].some((value) => value.toLowerCase().includes(query)),
+  )
+  const visible = expanded || query ? matching : matching.slice(0, INITIAL_ASSETS)
+  const available = (token: Token) => token.balance?.available ?? ZERO
+  const allocated = (token: Token) => token.balance?.allocated ?? ZERO
+  const sectionPanel = (value: (typeof sections)[number]['value']) => ({
+    id: `${tabId}-${value}-panel`,
+    'aria-labelledby': `${tabId}-${value}-tab`,
+    'data-enter': sectionPointer,
+    hidden: section !== value,
+  })
+  const operationPanel = (value: TreasuryOperation) => ({
+    id: `${operationId}-${value}-panel`,
+    'aria-labelledby': `${operationId}-${value}-tab`,
+    'data-enter': operationPointer,
+    hidden: operation !== value,
+  })
+
   return (
     <Workspace>
-      <V3Card>
-        <div>
-          <h2>Central Treasury</h2>
-          <V3Badge>{treasury.paused ? 'Treasury paused' : 'Treasury open'}</V3Badge>
-          <AssetTable role="region" aria-label="Treasury balances by asset" tabIndex={0}>
-            <table>
-              <thead>
-                <tr>
-                  {['Asset', 'Available', 'Allocated', 'Total'].map((name) => (
-                    <th scope="col" key={name}>
-                      {name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {preferStudioTokens(studio.supported).map((token) => (
-                  <tr key={token.address}>
-                    <th scope="row">
-                      <TokenLabel>
-                        <RewardTokenIcon token={token.symbol} tokenMeta={token} size={20} />
-                        {token.symbol}
-                      </TokenLabel>
-                      <small>{token.review?.valid ? token.address.slice(0, 8) : 'Review required'}</small>
-                    </th>
-                    {[
-                      token.balance?.available ?? ZERO,
-                      token.balance?.allocated ?? ZERO,
-                      (token.balance?.available ?? ZERO) + (token.balance?.allocated ?? ZERO),
-                    ].map((value, index) => (
-                      <td key={index}>{shortAmount(value, token.decimals)}</td>
-                    ))}
+      <WorkspaceHeader>
+        <TreasuryTabs
+          id={tabId}
+          tabs={sections}
+          label="Treasury sections"
+          active={section}
+          pointer={sectionPointer}
+          onChange={(value, pointer) => {
+            setSectionPointer(pointer)
+            setSection(value)
+          }}
+        />
+        <TreasuryStatus $paused={treasury.paused}>
+          {treasury.paused ? 'Treasury paused' : 'Treasury open'}
+        </TreasuryStatus>
+      </WorkspaceHeader>
+
+      <TabPanel role="tabpanel" aria-label="Treasury overview" {...sectionPanel('overview')}>
+        <OverviewGrid>
+          <TreasuryPanel aria-label="Asset balances">
+            <AssetHeader>
+              <PanelHeading>
+                <div>
+                  <h2>Asset balances</h2>
+                  <p>
+                    {assets.length} {assets.length === 1 ? 'asset' : 'assets'} in Treasury
+                  </p>
+                </div>
+                <JumpToFunds href={`#${fundsId}`} aria-label="Jump to move funds">
+                  <ChevronRightIcon width="18px" aria-hidden="true" />
+                  Move funds
+                </JumpToFunds>
+              </PanelHeading>
+              {assets.length > INITIAL_ASSETS && (
+                <AssetSearch>
+                  <SearchIcon width="18px" aria-hidden="true" />
+                  <input
+                    type="search"
+                    aria-label="Search Treasury assets"
+                    placeholder="Search assets"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </AssetSearch>
+              )}
+            </AssetHeader>
+            <AssetTable role="region" aria-label="Treasury balances by asset" tabIndex={0}>
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Asset</th>
+                    <th scope="col">Available</th>
+                    <th scope="col">Allocated</th>
+                    <th scope="col">Total</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </AssetTable>
-          {!studio.supported.length && <V3Muted>Review a token to start using Treasury.</V3Muted>}
-          <V3Muted>
-            Total combines available funds and pool allocations. Reward inventory appears by pool below.
-          </V3Muted>
-          {studio.supported.some(({ review }) => review && (review.swappedIn > ZERO || review.swappedOut > ZERO)) && (
-            <Review>
-              <summary>Swap totals by asset</summary>
-              <AssetTable role="region" aria-label="Treasury swap totals" tabIndex={0}>
-                <table>
-                  <thead>
-                    <tr>
-                      {['Asset', 'Swapped in', 'Swapped out'].map((label) => (
-                        <th key={label} scope="col">
-                          {label}
-                        </th>
-                      ))}
+                </thead>
+                <tbody>
+                  {visible.map((token) => (
+                    <tr key={token.address} data-selected={token.address === selectedAsset}>
+                      <th scope="row">
+                        <AssetButton
+                          type="button"
+                          aria-label={`Select ${token.symbol}`}
+                          aria-pressed={token.address === selectedAsset}
+                          disabled={!owner || props.locked}
+                          onClick={() => {
+                            onSelectAsset(token.address)
+                            if (operation === 'swap') onOperationChange('deposit')
+                            const funds = document.getElementById(fundsId)
+                            if (window.matchMedia('(max-width: 969px)').matches) {
+                              funds?.focus({ preventScroll: true })
+                              funds?.scrollIntoView({ block: 'start' })
+                            }
+                          }}
+                        >
+                          <RewardTokenIcon
+                            token={token.symbol}
+                            tokenMeta={isAddressEqual(token.address, studio.wrappedNative) ? wrappedPolArtwork : token}
+                            size={28}
+                          />
+                          <span>
+                            <strong>{token.symbol}</strong>
+                            <small>{token.review?.valid ? token.address.slice(0, 8) : 'Review required'}</small>
+                          </span>
+                        </AssetButton>
+                      </th>
+                      <td>{treasuryBalance(available(token), token.decimals)}</td>
+                      <td>{treasuryBalance(allocated(token), token.decimals)}</td>
+                      <td>{treasuryBalance(available(token) + allocated(token), token.decimals)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {studio.supported.map(({ address, symbol, decimals, review }) => (
-                      <tr key={address}>
-                        <th scope="row">{symbol}</th>
-                        <td>{shortAmount(review?.swappedIn ?? ZERO, decimals)}</td>
-                        <td>{shortAmount(review?.swappedOut ?? ZERO, decimals)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </AssetTable>
-            </Review>
-          )}
-          {controls}
-          {owner && <AddToken {...props} />}
-          {owner && studio.supported.length > 0 && <ManagePermissions {...props} />}
-        </div>
-      </V3Card>
-      <Swap {...props} />
+                  ))}
+                </tbody>
+              </table>
+            </AssetTable>
+            {!visible.length && (
+              <PanelBody>
+                <V3Muted role="status">
+                  {query ? 'No assets match this search.' : 'Review a token in Asset settings to start using Treasury.'}
+                </V3Muted>
+              </PanelBody>
+            )}
+            {visible.length > 0 && (
+              <AssetFooter>
+                <V3Muted>Allocated funds are reserved for pools.</V3Muted>
+                {!query && assets.length > INITIAL_ASSETS && (
+                  <TextButton type="button" onClick={() => setExpanded((value) => !value)}>
+                    {expanded ? 'Show fewer' : `Show all ${assets.length} assets`}
+                  </TextButton>
+                )}
+              </AssetFooter>
+            )}
+          </TreasuryPanel>
+
+          <ActionPanel id={fundsId} tabIndex={-1} aria-label="Move funds">
+            <PanelBody>
+              <PanelHeading>
+                <div>
+                  <h2>Move funds</h2>
+                  <p>Between your wallet, Treasury and approved assets.</p>
+                </div>
+              </PanelHeading>
+              {owner ? (
+                <>
+                  <TreasuryTabs
+                    id={operationId}
+                    tabs={operations}
+                    label="Treasury transactions"
+                    active={operation}
+                    compact
+                    pointer={operationPointer}
+                    onChange={(value, pointer) => {
+                      setOperationPointer(pointer)
+                      onOperationChange(value)
+                    }}
+                  />
+                  {(['deposit', 'withdraw'] as const).map((value) => (
+                    <TabPanel key={value} role="tabpanel" {...operationPanel(value)}>
+                      {operation === value && transfer}
+                    </TabPanel>
+                  ))}
+                  <TabPanel role="tabpanel" {...operationPanel('swap')}>
+                    <Swap {...props} />
+                  </TabPanel>
+                  {section === 'overview' && status}
+                </>
+              ) : (
+                <V3Muted>Connect the Treasury owner wallet to move funds.</V3Muted>
+              )}
+            </PanelBody>
+          </ActionPanel>
+        </OverviewGrid>
+      </TabPanel>
+
+      <TabPanel role="tabpanel" tabIndex={0} {...sectionPanel('activity')}>
+        {activity}
+      </TabPanel>
+      <TabPanel role="tabpanel" tabIndex={0} {...sectionPanel('reserves')}>
+        {reserves}
+      </TabPanel>
+      <TabPanel role="tabpanel" tabIndex={0} {...sectionPanel('settings')}>
+        {owner ? (
+          <SettingsGrid>
+            <TreasuryPanel aria-label="Asset registration and permissions">
+              <PanelBody>
+                <PanelHeading>
+                  <div>
+                    <h2>Asset settings</h2>
+                    <p>Review a contract or change what an approved token can do.</p>
+                  </div>
+                </PanelHeading>
+                <AddToken {...props} />
+                {assets.length > 0 && <ManagePermissions {...props} />}
+                {section === 'settings' && status}
+              </PanelBody>
+            </TreasuryPanel>
+            <TreasuryPanel aria-label="Treasury controls">
+              <PanelBody>
+                <PanelHeading>
+                  <div>
+                    <h2>Treasury controls</h2>
+                    <p>Pause deposits, withdrawals and swaps when needed.</p>
+                  </div>
+                </PanelHeading>
+                {pause}
+                {assets.some(({ review }) => review && (review.swappedIn > ZERO || review.swappedOut > ZERO)) && (
+                  <Review>
+                    <summary>Swap totals by asset</summary>
+                    <TreasuryTable role="region" aria-label="Treasury swap totals" tabIndex={0}>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Asset</th>
+                            <th scope="col">Swapped in</th>
+                            <th scope="col">Swapped out</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assets.map(({ address, symbol, decimals, review }) => (
+                            <tr key={address}>
+                              <th scope="row">{symbol}</th>
+                              <td>{shortAmount(review?.swappedIn ?? ZERO, decimals)}</td>
+                              <td>{shortAmount(review?.swappedOut ?? ZERO, decimals)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </TreasuryTable>
+                  </Review>
+                )}
+              </PanelBody>
+            </TreasuryPanel>
+          </SettingsGrid>
+        ) : (
+          <V3Muted>Only the Treasury owner can manage assets and permissions.</V3Muted>
+        )}
+      </TabPanel>
+      {(section === 'activity' || section === 'reserves') && (props.action.busy || props.action.unconfirmed) && (
+        <div>{status}</div>
+      )}
     </Workspace>
   )
 }

@@ -1019,7 +1019,7 @@ async function testBrowser() {
           return input.checked
         }),
       )
-      await click('button', 'Deposit')
+      await click('form[aria-label="Manage available treasury assets"] button', 'Deposit')
       await has('Confirmed on the settlement network.')
       assert.equal((await available()).available, parseEther('100'))
       await openStudio()
@@ -1066,6 +1066,7 @@ async function testBrowser() {
       assert.equal(reserved.allocated, parseEther('10'))
       await openStudio(fixture.treasury)
       await click('button', 'Treasury')
+      if (fixture.version === '3.6') await click('[role="tab"]', 'Withdraw')
       await field('treasury-amount', '20')
       await click('button', 'Withdraw available')
       await has('Confirmed on the settlement network.')
@@ -1087,6 +1088,7 @@ async function testBrowser() {
         assert.equal((await readBatchPool('rewardState', [createdV31, fixture.token])).inventory, parseEther('10'))
       }
       await viewport(390, 844, true)
+      if (fixture.version === '3.6') await click('[role="tab"]', 'Pool reserves')
       await has('Reserved NFT claims')
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
       console.log(
@@ -1232,7 +1234,7 @@ async function testBrowser() {
       const observe = () => sendFixture(dynamic.adapter, 'observe', [fixture.token, dynamic.stable])
       await openStudio()
       await click('button', 'Treasury')
-      await has('Manage token permissions')
+      await click('[role="tab"]', 'Swap')
       await field('treasury-sell', fixture.token)
       await field('treasury-buy', dynamic.stable)
       await field('treasury-swap-amount', '1')
@@ -1256,11 +1258,11 @@ async function testBrowser() {
         fs.writeFileSync(process.env.V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
       }
       await viewport(390, 844, true)
-      await wait('Treasury and liabilities fit the mobile viewport after resize', () => {
+      await wait('Treasury and protected quote fit the mobile viewport after resize', () => {
         const page = document.documentElement
-        const liabilities = document.querySelector('[aria-label="Pool reward liabilities"]')
+        const quote = document.querySelector('[aria-label="Protected Treasury quote"]')
         return page.scrollWidth <= page.clientWidth &&
-          liabilities && liabilities.scrollWidth <= liabilities.clientWidth
+          quote?.clientWidth > 0 && quote.scrollWidth <= quote.clientWidth
       })
       if (process.env.V3_BROWSER_TREASURY_SCREENSHOT) {
         assert.equal(await evalPage(() => window.innerWidth), 390)
@@ -1307,16 +1309,24 @@ async function testBrowser() {
       await click('button', 'Get protected quote')
       await has('Minimum received')
       await click('button', 'Confirm Treasury swap')
+      await has('Confirmed on the settlement network.')
+      await click('[role="tab"]', 'Activity')
       await has('Swap 1 V3R →')
       const afterSwap = await read(fixture.treasuryVault, 'balance', [fixture.token])
       assert.equal(afterSwap.available, beforeSwap.available - parseEther('1'))
       assert.equal(afterSwap.allocated, beforeSwap.allocated)
       assert.equal((await read(fixture.treasuryVault, 'swapTotals', [fixture.token]))[1], parseEther('1'))
       assert.ok((await read(fixture.treasuryVault, 'swapTotals', [dynamic.stable]))[0] > 0n)
+      await click('[role="tab"]', 'Overview')
+      await click('[role="tab"]', 'Withdraw')
       await field('treasury-amount', '1')
+      await evalPage(() => document.querySelector('input[name="treasury-native-withdraw"]').click())
       await click('button', 'Withdraw as native POL')
+      await has('Confirmed on the settlement network.')
+      await click('[role="tab"]', 'Activity')
       await has('Withdrawn as native POL · 1 POL')
       assert.equal((await read(fixture.treasuryVault, 'balance', [fixture.token])).available, afterSwap.available - parseEther('1'))
+      await click('[role="tab"]', 'Asset settings')
       await click('summary', 'Add or re-review a token')
       await field('token-contract', dynamic.nextToken)
       await click('button', 'Check token contract')
@@ -1333,9 +1343,13 @@ async function testBrowser() {
           cell.textContent.includes('V3BTC')))
       assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 3]), true)
       assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 4]), false)
+      await click('[role="tab"]', 'Overview')
+      await click('[role="tab"]', 'Deposit')
       await field('treasury-asset', dynamic.nextToken)
       await field('treasury-amount', '15')
-      await click('button', 'Deposit')
+      await click('form[aria-label="Manage available treasury assets"] button', 'Deposit')
+      await has('Confirmed on the settlement network.')
+      await click('[role="tab"]', 'Activity')
       await wait('new token deposit appears in Treasury history', () => document.body.innerText.includes('Deposited · 15 V3BTC'))
       await viewport(1200, 900)
       await openStudio()
@@ -1375,6 +1389,7 @@ async function testBrowser() {
       assert.equal(tokenBook.allocated, 1000000000n)
       await openStudio()
       await click('button', 'Treasury')
+      await click('[role="tab"]', 'Asset settings')
       await click('summary', 'Manage token permissions')
       await field('registered-asset', dynamic.nextToken)
       await evalPage(() => document.querySelector('form[aria-labelledby] select[name="registered-asset"]').form

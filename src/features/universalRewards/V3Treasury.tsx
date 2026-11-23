@@ -1,6 +1,8 @@
 import { useCallback, useState, type FormEvent } from 'react'
 import styled from 'styled-components'
-import { encodeFunctionData, getAddress, isAddressEqual, type Address } from 'viem'
+import { HistoryIcon } from '@pancakeswap/uikit'
+import { encodeFunctionData, formatUnits, getAddress, isAddressEqual, type Address } from 'viem'
+import RewardTokenIcon from 'views/NftFarms/components/FarmCard/RewardTokenIcon'
 import { treasuryVaultAbi } from './abi'
 import { treasuryVaultV36Abi } from './abiV36'
 import V36Treasury from './V36Treasury'
@@ -9,6 +11,16 @@ import { shortAmount } from './presentation'
 import { erc20Abi, MAX_V3_PAGE, readV3Catalogue } from './reader'
 import type { V3Client, V3Deployment } from './runtime'
 import { parseV3Amount, type V3StudioSnapshot } from './studio'
+import {
+  PanelBody,
+  PanelHeading,
+  SolidAction,
+  TreasuryPanel,
+  TreasuryTable,
+  treasuryBalance,
+  wrappedPolArtwork,
+  type TreasuryOperation,
+} from './treasuryLayout'
 import { describeV3Error } from './transactions'
 import { V3Actions, V3Button, V3Card, V3Error, V3Field, V3Muted, V3Section } from './styles'
 
@@ -37,10 +49,117 @@ const TableRegion = styled.div`
   }
 `
 
-const LiabilityTableRegion = styled(TableRegion)`
-  thead th {
-    white-space: normal;
+const TransferForm = styled.form`
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+
+  select,
+  input:not([type='checkbox']) {
+    min-height: 48px;
+    font-size: 1rem;
   }
+
+  :is(input, select, button):focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+  }
+`
+
+const SelectedBalance = styled.div`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 11px;
+  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.colors.background};
+  font-variant-numeric: tabular-nums;
+
+  strong,
+  small {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+  small {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 0.75rem;
+  }
+  div:last-child {
+    text-align: end;
+    max-width: 130px;
+  }
+`
+
+const NativeOption = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  input {
+    width: 17px;
+    height: 17px;
+    accent-color: ${({ theme }) => theme.colors.primary};
+  }
+`
+
+const AmountGroup = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+
+  button {
+    min-height: 48px;
+  }
+`
+
+const Events = styled.ul`
+  display: grid;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    min-width: 0;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  }
+
+  li:last-child {
+    border: 0;
+  }
+  strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-weight: 650;
+  }
+  small {
+    color: ${({ theme }) => theme.colors.textSubtle};
+    font-size: 0.8125rem;
+  }
+  code {
+    color: inherit;
+  }
+`
+
+const EventIcon = styled.span`
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.input};
+  color: ${({ theme }) => theme.colors.textSubtle};
 `
 
 export default function V3Treasury({
@@ -61,11 +180,13 @@ export default function V3Treasury({
   rightNetwork: boolean
 }) {
   const [asset, setAsset] = useState('')
+  const [operation, setOperation] = useState<TreasuryOperation>('deposit')
   const [amount, setAmount] = useState('')
   const [native, setNative] = useState(false)
   const [failure, setFailure] = useState('')
   const [offset, setOffset] = useState(0)
   const [historyEnd, setHistoryEnd] = useState<bigint>()
+  const [historyLimit, setHistoryLimit] = useState(8)
   const [submitting, setSubmitting] = useState(false)
   const action = useV3Action(client, deployment, getWallet, account)
   const treasury = studio.treasury
@@ -107,6 +228,26 @@ export default function V3Treasury({
     onChange()
     liabilities.refresh()
     recent.refresh()
+  }
+
+  const selectAsset = (address: string) => {
+    if (treasury.v36 && selected?.address !== address) setAmount('')
+    setAsset(address)
+    setNative(false)
+    setFailure('')
+  }
+
+  const changeOperation = (next: TreasuryOperation) => {
+    if (next === operation) return
+    setOperation(next)
+    setAmount('')
+    setNative(false)
+    setFailure('')
+  }
+
+  const changePause = async () => {
+    const data = encodeFunctionData({ abi: treasuryVaultAbi, functionName: 'setPaused', args: [!treasury.paused] })
+    if (await action.run({ to: treasury.address, data })) refresh()
   }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -164,7 +305,34 @@ export default function V3Treasury({
     }
   }
 
-  const controls = (
+  const assetOptions = studio.supported.map(({ address, symbol }) => (
+    <option key={address} value={address}>
+      {symbol}
+    </option>
+  ))
+  const pause = (
+    <V3Button type="button" $secondary disabled={locked} onClick={changePause}>
+      {treasury.paused ? 'Resume treasury' : 'Pause treasury'}
+    </V3Button>
+  )
+  const status = (
+    <>
+      {action.message && <V3Muted role="status">{action.message}</V3Muted>}
+      {(failure || action.error) && <V3Error role="alert">{failure || action.error}</V3Error>}
+      {action.unconfirmed && (
+        <V3Button
+          type="button"
+          $secondary
+          onClick={async () => {
+            if (await action.recheck()) refresh()
+          }}
+        >
+          Verify pending transaction
+        </V3Button>
+      )}
+    </>
+  )
+  const legacyControls = (
     <>
       {owner && selected && (
         <form onSubmit={submit} aria-label="Manage available treasury assets">
@@ -174,16 +342,9 @@ export default function V3Treasury({
               <select
                 name="treasury-asset"
                 value={selected.address}
-                onChange={(event) => {
-                  setAsset(event.target.value)
-                  setNative(false)
-                }}
+                onChange={(event) => selectAsset(event.target.value)}
               >
-                {studio.supported.map(({ address, symbol }) => (
-                  <option key={address} value={address}>
-                    {symbol}
-                  </option>
-                ))}
+                {assetOptions}
               </select>
             </V3Field>
             <V3Field>
@@ -213,48 +374,258 @@ export default function V3Treasury({
             <V3Button type="submit" value="withdraw" $secondary disabled={locked || treasury.paused}>
               Withdraw available
             </V3Button>
-            {treasury.v36 && validNative && (
-              <V3Button
-                type="submit"
-                value="withdraw-native"
-                $secondary
-                disabled={locked || treasury.paused || !selected.review?.valid}
-              >
-                Withdraw as native POL
-              </V3Button>
-            )}
-            <V3Button
-              type="button"
-              $secondary
-              disabled={locked}
-              onClick={async () => {
-                const data = encodeFunctionData({
-                  abi: treasuryVaultAbi,
-                  functionName: 'setPaused',
-                  args: [!treasury.paused],
-                })
-                if (await action.run({ to: treasury.address, data })) refresh()
-              }}
-            >
-              {treasury.paused ? 'Resume treasury' : 'Pause treasury'}
-            </V3Button>
+            {pause}
           </V3Actions>
         </form>
       )}
-      {action.message && <V3Muted role="status">{action.message}</V3Muted>}
-      {(failure || action.error) && <V3Error role="alert">{failure || action.error}</V3Error>}
-      {action.unconfirmed && (
-        <V3Button
-          type="button"
-          $secondary
-          onClick={async () => {
-            if (await action.recheck()) refresh()
-          }}
-        >
-          Verify pending transaction
-        </V3Button>
-      )}
+      {status}
     </>
+  )
+
+  const withdraw = operation === 'withdraw'
+  const withdrawNative = withdraw && native && validNative
+  const transfer =
+    owner && selected ? (
+      <TransferForm onSubmit={submit} aria-label="Manage available treasury assets">
+        <V3Field>
+          Asset
+          <select
+            name="treasury-asset"
+            value={selected.address}
+            disabled={locked}
+            onChange={(event) => selectAsset(event.target.value)}
+          >
+            {assetOptions}
+          </select>
+        </V3Field>
+        <SelectedBalance>
+          <RewardTokenIcon token={selected.symbol} tokenMeta={validNative ? wrappedPolArtwork : selected} size={32} />
+          <div>
+            <small>Available</small>
+            <strong>
+              {treasuryBalance(selected.balance?.available ?? ZERO, selected.decimals)} {selected.symbol}
+            </strong>
+          </div>
+          <div>
+            <small>Allocated to pools</small>
+            <strong>
+              {treasuryBalance(selected.balance?.allocated ?? ZERO, selected.decimals)} {selected.symbol}
+            </strong>
+          </div>
+        </SelectedBalance>
+        <AmountGroup>
+          <V3Field>
+            Amount
+            <input
+              required
+              name="treasury-amount"
+              inputMode="decimal"
+              placeholder="0.00"
+              readOnly={locked}
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+            />
+          </V3Field>
+          {withdraw && selected.decimals !== null && (
+            <V3Button
+              type="button"
+              $secondary
+              disabled={locked || !selected.balance?.available}
+              onClick={() => {
+                if (selected.decimals !== null)
+                  setAmount(formatUnits(selected.balance?.available ?? ZERO, selected.decimals))
+              }}
+            >
+              Max
+            </V3Button>
+          )}
+        </AmountGroup>
+        {validNative && (
+          <NativeOption>
+            <input
+              type="checkbox"
+              name={withdraw ? 'treasury-native-withdraw' : 'treasury-native'}
+              checked={native}
+              disabled={locked}
+              onChange={(event) => setNative(event.target.checked)}
+            />
+            {withdraw ? 'Receive native POL' : 'Deposit native POL as WPOL'}
+          </NativeOption>
+        )}
+        {treasury.paused && <V3Muted>Resume Treasury in Asset settings to move funds.</V3Muted>}
+        {!rightNetwork && <V3Muted>Switch to the V3 settlement network to move funds.</V3Muted>}
+        {!withdraw && !selected.canDeposit && <V3Muted>Deposits are disabled for this asset.</V3Muted>}
+        {withdrawNative && !selected.review?.valid && (
+          <V3Muted>Review this asset in Asset settings to withdraw native POL.</V3Muted>
+        )}
+        <SolidAction
+          type="submit"
+          value={withdrawNative ? 'withdraw-native' : withdraw ? 'withdraw' : 'deposit'}
+          disabled={
+            locked ||
+            treasury.paused ||
+            selected.decimals === null ||
+            (!withdraw && !selected.canDeposit) ||
+            (withdrawNative && !selected.review?.valid)
+          }
+        >
+          {withdrawNative ? 'Withdraw as native POL' : withdraw ? 'Withdraw available' : 'Deposit'}
+        </SolidAction>
+      </TransferForm>
+    ) : (
+      <V3Muted>Review a token in Asset settings to start moving funds.</V3Muted>
+    )
+
+  const reserves = (
+    <TreasuryPanel aria-label="Pool reserves">
+      <PanelBody>
+        <PanelHeading>
+          <div>
+            <h2>Pool reserves</h2>
+            <p>Reward inventory and NFT liabilities by pool.</p>
+          </div>
+        </PanelHeading>
+        {liabilities.loading && !liabilities.data && <V3Muted role="status">Reading pool reserves…</V3Muted>}
+        {liabilities.error && <V3Error role="alert">{liabilities.error}</V3Error>}
+        <TreasuryTable role="region" aria-label="Pool reward liabilities" tabIndex={0}>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Pool and asset</th>
+                <th scope="col">Reward inventory</th>
+                <th scope="col">Reserved NFT claims</th>
+              </tr>
+            </thead>
+            <tbody>
+              {liabilities.data?.pools.flatMap((pool) =>
+                pool.rewards.map(({ token, symbol, decimals, inventory, settlement }) => (
+                  <tr key={`${pool.poolId}:${token}`}>
+                    <th scope="row">
+                      #{pool.poolId.toString()} · {symbol}
+                    </th>
+                    <td>{shortAmount(inventory, decimals)}</td>
+                    <td>{settlement ? shortAmount(settlement.claimLiability, (decimals ?? 0) + 18) : 'Unavailable'}</td>
+                  </tr>
+                )),
+              )}
+            </tbody>
+          </table>
+        </TreasuryTable>
+        {liabilities.data && !liabilities.data.pools.some((pool) => pool.rewards.length > 0) && (
+          <V3Muted>No pool reserves in this range.</V3Muted>
+        )}
+        <V3Actions>
+          {offset > 0 && (
+            <V3Button type="button" $secondary onClick={() => setOffset(offset - MAX_V3_PAGE)}>
+              Previous pools
+            </V3Button>
+          )}
+          {(liabilities.data?.total ?? ZERO) > BigInt(offset + MAX_V3_PAGE) && (
+            <V3Button type="button" $secondary onClick={() => setOffset(offset + MAX_V3_PAGE)}>
+              Next pools
+            </V3Button>
+          )}
+        </V3Actions>
+      </PanelBody>
+    </TreasuryPanel>
+  )
+
+  const activity = (
+    <TreasuryPanel aria-label="Treasury activity">
+      <PanelBody>
+        <PanelHeading>
+          <div>
+            <h2>Recent treasury transactions</h2>
+            <p>
+              {recent.data
+                ? `Confirmed events in blocks ${recent.data.fromBlock}–${recent.data.toBlock}.`
+                : 'Reading confirmed Treasury events…'}
+            </p>
+          </div>
+        </PanelHeading>
+        {recent.error && <V3Error role="alert">{recent.error}</V3Error>}
+        {recent.data?.logs.length === 0 && <V3Muted>No treasury transactions in this range.</V3Muted>}
+        {recent.data && recent.data.logs.length > 0 && (
+          <Events>
+            {recent.data.logs.slice(0, historyLimit).map((log) => {
+              const tokenFor = (address: Address) =>
+                studio.supported.find((token) => token.address === getAddress(address))
+              const format = (address: Address, amount: bigint) => {
+                const token = tokenFor(address)
+                return `${shortAmount(amount, token?.decimals ?? null)} ${token?.symbol ?? address.slice(0, 8)}`
+              }
+              const description =
+                log.eventName === 'NativeWithdrawn'
+                  ? `Withdrawn as native POL · ${shortAmount(log.args.amount, 18)} POL`
+                  : log.eventName === 'TreasurySwap'
+                  ? `Swap ${format(log.args.input, log.args.amountIn)} → ${format(log.args.output, log.args.amountOut)}`
+                  : log.eventName === 'Recovered'
+                  ? `${log.args.reward ? 'Recovered rewards' : 'Recovered funding'} · Pool #${
+                      log.args.poolId
+                    } · ${format(log.args.token, log.args.amount)}`
+                  : [
+                      log.eventName,
+                      'poolId' in log.args && `Pool #${log.args.poolId}`,
+                      'token' in log.args && 'amount' in log.args && format(log.args.token, log.args.amount),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+              return (
+                <li key={`${log.transactionHash}:${log.logIndex}`}>
+                  <EventIcon>
+                    <HistoryIcon width="18px" aria-hidden="true" />
+                  </EventIcon>
+                  <div>
+                    <strong>{description}</strong>
+                    <small>
+                      Block {log.blockNumber?.toString()} ·{' '}
+                      {deployment.chainId === 137 ? (
+                        <a href={`https://polygonscan.com/tx/${log.transactionHash}`} target="_blank" rel="noreferrer">
+                          <code>{log.transactionHash.slice(0, 12)}…</code>
+                        </a>
+                      ) : (
+                        <code>{log.transactionHash.slice(0, 12)}…</code>
+                      )}
+                    </small>
+                  </div>
+                </li>
+              )
+            })}
+          </Events>
+        )}
+        <V3Actions>
+          {(recent.data?.logs.length ?? 0) > historyLimit && (
+            <V3Button type="button" $secondary onClick={() => setHistoryLimit((limit) => limit + 8)}>
+              Show more transactions
+            </V3Button>
+          )}
+          {historyEnd !== undefined && (
+            <V3Button
+              type="button"
+              $secondary
+              onClick={() => {
+                setHistoryLimit(8)
+                setHistoryEnd(undefined)
+              }}
+            >
+              Latest blocks
+            </V3Button>
+          )}
+          {recent.data && recent.data.fromBlock > ZERO && (
+            <V3Button
+              type="button"
+              $secondary
+              onClick={() => {
+                setHistoryLimit(8)
+                if (recent.data) setHistoryEnd(recent.data.fromBlock - BigInt(1))
+              }}
+            >
+              Older blocks
+            </V3Button>
+          )}
+        </V3Actions>
+      </PanelBody>
+    </TreasuryPanel>
   )
 
   return (
@@ -269,7 +640,15 @@ export default function V3Treasury({
           action={action}
           refresh={refresh}
           locked={locked}
-          controls={controls}
+          operation={operation}
+          onOperationChange={changeOperation}
+          selectedAsset={selected?.address}
+          onSelectAsset={selectAsset}
+          transfer={transfer}
+          status={status}
+          pause={pause}
+          reserves={reserves}
+          activity={activity}
         />
       ) : (
         <V3Card>
@@ -316,122 +695,16 @@ export default function V3Treasury({
                 </tbody>
               </table>
             </TableRegion>
-            {controls}
+            {legacyControls}
           </div>
         </V3Card>
       )}
-      <V3Card>
-        <div>
-          <h2>Reward inventory and NFT liabilities by pool</h2>
-          {liabilities.loading && !liabilities.data && <V3Muted role="status">Reading pool reserves…</V3Muted>}
-          {liabilities.error && <V3Error role="alert">{liabilities.error}</V3Error>}
-          <LiabilityTableRegion role="region" aria-label="Pool reward liabilities" tabIndex={0}>
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Pool and asset</th>
-                  <th scope="col">Reward inventory</th>
-                  <th scope="col">Reserved NFT claims</th>
-                </tr>
-              </thead>
-              <tbody>
-                {liabilities.data?.pools.flatMap((pool) =>
-                  pool.rewards.map(({ token, symbol, decimals, inventory, settlement }) => (
-                    <tr key={`${pool.poolId}:${token}`}>
-                      <th scope="row">
-                        #{pool.poolId.toString()} · {symbol}
-                      </th>
-                      <td>{shortAmount(inventory, decimals)}</td>
-                      <td>
-                        {settlement ? shortAmount(settlement.claimLiability, (decimals ?? 0) + 18) : 'Unavailable'}
-                      </td>
-                    </tr>
-                  )),
-                )}
-              </tbody>
-            </table>
-          </LiabilityTableRegion>
-          <V3Actions>
-            {offset > 0 && (
-              <V3Button type="button" $secondary onClick={() => setOffset(offset - MAX_V3_PAGE)}>
-                Previous pools
-              </V3Button>
-            )}
-            {(liabilities.data?.total ?? ZERO) > BigInt(offset + MAX_V3_PAGE) && (
-              <V3Button type="button" $secondary onClick={() => setOffset(offset + MAX_V3_PAGE)}>
-                Next pools
-              </V3Button>
-            )}
-          </V3Actions>
-        </div>
-      </V3Card>
-      <V3Card>
-        <div>
-          <h2>Recent treasury transactions</h2>
-          <V3Muted>
-            {recent.data
-              ? `Confirmed events in blocks ${recent.data.fromBlock}–${recent.data.toBlock}.`
-              : 'Reading confirmed Treasury events…'}
-          </V3Muted>
-          {recent.error && <V3Error role="alert">{recent.error}</V3Error>}
-          {recent.data?.logs.length === 0 && <V3Muted>No treasury transactions in this range.</V3Muted>}
-          {recent.data?.logs.map((log) => {
-            const tokenFor = (address: Address) =>
-              studio.supported.find((token) => token.address === getAddress(address))
-            const format = (address: Address, amount: bigint) => {
-              const token = tokenFor(address)
-              return `${shortAmount(amount, token?.decimals ?? null)} ${token?.symbol ?? address.slice(0, 8)}`
-            }
-            const description =
-              log.eventName === 'NativeWithdrawn'
-                ? `Withdrawn as native POL · ${shortAmount(log.args.amount, 18)} POL`
-                : log.eventName === 'TreasurySwap'
-                ? `Swap ${format(log.args.input, log.args.amountIn)} → ${format(log.args.output, log.args.amountOut)}`
-                : log.eventName === 'Recovered'
-                ? `${log.args.reward ? 'Recovered rewards' : 'Recovered funding'} · Pool #${log.args.poolId} · ${format(
-                    log.args.token,
-                    log.args.amount,
-                  )}`
-                : [
-                    log.eventName,
-                    'poolId' in log.args && `Pool #${log.args.poolId}`,
-                    'token' in log.args && 'amount' in log.args && format(log.args.token, log.args.amount),
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-            return (
-              <V3Muted key={`${log.transactionHash}:${log.logIndex}`}>
-                {description} ·{' '}
-                {deployment.chainId === 137 ? (
-                  <a href={`https://polygonscan.com/tx/${log.transactionHash}`} target="_blank" rel="noreferrer">
-                    <code>{log.transactionHash.slice(0, 12)}…</code>
-                  </a>
-                ) : (
-                  <code>{log.transactionHash.slice(0, 12)}…</code>
-                )}
-              </V3Muted>
-            )
-          })}
-          <V3Actions>
-            {historyEnd !== undefined && (
-              <V3Button type="button" $secondary onClick={() => setHistoryEnd(undefined)}>
-                Latest blocks
-              </V3Button>
-            )}
-            {recent.data && recent.data.fromBlock > ZERO && (
-              <V3Button
-                type="button"
-                $secondary
-                onClick={() =>
-                  setHistoryEnd(recent.data?.fromBlock === undefined ? undefined : recent.data.fromBlock - BigInt(1))
-                }
-              >
-                Older blocks
-              </V3Button>
-            )}
-          </V3Actions>
-        </div>
-      </V3Card>
+      {!treasury.v36 && (
+        <>
+          {reserves}
+          {activity}
+        </>
+      )}
     </TreasurySection>
   )
 }
