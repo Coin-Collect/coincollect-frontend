@@ -107,6 +107,7 @@ type SelectionOption = {
   selected: boolean
   disabled?: boolean
   accessibleLabel?: string
+  supportingText?: string
   onSelect: () => void
 }
 
@@ -157,6 +158,7 @@ export default function NftSelectionModal({
   after,
   confirmLabel,
   initialFocus = false,
+  minWidth = '346px',
 }: {
   title: string
   options: SelectionOption[]
@@ -171,12 +173,13 @@ export default function NftSelectionModal({
   after?: ReactNode
   confirmLabel?: string
   initialFocus?: boolean
+  minWidth?: string
 }) {
   const { t } = useTranslation()
   const { theme } = useTheme()
   return (
     <Modal
-      minWidth="346px"
+      minWidth={minWidth}
       bodyPadding="24px 24px 10px 24px"
       title={title}
       headerBackground={theme.colors.gradients.bubblegum}
@@ -187,38 +190,54 @@ export default function NftSelectionModal({
         <Wrapper>
           {options.length > 0 ? (
             <Flex flexWrap="wrap" justifyContent="center">
-              {options.map(({ key, label, image, selected, accessibleLabel, onSelect, disabled: optionDisabled }) => {
-                return (
-                  <NftOption
-                    as="button"
-                    type="button"
-                    key={key}
-                    onClick={onSelect}
-                    aria-pressed={selected}
-                    aria-label={accessibleLabel || label}
-                    disabled={optionDisabled || pending}
-                  >
-                    <NftBox
-                      $selected={selected}
-                      src={image || '/images/nfts/no-profile-md.png'}
-                      alt=""
-                      height={90}
-                      width={90}
-                    />
-                    <Text
-                      fontSize="11px"
-                      color="textSubtle"
-                      mt="6px"
-                      textAlign="center"
-                      width="100%"
-                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                      title={label}
+              {options.map(
+                ({
+                  key,
+                  label,
+                  image,
+                  selected,
+                  accessibleLabel,
+                  supportingText,
+                  onSelect,
+                  disabled: optionDisabled,
+                }) => {
+                  return (
+                    <NftOption
+                      as="button"
+                      type="button"
+                      key={key}
+                      onClick={onSelect}
+                      aria-pressed={selected}
+                      aria-label={accessibleLabel || label}
+                      disabled={optionDisabled || pending}
                     >
-                      {label}
-                    </Text>
-                  </NftOption>
-                )
-              })}
+                      <NftBox
+                        $selected={selected}
+                        src={image || '/images/nfts/no-profile-md.png'}
+                        alt=""
+                        height={90}
+                        width={90}
+                      />
+                      <Text
+                        fontSize="11px"
+                        color="textSubtle"
+                        mt="6px"
+                        textAlign="center"
+                        width="100%"
+                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        title={label}
+                      >
+                        {label}
+                      </Text>
+                      {supportingText && (
+                        <Text small color="textSubtle">
+                          {supportingText}
+                        </Text>
+                      )}
+                    </NftOption>
+                  )
+                },
+              )}
             </Flex>
           ) : error ? (
             <Flex p="24px" flexDirection="column" alignItems="center">

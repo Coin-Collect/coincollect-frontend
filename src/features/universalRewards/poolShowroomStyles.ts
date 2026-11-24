@@ -292,46 +292,6 @@ export const CollectionShelf = styled.aside`
   }
 `
 
-export const PoolDisclosure = styled.details`
-  min-width: 0;
-  margin: 12px 0;
-  border: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.backgroundAlt};
-  scroll-margin-top: 90px;
-
-  > summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    min-height: 54px;
-    padding: 10px clamp(13px, 2vw, 22px);
-    border-radius: inherit;
-    cursor: pointer;
-    font-weight: 750;
-    list-style: none;
-  }
-  > summary::-webkit-details-marker {
-    display: none;
-  }
-  > summary:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 2px;
-  }
-  &[open] > summary svg {
-    transform: rotate(180deg);
-  }
-  &[open] > summary {
-    border-bottom: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  }
-  > div {
-    display: grid;
-    gap: 13px;
-    padding: clamp(13px, 2vw, 22px);
-  }
-`
-
 export const DiscoverHeader = styled.header`
   display: flex;
   align-items: baseline;

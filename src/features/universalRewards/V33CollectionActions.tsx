@@ -13,6 +13,7 @@ import {
 } from 'viem'
 import { useSwitchChain } from 'wagmi'
 import { finalizedNftJournalAbi, managedNftCollectionAbi, nftSourceJournalAbi } from './abi'
+import { studioCollection } from './assetCatalog'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
 import { managedSourceChains } from './managedChains'
 import {
@@ -27,6 +28,7 @@ import type { V3PoolSnapshot } from './reader'
 import type { V3Client, V3Deployment } from './runtime'
 import { V3Actions, V3Button, V3Error, V3Field, V3Fields, V3Muted } from './styles'
 import { UINT256_MAX } from './units'
+import { WalletLookup, WalletNftGrid, WalletNftTile } from './poolWalletStyles'
 
 const ZERO = BigInt(0)
 
@@ -39,6 +41,7 @@ type Props = {
   account: Address
   chainId?: number
   refresh: () => void
+  active?: boolean
 }
 
 export default function V33CollectionActions({
@@ -50,6 +53,7 @@ export default function V33CollectionActions({
   account,
   chainId,
   refresh,
+  active = true,
 }: Props) {
   const local = rule.sourceChainId === SETTLEMENT_SOURCE
   const [enteredId, setEnteredId] = useState('')
@@ -120,7 +124,7 @@ export default function V33CollectionActions({
     if (!source || (await source.getChainId()) !== targetChain) return []
     return discoverManagedIds(source, rule, account)
   }, [local, client, sourceClient, rule, account, targetChain])
-  const inventory = useV3Query(`${account}:${rule.adapter}`, loadInventory)
+  const inventory = useV3Query(active ? `${account}:${rule.adapter}` : '', loadInventory)
   const loadArtwork = useCallback(async () => {
     const source = local ? client : sourceClient
     if (!source || tokenId === undefined || (await source.getChainId()) !== targetChain) return undefined
@@ -142,9 +146,9 @@ export default function V33CollectionActions({
           })
     return readNftMetadataFromUri(uri)
   }, [local, client, sourceClient, tokenId, targetChain, rule])
-  const artwork = useV3Query(tokenId === undefined ? '' : `${rule.collection}:${tokenId}`, loadArtwork)
+  const artwork = useV3Query(!active || tokenId === undefined ? '' : `${rule.collection}:${tokenId}`, loadArtwork)
   const ownership = useV3Query(
-    tokenId === undefined ? '' : `${account}:${rule.adapter}:${tokenId}`,
+    !active || tokenId === undefined ? '' : `${account}:${rule.adapter}:${tokenId}`,
     readOwnership,
     15_000,
   )
@@ -181,7 +185,7 @@ export default function V33CollectionActions({
     refreshOwnership()
     return skipped.length > 0 ? 'skipped' : 'processed'
   }, [client, rule, local, request, refreshOwnership])
-  const progress = useV3Query(request === undefined ? '' : request.toString(), readProgress, 10_000)
+  const progress = useV3Query(!active || request === undefined ? '' : request.toString(), readProgress, 10_000)
 
   const check = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -264,6 +268,9 @@ export default function V33CollectionActions({
   }
 
   const data = ownership.data
+  const collection = studioCollection(rule.sourceChainId, rule.collection)
+  const tokenImage =
+    artwork.data?.image && /^(https:\/\/|\/(?!\/))/.test(artwork.data.image) ? artwork.data.image : undefined
   const ended = pool.claimDeadline !== undefined && pool.timestamp >= pool.claimDeadline
   const ready = Boolean(data && wallet && !action.busy && !action.unconfirmed && !ended && !rule.paused)
   const additional = /^\d{1,9}$/.test(quantity) ? Number(quantity) : 0
@@ -275,62 +282,66 @@ export default function V33CollectionActions({
     poolTiming(pool) === 'Live'
   return (
     <V3Fields>
-      <legend>
-        {sourceName(rule.sourceChainId)} · ERC-{rule.standard}
-      </legend>
-      <V3Muted>
-        {rule.collection} · {baseWeight} power per unit · Up to {rule.limit} active per token ID and wallet
-      </V3Muted>
-      {!local && (
-        <V3Muted>
-          Request on {sourceName(rule.sourceChainId)} and claim released rewards on Polygon after verification.
-        </V3Muted>
-      )}
+      <legend>{collection?.name ?? 'Your NFTs'}</legend>
       {!local && (!sourceClient || rule.paused) && (
-        <V3Muted role="status">
-          {rule.paused ? 'Source verification is paused.' : 'This preview has no isolated source network configured.'}
-        </V3Muted>
+        <V3Muted role="status">NFTs from this network are temporarily unavailable.</V3Muted>
       )}
       {!!inventory.data?.length && (
-        <V3Actions aria-label="Recently received NFTs">
+        <WalletNftGrid aria-label="Your NFTs in this collection">
           {inventory.data.map((id) => (
-            <V3Button
-              key={id.toString()}
-              type="button"
-              $secondary
-              onClick={() => {
-                setEnteredId(id.toString())
-                setTokenId(id)
-              }}
-            >
-              NFT #{id.toString()}
-            </V3Button>
+            <WalletNftTile key={id.toString()} data-selected={tokenId === id}>
+              <input
+                type="radio"
+                name="managed-nft"
+                checked={tokenId === id}
+                onChange={() => {
+                  setEnteredId(id.toString())
+                  setTokenId(id)
+                }}
+              />
+              <img
+                src={(tokenId === id ? tokenImage : undefined) || collection?.image || '/images/nfts/no-profile-md.png'}
+                alt=""
+                width={128}
+                height={128}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
+              <strong>#{id.toString()}</strong>
+              <small>
+                {baseWeight} power{rule.standard === 1155 && ' each'}
+              </small>
+            </WalletNftTile>
           ))}
-        </V3Actions>
+        </WalletNftGrid>
       )}
-      <form method="post" onSubmit={check} aria-label="Check managed NFT ownership">
-        <V3Actions>
-          <V3Field>
-            NFT token ID
-            <input
-              name="managed-token-id"
-              inputMode="numeric"
-              required
-              maxLength={78}
-              value={enteredId}
-              onChange={(event) => {
-                setEnteredId(event.target.value)
-                setError('')
-              }}
-            />
-          </V3Field>
-          <V3Button type="submit" $secondary>
-            Check NFT
-          </V3Button>
-        </V3Actions>
-      </form>
-      {ownership.loading && !data && <V3Muted role="status">Checking source ownership…</V3Muted>}
-      {ownership.error && <V3Error role="status">{ownership.error}</V3Error>}
+      {inventory.loading && <V3Muted role="status">Looking for your NFTs…</V3Muted>}
+      <WalletLookup>
+        <summary>Find by token ID</summary>
+        <form method="post" onSubmit={check} aria-label="Check managed NFT ownership">
+          <V3Actions>
+            <V3Field>
+              NFT token ID
+              <input
+                name="managed-token-id"
+                inputMode="numeric"
+                required
+                maxLength={78}
+                value={enteredId}
+                onChange={(event) => {
+                  setEnteredId(event.target.value)
+                  setError('')
+                }}
+              />
+            </V3Field>
+            <V3Button type="submit" $secondary>
+              Check NFT
+            </V3Button>
+          </V3Actions>
+        </form>
+      </WalletLookup>
+      {ownership.loading && !data && <V3Muted role="status">Checking your NFT…</V3Muted>}
+      {ownership.error && <V3Error role="status">Could not confirm NFT ownership. Check the ID and try again.</V3Error>}
       {data && (
         <>
           {artwork.data?.image && /^(https:\/\/|\/(?!\/))/.test(artwork.data.image) && (
@@ -344,12 +355,12 @@ export default function V33CollectionActions({
             />
           )}
           <V3Muted>
-            #{tokenId?.toString()} · {data.owned.toString()} owned · {data.active} participating ·{' '}
-            {data.active * baseWeight} power
+            #{tokenId?.toString()} · {data.owned.toString()} owned · {data.active} staked · {data.active * baseWeight}{' '}
+            power
           </V3Muted>
           {rule.standard === 1155 && (
             <V3Field>
-              Participating quantity
+              Quantity to stake or unstake
               <input
                 name="managed-quantity"
                 inputMode="numeric"
@@ -387,7 +398,9 @@ export default function V33CollectionActions({
                 disabled={!ready || poolTiming(pool) !== 'Live'}
                 onClick={() => void submit('join')}
               >
-                Join with quantity
+                {rule.standard === 1155 && additional > 0
+                  ? `Stake ${additional} NFT${additional === 1 ? '' : 's'}`
+                  : 'Stake NFT'}
               </V3Button>
               <V3Button
                 type="button"
@@ -395,7 +408,7 @@ export default function V33CollectionActions({
                 disabled={!ready || data.entitled === ZERO}
                 onClick={() => void submit('exit')}
               >
-                Exit quantity and release rewards
+                Unstake
               </V3Button>
               {!local && (
                 <V3Button
@@ -404,7 +417,7 @@ export default function V33CollectionActions({
                   disabled={!ready || data.entitled === ZERO}
                   onClick={() => void submit('release')}
                 >
-                  Request reward release
+                  Request rewards
                 </V3Button>
               )}
             </V3Actions>
@@ -418,9 +431,8 @@ export default function V33CollectionActions({
         <V3Muted role="status">
           {progress.data === 'skipped' &&
             'The request could not be applied. Check your balance and pool status, then try again.'}
-          {progress.data === 'processed' && 'Source request processed. Check your Polygon position for the result.'}
-          {(!progress.data || progress.data === 'pending') &&
-            'Source request confirmed. Waiting for finalized verification on Polygon.'}
+          {progress.data === 'processed' && 'Request completed. Check your position for the result.'}
+          {(!progress.data || progress.data === 'pending') && 'Request confirmed. Your position is being updated.'}
         </V3Muted>
       ) : (
         action.message && <V3Muted role="status">{action.message}</V3Muted>

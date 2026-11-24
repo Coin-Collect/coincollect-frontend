@@ -6,6 +6,7 @@ import { isAddressEqual, type Address } from 'viem'
 import { useTranslation } from 'contexts/Localization'
 import { readNftMetadataFromUri, type V2NftMetadata } from 'features/nftPoolManager/user/nftDiscovery'
 import { useV3Query, type useV3Action } from 'features/universalRewards/hooks'
+import { WalletLookup } from 'features/universalRewards/poolWalletStyles'
 import { poolTiming, positionDailyEstimate, shortAmount, sourceName } from 'features/universalRewards/presentation'
 import {
   discoverV3Nfts,
@@ -197,7 +198,6 @@ export default function V3NftActionModal({
       choices: choices.filter((choice): choice is Choice => Boolean(choice)),
       count: wallet.count,
       total,
-      needsId,
     }
   }, [account, client, collections, deployment, manualIds, mode, offset, pool, rule])
 
@@ -205,7 +205,8 @@ export default function V3NftActionModal({
   const max = pool.config.maxNftsPerWallet
   const currentCount = options.data?.count ?? 0
   const selectionLimit = batchExit ? pool.batchLimit : 32
-  const overLimit = selectedNfts.length > selectionLimit || (mode === 'stake' && currentCount + selectedNfts.length > max)
+  const overLimit =
+    selectedNfts.length > selectionLimit || (mode === 'stake' && currentCount + selectedNfts.length > max)
   const addToken = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!/^\d{1,78}$/.test(typedId) || BigInt(typedId) > UINT256_MAX) {
@@ -266,10 +267,21 @@ export default function V3NftActionModal({
         const rewards = pool.rewards
           .filter((_, index) => checks.some(({ claimable }) => claimable[index] > ZERO))
           .map(({ symbol }) => symbol)
-        return [{
-          ...manageV3Positions(deployment, pool.poolId, selectedNfts.map(({ ref }) => ref), 'exitBatch'),
-          confirmationLabel: [t('Unstake & Harvest'), t('%count% NFT positions', { count: selectedNfts.length }), ...rewards].join(' · '),
-        }]
+        return [
+          {
+            ...manageV3Positions(
+              deployment,
+              pool.poolId,
+              selectedNfts.map(({ ref }) => ref),
+              'exitBatch',
+            ),
+            confirmationLabel: [
+              t('Unstake & Harvest'),
+              t('%count% NFT positions', { count: selectedNfts.length }),
+              ...rewards,
+            ].join(' · '),
+          },
+        ]
       }
       return selectedNfts.map(({ name, ref }, index) => {
         const operation = leave ? t('Leave and keep claims') : t('Unstake & Harvest')
@@ -320,13 +332,15 @@ export default function V3NftActionModal({
       <NftSelectionModal
         title={title}
         initialFocus
+        minWidth="min(346px, 100%)"
         options={(options.data?.choices ?? []).map((choice) => {
           const key = nftRefKey(choice.ref)
-          const label = `${choice.name} #${choice.ref.tokenId}`
+          const label = `${choice.name} #${choice.ref.tokenId} · ${choice.weight} power`
           return {
             key,
             label: `#${choice.ref.tokenId} · ${choice.name}`,
             accessibleLabel: label,
+            supportingText: `${choice.weight} power`,
             image: choice.image,
             selected: Boolean(selected[key]),
             onSelect: () =>
@@ -355,7 +369,17 @@ export default function V3NftActionModal({
             action.unconfirmed ||
             (mode === 'stake' && poolTiming(pool) !== 'Live'))
         }
-        confirmLabel={wrongChain ? t('Switch network') : mode === 'unstake' ? t('Unstake & Harvest') : undefined}
+        confirmLabel={
+          wrongChain
+            ? t('Switch network')
+            : mode === 'unstake'
+            ? t('Unstake & Harvest')
+            : selectedNfts.length === 1
+            ? t('Stake 1 NFT')
+            : selectedNfts.length > 1
+            ? t('Stake %count% NFTs', { count: selectedNfts.length })
+            : t('Stake NFTs')
+        }
         before={
           mode === 'stake' && (
             <>
@@ -408,7 +432,8 @@ export default function V3NftActionModal({
             )}
             {mode === 'stake' && options.data && (
               <>
-                {options.data.needsId && (
+                <WalletLookup key={collectionIndex}>
+                  <summary>{t('Find by token ID')}</summary>
                   <form aria-label={t('Check NFT token ID')} onSubmit={addToken}>
                     <Flex alignItems="flex-end" style={{ gap: 8 }}>
                       <Field>
@@ -443,7 +468,7 @@ export default function V3NftActionModal({
                         </Text>
                       )}
                   </form>
-                )}
+                </WalletLookup>
                 {selectedNfts.length > 0 && (
                   <Text small color="textSubtle">
                     {t('Estimated next 24 hours')}:{' '}

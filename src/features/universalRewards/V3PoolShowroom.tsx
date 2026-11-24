@@ -145,6 +145,7 @@ export function PoolShowroomCover({
 }
 
 export function PoolShowroomCollections({ collections }: { collections: V3PoolSnapshot['collections'] }) {
+  const showNetworks = new Set(collections.map((rule) => (rule.managed ?? rule).sourceChainId)).size > 1
   return (
     <CollectionShelf aria-labelledby="pool-collections-title">
       <h3 id="pool-collections-title">Eligible collections</h3>
@@ -152,7 +153,7 @@ export function PoolShowroomCollections({ collections }: { collections: V3PoolSn
         {collections.map((rule) => {
           const { sourceChainId: chain, collection: address } = rule.managed ?? rule
           const featured = studioCollection(chain, address)
-          const name = featured?.name || `${address.slice(0, 8)}…${address.slice(-4)}`
+          const name = featured?.name || 'NFT collection'
           return (
             <li key={`${rule.sourceChainId}:${rule.collection}`}>
               {featured?.image ? (
@@ -162,7 +163,7 @@ export function PoolShowroomCollections({ collections }: { collections: V3PoolSn
               )}
               <div>
                 <strong>{name}</strong>
-                <small>{sourceName(chain)}</small>
+                {showNetworks && <small>{sourceName(chain)}</small>}
               </div>
               <small>{rule.weight} power</small>
             </li>

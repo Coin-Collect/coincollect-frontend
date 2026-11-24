@@ -540,7 +540,7 @@ async function testBrowser() {
         'eligible NFT tile',
         (id) => {
           const option = Array.from(document.querySelectorAll('dialog[open] button[aria-pressed]')).find((button) =>
-            button.getAttribute('aria-label').endsWith('#' + id),
+            button.getAttribute('aria-label').split(' · ')[0].endsWith('#' + id),
           )
           if (!option || option.disabled) return false
           option.click()
@@ -554,7 +554,7 @@ async function testBrowser() {
     await evalPage(() => {
       window.__nextV3WalletError = { message: 'User rejected the request.', code: 4001 }
     })
-    await click('dialog button', 'Confirm')
+    await click('dialog button', 'Stake 1 NFT')
     await wait('wallet rejection is visible', () => /user (rejected|denied)/i.test(document.body.innerText))
     assert.equal(await rpc('eth_getTransactionCount', [fixture.participant, 'latest']), beforeRejection)
     await visit('/nftpools', fixture.participant)
@@ -563,13 +563,13 @@ async function testBrowser() {
     await evalPage(() => {
       window.__nextV3WalletError = { message: 'Wallet provider disconnected.', code: 4900 }
     })
-    await click('dialog button', 'Confirm')
+    await click('dialog button', 'Stake 1 NFT')
     await wait('wallet disconnect is visible', () => /(?:provider|wallet)(?: is)? disconnected/i.test(document.body.innerText))
     assert.equal(await rpc('eth_getTransactionCount', [fixture.participant, 'latest']), beforeRejection)
     await visit('/nftpools', fixture.participant)
     await click('article button', 'Click to Stake Now')
     await selectNft(fixture.tokenId)
-    await click('dialog button', 'Confirm')
+    await click('dialog button', 'Stake 1 NFT')
     await has('Confirmed on the settlement network.')
     await has('STAKED NFT COUNT')
     console.log('PASS rejected requests and disconnected wallets leave positions untouched and permit retry')
@@ -618,7 +618,9 @@ async function testBrowser() {
       poolPath,
     )
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
-    await has(['3.2', '3.3', '3.4', '3.6'].includes(fixture.version) ? 'Reconcile recorded owner' : 'No wallet positions in the records on this page.')
+    assert.ok(await evalPage(() => !document.body.innerText.includes('Your NFTs and rewards')))
+    await command('Page.navigate', { url: base + poolPath + '#v3-positions' })
+    await has(['3.2', '3.3', '3.4', '3.6'].includes(fixture.version) ? 'Refresh ownership' : 'No positions in this pool yet.')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -905,7 +907,7 @@ async function testBrowser() {
     await visit('/nftpools/v3/' + batchId, fixture.participant)
     await click('article button', 'Click to Stake Now')
     for (const id of batchIds) await selectNft(id)
-    await click('dialog button', 'Confirm')
+    await click('dialog button', `Stake ${batchIds.length} NFTs`)
     await has('Confirmed on the settlement network.')
     assert.equal(await readBatchPool('walletsNftCount', [batchId, fixture.participant]), 3n)
     await rpc('evm_increaseTime', [180])
@@ -1158,15 +1160,14 @@ async function testBrowser() {
         }
         const before = Date.now()
         await visit('/nftpools/v3/' + scaleId, fixture.participant)
+        await click('article button', 'Details')
         await wait(
-          'render participants, NFT count and power at scale',
+          'render the FarmCard staked NFT count at scale',
           (members) => {
-            const stats = document.querySelector('[aria-label="Recorded pool participation"]')
-            const values = [...(stats?.querySelectorAll('dd') ?? [])].map((value) => value.textContent.trim())
-            return (
-              values.join('|') ===
-              [members / 8, members, members * 2].map((value) => value.toLocaleString('en-US')).join('|')
+            const info = [...document.querySelectorAll('#pool-farmcard article div')].find(
+              (item) => item.firstElementChild?.textContent.trim() === 'Total staked:',
             )
+            return info?.lastElementChild?.textContent.replace(/\D/g, '') === String(members)
           },
           size,
         )
@@ -1217,26 +1218,30 @@ async function testBrowser() {
       await rpc('evm_mine')
       const route = '/nftpools/v3/' + poolId
       await visit(route, fixture.participant)
-      await has('Polygon · ERC-1155')
+      await click('article button', 'Click to Stake Now')
+      await click('dialog summary', 'Find by token ID')
       await field('managed-token-id', '25')
-      await click('button', 'Check NFT')
-      await has('10 owned · 0 participating')
-      await has('Up to 8 active')
+      await click('dialog button', 'Check NFT')
+      await has('10 owned · 0 staked')
       await field('managed-quantity', '6')
-      await click('button', 'Join with quantity')
-      await has('10 owned · 6 participating · 18 power')
+      await click('dialog button', 'Stake 6 NFTs')
+      await has('10 owned · 6 staked · 18 power')
       await rpc('evm_increaseTime', [120])
       await rpc('evm_mine')
       await sendFixture(fixture.managed.collection, 'safeTransferFrom',
         [fixture.participant, fixture.operator, 25n, 2n, '0x'], undefined, fixture.participant)
       await visit(route, fixture.operator)
+      await command('Page.navigate', { url: base + route + '#eligible-nfts' })
+      await click('dialog summary', 'Find by token ID')
       await field('managed-token-id', '25')
-      await click('button', 'Check NFT')
-      await has('2 owned · 2 participating · 6 power')
+      await click('dialog button', 'Check NFT')
+      await has('2 owned · 2 staked · 6 power')
       await field('managed-quantity', '1')
-      await click('button', 'Exit quantity and release rewards')
-      await has('2 owned · 1 participating · 3 power')
+      await click('dialog button', 'Unstake')
+      await has('2 owned · 1 staked · 3 power')
+      await click('dialog button', 'Your positions')
       await has('Released rewards')
+      await click('dialog button[aria-label="Close"]', '')
       await click('article button', 'Harvest')
       await has('Confirmed on the settlement network.')
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
