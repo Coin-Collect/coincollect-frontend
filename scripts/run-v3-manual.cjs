@@ -8,6 +8,9 @@ const path = require('node:path')
 const { createInterface } = require('node:readline/promises')
 const { setTimeout: delay } = require('node:timers/promises')
 const { Wallet, Contract } = require('ethers')
+const { refuseFixtureEnvironment } = require('./local-test-environment.cjs')
+
+refuseFixtureEnvironment()
 
 const project = path.resolve(process.argv[2] || '')
 const port = Number(process.argv[3] || 3020)

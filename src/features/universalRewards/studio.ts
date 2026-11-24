@@ -1,6 +1,7 @@
 import { describeManagedCollection, managed1155Abi, readManagedAdapter, SETTLEMENT_SOURCE } from './managedNfts'
 import {
   encodeFunctionData,
+  formatUnits,
   getAddress,
   isAddress,
   isAddressEqual,
@@ -12,7 +13,7 @@ import {
 import { managedNftCollectionAbi, ownershipVerifierAbi, treasuryVaultAbi, universalRewardsAbi } from './abi'
 import { encodeV3Presentation, type V3Presentation } from './metadata'
 import { erc20Abi, readV3Pool, tokenDetails } from './reader'
-import { quoteV3Route, readV3RouteOptions, v3SwapLegs, type V3SwapLeg } from './routes'
+import { quoteV3Route, readV3RouteOptions, V3MissingRouteError, v3SwapLegs, type V3SwapLeg } from './routes'
 import { estimateV3Economics } from './economics'
 import { isV3MissingSelector, readV3Capacity, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import type { V3Call } from './transactions'
@@ -22,6 +23,7 @@ import { readV36Asset, readV36Treasury, treasuryPermission } from './treasuryV36
 const ZERO = BigInt(0)
 const BPS = BigInt(10_000)
 const collectionAbi = parseAbi(['function supportsInterface(bytes4 interfaceId) view returns (bool)'])
+const directTreasuryAbi = parseAbi(['function DIRECT_TREASURY_REWARDS() view returns (bool)'])
 const legacyCreateAbi = parseAbi([
   'struct LegacyPoolConfig { uint64 start; uint64 end; uint8 threshold; uint8 maxWallets; uint8 maxNftsPerWallet; string metadataURI; }',
   'struct CollectionRule { uint256 sourceChainId; address collection; uint32 weight; }',
@@ -41,7 +43,8 @@ export interface V3StudioDraft extends V3Presentation {
   budget: string
   intervalHours: string
   usdPerFundingUnit: string
-  fundingSource?: 'wallet' | 'treasury'
+  fundingSource?: 'wallet' | 'treasury' | 'direct'
+  directRewardAmounts?: Record<string, string>
   purchaseMode?: 'automatic' | 'consolidated' | 'adaptive'
   collections: { address: string; sourceChain: string; power: string }[]
   rewards: { address: string; sharePercent: string }[]
@@ -57,12 +60,23 @@ export async function readV3Treasury(client: V3Client, deployment: V3Deployment,
     })
     if (address === zeroAddress) return undefined
     const vault = { address, abi: treasuryVaultAbi, blockNumber } as const
-    const [owner, paused, v36] = await Promise.all([
+    const [owner, paused, v36, directRewards] = await Promise.all([
       client.readContract({ ...vault, functionName: 'owner' }),
       client.readContract({ ...vault, functionName: 'paused' }),
       readV36Treasury(client, deployment, address, blockNumber),
+      client
+        .readContract({
+          address: deployment.address,
+          abi: directTreasuryAbi,
+          functionName: 'DIRECT_TREASURY_REWARDS',
+          blockNumber,
+        })
+        .catch((error: unknown) => {
+          if (isV3MissingSelector(error)) return false
+          throw error
+        }),
     ])
-    return { address, owner, paused, v36 }
+    return { address, owner, paused, v36, directRewards }
   } catch (error) {
     if (isV3MissingSelector(error)) return undefined
     throw error
@@ -140,6 +154,7 @@ export async function quoteV3RewardWindow(
   try {
     return await quoteV3Route(client, studio.swap, funding.address, reward.address, amount, blockNumber)
   } catch (error) {
+    if (error instanceof V3MissingRouteError) throw error
     const reason = error instanceof Error ? error.message : 'quote verification failed'
     throw new Error(`${funding.symbol} to ${reward.symbol}: ${reason}`)
   }
@@ -274,14 +289,7 @@ export async function inspectStudioCollection(
 
 export async function buildV3Preview(client: V3Client, deployment: V3Deployment, draft: V3StudioDraft) {
   const studio = await readV3Studio(client, deployment)
-  const funding = studio.supported.find(({ address }) => address.toLowerCase() === draft.fundAsset.toLowerCase())
-  if (!funding?.canDeposit || funding.decimals === null)
-    throw new Error('Choose a supported funding asset with readable decimals.')
-  const budget = parseV3Amount(draft.budget, funding.decimals, 'funding budget')
-  const treasuryFunded = draft.fundingSource === 'treasury'
-  if (treasuryFunded && (!studio.treasury || studio.treasury.paused || (funding.balance?.available ?? ZERO) < budget)) {
-    throw new Error('Treasury is paused or has insufficient available balance for this lifetime budget.')
-  }
+  const direct = draft.fundingSource === 'direct'
   const days = integer(draft.durationDays, 1, 1460, 'duration in days')
   const maximumWallets = integer(draft.maxWallets, 1, studio.capacity, 'maximum participant wallets')
   const maxNftsPerWallet = integer(draft.maxNfts, 1, studio.capacity, 'maximum NFTs per wallet')
@@ -293,7 +301,6 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   const start = BigInt(startTime)
   const duration = BigInt(days * 86_400)
   const maxIntervalHours = Math.min(720, days * 24)
-  const selectedInterval = integer(draft.intervalHours, 1, maxIntervalHours, 'replenishment interval in hours') * 3600
   const metadataURI = encodeV3Presentation(draft)
 
   if (draft.collections.length === 0 || draft.collections.length > 16)
@@ -328,21 +335,72 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
 
   if (draft.rewards.length === 0 || draft.rewards.length > 4)
     throw new Error('Select between one and four reward assets.')
+  const assetKeys = draft.rewards.map(({ address }) => address.toLowerCase())
+  if (new Set(assetKeys).size !== assetKeys.length) throw new Error('Each reward asset can be selected once.')
+  const rewardAssets = assetKeys.map((address) => {
+    const asset = studio.supported.find((candidate) => candidate.address.toLowerCase() === address)
+    if (!asset?.canReward || asset.decimals === null)
+      throw new Error('Choose a supported reward asset with readable decimals.')
+    return { ...asset, decimals: asset.decimals }
+  })
+  const pool = {
+    admin: studio.admin,
+    capacity: studio.capacity,
+    config: { start, end: start + duration, threshold, maxWallets: maximumWallets, maxNftsPerWallet, metadataURI },
+    collections,
+  }
+  if (direct) {
+    const treasury = studio.treasury
+    if (!treasury?.directRewards || !isAddressEqual(treasury.owner, studio.admin))
+      throw new Error('Direct Treasury rewards require a compatible deployment and the Treasury owner.')
+    if (treasury.paused) throw new Error('Resume Central Treasury before reserving rewards.')
+    const rewards = rewardAssets.map(({ address, balance, symbol, decimals }) => {
+      const input = draft.directRewardAmounts?.[address.toLowerCase()] ?? ''
+      const cap = parseV3Amount(input, decimals, symbol + ' reward amount')
+      const available = balance?.available ?? ZERO
+      if (cap > available)
+        throw new Error(
+          `Treasury has ${formatUnits(
+            available,
+            decimals,
+          )} ${symbol} available. Lower the reward amount or add funds to Treasury.`,
+        )
+      return { token: address, symbol, decimals, cap }
+    })
+    return { ...pool, kind: 'direct' as const, rewards }
+  }
+
+  const funding = studio.supported.find(({ address }) => address.toLowerCase() === draft.fundAsset.toLowerCase())
+  if (!funding?.canDeposit || funding.decimals === null)
+    throw new Error('Choose a supported funding asset with readable decimals.')
+  const budget = parseV3Amount(draft.budget, funding.decimals, 'funding budget')
+  const treasuryFunded = draft.fundingSource === 'treasury'
+  if (treasuryFunded) {
+    if (!studio.treasury) throw new Error('Central Treasury is unavailable on this deployment. Choose Wallet deposit.')
+    if (studio.treasury.paused)
+      throw new Error('Central Treasury is paused. Resume it in Treasury or choose Wallet deposit.')
+    const available = funding.balance?.available ?? ZERO
+    if (available < budget) {
+      throw new Error(
+        `Treasury has ${formatUnits(available, funding.decimals)} ${
+          funding.symbol
+        } available. This pool needs ${formatUnits(budget, funding.decimals)} ${
+          funding.symbol
+        }. Lower the budget, deposit more ${funding.symbol}, or choose another funding asset.`,
+      )
+    }
+  }
+  const selectedInterval = integer(draft.intervalHours, 1, maxIntervalHours, 'replenishment interval in hours') * 3600
   const allocations = draft.rewards.map((entry) => Number(parseV3Amount(entry.sharePercent, 2, 'reward share')))
   if (allocations.reduce((total, value) => total + value, 0) !== Number(BPS))
     throw new Error('Reward shares must add to 100%.')
-  const assetKeys = draft.rewards.map(({ address }) => address.toLowerCase())
-  if (new Set(assetKeys).size !== assetKeys.length) throw new Error('Each reward asset can be selected once.')
-  const lanes = draft.rewards.map(({ address }, index) => {
-    const asset = studio.supported.find((candidate) => candidate.address.toLowerCase() === address.toLowerCase())
-    if (!asset?.canReward || asset.decimals === null)
-      throw new Error('Choose a supported reward asset with readable decimals.')
+  const lanes = rewardAssets.map((asset, index) => {
     const allocation = (budget * BigInt(allocations[index])) / BPS
     if (allocation <= ZERO) throw new Error('A reward share is smaller than the funding asset base unit.')
     return { asset, allocation }
   })
-  const quoteLanes = (consolidated: boolean, interval: number) =>
-    Promise.all(
+  const quoteLanes = async (consolidated: boolean, interval: number) => {
+    const quotes = await Promise.allSettled(
       lanes.map(async ({ asset, allocation }) => {
         const sampleInput = consolidated
           ? allocation
@@ -371,12 +429,29 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
         }
       }),
     )
+    const missing = lanes.filter((_, index) => {
+      const result = quotes[index]
+      return result.status === 'rejected' && result.reason instanceof V3MissingRouteError
+    })
+    if (missing.length) {
+      const pairs = missing.map(({ asset }) => `${funding.symbol} → ${asset.symbol}`).join(', ')
+      throw new V3MissingRouteError(
+        `No approved swap route for ${pairs}. This pool uses one budget token, ${funding.symbol}. ` +
+          'The selected funding source supplies only that token. Choose a funding token with routes to every reward, ' +
+          'use the funding token as the only reward, or have the route administrator configure the missing routes.',
+      )
+    }
+    return quotes.map((result) => {
+      if (result.status === 'rejected') throw result.reason
+      return result.value
+    })
+  }
   const automatic = treasuryFunded && (draft.purchaseMode === undefined || draft.purchaseMode === 'automatic')
   let interval = selectedInterval
   let consolidated = treasuryFunded && draft.purchaseMode !== 'adaptive'
   let strategyNote: string | undefined
   const rewards = await quoteLanes(consolidated, interval).catch((error: unknown) => {
-    if (!automatic) throw error
+    if (!automatic || error instanceof V3MissingRouteError) throw error
     consolidated = false
     interval = maxIntervalHours * 3600
     strategyNote = error instanceof Error ? error.message : 'A protected lifetime purchase could not be verified.'
@@ -439,10 +514,8 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
     lanes: economicLanes,
   })
   return {
-    admin: studio.admin,
-    capacity: studio.capacity,
-    config: { start, end: start + duration, threshold, maxWallets: maximumWallets, maxNftsPerWallet, metadataURI },
-    collections,
+    ...pool,
+    kind: 'purchase' as const,
     rewards,
     fundingAsset: { ...funding, decimals: funding.decimals },
     funding: { asset: funding.address, budget, interval, allocations },
@@ -455,8 +528,26 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
 }
 
 export type V3Preview = Awaited<ReturnType<typeof buildV3Preview>>
+export type V3PurchasePreview = Extract<V3Preview, { kind: 'purchase' }>
 
 export function createV3FundedPool(deployment: V3Deployment, preview: V3Preview): V3Call {
+  if (preview.kind === 'direct') {
+    return {
+      to: deployment.address,
+      data: encodeFunctionData({
+        abi: universalRewardsAbi,
+        functionName: 'createTreasuryFundedPool',
+        args: [
+          preview.config,
+          preview.collections,
+          preview.rewards,
+          { asset: zeroAddress, budget: ZERO, interval: 0, allocations: [] },
+          ZERO,
+          false,
+        ],
+      }),
+    }
+  }
   const abi = preview.capacity <= 32 ? legacyCreateAbi : universalRewardsAbi
   if (preview.treasuryFunded) {
     return {

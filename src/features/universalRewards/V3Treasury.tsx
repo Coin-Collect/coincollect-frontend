@@ -5,6 +5,7 @@ import { encodeFunctionData, formatUnits, getAddress, isAddressEqual, type Addre
 import { treasuryVaultAbi } from './abi'
 import { treasuryVaultV36Abi } from './abiV36'
 import V36Treasury from './V36Treasury'
+import V3WalletError from './V3WalletError'
 import { useV3Action, useV3Query } from './hooks'
 import { shortAmount } from './presentation'
 import { erc20Abi, MAX_V3_PAGE, readV3Catalogue } from './reader'
@@ -330,7 +331,15 @@ export default function V3Treasury({
   const status = (
     <>
       {action.message && <V3Muted role="status">{action.message}</V3Muted>}
-      {(failure || action.error) && <V3Error role="alert">{failure || action.error}</V3Error>}
+      {action.hash && (
+        <V3Muted>
+          Transaction hash <code>{action.hash}</code>
+        </V3Muted>
+      )}
+      {failure && <V3Error role="alert">{failure}</V3Error>}
+      {!failure && action.error && (
+        <V3WalletError key={action.error} message={action.error} client={client} getWallet={getWallet} />
+      )}
       {action.unconfirmed && (
         <V3Button
           type="button"

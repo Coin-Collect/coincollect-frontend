@@ -16,6 +16,7 @@ import { validateV3Deployment, type V3Client, type V3Deployment } from './runtim
 
 const expiredClaimError = toFunctionSelector('ClaimPeriodEnded()')
 const openClaimError = toFunctionSelector('ClaimPeriodOpen()')
+export const localRpcMismatch = 'Your wallet is connected to a different or behind local RPC.'
 const individualConfirmations = 'This deployment uses individual NFT confirmations for Harvest and Unstake.'
 const positionBatchSelectors = ['claimBatch', 'exitBatch'].map((name) =>
   toFunctionSelector(`${name}(uint256,(uint256,address,uint256)[])`),
@@ -51,14 +52,22 @@ async function assertWallet(wallet: WalletClient, account: Address, deployment: 
 }
 
 export async function assertLocalFork(wallet: WalletClient, client: V3Client) {
-  const expected = await client.getBlock()
-  // Cloned forks may have the same chain ID, deployer, address and runtime. Compare their block histories.
-  const observed =
-    expected.number === null
-      ? undefined
-      : await getBlock(wallet, { blockNumber: expected.number }).catch(() => undefined)
-  if (!expected.hash || observed?.hash !== expected.hash) {
-    throw new Error('Your wallet is connected to a different or behind local RPC. Select the RPC for this preview.')
+  const [expected, observed] = await Promise.all([client.getBlock(), getBlock(wallet).catch(() => undefined)])
+  if (observed?.number == null || !observed.hash) {
+    throw new Error(`${localRpcMismatch} The wallet RPC did not return its latest block.`)
+  }
+  if (observed.number < expected.number) {
+    throw new Error(
+      `${localRpcMismatch} Your wallet reports block ${observed.number}, while this preview is at block ${expected.number}.`,
+    )
+  }
+  // A fork can share the preview’s latest block and extend it on its own. Verify the wallet’s head on the app RPC.
+  const verified =
+    observed.number === expected.number
+      ? expected
+      : await client.getBlock({ blockNumber: observed.number }).catch(() => undefined)
+  if (verified?.hash !== observed.hash) {
+    throw new Error(`${localRpcMismatch} Wallet block ${observed.number} is not part of this preview’s chain.`)
   }
 }
 

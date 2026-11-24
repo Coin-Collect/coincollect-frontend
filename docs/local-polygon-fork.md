@@ -1,5 +1,7 @@
 # CoinCollect local Polygon fork
 
+On a workstation with `~/.config/coincollect/test-environment.json`, use `npm run fork:status` to verify the existing test chain and get its Studio and wallet URLs. The fixture launchers below are for workstations without a protected test environment. If the protected RPC is unavailable or fails its checkpoint check, preserve the existing chain data and investigate before making any changes.
+
 This is an isolated manual-development environment. Anvil forks Polygon state for reads, but exposes a different local chain ID (`31337`). The app’s fork mode uses only `127.0.0.1:18545`; if Anvil stops, Polygon RPC reads fail closed. Local transactions are never broadcast to Polygon mainnet.
 
 The fork uses the real Polygon NFT SmartChef factory, token contracts and WPOL contract at the selected fork block. The seed command transfers that forked factory’s ownership to a deterministic local test account. It also clears an inherited EIP-7702 delegation record from that known test account on the loopback fork only, so the UI can correctly treat the signer as an EOA. If available, it impersonates a token holder **inside Anvil only** to copy real COLLECT/USDT balances into the local account. Otherwise it mints clearly-labelled fork-only COLLECT/USDT fixtures. No private key or signed transaction is sent to the upstream Polygon RPC.

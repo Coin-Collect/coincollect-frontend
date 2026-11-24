@@ -32,6 +32,7 @@ import V3StudioDashboard from './V3StudioDashboard'
 import V3EconomicPreflight from './V3EconomicPreflight'
 import V3StudioPool, { type V3StudioPreviewProps } from './V3StudioPool'
 import V3Treasury from './V3Treasury'
+import V3WalletError from './V3WalletError'
 import {
   FundingDisclosure,
   FundingMethod,
@@ -48,6 +49,7 @@ import {
   V3Card,
   V3Error,
   V3Field,
+  V3Fields,
   V3Grid,
   V3Link,
   V3Metrics,
@@ -79,10 +81,14 @@ function TransactionFeedback({
   deployment,
   onReceipt,
   purpose,
+  client,
+  getWallet,
 }: {
   transaction: ReturnType<typeof useV3Action>
   deployment?: V3Deployment
   purpose?: string
+  client: V3Client
+  getWallet: ReturnType<typeof useV3Wallet>
   onReceipt: (receipt: NonNullable<Awaited<ReturnType<typeof transaction.recheck>>>) => void
 }) {
   return (
@@ -90,7 +96,9 @@ function TransactionFeedback({
       <V3Muted role="status">
         {transaction.message && (purpose ? `${purpose} · ${transaction.message}` : transaction.message)}
       </V3Muted>
-      {transaction.error && <V3Error role="alert">{transaction.error}</V3Error>}
+      {transaction.error && (
+        <V3WalletError key={transaction.error} message={transaction.error} client={client} getWallet={getWallet} />
+      )}
       {transaction.unconfirmed && (
         <V3Button
           type="button"
@@ -559,6 +567,8 @@ function FundingPanel({
       <TransactionFeedback
         transaction={transaction}
         deployment={deployment}
+        client={client}
+        getWallet={getWallet}
         purpose={purpose}
         onReceipt={result.refresh}
       />
@@ -615,6 +625,21 @@ export default function V3Studio({
   const allowed = Boolean(account && studio.data && isAddressEqual(account, studio.data.admin))
   const treasuryOwner = Boolean(account && studio.data?.treasury && isAddressEqual(account, studio.data.treasury.owner))
   const fundingSource = draft.fundingSource ?? (studio.data?.treasury ? 'treasury' : 'wallet')
+  const budgetToken = studio.data?.supported.find(
+    ({ address }) => address.toLowerCase() === draft.fundAsset.toLowerCase(),
+  )
+  const directFunding = fundingSource === 'direct'
+  const directAvailable = Boolean(studio.data?.treasury?.directRewards && treasuryOwner)
+  const conversionRewards =
+    budgetToken && !directFunding
+      ? draft.rewards
+          .filter(({ address }) => address.toLowerCase() !== draft.fundAsset.toLowerCase())
+          .map(
+            ({ address }) =>
+              studio.data?.supported.find((asset) => asset.address.toLowerCase() === address.toLowerCase())?.symbol,
+          )
+          .filter(Boolean)
+      : []
   const writeAllowed = Boolean(allowed && deployment && chainId === deployment.chainId)
   const transaction = useV3Action(client, deployment, getWallet, account)
   const locked = transaction.busy || transaction.unconfirmed || reviewing
@@ -814,8 +839,26 @@ export default function V3Studio({
                     <>
                       {studio.data.treasury && (
                         <>
-                          <FundingMethod disabled={locked}>
+                          <FundingMethod
+                            disabled={locked}
+                            aria-describedby={conversionRewards.length ? 'v3-funding-conversion' : undefined}
+                          >
                             <legend>Funding source</legend>
+                            {directAvailable && (
+                              <label data-selected={directFunding}>
+                                <input
+                                  type="radio"
+                                  name="funding-source"
+                                  value="direct"
+                                  checked={directFunding}
+                                  onChange={() => update({ fundingSource: 'direct' })}
+                                />
+                                <span>
+                                  <strong>Direct Treasury rewards</strong>
+                                  <small>Enter an amount for each reward token already in Treasury.</small>
+                                </span>
+                              </label>
+                            )}
                             <label data-selected={fundingSource === 'treasury'}>
                               <input
                                 type="radio"
@@ -826,7 +869,7 @@ export default function V3Studio({
                               />
                               <span>
                                 <strong>Central Treasury</strong>
-                                <small>Reserve the lifetime budget from Treasury when you create the pool.</small>
+                                <small>Reserve the selected budget token from Treasury when you create the pool.</small>
                               </span>
                             </label>
                             <label data-selected={fundingSource === 'wallet'}>
@@ -839,10 +882,59 @@ export default function V3Studio({
                               />
                               <span>
                                 <strong>Wallet deposit</strong>
-                                <small>Fund the pool from your wallet after creating it.</small>
+                                <small>
+                                  Deposit the selected budget token from your wallet after creating the pool.
+                                </small>
                               </span>
                             </label>
                           </FundingMethod>
+                          {directFunding && (
+                            <V3Fields disabled={locked}>
+                              <legend>Reward amounts from Treasury</legend>
+                              {!draft.rewards.length && (
+                                <V3Muted>Select the reward tokens above to enter their amounts.</V3Muted>
+                              )}
+                              {draft.rewards.map(({ address }) => {
+                                const key = address.toLowerCase()
+                                const asset = studio.data?.supported.find(
+                                  (token) => token.address.toLowerCase() === key,
+                                )
+                                if (!asset) return null
+                                const balanceId = `reward-available-${key}`
+                                return (
+                                  <V3Field key={key}>
+                                    {asset.symbol} amount
+                                    <input
+                                      name={`direct-amount-${key}`}
+                                      inputMode="decimal"
+                                      autoComplete="off"
+                                      required
+                                      aria-describedby={balanceId}
+                                      value={draft.directRewardAmounts?.[key] ?? ''}
+                                      onChange={(event) =>
+                                        update({
+                                          directRewardAmounts: {
+                                            ...draft.directRewardAmounts,
+                                            [key]: event.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                    <small id={balanceId}>
+                                      Available in Treasury ·{' '}
+                                      {shortAmount(asset.balance?.available ?? ZERO, asset.decimals)} {asset.symbol}
+                                    </small>
+                                  </V3Field>
+                                )
+                              })}
+                            </V3Fields>
+                          )}
+                          {conversionRewards.length > 0 && (
+                            <V3Muted id="v3-funding-conversion">
+                              This pool uses {budgetToken?.symbol} to buy {conversionRewards.join(', ')} through
+                              approved routes. Reward shares split the budget across the selected tokens.
+                            </V3Muted>
+                          )}
                           {fundingSource === 'treasury' && (
                             <>
                               <V3Field>
@@ -869,7 +961,11 @@ export default function V3Studio({
                         </>
                       )}
                       <V3Button type="button" disabled={locked} onClick={() => void review()}>
-                        {reviewing ? 'Checking on-chain routes…' : 'Review pool plan'}
+                        {reviewing
+                          ? directFunding
+                            ? 'Checking Treasury balances…'
+                            : 'Checking on-chain routes…'
+                          : 'Review pool plan'}
                       </V3Button>
                       {reviewError && (
                         <V3Error tabIndex={-1} ref={summary} role="alert">
@@ -879,7 +975,33 @@ export default function V3Studio({
                     </>
                   }
                 />
-                {preview && (
+                {preview?.kind === 'direct' && (
+                  <V3Card>
+                    <div>
+                      <h2 ref={reviewHeading} tabIndex={-1}>
+                        Review direct Treasury rewards
+                      </h2>
+                      <V3Muted>
+                        The following amounts enter the pool’s reward inventory when it is created. Your wallet pays the
+                        network fee.
+                      </V3Muted>
+                      <V3Metrics>
+                        {preview.rewards.map(({ token, symbol, cap, decimals }) => (
+                          <div key={token}>
+                            <dt>{symbol} reserved reward</dt>
+                            <dd>
+                              {formatUnits(cap, decimals)} {symbol}
+                            </dd>
+                          </div>
+                        ))}
+                      </V3Metrics>
+                      <V3Button type="button" disabled={locked || !writeAllowed} onClick={() => void create()}>
+                        Create pool and reserve rewards
+                      </V3Button>
+                    </div>
+                  </V3Card>
+                )}
+                {preview?.kind === 'purchase' && (
                   <V3Card>
                     <div>
                       <h2 ref={reviewHeading} tabIndex={-1}>
@@ -945,7 +1067,10 @@ export default function V3Studio({
                       {preview.strategyNote && <V3Muted>Adaptive purchases selected · {preview.strategyNote}</V3Muted>}
                       <V3Button type="button" disabled={locked || !writeAllowed} onClick={() => void create()}>
                         {preview.treasuryFunded
-                          ? `Create pool and reserve ${formatUnits(preview.funding.budget, preview.fundingAsset.decimals)} ${preview.fundingAsset.symbol} from Treasury`
+                          ? `Create pool and reserve ${formatUnits(
+                              preview.funding.budget,
+                              preview.fundingAsset.decimals,
+                            )} ${preview.fundingAsset.symbol} from Treasury`
                           : 'Create V3 pool'}
                       </V3Button>
                     </div>
@@ -954,7 +1079,13 @@ export default function V3Studio({
               </>
             )}
             {mode !== 'dashboard' && (
-              <TransactionFeedback transaction={transaction} onReceipt={confirmCreated} deployment={deployment} />
+              <TransactionFeedback
+                transaction={transaction}
+                onReceipt={confirmCreated}
+                deployment={deployment}
+                client={client}
+                getWallet={getWallet}
+              />
             )}
             {typeof mode === 'bigint' && account && (
               <>
@@ -974,7 +1105,16 @@ export default function V3Studio({
                   Preview={Preview}
                   renderFunding={(pool) =>
                     pool.funding.asset === zeroAddress ? (
-                      <V3Muted>This pool uses direct reward deposits.</V3Muted>
+                      <V3Metrics aria-label="Direct reward inventory">
+                        {pool.rewards.map(({ token, symbol, inventory, decimals }) => (
+                          <div key={token}>
+                            <dt>{symbol} reward inventory</dt>
+                            <dd>
+                              {shortAmount(inventory, decimals)} {symbol}
+                            </dd>
+                          </div>
+                        ))}
+                      </V3Metrics>
                     ) : (
                       <FundingPanel
                         client={client}

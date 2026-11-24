@@ -97,6 +97,13 @@ function injectedWallet(account, node, announceProvider, initialChain) {
       })
       const result = await response.json()
       if (result.error) throw Object.assign(new Error(result.error.message), result.error)
+      if (method === 'eth_getBlockByNumber' && params[0] === 'latest' && window.__nextV3WalletForkAhead && result.result) {
+        return {
+          ...result.result,
+          number: '0x' + (BigInt(result.result.number) + 35n).toString(16),
+          hash: '0x' + '01'.repeat(32),
+        }
+      }
       if (method === 'eth_getBlockByNumber' && window.__nextV3DifferentFork && result.result) {
         return { ...result.result, hash: '0x' + '00'.repeat(32) }
       }
@@ -1022,6 +1029,11 @@ async function testBrowser() {
       await click('form[aria-label="Manage available treasury assets"] button', 'Deposit')
       await has('Confirmed on the settlement network.')
       assert.equal((await available()).available, parseEther('100'))
+      await wait('confirmed deposit updates the displayed Treasury balance', () =>
+        document.querySelector('form[aria-label="Manage available treasury assets"]')?.innerText.includes('100 V3R') ||
+        [...document.querySelectorAll('[aria-label="Treasury balances by asset"] tbody tr')].some((row) =>
+          row.querySelector('th')?.textContent.includes('V3R') && row.querySelector('td')?.textContent.trim() === '100'),
+      )
       await openStudio()
       await click('button', 'New pool')
       await editPoolName('Treasury lifetime pool')
@@ -1068,9 +1080,21 @@ async function testBrowser() {
       await click('button', 'Treasury')
       if (fixture.version === '3.6') await click('[role="tab"]', 'Withdraw')
       await field('treasury-amount', '20')
+      await evalPage(() => { window.__nextV3WalletForkAhead = true })
+      await click('button', 'Withdraw available')
+      await has('is not part of this preview’s chain.')
+      assert.deepEqual(await available(), reserved, 'A wallet on a descendant fork must never submit the withdrawal')
+      await evalPage(() => { window.__nextV3WalletForkAhead = false })
+      await click('button', 'Check wallet RPC')
+      await has('Wallet RPC verified. Retry your transaction.')
       await click('button', 'Withdraw available')
       await has('Confirmed on the settlement network.')
       assert.equal((await available()).available, parseEther('70'))
+      await wait('confirmed withdrawal updates the displayed Treasury balance', () =>
+        [...document.querySelectorAll('[aria-label="Treasury balances by asset"] tbody tr')].some((row) =>
+          row.querySelector('th')?.textContent.includes('V3R') && row.querySelector('td')?.textContent.trim() === '70'),
+      )
+      await has('Transaction hash')
       if (secret) {
         const createdV31 = await readBatchPool('poolCount')
         let funding = await tick()

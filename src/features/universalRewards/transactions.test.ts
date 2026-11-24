@@ -1,5 +1,52 @@
-import { toFunctionSelector, zeroAddress } from 'viem'
-import { describeV3Error, withV3GasHeadroom } from './transactions'
+import { createWalletClient, custom, toFunctionSelector, toHex, zeroAddress, zeroHash } from 'viem'
+import { assertLocalFork, describeV3Error, withV3GasHeadroom } from './transactions'
+import type { V3Client } from './runtime'
+
+const sharedHash = toHex(1, { size: 32 })
+const nextHash = toHex(2, { size: 32 })
+
+function forkRead(head: number, headHash: `0x${string}`, latestOnApp?: { number: bigint; hash: `0x${string}` }) {
+  const wallet = createWalletClient({
+    transport: custom({
+      async request({ params }) {
+        if (params?.[0] === 'latest') return { number: toHex(head), hash: headHash, transactions: [] }
+        return { number: '0xed', hash: sharedHash, transactions: [] }
+      },
+    }),
+  })
+  const appGetBlock = jest.fn(async (options?: { blockNumber?: bigint }) => {
+    if (options?.blockNumber !== undefined) {
+      if (latestOnApp?.number === options.blockNumber) return latestOnApp
+      throw new Error('Block not found')
+    }
+    return { number: BigInt(237), hash: sharedHash }
+  })
+  return { wallet, client: { getBlock: appGetBlock } as unknown as V3Client, appGetBlock }
+}
+
+it('rejects a wallet fork that shares the preview head but has mined its own blocks', async () => {
+  const { wallet, client, appGetBlock } = forkRead(272, nextHash)
+  await expect(assertLocalFork(wallet, client)).rejects.toThrow('Wallet block 272 is not part of this preview’s chain.')
+  expect(appGetBlock).toHaveBeenCalledWith({ blockNumber: BigInt(272) })
+})
+
+it('accepts a wallet when the preview recognizes a block mined concurrently', async () => {
+  const { wallet, client } = forkRead(238, nextHash, { number: BigInt(238), hash: nextHash })
+  await expect(assertLocalFork(wallet, client)).resolves.toBeUndefined()
+})
+
+it.each([
+  [236, sharedHash, 'Your wallet reports block 236'],
+  [237, zeroHash, 'Wallet block 237 is not part of this preview’s chain.'],
+] as const)('rejects an out-of-sync head at block %s', async (head, hash, message) => {
+  const { wallet, client } = forkRead(head, hash)
+  await expect(assertLocalFork(wallet, client)).rejects.toThrow(message)
+})
+
+it('accepts a wallet reporting the same current preview block', async () => {
+  const { wallet, client } = forkRead(237, sharedHash)
+  await expect(assertLocalFork(wallet, client)).resolves.toBeUndefined()
+})
 
 it.each([
   new Error('The requested method and/or account has not been authorized by the user.'),

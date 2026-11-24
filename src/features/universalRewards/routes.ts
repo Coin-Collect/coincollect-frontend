@@ -4,6 +4,8 @@ import { isV3MissingSelector, type V3Client } from './runtime'
 
 const ZERO = BigInt(0)
 
+export class V3MissingRouteError extends Error {}
+
 export interface V3SwapLeg {
   adapter: Address
   input: Address
@@ -75,7 +77,7 @@ export async function quoteV3Route(
   blockNumber?: bigint,
 ) {
   if (input.toLowerCase() === output.toLowerCase()) return { quoted: amount, minimum: amount, hops: 0 }
-  if (swap === zeroAddress) throw new Error('No approved swap adapter is configured.')
+  if (swap === zeroAddress) throw new V3MissingRouteError('No approved swap adapter is configured.')
   const options = await readV3RouteOptions(client, swap, input, output, blockNumber)
   const leafQuote = (leg: V3SwapLeg, value: bigint) =>
     client.readContract({
@@ -93,7 +95,7 @@ export async function quoteV3Route(
       throw new Error(v3RouteFailure(error))
     }
   }
-  if (!options.some(({ enabled }) => enabled)) throw new Error('No approved path connects these tokens.')
+  if (!options.some(({ enabled }) => enabled)) throw new V3MissingRouteError('No approved path connects these tokens.')
   try {
     const [index, quoted, minimum] = await client.readContract({
       address: swap,

@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { shortAmount } from './presentation'
-import type { V3Preview } from './studio'
+import type { V3PurchasePreview } from './studio'
 import { V3Metrics, V3Muted } from './styles'
 
 const TableRegion = styled.div`
@@ -33,7 +33,7 @@ const WarningList = styled.ul`
   list-style: disc;
 `
 
-export default function V3EconomicPreflight({ preview }: { preview: V3Preview }) {
+export default function V3EconomicPreflight({ preview }: { preview: V3PurchasePreview }) {
   const { economics, fundingAsset, funding } = preview
   const fundingAmount = (amount: bigint) => `${shortAmount(amount, fundingAsset.decimals)} ${fundingAsset.symbol}`
   const fee = (pol?: bigint, equivalent?: bigint) => {

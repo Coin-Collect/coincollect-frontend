@@ -7,6 +7,9 @@ const { randomBytes } = require('node:crypto')
 const { writeFileSync, mkdtempSync, openSync, closeSync, readFileSync, rmSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const path = require('node:path')
+const { refuseFixtureEnvironment } = require('./local-test-environment.cjs')
+
+refuseFixtureEnvironment()
 
 const project = process.argv[2]
 if (!project) throw new Error('Usage: node scripts/run-v3-browser-acceptance.cjs <Universal Rewards Solidity project>')

@@ -7,6 +7,7 @@ const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('fs')
 const path = require('path')
 const { randomUUID } = require('crypto')
 const { Contract, ContractFactory, providers, utils } = require('ethers')
+const { printProtectedStatus, readProtectedEnvironment, refuseFixtureEnvironment } = require('../local-test-environment.cjs')
 
 const ROOT = path.resolve(__dirname, '../..')
 const TOOL_DIR = __dirname
@@ -933,6 +934,9 @@ async function runForkTest() {
 
 async function main() {
   const command = process.argv[2]
+  const protectedEnvironment = readProtectedEnvironment()
+  if (protectedEnvironment && command === 'status') return printProtectedStatus(protectedEnvironment)
+  refuseFixtureEnvironment(protectedEnvironment)
   if (command === 'start') return startFork()
   if (command === 'seed') return seedFork()
   if (command === 'status') return printStatus()

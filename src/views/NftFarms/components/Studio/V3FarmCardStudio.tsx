@@ -126,6 +126,7 @@ export default function V3FarmCardStudio({
   const funding = assets.find(
     (asset) => asset.canDeposit && asset.address.toLowerCase() === draft.fundAsset.toLowerCase(),
   )
+  const directFunding = draft.fundingSource === 'direct'
   const hasSwap = !isAddressEqual(studio.swap, zeroAddress)
   const hasRemote =
     (studio.managedCollections && deployment.chainId === 31337) || !isAddressEqual(studio.verifier, zeroAddress)
@@ -208,14 +209,21 @@ export default function V3FarmCardStudio({
   }, [knownCollections.data])
 
   const previewAmounts = useMemo(() => {
-    if (!funding || funding.decimals === null || !Number.isInteger(duration) || duration <= 0 || duration > 1460)
+    if (
+      directFunding ||
+      !funding ||
+      funding.decimals === null ||
+      !Number.isInteger(duration) ||
+      duration <= 0 ||
+      duration > 1460
+    )
       return undefined
     try {
       return parseV3Amount(draft.budget, funding.decimals, 'funding budget')
     } catch {
       return undefined
     }
-  }, [draft.budget, duration, funding])
+  }, [directFunding, draft.budget, duration, funding])
 
   useEffect(() => {
     if (
@@ -263,6 +271,17 @@ export default function V3FarmCardStudio({
   }, [client, draft.rewards, duration, funding, hasSwap, interval, previewAmounts, quoteKey, studio])
 
   const amountPerDay = (address: Address, share: number) => {
+    if (directFunding) {
+      const reward = assetFor(address)
+      const amount = draft.directRewardAmounts?.[address.toLowerCase()]
+      if (!amount || !reward || reward.decimals === null || !Number.isInteger(duration) || duration <= 0)
+        return undefined
+      try {
+        return shortAmount(parseV3Amount(amount, reward.decimals, 'reward amount') / BigInt(duration), reward.decimals)
+      } catch {
+        return undefined
+      }
+    }
     if (!funding || funding.decimals === null || !previewAmounts) return undefined
     if (isAddressEqual(funding.address, address)) {
       return shortAmount((previewAmounts * BigInt(share)) / BigInt(10000) / BigInt(duration), funding.decimals)
@@ -277,7 +296,7 @@ export default function V3FarmCardStudio({
         token: reward.symbol,
         tokenMeta: { address: reward.address, symbol: reward.symbol },
         primary: index === 0,
-        amount: amountPerDay(reward.address, shares[index]) ?? `${sharePercent}%`,
+        amount: amountPerDay(reward.address, shares[index]) ?? (directFunding ? '—' : `${sharePercent}%`),
       },
     ]
   })
@@ -664,7 +683,7 @@ export default function V3FarmCardStudio({
                   const disabled =
                     !selected &&
                     (draft.rewards.length >= 4 ||
-                      (!hasSwap && !!funding && !isAddressEqual(funding.address, asset.address)))
+                      (!directFunding && !hasSwap && !!funding && !isAddressEqual(funding.address, asset.address)))
                   return (
                     <AssetChoice
                       key={asset.address}
@@ -673,8 +692,8 @@ export default function V3FarmCardStudio({
                       aria-pressed={selected}
                       disabled={disabled}
                       onClick={() => {
-                        if (!funding && !selected && asset.canDeposit) setFunding(asset.address)
-                        if (funding || hasSwap) toggleReward(asset.address)
+                        if (!directFunding && !funding && !selected && asset.canDeposit) setFunding(asset.address)
+                        if (directFunding || funding || hasSwap) toggleReward(asset.address)
                       }}
                     >
                       <RewardTokenIcon token={asset.symbol} tokenMeta={asset} size={30} />
@@ -686,8 +705,10 @@ export default function V3FarmCardStudio({
                   )
                 })}
             </EditorGrid>
-            {!hasSwap && <V3Muted>This deployment funds rewards in the same token as the budget.</V3Muted>}
-            {draft.rewards.length > 0 && (
+            {!directFunding && !hasSwap && (
+              <V3Muted>This deployment funds rewards in the same token as the budget.</V3Muted>
+            )}
+            {!directFunding && draft.rewards.length > 0 && (
               <>
                 <Distribution aria-hidden="true">
                   {shares.map((share, index) => (
@@ -708,70 +729,71 @@ export default function V3FarmCardStudio({
                 </V3Actions>
               </>
             )}
-            {draft.rewards.map(({ address, sharePercent }, index) => {
-              const reward = assetFor(address)
-              if (!reward) return null
-              const allocation =
-                funding && funding.decimals !== null && previewAmounts
-                  ? shortAmount((previewAmounts * BigInt(shares[index])) / BigInt(10000), funding.decimals)
-                  : undefined
-              const daily = amountPerDay(reward.address, shares[index])
-              return (
-                <RewardLane key={address}>
-                  <Flex justifyContent="space-between" alignItems="center" style={{ gap: 10 }}>
-                    <label htmlFor={draft.rewards.length > 1 ? `studio-share-${index}` : `studio-percent-${index}`}>
-                      <Flex as="span" alignItems="center" style={{ gap: 6 }}>
-                        <RewardTokenIcon token={reward.symbol} tokenMeta={reward} size={20} />
-                        {reward.symbol} share
+            {!directFunding &&
+              draft.rewards.map(({ address, sharePercent }, index) => {
+                const reward = assetFor(address)
+                if (!reward) return null
+                const allocation =
+                  funding && funding.decimals !== null && previewAmounts
+                    ? shortAmount((previewAmounts * BigInt(shares[index])) / BigInt(10000), funding.decimals)
+                    : undefined
+                const daily = amountPerDay(reward.address, shares[index])
+                return (
+                  <RewardLane key={address}>
+                    <Flex justifyContent="space-between" alignItems="center" style={{ gap: 10 }}>
+                      <label htmlFor={draft.rewards.length > 1 ? `studio-share-${index}` : `studio-percent-${index}`}>
+                        <Flex as="span" alignItems="center" style={{ gap: 6 }}>
+                          <RewardTokenIcon token={reward.symbol} tokenMeta={reward} size={20} />
+                          {reward.symbol} share
+                        </Flex>
+                      </label>
+                      <Flex alignItems="center" style={{ gap: 5 }}>
+                        <ShareInput
+                          id={`studio-percent-${index}`}
+                          type="text"
+                          inputMode="decimal"
+                          aria-label={`${reward.symbol} percentage`}
+                          value={shareEntry?.address === address ? shareEntry.text : sharePercent}
+                          disabled={draft.rewards.length === 1}
+                          onChange={(event) => setShareEntry({ address, text: event.target.value })}
+                          onBlur={() => {
+                            if (shareEntry?.address === address && /^\d{1,3}(\.\d{0,2})?$/.test(shareEntry.text))
+                              setShare(index, Number(shareEntry.text) * 100)
+                            setShareEntry(undefined)
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') event.currentTarget.blur()
+                          }}
+                        />
+                        <span>%</span>
                       </Flex>
-                    </label>
-                    <Flex alignItems="center" style={{ gap: 5 }}>
-                      <ShareInput
-                        id={`studio-percent-${index}`}
-                        type="text"
-                        inputMode="decimal"
-                        aria-label={`${reward.symbol} percentage`}
-                        value={shareEntry?.address === address ? shareEntry.text : sharePercent}
-                        disabled={draft.rewards.length === 1}
-                        onChange={(event) => setShareEntry({ address, text: event.target.value })}
-                        onBlur={() => {
-                          if (shareEntry?.address === address && /^\d{1,3}(\.\d{0,2})?$/.test(shareEntry.text))
-                            setShare(index, Number(shareEntry.text) * 100)
-                          setShareEntry(undefined)
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') event.currentTarget.blur()
-                        }}
-                      />
-                      <span>%</span>
                     </Flex>
-                  </Flex>
-                  {draft.rewards.length > 1 && (
-                    <input
-                      id={`studio-share-${index}`}
-                      name={`reward-share-${index}`}
-                      type="range"
-                      min={1}
-                      max={10000 - draft.rewards.length + 1}
-                      step={1}
-                      value={shares[index]}
-                      aria-valuetext={`${sharePercent}%`}
-                      style={{ '--reward-share': `${sharePercent}%` } as CSSProperties}
-                      onChange={(event) => setShare(index, Number(event.target.value))}
-                    />
-                  )}
-                  <small>
-                    {allocation !== undefined
-                      ? `${allocation} ${funding?.symbol} allocated`
-                      : 'Set a budget to calculate the allocation'}
-                    {daily !== undefined && ` · ${daily} ${reward.symbol} / day`}
-                  </small>
-                  {allocation && daily === undefined && quote?.key === quoteKey && (
-                    <V3Muted>Quote unavailable for the current tranche.</V3Muted>
-                  )}
-                </RewardLane>
-              )
-            })}
+                    {draft.rewards.length > 1 && (
+                      <input
+                        id={`studio-share-${index}`}
+                        name={`reward-share-${index}`}
+                        type="range"
+                        min={1}
+                        max={10000 - draft.rewards.length + 1}
+                        step={1}
+                        value={shares[index]}
+                        aria-valuetext={`${sharePercent}%`}
+                        style={{ '--reward-share': `${sharePercent}%` } as CSSProperties}
+                        onChange={(event) => setShare(index, Number(event.target.value))}
+                      />
+                    )}
+                    <small>
+                      {allocation !== undefined
+                        ? `${allocation} ${funding?.symbol} allocated`
+                        : 'Set a budget to calculate the allocation'}
+                      {daily !== undefined && ` · ${daily} ${reward.symbol} / day`}
+                    </small>
+                    {allocation && daily === undefined && quote?.key === quoteKey && (
+                      <V3Muted>Quote unavailable for the current tranche.</V3Muted>
+                    )}
+                  </RewardLane>
+                )
+              })}
           </>
         )
       case 'schedule':
@@ -815,17 +837,19 @@ export default function V3FarmCardStudio({
                   onChange={(event) => onChange({ durationDays: event.target.value })}
                 />
               </V3Field>
-              <V3Field>
-                Replenish every (hours)
-                <input
-                  type="number"
-                  min={1}
-                  max={Math.min(720, duration * 24) || 720}
-                  name="interval-hours"
-                  value={draft.intervalHours}
-                  onChange={(event) => onChange({ intervalHours: event.target.value })}
-                />
-              </V3Field>
+              {!directFunding && (
+                <V3Field>
+                  Replenish every (hours)
+                  <input
+                    type="number"
+                    min={1}
+                    max={Math.min(720, duration * 24) || 720}
+                    name="interval-hours"
+                    value={draft.intervalHours}
+                    onChange={(event) => onChange({ intervalHours: event.target.value })}
+                  />
+                </V3Field>
+              )}
             </EditorGrid>
           </>
         )
@@ -962,9 +986,13 @@ export default function V3FarmCardStudio({
               width="100%"
               variant="primary"
               disabled={locked}
-              onClick={() => open('budget')}
+              onClick={() => open(directFunding ? 'rewards' : 'budget')}
             >
-              {draft.budget && funding ? `Budget · ${budgetText}` : 'Set funding budget'}
+              {directFunding
+                ? 'Edit direct rewards'
+                : draft.budget && funding
+                ? `Budget · ${budgetText}`
+                : 'Set funding budget'}
             </StyledActionButton>
           </Action>
         </NftFarmCardLayout>
@@ -979,7 +1007,7 @@ export default function V3FarmCardStudio({
           'collections',
         )}
         {row('Reward tokens', chips.length ? chips.map(({ token }) => token).join(', ') : 'Add rewards', 'rewards')}
-        {row('Funding budget', funding && draft.budget ? budgetText : 'Set budget', 'budget')}
+        {!directFunding && row('Funding budget', funding && draft.budget ? budgetText : 'Set budget', 'budget')}
         {row(
           'Schedule',
           draft.startLocal ? `${scheduleText} · ${draft.durationDays} days` : 'Choose a start',
