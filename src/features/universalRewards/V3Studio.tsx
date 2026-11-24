@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -598,15 +599,17 @@ export default function V3Studio(props: V3StudioProps) {
   const deployments = useMemo(getV3Deployments, [])
   const [selected, setSelected] = useState<string>()
   const chooser = useRef<HTMLSelectElement>(null)
+  const deploymentLabel = useId()
   const deployment = selected === undefined
     ? deployments.find((entry) => entry.primary || entry.id === undefined)
     : deployments.find((entry) => entry.id === selected)
   const deploymentChooser = deployments.length > 1 && (
     <V3Field>
-      Deployment
+      <span id={deploymentLabel}>Deployment</span>
       <select
         ref={chooser}
         name="deployment"
+        aria-labelledby={deploymentLabel}
         value={deployment?.id}
         onChange={(event) => {
           setSelected(event.target.value)

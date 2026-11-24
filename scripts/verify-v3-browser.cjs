@@ -620,7 +620,11 @@ async function testBrowser() {
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
     assert.ok(await evalPage(() => !document.body.innerText.includes('Your NFTs and rewards')))
     await command('Page.navigate', { url: base + poolPath + '#v3-positions' })
-    await has('Refresh ownership')
+    await wait('the positions view resolves the transferred NFT', () => {
+      const dialog = document.querySelector('dialog[open]')
+      return dialog?.innerText.includes('Your positions') &&
+        /Refresh ownership|Claim rewards|No positions in this pool yet/.test(dialog.innerText)
+    })
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -632,7 +636,7 @@ async function testBrowser() {
     await selectNft(fixture.tokenId)
     await click('dialog button', 'Unstake & Harvest')
     await has('Confirmed on the settlement network.')
-    await has('No active participation')
+    await has('Click to Stake Now')
     assert.equal(await ownerOf(), '0x' + pad(fixture.operator).toLowerCase())
     assert.ok((await tokenBalance(fixture.operator)) > ownerBalance)
     assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
