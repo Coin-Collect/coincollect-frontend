@@ -1505,7 +1505,9 @@ async function testBrowser() {
       })
       await field('collection-address', fixture.nft)
       await click('dialog button', 'Add collection')
+      await has('Polygon ERC-721 · direct ownership check')
       await click('dialog button', 'Done')
+      await has('1 included')
       await wait('open reward token editor', () => {
         const button = [...document.querySelectorAll('button')].find((entry) => entry.textContent.trim().startsWith('Reward tokens'))
         if (!button) return false
@@ -1519,6 +1521,7 @@ async function testBrowser() {
         return true
       })
       await click('dialog button', 'Done')
+      await wait('direct rewards dialog closes', () => !document.querySelector('dialog[open]'))
       await field('direct-amount-' + fixture.dynamic.stable.toLowerCase(), '0.01')
       await click('button', 'Review pool plan')
       await has('On pool creation')
