@@ -207,6 +207,10 @@ export default function V3NftActionModal({
   const selectionLimit = batchExit ? pool.batchLimit : 32
   const overLimit =
     selectedNfts.length > selectionLimit || (mode === 'stake' && currentCount + selectedNfts.length > max)
+  const unstakeChoices = mode === 'unstake' ? options.data?.choices ?? [] : []
+  const unselectedChoices = unstakeChoices.filter(({ ref }) => !selected[nftRefKey(ref)])
+  const canSelectVisible =
+    batchExit && unselectedChoices.length > 0 && selectedNfts.length + unselectedChoices.length <= selectionLimit
   const addToken = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!/^\d{1,78}$/.test(typedId) || BigInt(typedId) > UINT256_MAX) {
@@ -495,6 +499,37 @@ export default function V3NftActionModal({
             )}
             {mode === 'unstake' && (
               <>
+                {batchExit && unstakeChoices.length > 1 && (
+                  <Flex flexWrap="wrap" style={{ gap: 8 }}>
+                    <Button
+                      type="button"
+                      scale="sm"
+                      variant="secondary"
+                      disabled={!canSelectVisible || pending || options.loading || action.unconfirmed}
+                      onClick={() =>
+                        setSelected((previous) => ({
+                          ...previous,
+                          ...Object.fromEntries(unstakeChoices.map((choice) => [nftRefKey(choice.ref), choice])),
+                        }))
+                      }
+                    >
+                      {t(
+                        options.data?.total === BigInt(unstakeChoices.length) ? 'Select all NFTs' : 'Select this page',
+                      )}
+                    </Button>
+                    {selectedNfts.length > 0 && (
+                      <Button
+                        type="button"
+                        scale="sm"
+                        variant="text"
+                        disabled={pending || action.unconfirmed}
+                        onClick={() => setSelected({})}
+                      >
+                        {t('Clear selection')}
+                      </Button>
+                    )}
+                  </Flex>
+                )}
                 {selectedNfts.length > selectionLimit && (
                   <Text small color="failure" role="alert">
                     {t('Select up to %count% NFTs per batch.', { count: selectionLimit })}
@@ -505,17 +540,19 @@ export default function V3NftActionModal({
                     'You receive the available rewards for the NFTs you select. These NFTs stop earning in this pool.',
                   )}
                 </Text>
-                {selectedNfts.length > 0 && (
-                  <Text small role="status">
-                    {t('%count% NFTs selected', { count: selectedNfts.length })} ·{' '}
-                    {pool.rewards
-                      .map((reward, index) => {
-                        const amount = selectedNfts.reduce((sum, choice) => sum + choice.claimable[index], ZERO)
-                        return `${shortAmount(amount, reward.decimals)} ${reward.symbol}`
-                      })
-                      .join(' · ')}
-                  </Text>
-                )}
+                <Text small role="status">
+                  {selectedNfts.length > 0 && (
+                    <>
+                      {t('%count% NFTs selected', { count: selectedNfts.length })} ·{' '}
+                      {pool.rewards
+                        .map((reward, index) => {
+                          const amount = selectedNfts.reduce((sum, choice) => sum + choice.claimable[index], ZERO)
+                          return `${shortAmount(amount, reward.decimals)} ${reward.symbol}`
+                        })
+                        .join(' · ')}
+                    </>
+                  )}
+                </Text>
                 {selectedNfts.length > 1 && (
                   <Text small color="textSubtle">
                     {batchExit
@@ -561,7 +598,7 @@ export default function V3NftActionModal({
                 disabled={pending}
                 onClick={async () => {
                   if (await action.recheck()) {
-                    if (mode === 'stake' || selectedNfts.length <= 1) done()
+                    if (mode === 'stake' || batchExit || selectedNfts.length <= 1) done()
                     else {
                       onSuccess()
                       options.refresh()

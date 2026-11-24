@@ -1,4 +1,5 @@
 import {
+  decodeFunctionData,
   encodeFunctionData,
   isAddressEqual,
   parseEventLogs,
@@ -10,16 +11,16 @@ import {
 import { getBlock } from 'viem/actions'
 import { isLocalForkMode } from 'config/localFork'
 import { universalRewardsAbi } from './abi'
-import { allowsLocalPositionBatch, localPositionBatchAbi } from './localPositionBatch'
+import { positionBatchAbi } from './positionBatch'
 import { erc20Abi, type NftRef } from './reader'
-import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { readV3BatchLimit, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
 const expiredClaimError = toFunctionSelector('ClaimPeriodEnded()')
 const openClaimError = toFunctionSelector('ClaimPeriodOpen()')
 export const localRpcMismatch = 'Your wallet is connected to a different or behind local RPC.'
 const individualConfirmations = 'This deployment uses individual NFT confirmations for Harvest and Unstake.'
-const positionBatchSelectors = ['claimBatch', 'exitBatch'].map((name) =>
-  toFunctionSelector(`${name}(uint256,(uint256,address,uint256)[])`),
+const positionBatchSelectors = new Set(
+  ['claimBatch', 'exitBatch'].map((name) => toFunctionSelector(`${name}(uint256,(uint256,address,uint256)[])`)),
 )
 const payoutSelectors = new Set<string>([
   toFunctionSelector('claim(uint256,uint256,address,uint256)'),
@@ -34,13 +35,18 @@ export interface V3Call {
 }
 
 export function withV3GasHeadroom(estimate: bigint, execution?: { ledger: Address; call: V3Call }) {
-  // A quote immediately after Harvest may estimate the no-payout branch. The mined block
-  // can accrue rewards and execute up to four ERC-20 payments before the next estimate.
-  const canStartPayout =
-    execution &&
-    isAddressEqual(execution.call.to, execution.ledger) &&
-    payoutSelectors.has(execution.call.data.slice(0, 10))
-  return estimate + estimate / BigInt(5) + BigInt(canStartPayout ? 175_000 : 25_000)
+  // Rewards can accrue between the estimate and the mined block and add ERC-20 transfers.
+  const positions = execution ? payoutPositions(execution.ledger, execution.call) : 0
+  return estimate + estimate / BigInt(5) + BigInt(25_000 + positions * 150_000)
+}
+
+function payoutPositions(ledger: Address, call: V3Call) {
+  if (!isAddressEqual(call.to, ledger)) return 0
+  const selector = call.data.slice(0, 10) as Hex
+  if (payoutSelectors.has(selector)) return 1
+  if (!positionBatchSelectors.has(selector)) return 0
+  const { args } = decodeFunctionData({ abi: positionBatchAbi, data: call.data })
+  return args?.[1]?.length ?? 0
 }
 
 async function assertWallet(wallet: WalletClient, account: Address, deployment: V3Deployment) {
@@ -78,13 +84,10 @@ export async function sendV3Call(
   account: Address,
   call: V3Call,
 ) {
-  const isPositionBatch =
-    isAddressEqual(call.to, deployment.address) &&
-    positionBatchSelectors.some((selector) => call.data.startsWith(selector))
-  if (isPositionBatch && !allowsLocalPositionBatch(deployment)) {
-    throw new Error(individualConfirmations)
-  }
   await Promise.all([validateV3Deployment(client, deployment), assertWallet(wallet, account, deployment)])
+  if (isAddressEqual(call.to, deployment.address) && positionBatchSelectors.has(call.data.slice(0, 10) as Hex)) {
+    if (!(await readV3BatchLimit(client, deployment))) throw new Error(individualConfirmations)
+  }
   await client.call({ account, ...call })
   const gas = withV3GasHeadroom(await client.estimateGas({ account, ...call }), { ledger: deployment.address, call })
   const [balance, gasPrice] = await Promise.all([client.getBalance({ address: account }), client.getGasPrice()])
@@ -150,12 +153,9 @@ export function manageV3Positions(
   refs: readonly NftRef[],
   action: 'claimBatch' | 'exitBatch',
 ): V3Call {
-  if (!allowsLocalPositionBatch(deployment)) {
-    throw new Error(individualConfirmations)
-  }
   return {
     to: deployment.address,
-    data: encodeFunctionData({ abi: localPositionBatchAbi, functionName: action, args: [poolId, refs] }),
+    data: encodeFunctionData({ abi: positionBatchAbi, functionName: action, args: [poolId, refs] }),
   }
 }
 

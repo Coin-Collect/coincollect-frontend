@@ -29,7 +29,7 @@ import { FarmCardEarned, FarmCardStakedPosition } from './PositionPanels'
 import { useV3Action, useV3Query, useV3Wallet } from 'features/universalRewards/hooks'
 import { MAX_V3_PAGE, readV3CardPosition } from 'features/universalRewards/reader'
 import { createV3Client } from 'features/universalRewards/runtime'
-import { manageV3Position, manageV3Positions } from 'features/universalRewards/transactions'
+import { manageV3Position, manageV3Positions, type V3Call } from 'features/universalRewards/transactions'
 import { V3Button } from 'features/universalRewards/styles'
 import V3NftActionModal, { type V3NftActionMode } from './V3NftActionModal'
 
@@ -181,16 +181,20 @@ export default function V3FarmCard({
       if (isV3ClaimExpired(pool, fresh.timestamp)) throw new Error(t('Claim period ended'))
       if (!fresh.claimableNfts.length) throw new Error(t('No rewards are currently available to harvest.'))
       if (batchHarvest) {
-        if (fresh.claimableNfts.length > pool.batchLimit) {
-          throw new Error(t('This pool has more than %count% claimable positions. Use the individual claims in pool details.', {
-            count: pool.batchLimit,
-          }))
+        const calls: (V3Call & { confirmationLabel: string })[] = []
+        for (let offset = 0; offset < fresh.claimableNfts.length; offset += pool.batchLimit) {
+          const refs = fresh.claimableNfts.slice(offset, offset + pool.batchLimit)
+          const rewards = pool.rewards.filter((_, index) => refs.some(({ claimable }) => claimable[index] > BigInt(0)))
+          calls.push({
+            ...manageV3Positions(deployment, pool.poolId, refs, 'claimBatch'),
+            confirmationLabel: [
+              t('Harvest'),
+              t('%count% NFT positions', { count: refs.length }),
+              ...rewards.map(({ symbol }) => symbol),
+            ].join(' · '),
+          })
         }
-        const rewards = pool.rewards.filter((_, index) => fresh.amounts[index] > BigInt(0)).map(({ symbol }) => symbol)
-        return [{
-          ...manageV3Positions(deployment, pool.poolId, fresh.claimableNfts, 'claimBatch'),
-          confirmationLabel: `${t('Harvest')} · ${t('%count% NFT positions', { count: fresh.claimableNfts.length })} · ${rewards.join(' + ')}`,
-        }]
+        return calls
       }
       return fresh.claimableNfts.map((ref) => {
         const rewardSymbols = pool.rewards
@@ -347,15 +351,16 @@ export default function V3FarmCard({
             )}
             {batchHarvest && claimableNfts.length > 0 && (
               <Text small color="textSubtle" mt="8px" mb="8px">
-                {t('Harvest collects the available rewards across this pool in one wallet confirmation.')}
+                {t('Harvest collects all available rewards, with one wallet confirmation for up to %count% NFTs.', {
+                  count: pool.batchLimit,
+                })}
               </Text>
             )}
             {!batchHarvest && claimableNfts.length > 1 && (
               <Text small color="textSubtle" mt="8px" mb="8px">
-                {t(
-                  '%count% wallet confirmations, one per NFT. Each includes all available rewards for that NFT.',
-                  { count: claimableNfts.length },
-                )}
+                {t('%count% wallet confirmations, one per NFT. Each includes all available rewards for that NFT.', {
+                  count: claimableNfts.length,
+                })}
               </Text>
             )}
             {detail && batchHarvest && !claimsExpired && !claimableNfts.length && (

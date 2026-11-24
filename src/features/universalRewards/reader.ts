@@ -446,7 +446,7 @@ export async function readV3CardPosition(
     }
     total = nextTotal
     offset += BigInt(MAX_V3_PAGE)
-  } while (!indexed && offset < total && (!wholePool || claimableNfts.length <= pool.batchLimit))
+  } while (!indexed && offset < total)
 
   const recorded = indexed
     ? await client.readContract({ ...ledger, functionName: 'walletPositionStats', args: [pool.poolId, account] })
