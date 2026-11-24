@@ -8,7 +8,7 @@ import { universalRewardsAbi } from 'features/universalRewards/abi'
 import { preferStudioTokens, studioCollection, studioCollections } from 'features/universalRewards/assetCatalog'
 import RewardTokenIcon from '../FarmCard/RewardTokenIcon'
 import { useV3Query } from 'features/universalRewards/hooks'
-import { safeArtwork } from 'features/universalRewards/metadata'
+import { safeArtwork, v3PoolTypeLabels } from 'features/universalRewards/metadata'
 import { shortAmount } from 'features/universalRewards/presentation'
 import { adjustRewardShare, equalRewardShares } from 'features/universalRewards/rewardShares'
 import {
@@ -22,6 +22,7 @@ import type { V3StudioComposerProps } from 'features/universalRewards/V3Studio'
 import { Action, StyledActionButton } from '../FarmCard/CardActionsContainer'
 import CardHeadingWithBanner from '../FarmCard/CardHeadingWithBanner'
 import { NftFarmCardLayout } from '../FarmCard/FarmCard'
+import V3PoolTypeEditor from './V3PoolTypeEditor'
 import {
   AssetChoice,
   Choice,
@@ -106,6 +107,8 @@ export default function V3FarmCardStudio({
   launch,
 }: V3StudioComposerProps) {
   const [panel, setPanel] = useState<Panel>()
+  const [editingPoolType, setEditingPoolType] = useState(false)
+  const poolType = draft.poolType ?? 'community'
   const [editingName, setEditingName] = useState(false)
   const [title, setTitle] = useState('')
   const [artworkInput, setArtworkInput] = useState('')
@@ -920,7 +923,8 @@ export default function V3FarmCardStudio({
           heading={
             <CardHeadingWithBanner
               lpLabel={draft.name || 'Name your pool'}
-              isCommunity
+              isCommunity={poolType === 'community'}
+              onEditPoolType={locked ? undefined : () => setEditingPoolType(true)}
               publishedPool={{
                 banner: draft.artwork,
                 status: 'UPCOMING',
@@ -1001,6 +1005,13 @@ export default function V3FarmCardStudio({
       <Inspector aria-label="Pool setup">
         <h2>Pool setup</h2>
         <V3Muted>Click the card to edit. Check the plan before signing.</V3Muted>
+        <RowButton type="button" aria-haspopup="dialog" disabled={locked} onClick={() => setEditingPoolType(true)}>
+          <strong>Pool type</strong>
+          <Flex alignItems="center" style={{ gap: 6 }}>
+            <small>{v3PoolTypeLabels[poolType]}</small>
+            <ChevronRightIcon width="15px" color="textSubtle" />
+          </Flex>
+        </RowButton>
         {row(
           'Eligible NFTs',
           draft.collections.length ? `${draft.collections.length} included` : 'Add collections',
@@ -1016,6 +1027,14 @@ export default function V3FarmCardStudio({
         <Launch>{launch}</Launch>
       </Inspector>
 
+      {editingPoolType && (
+        <V3PoolTypeEditor
+          value={poolType}
+          action="Apply to draft"
+          onApply={(type) => onChange({ poolType: type })}
+          onClose={() => setEditingPoolType(false)}
+        />
+      )}
       {panel && (
         <StudioDialog
           key={panel}

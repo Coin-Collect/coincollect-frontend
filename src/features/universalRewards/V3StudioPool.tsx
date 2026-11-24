@@ -3,7 +3,7 @@ import { encodeFunctionData, zeroAddress, type Address } from 'viem'
 import { poolArtworkRegistry } from 'features/nftPoolManager/studio/artworkRegistry'
 import { managedNftCollectionAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
-import { safeArtwork, type V3Presentation } from './metadata'
+import { safeArtwork, v3PoolTypeLabels, type V3PoolType, type V3Presentation } from './metadata'
 import {
   emptyV3PresentationDocument,
   localPresentationMessage,
@@ -25,6 +25,7 @@ const ZERO = BigInt(0)
 export interface V3StudioPreviewProps {
   pool: V3PoolSnapshot
   deployment: V3Deployment
+  poolTypeEditor?: { action: string; help?: string; save: (type: V3PoolType) => void | Promise<void> }
 }
 
 const gallery = [
@@ -86,46 +87,52 @@ export default function V3StudioPool({
     setError('')
   }
 
+  const persistPresentation = async (value: V3Presentation, revision: string) => {
+    const presentation = validateV3Presentation(value)
+    const record = { poolId: poolId.toString(), ...presentation }
+    if (!local) {
+      const exportDocument = { ...emptyV3PresentationDocument(deployment), pools: [record] }
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(exportDocument, null, 2)], { type: 'application/json' }),
+      )
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = `v3-pool-${poolId}-presentation.json`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setMessage('Downloaded. Merge this pool’s entry into v3-pools.json to publish it.')
+      return
+    }
+    if (!getWallet || !writeAllowed) throw new Error('Connect the V3 operator wallet to the settlement network.')
+    const issuedAt = Date.now()
+    const wallet = await getWallet()
+    const signature = await wallet.signMessage({
+      account,
+      message: localPresentationMessage(deployment, record, revision, issuedAt),
+    })
+    const response = await fetch('/api/v3/presentation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...record, revision, issuedAt, signature, presentation }),
+    })
+    const body = await response.json()
+    if (!response.ok) {
+      if (response.status === 409) refreshPresentation()
+      throw new Error(body.error || 'Presentation could not be saved.')
+    }
+    setDocument(validateV3PresentationDocument(body, deployment))
+  }
+
   const save = async () => {
     if (!draft || busy || (local && (!getWallet || !writeAllowed))) return
     setBusy(true)
     setError('')
     setMessage('')
     try {
-      const presentation = validateV3Presentation(draft)
-      const record = { poolId: poolId.toString(), ...presentation }
+      await persistPresentation(draft, version)
       if (local) {
-        if (!getWallet) throw new Error('Connect the V3 operator wallet.')
-        const issuedAt = Date.now()
-        const wallet = await getWallet()
-        const signature = await wallet.signMessage({
-          account,
-          message: localPresentationMessage(deployment, record, version, issuedAt),
-        })
-        const response = await fetch('/api/v3/presentation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...record, revision: version, issuedAt, signature, presentation }),
-        })
-        const body = await response.json()
-        if (!response.ok) {
-          if (response.status === 409) refreshPresentation()
-          throw new Error(body.error || 'Presentation could not be saved.')
-        }
-        setDocument(validateV3PresentationDocument(body, deployment))
         setDraft(undefined)
         setMessage('Presentation saved. The local catalogue uses the updated FarmCard.')
-      } else {
-        const exportDocument = { ...emptyV3PresentationDocument(deployment), pools: [record] }
-        const url = URL.createObjectURL(
-          new Blob([JSON.stringify(exportDocument, null, 2)], { type: 'application/json' }),
-        )
-        const link = window.document.createElement('a')
-        link.href = url
-        link.download = `v3-pool-${poolId}-presentation.json`
-        link.click()
-        window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-        setMessage('Downloaded. Merge this pool’s entry into v3-pools.json to publish it.')
       }
     } catch (failure) {
       setError(describeV3Error(failure))
@@ -148,6 +155,16 @@ export default function V3StudioPool({
   }
   const expired = isV3ClaimExpired(pool)
   const claimMessage = claimPeriodMessage(pool)
+  const savePoolType = async (poolType: V3PoolType) => {
+    if (draft) {
+      setDraft({ ...draft, poolType })
+      return
+    }
+    setMessage('')
+    const revision = presentationRevision(document?.pools.find((row) => row.poolId === poolId.toString()))
+    await persistPresentation({ ...pool.presentation, poolType }, revision)
+    if (local) setMessage(`Pool type updated to ${v3PoolTypeLabels[poolType]}.`)
+  }
 
   return (
     <>
@@ -189,6 +206,19 @@ export default function V3StudioPool({
           {previewOpen && (
             <Preview
               deployment={deployment}
+              poolTypeEditor={
+                !busy && (!local || (getWallet && writeAllowed))
+                  ? {
+                      action: draft ? 'Apply to draft' : local ? 'Save pool type' : 'Download update',
+                      help: draft
+                        ? undefined
+                        : local
+                        ? 'Confirm the change with your operator wallet. The new badge will appear on the public pool.'
+                        : 'Publish the downloaded presentation entry to update the public pool badge.',
+                      save: savePoolType,
+                    }
+                  : undefined
+              }
               pool={
                 draft
                   ? {

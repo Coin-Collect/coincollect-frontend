@@ -1,21 +1,19 @@
-import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { mkdirSync, renameSync, unlinkSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
 import { randomBytes } from 'crypto'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { isHex, keccak256, stringToHex } from 'viem'
+import { isHex } from 'viem'
 import { universalRewardsAbi } from 'features/universalRewards/abi'
 import {
-  emptyV3PresentationDocument,
   localPresentationMessage,
-  localPresentationScope,
   MAX_PRESENTATION_BYTES,
   MAX_PRESENTATION_POOLS,
   parseV3PoolId,
   presentationRevision,
   validateV3Presentation,
-  validateV3PresentationDocument,
   type V3PresentationRecord,
 } from 'features/universalRewards/poolPresentation'
+import { localV3PresentationFile, readLocalV3PresentationDocument } from 'features/universalRewards/poolPresentation.server'
 import { createV3Client, getV3Deployment, validateV3Deployment } from 'features/universalRewards/runtime'
 
 export const config = { api: { bodyParser: { sizeLimit: '4kb' } } }
@@ -27,16 +25,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(404).end()
   }
   res.setHeader('Cache-Control', 'no-store')
-  const folder = join(process.cwd(), '.coincollect-fork', 'studio-presentations')
-  const file = join(folder, `${keccak256(stringToHex(localPresentationScope(deployment))).slice(2)}.json`)
-  const read = () => {
-    try {
-      return validateV3PresentationDocument(JSON.parse(readFileSync(file, 'utf8')), deployment)
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return emptyV3PresentationDocument(deployment)
-      throw error
-    }
-  }
+  const file = localV3PresentationFile(deployment)
+  const folder = dirname(file)
+  const read = () => readLocalV3PresentationDocument(deployment)
 
   if (req.method === 'GET') {
     try {

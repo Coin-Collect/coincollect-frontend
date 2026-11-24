@@ -11,11 +11,13 @@ import {
   useModal,
   OpenNewIcon,
   AddIcon,
+  PencilIcon,
 } from '@pancakeswap/uikit'
 import { Token } from '@coincollect/sdk'
 import { FarmAuctionTag, CommunityTag, PartnerTag } from 'components/Tags'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
+import { useTranslation } from 'contexts/Localization'
 import { mintingConfig } from 'config/constants'
 import nftFarmsConfig from 'config/constants/nftFarms'
 import AllowedNftsModal from 'components/AllowedNftsModal/AllowedNftsModal'
@@ -32,6 +34,7 @@ export interface ExpandableSectionProps {
   onOpenDetails?: () => void
   poolPageUrl?: string
   headingLevel?: 'h1' | 'h3'
+  onEditPoolType?: () => void
   editor?: {
     title: ReactNode
     onArtwork: () => void
@@ -161,6 +164,30 @@ const BannerFooter = styled(Flex)`
   gap: 8px;
 `
 
+const EditTypeButton = styled.button`
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  min-height: 48px;
+  margin-block: -12px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid white;
+    outline-offset: -3px;
+  }
+
+  @media (hover: hover) {
+    &:hover > span {
+      box-shadow: 0 0 0 2px white;
+    }
+  }
+`
+
 const ArtworkButton = styled.button`
   position: absolute;
   inset: 0;
@@ -209,9 +236,13 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
   onOpenDetails,
   poolPageUrl,
   headingLevel = 'h3',
+  onEditPoolType,
   publishedPool,
   editor,
 }) => {
+  const { t } = useTranslation()
+  const PoolTag = isCommunity ? CommunityTag : PartnerTag
+  const poolTagVariant = isCommunity ? 'success' : 'textSubtle'
   const router = useRouter()
   const nftFarmData = nftFarmsConfig.find((nftFarm) => nftFarm.pid === pid)
   const collectionDataByPid = mintingConfig.find((collection) => collection.stake_pid === pid)
@@ -455,10 +486,25 @@ const CardHeadingWithBanner: React.FC<ExpandableSectionProps> = ({
             >
               {editor?.title ?? lpLabel}
             </Heading>
-            {isCommunity ? (
-              <CommunityTag variant="success" scale="sm" />
+            {onEditPoolType ? (
+              <EditTypeButton
+                type="button"
+                aria-haspopup="dialog"
+                aria-label={`${t('Edit pool type')} · ${t(isCommunity ? 'Community' : 'Partner')}`}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onEditPoolType()
+                }}
+              >
+                <PoolTag
+                  as="span"
+                  variant={poolTagVariant}
+                  scale="sm"
+                  endIcon={<PencilIcon width="12px" color="currentColor" aria-hidden="true" />}
+                />
+              </EditTypeButton>
             ) : (
-              <PartnerTag variant="textSubtle" scale="sm" />
+              <PoolTag variant={poolTagVariant} scale="sm" />
             )}
           </BannerFooter>
         </BannerContainer>

@@ -17,6 +17,7 @@ import {
   poolTiming,
   shortAmount,
   sourceName,
+  v3PoolType,
   type V3PoolCardProps,
 } from 'features/universalRewards/presentation'
 import { studioCollection } from 'features/universalRewards/assetCatalog'
@@ -53,7 +54,8 @@ export default function V3FarmCard({
   detail = false,
   preview = false,
   onPositionChange,
-}: V3PoolCardProps & { preview?: boolean }) {
+  onEditPoolType,
+}: V3PoolCardProps & { preview?: boolean; onEditPoolType?: () => void }) {
   const { address, chainId } = useAccount()
   const { switchChainAsync } = useSwitchChain()
   const { t } = useTranslation()
@@ -233,7 +235,8 @@ export default function V3FarmCard({
         <CardHeadingWithBanner
           lpLabel={pool.presentation.name}
           headingLevel={detail ? 'h1' : 'h3'}
-          isCommunity={primary?.farm?.isCommunity ?? true}
+          isCommunity={v3PoolType(pool) === 'community'}
+          onEditPoolType={onEditPoolType}
           poolPageUrl={poolUrl}
           publishedPool={{
             banner: pool.presentation.artwork || primary?.farm?.banner || primary?.minting?.banner?.small,

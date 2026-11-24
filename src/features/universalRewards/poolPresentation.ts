@@ -1,6 +1,6 @@
 import { getLocalForkStorageKey } from 'config/localFork'
 import { keccak256, stringToHex } from 'viem'
-import { safeArtwork, type V3Presentation } from './metadata'
+import { isV3PoolType, safeArtwork, type V3Presentation } from './metadata'
 import type { V3Deployment } from './runtime'
 import { UINT256_MAX } from './units'
 
@@ -26,7 +26,7 @@ export function parseV3PoolId(value: unknown) {
 }
 
 export function validateV3Presentation(value: unknown): V3Presentation {
-  const { name, description, artwork } = (value ?? {}) as Partial<V3Presentation>
+  const { name, description, artwork, poolType } = (value ?? {}) as Partial<V3Presentation>
   if (
     typeof name !== 'string' ||
     !name.trim() ||
@@ -39,7 +39,8 @@ export function validateV3Presentation(value: unknown): V3Presentation {
   const image = artwork === '' || artwork === undefined ? undefined : safeArtwork(artwork)
   if (artwork !== undefined && artwork !== '' && !image)
     throw new Error('Choose a gallery image or enter an HTTPS image URL.')
-  return { name: name.trim(), description: description.trim(), artwork: image }
+  if (poolType !== undefined && !isV3PoolType(poolType)) throw new Error('Choose Community or Partner.')
+  return { name: name.trim(), description: description.trim(), artwork: image, ...(poolType && { poolType }) }
 }
 
 export function emptyV3PresentationDocument(deployment: V3Deployment): V3PresentationDocument {
@@ -89,6 +90,7 @@ export function localPresentationMessage(
     `Name: ${JSON.stringify(record.name)}`,
     `Description: ${JSON.stringify(record.description)}`,
     `Artwork: ${JSON.stringify(record.artwork ?? '')}`,
+    ...(record.poolType ? [`Pool type: ${record.poolType}`] : []),
   ].join('\n')
 }
 
@@ -97,8 +99,17 @@ export function withV3Presentation<T extends { poolId: bigint; presentation: V3P
   document?: V3PresentationDocument,
 ): T {
   const record = document?.pools.find(({ poolId }) => poolId === pool.poolId.toString())
+  const poolType = record?.poolType ?? pool.presentation.poolType
   return record
-    ? { ...pool, presentation: { name: record.name, description: record.description, artwork: record.artwork } }
+    ? {
+        ...pool,
+        presentation: {
+          name: record.name,
+          description: record.description,
+          artwork: record.artwork,
+          ...(poolType && { poolType }),
+        },
+      }
     : pool
 }
 

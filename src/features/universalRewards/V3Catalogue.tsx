@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react'
 import { useV3PresentationDocument, useV3Query } from './hooks'
 import { withV3Presentation } from './poolPresentation'
-import { poolTiming } from './presentation'
+import type { V3PoolType } from './metadata'
+import { poolTiming, v3PoolType } from './presentation'
 import { MAX_V3_PAGE, readV3Catalogue, type V3PoolSnapshot } from './reader'
 import { createV3Client, getV3Deployment, type V3Deployment } from './runtime'
 import { V3Actions, V3Button, V3Error, V3Muted, V3Section } from './styles'
@@ -16,6 +17,7 @@ export default function V3Catalogue({
   history = false,
   query = '',
   embedded = false,
+  poolType,
   onVisibility,
   Cards,
 }: {
@@ -23,6 +25,7 @@ export default function V3Catalogue({
   history?: boolean
   query?: string
   embedded?: boolean
+  poolType?: V3PoolType
   onVisibility?: (visible: boolean) => void
 }) {
   const [offset, setOffset] = useState(0)
@@ -42,11 +45,12 @@ export default function V3Catalogue({
         .filter(
           (pool) =>
             (!embedded || (poolTiming(pool) === 'Finished') === history) &&
+            (!poolType || v3PoolType(pool) === poolType) &&
             (!filter ||
               pool.presentation.name.toLowerCase().includes(filter) ||
               pool.collections.some(({ collection }) => collection.toLowerCase().includes(filter))),
         ),
-    [result.data, document, embedded, history, filter],
+    [result.data, document, embedded, history, filter, poolType],
   )
   const hasPools = pools.length > 0
   useEffect(() => {

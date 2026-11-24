@@ -6,8 +6,12 @@ it('round trips Unicode pool metadata with a safe existing artwork path', () => 
     name: 'CoinCollect Ödülleri',
     description: 'Ödül, NFT sahibine ödenir.',
     artwork: '/images/rewards/pool.webp',
-  }
+    poolType: 'partner',
+  } as const
   expect(decodeV3Presentation(encodeV3Presentation(value), BigInt(1))).toEqual(value)
+  expect(decodeV3Presentation(encodeV3Presentation({ ...value, poolType: 'community' }), BigInt(1)).poolType).toBe(
+    'community',
+  )
 })
 
 it('uses deterministic presentation when metadata is unusable, and blocks executable image protocols', () => {

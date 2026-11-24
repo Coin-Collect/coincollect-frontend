@@ -1,18 +1,95 @@
-import { useRouter } from 'next/router'
-import V3FarmCard from 'views/NftFarms/components/FarmCard/V3FarmCard'
-import { UINT256_MAX } from 'features/universalRewards/units'
+import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { light } from '@pancakeswap/uikit'
+import { ThemeProvider } from 'styled-components'
+import { isLocalForkMode } from 'config/localFork'
 import V3PoolDetail from 'features/universalRewards/V3PoolDetail'
-import { V3Page, V3Muted } from 'features/universalRewards/styles'
+import { PoolShowroomCover, PoolShowroomDiscover } from 'features/universalRewards/V3PoolShowroom'
+import { parseV3PoolId } from 'features/universalRewards/poolPresentation'
+import { poolShowroomArtwork, type V3PoolShowroomData, type V3PoolTeaser } from 'features/universalRewards/poolShowroom'
+import { readV3PoolShowroom } from 'features/universalRewards/poolShowroom.server'
+import { Showroom } from 'features/universalRewards/poolShowroomStyles'
+import { getV3Deployment } from 'features/universalRewards/runtime'
+import V3FarmCard from 'views/NftFarms/components/FarmCard/V3FarmCard'
 
-export default function UniversalRewardPoolPage() {
-  const { isReady, query } = useRouter()
-  if (!isReady) return null
-  if (typeof query.poolId !== 'string' || !/^[1-9]\d{0,77}$/.test(query.poolId) || BigInt(query.poolId) > UINT256_MAX) {
-    return (
-      <V3Page>
-        <V3Muted role="status">Enter a valid V3 pool number.</V3Muted>
-      </V3Page>
-    )
-  }
-  return <V3PoolDetail key={query.poolId} poolId={BigInt(query.poolId)} Card={V3FarmCard} />
+interface PoolPageProps {
+  poolId: string
+  initialPool: V3PoolShowroomData | null
+  related: V3PoolTeaser[]
+  initialMeta: { title: string; description: string; image: string; url: string; robots: string }
 }
+
+export const getServerSideProps: GetServerSideProps<PoolPageProps> = async ({ params, req, res }) => {
+  const poolId = parseV3PoolId(params?.poolId)
+  const deployment = getV3Deployment()
+  if (!poolId || !deployment) return { notFound: true }
+
+  const host = req.headers.host ?? ''
+  const base =
+    isLocalForkMode && /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host)
+      ? `http://${host}`
+      : process.env.NEXT_PUBLIC_APP_BASE_URL || 'https://app.coincollect.org'
+  const url = new URL(`/nftpools/v3/${poolId}`, base).href
+  const props = (initialPool: V3PoolShowroomData | null, related: V3PoolTeaser[]): PoolPageProps => ({
+    poolId: poolId.toString(),
+    initialPool,
+    related,
+    initialMeta: {
+      title: initialPool ? `${initialPool.name} | CoinCollect` : 'NFT rewards pool | CoinCollect',
+      description:
+        initialPool?.description.replace(/\s+/g, ' ').trim() ||
+        (initialPool
+          ? `Explore ${initialPool.name} on CoinCollect. See eligible NFT collections, ${initialPool.rewards
+              .map(({ symbol }) => symbol)
+              .join(', ')} rewards and pool dates.`
+          : 'Discover eligible NFT collections, pool rewards and how to participate on CoinCollect.'),
+      image: new URL(initialPool?.artwork ?? poolShowroomArtwork, base).href,
+      url,
+      robots: isLocalForkMode || !initialPool ? 'noindex, nofollow' : 'index, follow',
+    },
+  })
+
+  try {
+    const showroom = await readV3PoolShowroom(deployment, poolId)
+    if (!showroom) return { notFound: true }
+    res.setHeader('Cache-Control', isLocalForkMode ? 'no-store' : 'public, s-maxage=30, stale-while-revalidate=60')
+    return { props: props(showroom.pool, showroom.related) }
+  } catch {
+    res.statusCode = 503
+    res.setHeader('Cache-Control', 'no-store')
+    return { props: props(null, []) }
+  }
+}
+
+function UniversalRewardPoolPage({
+  poolId,
+  initialPool,
+  related,
+  initialMeta,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  return (
+    <V3PoolDetail
+      key={poolId}
+      poolId={BigInt(poolId)}
+      initialPool={initialPool}
+      related={related}
+      shareUrl={initialMeta.url}
+      Card={V3FarmCard}
+    />
+  )
+}
+
+// Public content is available in the first HTML response. Wallet and saved settings hydrate through the app gate.
+UniversalRewardPoolPage.PublicFallback = function PoolShowroomFallback({ initialPool, related, initialMeta }: PoolPageProps) {
+  return (
+    <ThemeProvider theme={light}>
+      <Showroom>
+        {initialPool && (
+          <PoolShowroomCover pool={initialPool} url={initialMeta.url} hasCardHeading={false} interactive={false} />
+        )}
+        <PoolShowroomDiscover related={related} />
+      </Showroom>
+    </ThemeProvider>
+  )
+}
+
+export default UniversalRewardPoolPage

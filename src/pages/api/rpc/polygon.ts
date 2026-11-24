@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { getLocalForkRpcUrl, isLocalForkMode } from 'config/localFork'
+import { isLocalForkMode } from 'config/localFork'
+import { polygonReadRpcUrls } from 'config/polygonReadRpc'
 
 const UPSTREAM_TIMEOUT_MS = 8_000
 const MAX_BATCH_SIZE = 50
@@ -22,13 +23,7 @@ const READ_METHODS = new Set([
   'eth_maxPriorityFeePerGas',
   'net_version',
 ])
-const UPSTREAMS = isLocalForkMode
-  ? [getLocalForkRpcUrl()!]
-  : [
-      process.env.NEXT_PUBLIC_MATIC_NODE_1,
-      'https://polygon-bor-rpc.publicnode.com',
-      'https://polygon.gateway.tenderly.co',
-    ].filter(Boolean) as string[]
+const UPSTREAMS = polygonReadRpcUrls()
 
 type RpcId = string | number
 type RpcRequest = {

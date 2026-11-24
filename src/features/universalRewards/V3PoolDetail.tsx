@@ -3,6 +3,9 @@ import V33CollectionActions from './V33CollectionActions'
 import { withV3Presentation } from './poolPresentation'
 import { useCallback, useEffect, useMemo, useState, type ComponentType, type FormEvent } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { ArrowBackIcon, ChevronDownIcon } from '@pancakeswap/uikit'
+import ConnectWalletButton from 'components/ConnectWalletButton'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { isAddressEqual, type Address } from 'viem'
 import { useV3Action, useV3PresentationDocument, useV3Query, useV3Wallet } from './hooks'
@@ -31,6 +34,9 @@ import {
 import { createV3Client, getV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import { joinV3, manageV3Position, reconcileV3Position } from './transactions'
 import { UINT256_MAX } from './units'
+import { poolShowroomData, type V3PoolShowroomData, type V3PoolTeaser } from './poolShowroom'
+import { FarmCardSlot, PoolDisclosure, PoolStage, Showroom, ShowroomSection } from './poolShowroomStyles'
+import { PoolShowroomCollections, PoolShowroomCover, PoolShowroomDiscover } from './V3PoolShowroom'
 import {
   V3Actions,
   V3Button,
@@ -42,7 +48,6 @@ import {
   V3Link,
   V3Metrics,
   V3Muted,
-  V3Page,
   V3RewardValue,
   V3Section,
 } from './styles'
@@ -205,7 +210,20 @@ function RewardRows({
   )
 }
 
-export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: ComponentType<V3PoolCardProps> }) {
+export default function V3PoolDetail({
+  poolId,
+  Card,
+  initialPool,
+  related,
+  shareUrl,
+}: {
+  poolId: bigint
+  Card: ComponentType<V3PoolCardProps>
+  initialPool: V3PoolShowroomData | null
+  related: V3PoolTeaser[]
+  shareUrl: string
+}) {
+  const router = useRouter()
   const { address: account, chainId } = useAccount()
   const { switchChain, isPending: switching } = useSwitchChain()
   const client = useMemo(createV3Client, [])
@@ -218,6 +236,7 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
   const [selectedKeys, setSelectedKeys] = useState<Record<string, string[]>>({})
   const [typedId, setTypedId] = useState('')
   const [inputError, setInputError] = useState('')
+  const [walletToolsOpen, setWalletToolsOpen] = useState(false)
   const accountKey = `${poolId}:${account ?? ''}`
   const manual = useMemo(() => manualIds[accountKey] ?? [], [manualIds, accountKey])
   const selection = selectedKeys[accountKey] ?? []
@@ -228,21 +247,55 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
   }, [client, deployment, poolId])
   const result = useV3Query(deployment ? `${deployment.address}:${poolId}` : '', readPool, 20_000)
   const presentation = useV3PresentationDocument(deployment)
-  const pool = useMemo(() => result.data && withV3Presentation(result.data, presentation), [result.data, presentation])
+  const pool = useMemo(() => {
+    if (!result.data) return undefined
+    if (presentation) return withV3Presentation(result.data, presentation)
+    return initialPool
+      ? {
+          ...result.data,
+          presentation: {
+            ...result.data.presentation,
+            name: initialPool.name,
+            description: initialPool.description,
+            artwork: initialPool.artwork,
+            poolType: initialPool.type,
+          },
+        }
+      : result.data
+  }, [result.data, presentation, initialPool])
+  const overview = pool ? poolShowroomData(pool) : initialPool
   const hasPool = Boolean(pool)
   useEffect(() => {
-    if (!hasPool) return
-    const target = window.location.hash.slice(1)
-    if (target === 'eligible-nfts' || target === 'v3-positions' || target === 'contract') {
-      document.getElementById(target)?.scrollIntoView()
+    if (!hasPool) return undefined
+    let frame: number
+    const reveal = () => {
+      const target = window.location.hash.slice(1)
+      if (target === 'eligible-nfts' || target === 'v3-positions') setWalletToolsOpen(true)
+      else if (target === 'contract') {
+        const details = document.getElementById(target)
+        if (details instanceof HTMLDetailsElement) details.open = true
+      } else return
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const section = document.getElementById(target) ?? document.getElementById('eligible-nfts')
+        section?.scrollIntoView()
+      })
     }
-  }, [hasPool])
+    reveal()
+    window.addEventListener('hashchange', reveal)
+    router.events.on('hashChangeComplete', reveal)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('hashchange', reveal)
+      router.events.off('hashChangeComplete', reveal)
+    }
+  }, [hasPool, router.events])
   const readNfts = useCallback(async () => {
     if (!pool || !deployment || !account) throw new Error('Connect your wallet to read eligible NFTs.')
     return loadNfts(client, deployment, pool, account, collectionIndex, collectionOffset, historyOffset, manual)
   }, [pool, deployment, account, client, collectionIndex, collectionOffset, historyOffset, manual])
   const walletData = useV3Query(
-    pool && account ? `${accountKey}:${collectionIndex}:${collectionOffset}:${historyOffset}` : '',
+    walletToolsOpen && pool && account ? `${accountKey}:${collectionIndex}:${collectionOffset}:${historyOffset}` : '',
     readNfts,
   )
   const transaction = useV3Action(client, deployment, getWallet, account)
@@ -305,90 +358,56 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
   }
 
   return (
-    <V3Page>
-      <V3Section aria-label="Universal Rewards pool">
-        <header>
-          <V3Link as={Link} href="/nftpools/v3">
-            All V3 pools
-          </V3Link>
-        </header>
-        {!deployment && <V3Muted role="status">V3 is unavailable in this environment.</V3Muted>}
-        {result.error && (
-          <V3Actions>
-            <V3Error role="status">{result.error}</V3Error>
-            <V3Button type="button" $secondary onClick={result.refresh}>
-              Retry
-            </V3Button>
-          </V3Actions>
-        )}
-        {result.loading && !pool && <V3Muted role="status">Reading pool and reward reserves…</V3Muted>}
-        {pool && deployment && (
-          <>
-            <V3Grid>
-              <Card pool={pool} deployment={deployment} detail onPositionChange={result.refresh} />
-              <V3Card id="contract">
-                <div>
-                  <h2>Pool rewards</h2>
-                  <V3Metrics aria-label="Recorded pool participation">
-                    <div>
-                      <dt>Participant wallets</dt>
-                      <dd>{pool.activeWallets.toLocaleString('en-US')}</dd>
-                    </div>
-                    <div>
-                      <dt>Active NFTs</dt>
-                      <dd>{pool.activeNfts.toLocaleString('en-US')}</dd>
-                    </div>
-                    {pool.collections.some(({ managed }) => managed?.standard === 1155) && (
-                      <div>
-                        <dt>Participating ERC-1155 units</dt>
-                        <dd>
-                          {pool.collections
-                            .reduce(
-                              (sum, { managed }) => (managed?.standard === 1155 ? sum + managed.units : sum),
-                              ZERO,
-                            )
-                            .toLocaleString('en-US')}
-                        </dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt>Total NFT power</dt>
-                      <dd>{pool.totalWeight.toLocaleString('en-US')}</dd>
-                    </div>
-                  </V3Metrics>
-                  {pool.capacity > 32 && (
-                    <V3Muted>
-                      Counts reflect recorded participation. Collection transfers may require verification before counts
-                      update.
-                    </V3Muted>
-                  )}
-                  <V3Muted>
-                    {pool.claimDeadline === undefined
-                      ? 'NFT ownership controls who can claim each balance.'
-                      : 'The current NFT owner can claim rewards until 30 days after the pool ends.'}
-                  </V3Muted>
-                  <V3Muted>Settlement contract · {deployment.address}</V3Muted>
-                  <V3Metrics>
-                    {pool.rewards.map((reward) => (
-                      <div key={reward.token}>
-                        <dt>{reward.symbol} uncommitted reserve</dt>
-                        <dd>{shortAmount(availableReward(reward), reward.decimals)}</dd>
-                      </div>
-                    ))}
-                  </V3Metrics>
-                  {pool.funding.paused && <V3Muted role="status">Funding replenishment is paused.</V3Muted>}
-                  {poolTiming(pool) === 'Live' && pool.rewards.some((reward) => availableReward(reward) === ZERO) && (
-                    <V3Muted role="status">At least one reward asset is awaiting replenishment.</V3Muted>
-                  )}
-                </div>
-              </V3Card>
-            </V3Grid>
+    <Showroom>
+      <V3Actions style={{ marginBottom: 12 }}>
+        <V3Link as={Link} href="/nftpools/v3">
+          <ArrowBackIcon color="currentColor" width="16px" mr="5px" aria-hidden="true" />
+          All V3 pools
+        </V3Link>
+      </V3Actions>
+      {overview && <PoolShowroomCover pool={overview} url={shareUrl} hasCardHeading={hasPool} />}
+      {result.error && (
+        <V3Actions style={{ marginTop: 12 }}>
+          <V3Error role="status">Pool data is temporarily unavailable.</V3Error>
+          <V3Button type="button" $secondary onClick={result.refresh}>
+            Retry
+          </V3Button>
+        </V3Actions>
+      )}
 
-            <V3Section id="eligible-nfts" aria-label="Your NFTs and rewards">
-              <header>
-                <h2>Your NFTs and rewards</h2>
-                {claimPeriodMessage(pool) && <V3Muted>{claimPeriodMessage(pool)}</V3Muted>}
-              </header>
+      <ShowroomSection id="pool-farmcard" aria-labelledby="pool-rewards-title">
+        <header>
+          <h2 id="pool-rewards-title">Pool rewards</h2>
+        </header>
+        {pool && deployment ? (
+          <PoolStage>
+            <FarmCardSlot>
+              <Card pool={pool} deployment={deployment} detail onPositionChange={result.refresh} />
+            </FarmCardSlot>
+            <PoolShowroomCollections collections={pool.collections} />
+          </PoolStage>
+        ) : (
+          !result.error && <V3Muted role="status">Loading the pool card…</V3Muted>
+        )}
+      </ShowroomSection>
+
+      {pool && deployment && (
+        <ShowroomSection aria-label="Pool information and participation">
+          <PoolDisclosure
+            id="eligible-nfts"
+            open={walletToolsOpen}
+            onToggle={(event) => setWalletToolsOpen(event.currentTarget.open)}
+          >
+            <summary>
+              Your NFTs and rewards <ChevronDownIcon width="20px" color="currentColor" aria-hidden="true" />
+            </summary>
+            <div>
+              {claimPeriodMessage(pool) && <V3Muted>{claimPeriodMessage(pool)}</V3Muted>}
+              {!account && (
+                <div>
+                  <ConnectWalletButton />
+                </div>
+              )}
               {wrongChain && deployment && (
                 <V3Actions>
                   <V3Muted role="status">Switch to the settlement network to send transactions.</V3Muted>
@@ -673,10 +692,65 @@ export default function V3PoolDetail({ poolId, Card }: { poolId: bigint; Card: C
                     ))}
                 </>
               )}
-            </V3Section>
-          </>
-        )}
-      </V3Section>
-    </V3Page>
+            </div>
+          </PoolDisclosure>
+
+          <PoolDisclosure id="contract">
+            <summary>
+              Pool details <ChevronDownIcon width="20px" color="currentColor" aria-hidden="true" />
+            </summary>
+            <div>
+              <V3Metrics aria-label="Recorded pool participation">
+                <div>
+                  <dt>Participant wallets</dt>
+                  <dd>{pool.activeWallets.toLocaleString('en-US')}</dd>
+                </div>
+                <div>
+                  <dt>Active NFTs</dt>
+                  <dd>{pool.activeNfts.toLocaleString('en-US')}</dd>
+                </div>
+                <div>
+                  <dt>Total NFT power</dt>
+                  <dd>{pool.totalWeight.toLocaleString('en-US')}</dd>
+                </div>
+                {pool.collections.some(({ managed }) => managed?.standard === 1155) && (
+                  <div>
+                    <dt>Participating ERC-1155 units</dt>
+                    <dd>
+                      {pool.collections
+                        .reduce((sum, { managed }) => (managed?.standard === 1155 ? sum + managed.units : sum), ZERO)
+                        .toLocaleString('en-US')}
+                    </dd>
+                  </div>
+                )}
+              </V3Metrics>
+              <V3Metrics aria-label="Reward reserves">
+                {pool.rewards.map((reward) => (
+                  <div key={reward.token}>
+                    <dt>{reward.symbol} uncommitted reserve</dt>
+                    <dd>{shortAmount(availableReward(reward), reward.decimals)}</dd>
+                  </div>
+                ))}
+              </V3Metrics>
+              {pool.funding.paused && <V3Muted role="status">Funding replenishment is paused.</V3Muted>}
+              {poolTiming(pool) === 'Live' && pool.rewards.some((reward) => availableReward(reward) === ZERO) && (
+                <V3Muted role="status">A reward token is awaiting replenishment.</V3Muted>
+              )}
+              {pool.capacity > 32 && (
+                <V3Muted>Participation totals may update after an NFT transfer is verified.</V3Muted>
+              )}
+              {deployment.chainId === 137 ? (
+                <V3Link href={`https://polygonscan.com/address/${deployment.address}`} rel="noreferrer" target="_blank">
+                  View settlement contract on PolygonScan
+                </V3Link>
+              ) : (
+                <V3Muted>Settlement contract · {deployment.address}</V3Muted>
+              )}
+            </div>
+          </PoolDisclosure>
+        </ShowroomSection>
+      )}
+      <PoolShowroomDiscover related={related} />
+    </Showroom>
   )
 }

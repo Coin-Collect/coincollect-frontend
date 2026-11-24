@@ -12,6 +12,7 @@ import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { encodeFunctionData, formatUnits, isAddressEqual, zeroAddress, type Address } from 'viem'
 import { universalRewardsAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
+import { v3PoolTypeLabels } from './metadata'
 import { isV3ClaimExpired, shortAmount } from './presentation'
 import { createV3Client, getV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import {
@@ -62,6 +63,7 @@ const ZERO = BigInt(0)
 const defaultDraft: V3StudioDraft = {
   name: '',
   description: '',
+  poolType: 'community',
   artwork: '/images/collectHeroes/14.jpg',
   startLocal: '',
   durationDays: '7',
@@ -986,6 +988,10 @@ export default function V3Studio({
                         network fee.
                       </V3Muted>
                       <V3Metrics>
+                        <div>
+                          <dt>Pool type</dt>
+                          <dd>{v3PoolTypeLabels[draft.poolType ?? 'community']}</dd>
+                        </div>
                         {preview.rewards.map(({ token, symbol, cap, decimals }) => (
                           <div key={token}>
                             <dt>{symbol} reserved reward</dt>
@@ -1016,6 +1022,10 @@ export default function V3Studio({
                         <V3Muted>Reference daily budget · {shortAmount(preview.usdPerDay, 6)} USD</V3Muted>
                       )}
                       <V3Metrics>
+                        <div>
+                          <dt>Pool type</dt>
+                          <dd>{v3PoolTypeLabels[draft.poolType ?? 'community']}</dd>
+                        </div>
                         {preview.rewards.map((reward, index) => (
                           <div key={reward.token}>
                             <dt>{reward.symbol} reward cap</dt>

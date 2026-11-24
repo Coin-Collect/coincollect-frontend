@@ -44,7 +44,9 @@ const FarmAuctionTag: React.FC<TagProps> = (props) => {
   )
 }
 
-const PartnerTag: React.FC<TagProps> = (props) => {
+type PoolCategoryTagProps = TagProps & { as?: 'span' }
+
+const PartnerTag: React.FC<PoolCategoryTagProps> = (props) => {
   const { t } = useTranslation()
   return (
     <Tag variant="failure" outline startIcon={<VerifiedIcon width="18px" color="failure" mr="4px" />} {...props}>
@@ -53,7 +55,7 @@ const PartnerTag: React.FC<TagProps> = (props) => {
   )
 }
 
-const CommunityTag: React.FC<TagProps> = (props) => {
+const CommunityTag: React.FC<PoolCategoryTagProps> = (props) => {
   const { t } = useTranslation()
   return (
     <Tag variant="failure" outline startIcon={<CommunityIcon width="18px" color="failure" mr="4px" />} {...props}>

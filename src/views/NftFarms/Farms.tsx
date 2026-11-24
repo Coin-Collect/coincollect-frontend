@@ -444,7 +444,8 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const stakedView = stakedOnly && !isArchived
   const [hasVisibleV3, setHasVisibleV3] = useState(false)
   const v3Configured = Boolean(getV3Deployment())
-  const showV3Catalogue = v3Configured && !stakedView && !isArchived && !isPartner && !isCommunity
+  const v3PoolTypeFilter = isPartner ? 'partner' : isCommunity ? 'community' : undefined
+  const showV3Catalogue = v3Configured && !stakedView && !isArchived
   const hasWallet = Boolean(account)
   const walletConnecting = isConnecting || isReconnecting
   const walletNeedsNetwork = Boolean(account && walletChainId && walletChainId !== getPolygonRuntimeChainId())
@@ -1025,7 +1026,15 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
           </section>
         ) : null}
         {showV3Catalogue && (
-          <V3Catalogue Cards={V3FarmCardGrid} embedded history={isInactive} query={query} onVisibility={setHasVisibleV3} />
+          <V3Catalogue
+            key={v3PoolTypeFilter ?? 'all'}
+            Cards={V3FarmCardGrid}
+            embedded
+            history={isInactive}
+            poolType={v3PoolTypeFilter}
+            query={query}
+            onVisibility={setHasVisibleV3}
+          />
         )}
         {v3Configured && stakedView && (
           <Button as={NextLinkFromReactRouter} to="/nftpools/v3" scale="sm" variant="secondary" mb="16px">

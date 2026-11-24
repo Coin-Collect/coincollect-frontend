@@ -362,6 +362,7 @@ function MyApp(props: AppProps) {
   const { pageProps } = props
   const store = useStore(pageProps.initialReduxState)
   const router = useRouter()
+  const PublicFallback = (props.Component as NextPageWithLayout).PublicFallback
 
   const appBaseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'https://app.coincollect.org'
   const normalizedBaseUrl = appBaseUrl.endsWith('/') ? appBaseUrl.slice(0, -1) : appBaseUrl
@@ -403,6 +404,7 @@ function MyApp(props: AppProps) {
         <meta key="app:twitter:title" name="twitter:title" content={title} />
         <meta key="app:twitter:description" name="twitter:description" content={description} />
         <meta key="app:twitter:image" name="twitter:image" content={image} />
+        {pageLevelMeta.robots && <meta key="app:robots" name="robots" content={pageLevelMeta.robots} />}
         <link key="app:canonical" rel="canonical" href={canonical} />
         <meta
           key="app:viewport"
@@ -419,7 +421,7 @@ function MyApp(props: AppProps) {
           <ResetCSS />
           <GlobalStyle />
           <GlobalCheckClaimStatus excludeLocations={[]} />
-          <PersistGate loading={null} persistor={persistor}>
+          <PersistGate loading={PublicFallback ? <PublicFallback {...pageProps} /> : null} persistor={persistor}>
             <BlockCountry />
             <App {...props} />
           </PersistGate>
@@ -443,6 +445,7 @@ function MyApp(props: AppProps) {
 }
 
 type NextPageWithLayout = NextPage & {
+  PublicFallback?: React.ComponentType<AppProps['pageProps']>
   Layout?: React.FC
 }
 

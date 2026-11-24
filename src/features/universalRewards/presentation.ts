@@ -1,4 +1,6 @@
 import { formatUnits } from 'viem'
+import nftFarms from 'config/constants/nftFarms'
+import type { V3PoolType } from './metadata'
 import type { readV3CardPosition, RewardSnapshot, V3PoolSnapshot } from './reader'
 import type { V3Deployment } from './runtime'
 import { UNIT } from './units'
@@ -12,6 +14,17 @@ export interface V3PoolCardProps {
 
 const ZERO = BigInt(0)
 const DAY = BigInt(86400)
+
+export function v3PoolType(pool: Pick<V3PoolSnapshot, 'presentation' | 'collections'>): V3PoolType {
+  if (pool.presentation.poolType) return pool.presentation.poolType
+  const first = pool.collections[0]
+  const source = first?.managed ?? first
+  if (source?.sourceChainId !== BigInt(137)) return 'community'
+  const address = source.collection.toLowerCase()
+  return nftFarms.find((farm) => farm.nftAddresses?.[137]?.toLowerCase() === address)?.isCommunity === false
+    ? 'partner'
+    : 'community'
+}
 
 export function shortAmount(amount: bigint, decimals: number | null) {
   if (decimals === null) return `${amount.toString()} base units`
