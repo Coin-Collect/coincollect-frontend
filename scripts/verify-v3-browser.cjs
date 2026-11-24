@@ -539,8 +539,9 @@ async function testBrowser() {
       wait(
         'eligible NFT tile',
         (id) => {
+          const labelSuffix = new RegExp(` #${id} · [^·]+$`)
           const option = Array.from(document.querySelectorAll('dialog[open] button[aria-pressed], dialog[open] input[type="checkbox"]')).find((control) =>
-            control.getAttribute('aria-label')?.split(' · ')[0].endsWith('#' + id),
+            labelSuffix.test(control.getAttribute('aria-label') ?? ''),
           )
           if (!option || option.disabled) return false
           option.click()
