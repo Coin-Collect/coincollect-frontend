@@ -4,6 +4,7 @@ import { managedNftCollectionAbi, ownershipVerifierAbi, universalRewardsAbi } fr
 import { decodeV3Presentation } from './metadata'
 import { readManagedCollection, SETTLEMENT_SOURCE } from './managedNfts'
 import {
+  isV3MissingSelector,
   readV3BatchLimit,
   readV3Capacity,
   readV3ClaimPeriod,
@@ -146,6 +147,57 @@ export async function readV3Pool(
 }
 
 export type V3PoolSnapshot = Awaited<ReturnType<typeof readV3Pool>>
+
+export async function simulateV3SurplusReturn(
+  client: V3Client,
+  deployment: V3Deployment,
+  poolId: bigint,
+  token: Address,
+  account: Address,
+  blockNumber: bigint,
+) {
+  const { result } = await client.simulateContract({
+    ...ledgerAt(deployment, blockNumber),
+    functionName: 'recoverSurplus',
+    args: [poolId, token],
+    account,
+  })
+  return result
+}
+
+export async function readV3DirectTreasurySurplus(
+  client: V3Client,
+  deployment: V3Deployment,
+  pool: V3PoolSnapshot,
+  account: Address,
+) {
+  if (
+    pool.funding.asset !== zeroAddress ||
+    pool.claimDeadline === undefined ||
+    pool.timestamp < pool.config.end ||
+    pool.timestamp >= pool.claimDeadline
+  ) {
+    return undefined
+  }
+
+  const [treasuryBacked] = await client
+    .readContract({ ...ledgerAt(deployment, pool.blockNumber), functionName: 'treasuryFunding', args: [pool.poolId] })
+    .catch((error: unknown) => {
+      if (isV3MissingSelector(error)) return [false, false] as const
+      throw error
+    })
+  if (!treasuryBacked) return undefined
+
+  const returns = await Promise.all(
+    pool.rewards.map(async ({ token, inventory }) => {
+      if (inventory === NIL) return [token, NIL] as const
+      const amount = await simulateV3SurplusReturn(client, deployment, pool.poolId, token, account, pool.blockNumber)
+        .catch(() => undefined)
+      return [token, amount] as const
+    }),
+  )
+  return new Map(returns)
+}
 
 async function v3PoolPage(client: V3Client, deployment: V3Deployment, offset: number) {
   const snapshot = await client.getBlock()

@@ -178,12 +178,17 @@ export function approveV3Funding(deployment: V3Deployment, token: Address, amoun
   }
 }
 
-export function recoverV3ExpiredRewards(deployment: V3Deployment, poolId: bigint, token: Address): V3Call {
+export function recoverV3Rewards(
+  deployment: V3Deployment,
+  poolId: bigint,
+  token: Address,
+  kind: 'surplus' | 'expired',
+): V3Call {
   return {
     to: deployment.address,
     data: encodeFunctionData({
       abi: universalRewardsAbi,
-      functionName: 'recoverExpiredRewards',
+      functionName: kind === 'surplus' ? 'recoverSurplus' : 'recoverExpiredRewards',
       args: [poolId, token],
     }),
   }

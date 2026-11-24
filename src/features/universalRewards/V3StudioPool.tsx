@@ -1,5 +1,5 @@
 import { useCallback, useId, useState, type ComponentType, type ReactNode } from 'react'
-import { encodeFunctionData, zeroAddress, type Address } from 'viem'
+import { encodeFunctionData, formatUnits, zeroAddress, type Address } from 'viem'
 import { poolArtworkRegistry } from 'features/nftPoolManager/studio/artworkRegistry'
 import { managedNftCollectionAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
@@ -14,11 +14,11 @@ import {
   type V3PresentationDocument,
 } from './poolPresentation'
 import { claimPeriodMessage, isV3ClaimExpired, poolTiming, shortAmount, sourceName } from './presentation'
-import { readV3Pool, type V3PoolSnapshot } from './reader'
+import { readV3DirectTreasurySurplus, readV3Pool, simulateV3SurplusReturn, type V3PoolSnapshot } from './reader'
 import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 import { PresentationFields, PresentationWorkspace, WorkspaceActions } from './studioDashboardStyles'
 import { V3Actions, V3Button, V3Card, V3Error, V3Field, V3Metrics, V3Muted } from './styles'
-import { describeV3Error, recoverV3ExpiredRewards } from './transactions'
+import { describeV3Error, recoverV3Rewards } from './transactions'
 
 const ZERO = BigInt(0)
 
@@ -60,9 +60,10 @@ export default function V3StudioPool({
   const load = useCallback(async () => {
     const block = await client.getBlock()
     await validateV3Deployment(client, deployment, block.number)
-    return readV3Pool(client, deployment, poolId, block, { includeSettlement: true })
-  }, [client, deployment, poolId])
-  const result = useV3Query(`${deployment.address}:manage:${poolId}`, load, 30_000)
+    const pool = await readV3Pool(client, deployment, poolId, block, { includeSettlement: true })
+    return { pool, surplus: await readV3DirectTreasurySurplus(client, deployment, pool, account) }
+  }, [account, client, deployment, poolId])
+  const result = useV3Query(`${deployment.address}:manage:${poolId}:${account}`, load, 30_000)
   const [previewOpen, setPreviewOpen] = useState(true)
   const [draft, setDraft] = useState<V3Presentation>()
   const [version, setVersion] = useState('initial')
@@ -74,7 +75,8 @@ export default function V3StudioPool({
   const getWallet = useV3Wallet(deployment.chainId)
   const settlementAction = useV3Action(client, deployment, getWallet, account)
   const local = deployment.chainId === 31337
-  const pool = result.data ? withV3Presentation(result.data, document) : undefined
+  const pool = result.data ? withV3Presentation(result.data.pool, document) : undefined
+  const directSurplus = result.data?.surplus
 
   const edit = () => {
     if (!pool) return
@@ -155,6 +157,27 @@ export default function V3StudioPool({
   }
   const expired = isV3ClaimExpired(pool)
   const claimMessage = claimPeriodMessage(pool)
+  const recoveryLocked = !writeAllowed || Boolean(result.error) || settlementAction.busy || settlementAction.unconfirmed
+  const returnSurplus = async (token: Address, symbol: string) => {
+    await settlementAction.runMany(async () => {
+      const block = await client.getBlock()
+      if (block.number === null) throw new Error('Could not verify the current settlement block.')
+      if (
+        isV3ClaimExpired(pool, block.timestamp) ||
+        (await simulateV3SurplusReturn(client, deployment, poolId, token, account, block.number)) === ZERO
+      ) {
+        result.refresh()
+        return []
+      }
+      return [
+        {
+          ...recoverV3Rewards(deployment, poolId, token, 'surplus'),
+          confirmationLabel: `Return unallocated ${symbol} to Treasury`,
+          onConfirmed: result.refresh,
+        },
+      ]
+    })
+  }
   const savePoolType = async (poolType: V3PoolType) => {
     if (draft) {
       setDraft({ ...draft, poolType })
@@ -403,11 +426,21 @@ export default function V3StudioPool({
           <div>
             <h2>Claims and treasury settlement</h2>
             {claimMessage && <V3Muted>{claimMessage}</V3Muted>}
+            {directSurplus && (
+              <V3Muted>
+                Unallocated rewards can return to Treasury after the pool ends. Earned rewards remain available to claim
+                until the deadline.
+              </V3Muted>
+            )}
             <V3Metrics>
               {pool.rewards.map(({ token, symbol, decimals, inventory, settlement }) => {
                 if (!settlement) return null
                 const { claimLiability, expiredRecovered } = settlement
                 const canRecover = expired && inventory > ZERO
+                const surplus = directSurplus?.get(token)
+                const returnAmount = surplus === undefined || surplus === ZERO
+                  ? undefined
+                  : decimals === null ? `${surplus} base units` : `${formatUnits(surplus, decimals)} ${symbol}`
                 return (
                   <div key={token}>
                     <dt>{symbol} claim liability</dt>
@@ -415,9 +448,27 @@ export default function V3StudioPool({
                       {shortAmount(claimLiability, (decimals ?? 0) + 18)}
                       {decimals === null ? ' base units' : ` ${symbol}`}
                     </dd>
-                    <dt>{symbol} treasury recovery</dt>
+                    <dt>{symbol} {directSurplus ? 'unallocated rewards' : 'treasury recovery'}</dt>
                     <dd>
-                      {canRecover ? (
+                      {directSurplus ? (
+                        <>
+                          <V3Muted>
+                            {returnAmount && `${returnAmount} available to return`}
+                            {surplus === ZERO && 'No unallocated rewards to return'}
+                            {surplus === undefined && 'Return amount unavailable'}
+                          </V3Muted>
+                          {returnAmount && (
+                            <V3Button
+                              type="button"
+                              $secondary
+                              disabled={recoveryLocked}
+                              onClick={() => void returnSurplus(token, symbol)}
+                            >
+                              Return unallocated {symbol}
+                            </V3Button>
+                          )}
+                        </>
+                      ) : canRecover ? (
                         <V3Muted>
                           {shortAmount(inventory, decimals)} {symbol} awaiting treasury recovery
                         </V3Muted>
@@ -434,9 +485,9 @@ export default function V3StudioPool({
                         <V3Button
                           type="button"
                           $secondary
-                          disabled={!writeAllowed || settlementAction.busy || settlementAction.unconfirmed}
+                          disabled={recoveryLocked}
                           onClick={async () => {
-                            if (await settlementAction.run(recoverV3ExpiredRewards(deployment, poolId, token))) {
+                            if (await settlementAction.run(recoverV3Rewards(deployment, poolId, token, 'expired'))) {
                               result.refresh()
                             }
                           }}
@@ -449,7 +500,7 @@ export default function V3StudioPool({
                 )
               })}
             </V3Metrics>
-            {settlementAction.message && <V3Muted role="status">{settlementAction.message}</V3Muted>}
+            <V3Muted role="status">{settlementAction.message}</V3Muted>
             {settlementAction.error && <V3Error role="alert">{settlementAction.error}</V3Error>}
             {settlementAction.unconfirmed && (
               <V3Actions>

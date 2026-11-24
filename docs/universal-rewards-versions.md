@@ -75,6 +75,8 @@ V3 FarmCard'daki Stake ve Stake More, havuz listesinde ve havuz detayında aynı
 
 V3 FarmCard, cüzdanın stake ettiği NFT sayısını ve havuzun cüzdan başına limitini `3/3 NFT` biçiminde gösterir. Liste ve detay kartı masaüstü Chromium'da, detay kartı ayrıca 360 px mobil görünümde doğrulandı.
 
+Pool Studio, biten Direct Treasury havuzlarında ödül alma süresi açıkken her token için iade edilebilen dağıtılmamış tutarı gösterir. Pozitif tutar için **Return unallocated** düğmesi mevcut kontrattan Treasury'ye iade işlemi gönderir. Yerel test havuzu #4'te arayüzden gönderilen işlem 365. blokta 0,01 USDT'yi Treasury'ye iade etti. Havuz #3'teki alınabilir ödüller işlem öncesi ve sonrası eşleşti.
+
 ### V3.10.0-rc · Havuz oluşturulduğunda başlatma
 
 Start now seçildiğinde Studio `start = 0` ve `end = süre` gönderir. Ledger başlangıç ve bitişi oluşturma bloğundan hesaplayıp mutlak zamanlar olarak saklar. Treasury rezervi ve cüzdan bütçesi planı kurulum sırasında tanımlanabilir. Cüzdan bütçesinin yatırılması mevcut ayrı işlemle yapılır. Önceden tarih verilen havuzlar mutlak zamanları kullanır.
