@@ -1272,8 +1272,13 @@ async function testBrowser() {
       await click('dialog button', 'Your positions')
       await has('Released rewards')
       await click('dialog button[aria-label="Close"]', '')
+      const balanceBefore = await tokenBalance(fixture.operator)
+      const nonceBefore = BigInt(await rpc('eth_getTransactionCount', [fixture.operator, 'latest']))
       await click('article button', 'Harvest')
-      await has('Confirmed on the settlement network.')
+      const atomic = fixture.version === '3.10'
+      await has(atomic ? 'Confirmed on the settlement network.' : '2 of 2 transactions confirmed on the settlement network.')
+      assert.ok((await tokenBalance(fixture.operator)) > balanceBefore)
+      assert.equal(BigInt(await rpc('eth_getTransactionCount', [fixture.operator, 'latest'])) - nonceBefore, atomic ? 1n : 2n)
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
       console.log('PASS managed mobile ERC-1155 unit cap, quantity join, partial transfer, partial exit and Harvest')
     }
