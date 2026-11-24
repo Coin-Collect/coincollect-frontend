@@ -113,6 +113,50 @@ jobs:
           COINCOLLECT_V310_FIXTURE: ${{ matrix.ledger == 'v310' && '1' || '0' }}
           V3_BROWSER_TREASURY_SCREENSHOT: ${{ runner.temp }}/v361-treasury-mobile.png
           V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT: ${{ runner.temp }}/v361-treasury-desktop.png
+      - name: Verify the V2 factory and user lifecycle on a pinned Polygon fork
+        if: ${{ !cancelled() && matrix.ledger == 'v310' }}
+        working-directory: frontend
+        env:
+          COINCOLLECT_V3_POLYGON_RPC: ${{ secrets.COINCOLLECT_V3_POLYGON_RPC }}
+        run: |
+          node - <<'NODE'
+          const assert = require('node:assert/strict')
+          const { spawn } = require('node:child_process')
+          const { once } = require('node:events')
+          const project = '../contracts/projects/universal-rewards-v3'
+          const { startLocalAnvil } = require(project + '/scripts/local-anvil.cjs')
+
+          async function run() {
+            const blockNumber = 97638790
+            const blockHash = '0x9cf4791f6b4aab715d03aa5f66ad39e40676b80f00620927c6ddc6827db63419'
+            const upstream = process.env.COINCOLLECT_V3_POLYGON_RPC || 'https://polygon.gateway.tenderly.co'
+            assert.equal(new URL(upstream).protocol, 'https:')
+            const fork = await startLocalAnvil(['--fork-url', upstream, '--fork-block-number', String(blockNumber)])
+            try {
+              assert.equal((await fork.provider.getBlock(blockNumber)).hash, blockHash)
+              const jest = spawn(process.execPath, [require.resolve('jest/bin/jest'), '--runInBand',
+                'src/features/nftPoolManager/launch/__tests__/fork.test.ts'], {
+                stdio: 'inherit',
+                env: {
+                  ...process.env,
+                  NEXT_PUBLIC_LOCAL_FORK: '1',
+                  NEXT_PUBLIC_LOCAL_FORK_CHAIN_ID: '31337',
+                  NEXT_PUBLIC_LOCAL_FORK_RPC: fork.url,
+                  NEXT_PUBLIC_FORK_BLOCK: String(blockNumber),
+                  COINCOLLECT_FORK_RPC: fork.url,
+                  COINCOLLECT_FORK_CHAIN_ID: '31337',
+                  COINCOLLECT_FORK_PRESERVE_TEST_POOL: '0',
+                  COINCOLLECT_SOLC_MODULE: require.resolve(project + '/node_modules/solc'),
+                },
+              })
+              const [exit] = await once(jest, 'exit')
+              process.exitCode = exit ?? 1
+            } finally {
+              fork.close()
+            }
+          }
+          run().catch((error) => { console.error(error.message); process.exitCode = 1 })
+          NODE
       - name: Record exact audit pairing
         if: ${{ success() && matrix.ledger == 'v36' }}
         working-directory: frontend

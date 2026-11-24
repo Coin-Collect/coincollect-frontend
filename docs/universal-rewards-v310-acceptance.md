@@ -13,5 +13,6 @@ The automation endpoint retains its existing explicitly configured default ledge
 ## Reproducibility and release gates
 
 - The frontend release lock records the contracts commit, committed release manifest, compiler input digest and runtime size. CI compares the V3.10 interfaces used by the frontend to the compiled ledger, Treasury, route planner, registry and batch adapter. The pairing artifact records exact frontend and contracts commits.
+- The release workflow also runs the existing V2 factory and user lifecycle suite on an isolated Anvil fork of the pinned Polygon block. The suite exercises approval, staking, harvest, partial exit and emergency recovery with fixture funds.
 - The V3.10 ledger is 24,538 bytes with 38 bytes of EIP-170 headroom. The compiled bytecode is versioned separately from the checked local deployment. The contracts pipeline enforces the size limit.
 - Mainnet remains blocked pending independent audit, production role and token/route approval, verified deployment parameters and addresses, automation and monitoring rehearsal, real wallet extension acceptance, and explicit approval for merge and release.
