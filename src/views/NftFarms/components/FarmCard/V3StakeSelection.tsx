@@ -651,7 +651,7 @@ export default function V3StakeSelection({
       poolTiming(pool) === 'Live',
   )
   const confirm = async () => {
-    if (blocked || !canStake) return
+    if (blocked) return
     if (wrongChain) {
       setSwitchFailed(false)
       try {
@@ -661,6 +661,7 @@ export default function V3StakeSelection({
       }
       return
     }
+    if (!canStake) return
     setAttempted(true)
     if (
       await action.run(
@@ -742,7 +743,7 @@ export default function V3StakeSelection({
       title={title}
       initialFocus
       pending={blocked && !action.unconfirmed}
-      disabled={blocked || !canStake}
+      disabled={blocked || (!wrongChain && !canStake)}
       confirmLabel={
         wrongChain
           ? t('Switch network')
