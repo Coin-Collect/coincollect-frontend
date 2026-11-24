@@ -40,6 +40,16 @@ Test her iki sürümde Direct Treasury fonlamasını, ayrıca V3.8'de 32 NFT ile
 
 V3.8.0-rc `standard-input.json` SHA-256 değeri `6c79b0e27c1abaa4ef53b9b8b93998d4841a3acf23a9132460d3f78b6779ec98`. Derlenen V3.8.0 ledger çalışma kodu 24.389 bayttır. Henüz dağıtım adresi veya zincirde doğrulanmış çalışma kodu hash'i yoktur.
 
+### 24 Kasım 2026 test hazırlığı
+
+V3.8.0-rc, V3.7.0'ın 63 kontrat fonksiyonunu koruyor. Treasury Vault, varlık kaydı ve rota planlayıcısının derlenen çalışma kodları eşleşiyor. Pool Studio'nun 22 NFT ve sekiz ekosistem tokenı kataloğu, varsayılan Power değerleri, görseller ve Community / Partner sunumu uygulama kodunda ortak kullanılıyor.
+
+- Korunan V3.7 test zincirinde USDT, COLLECT ve AVATAR için doğrudan Treasury rezervi, USDT bütçeli Treasury ve cüzdan bütçeli havuz açılışı zincire işlem yazılmadan simüle edildi. USDT → COLLECT ve USDT → AVATAR için onaylı rotadan fiyat alındı.
+- Treasury'ye native POL yatırma, USDT çekme ve Treasury içinden USDT → COLLECT swap işlemleri aynı blokta başarıyla simüle edildi.
+- Treasury'de 13 varlık görüldü. Dört test cüzdanının her birinde 22 koleksiyonun her birinden 500 NFT doğrulandı. Havuz oluşturma simülasyonunda 21 koleksiyon doğrudan kabul edildi. Aavegotchi mevcut uyumluluk kontrolünde reddedildi.
+- V3.8 toplu Unstake, doğrudan stake edilen NFT pozisyonlarını kapsıyor. Yönetilen ERC-1155 pozisyonları mevcut adet bazlı çıkış akışını kullanıyor.
+- V3.7 havuz ve Treasury kayıtlarına erişimi koruyan sürüm seçimi henüz ortak Studio'da yok. Bir V3.8 ledger dağıtımı yapılsa bile V3.7 Treasury kayıtları ve havuz pozisyonları yeni kontrata kendiliğinden taşınmaz.
+
 ## Bundan sonraki sürümler
 
 - Zincir üstü davranışa yeni özellik eklenince yeni bir minor sürüm, hata düzeltildiğinde yeni bir patch sürüm hazırlanır. Yalnızca arayüzü etkileyen değişiklikler uygulama sürümünde kaydedilir.
