@@ -73,6 +73,8 @@ Yeni Treasury test fonlarıyla açıldı. 287. blokta oluşturulan 1 numaralı h
 
 V3 FarmCard'daki Stake ve Stake More, havuz listesinde ve havuz detayında aynı NFT seçim modalını açar. ERC-721 galerisi uygun koleksiyonları tek ekranda gruplar. Büyük koleksiyonlar önizlemeyle açılır ve bağımsız genişler. Filtreler ve seçim görünümü ortak NFT seçimini korur. Alttaki sabit özet seçilen NFT sayısını, toplam Power'ı ve boş yerleri gösterir. ERC-1155 adet girişi ilgili koleksiyonun altında açılır.
 
+V3 FarmCard, cüzdanın stake ettiği NFT sayısını ve havuzun cüzdan başına limitini `3/3 NFT` biçiminde gösterir. Liste ve detay kartı masaüstü Chromium'da, detay kartı ayrıca 360 px mobil görünümde doğrulandı.
+
 ### V3.10.0-rc · Havuz oluşturulduğunda başlatma
 
 Start now seçildiğinde Studio `start = 0` ve `end = süre` gönderir. Ledger başlangıç ve bitişi oluşturma bloğundan hesaplayıp mutlak zamanlar olarak saklar. Treasury rezervi ve cüzdan bütçesi planı kurulum sırasında tanımlanabilir. Cüzdan bütçesinin yatırılması mevcut ayrı işlemle yapılır. Önceden tarih verilen havuzlar mutlak zamanları kullanır.
@@ -82,6 +84,8 @@ V3.10.0-rc derleyici girdisi SHA-256 değeri `bf0053a06db21544d75744dfa654dc9277
 24 Kasım 2026'da aynı RPC üzerinden ledger, Treasury ve adaptör sırasıyla 322, 323 ve 325. bloklarda dağıtıldı. Ledger çalışma kodu hash'i `0xd29e49393de68bb02b0c3f7f038d9989defb467ab5dd05fb6c0b76d584e990bd`, Treasury hash'i `0x4bf5df3d6887e91b91a0619f5356d5e9056e1e2d75b74bf6b855fe585f4ff863`, adaptör hash'i `0x87bb26bca663872682403c29e0f8777ef933c9a6551b430ffe26d3bf36b82e46`.
 
 Studio'da Start now varsayılanıyla oluşturulan `V3.10 Start Now` havuzu 338. blokta açıldı. Doğrudan Treasury'den 0,25 USDT, 10 COLLECT ve 2 AVATAR ayrıldı. `joinBatch` 338. blok verisiyle başarılı oldu. Tarayıcıdan iki ERC-721 için gönderilen stake işlemi 339. blokta onaylandı. V3.9'daki beş havuzun kuralları, pozisyonları ve 13 varlıklı Treasury kayıtları işlemden önce ve sonra eşleşti.
+
+FAROZ (#2) üzerinde 353–355. bloklarda 23 ve 15 Power ile iki cüzdanın ödül paylaşımı doğrulandı. İkinci cüzdan iki NFT'yi tek işlemde çıkardı ve birikmiş COLLECT, LOT ve USDT ödüllerini aldı. Kalan cüzdanın payı 23/38'den %100'e çıktı. Eşit 24 saniyelik aralıklarda COLLECT ve LOT birikim hızı yaklaşık %65,2 arttı. USDT tutarları tokenın en küçük birimine yuvarlandı ve hesapla eşleşti.
 
 ## Bundan sonraki sürümler
 

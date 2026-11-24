@@ -90,6 +90,7 @@ export function FarmCardEarned({
 
 export function FarmCardStakedPosition({
   count,
+  walletLimit,
   power,
   canUnstake,
   canStakeMore,
@@ -97,6 +98,7 @@ export function FarmCardStakedPosition({
   onStakeMore,
 }: {
   count: string
+  walletLimit?: number
   power: string
   canUnstake: boolean
   canStakeMore: boolean
@@ -110,8 +112,19 @@ export function FarmCardStakedPosition({
       <Text bold textTransform="uppercase" color="secondary" fontSize="12px">
         {t('Staked NFT Count')}
       </Text>
-      <Flex justifyContent="space-between" alignItems="center">
-        <Heading title={`${power} power`}>{count}</Heading>
+      <Flex
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap={walletLimit === undefined ? undefined : 'wrap'}
+        style={walletLimit === undefined ? undefined : { gap: 8 }}
+      >
+        {walletLimit === undefined ? (
+          <Heading title={`${power} power`}>{count}</Heading>
+        ) : (
+          <Text as="p" bold fontSize="20px" title={`${power} power`} style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {t('%count%/%limit% NFT', { count, limit: walletLimit })}
+          </Text>
+        )}
         <IconButtonWrapper>
           <ActionChipButton variant="tertiary" disabled={!canUnstake} onClick={onUnstake}>
             <MinusIcon width="13px" mr="4px" color="currentColor" />

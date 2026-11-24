@@ -368,6 +368,7 @@ export default function V3FarmCard({
             {count > 0 ? (
               <FarmCardStakedPosition
                 count={String(count)}
+                walletLimit={pool.config.maxNftsPerWallet}
                 power={String(walletPosition.power)}
                 canUnstake={!actionPending}
                 canStakeMore={canStake}
