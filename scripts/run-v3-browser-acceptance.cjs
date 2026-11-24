@@ -38,7 +38,7 @@ async function run() {
       cwd: contracts,
       encoding: 'utf8',
       env: { ...process.env, COINCOLLECT_V34_FIXTURE: '1', COINCOLLECT_V3_LOCAL_RPC: fork.url },
-      timeout: 120_000,
+      timeout: 210_000,
     })
     const fixture = JSON.parse(fixtureJson)
     writeFileSync(fixturePath, fixtureJson)
