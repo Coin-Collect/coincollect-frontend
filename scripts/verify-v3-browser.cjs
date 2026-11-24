@@ -469,11 +469,11 @@ async function testBrowser() {
 
     const walletNonceBeforeSwitch = await rpc('eth_getTransactionCount', [fixture.participant, 'latest'])
     await visit('/nftpools/v3/' + fixture.poolId, fixture.participant, false, '0x1')
-    await has('Switch to the settlement network to send transactions.')
-    await click('button', 'Switch network')
+    await click('article button', 'Click to Stake Now')
+    await click('dialog button', 'Switch network')
     await wait('wallet switches to the local settlement chain', async () =>
       (await window.ethereum.request({ method: 'eth_chainId' })) === '0x7a69' &&
-      !document.body.innerText.includes('Switch to the settlement network to send transactions.'),
+      ![...document.querySelectorAll('dialog button')].some((button) => button.textContent.trim() === 'Switch network'),
     )
     assert.equal(await rpc('eth_getTransactionCount', [fixture.participant, 'latest']), walletNonceBeforeSwitch)
     console.log('PASS a wrong-network wallet switches to the isolated chain without submitting a transaction')
@@ -611,7 +611,7 @@ async function testBrowser() {
       'upper-right pool detail link',
       (path) => {
         const link = document.querySelector('article a[aria-label="Open pool page"]')
-        if (link?.getAttribute('href') !== path) return false
+        if (!link || new URL(link.href).pathname !== path) return false
         link.click()
         return true
       },
@@ -620,7 +620,7 @@ async function testBrowser() {
     await wait('pool detail route', (path) => location.pathname === path, poolPath)
     assert.ok(await evalPage(() => !document.body.innerText.includes('Your NFTs and rewards')))
     await command('Page.navigate', { url: base + poolPath + '#v3-positions' })
-    await has(['3.2', '3.3', '3.4', '3.6'].includes(fixture.version) ? 'Refresh ownership' : 'No positions in this pool yet.')
+    await has('Refresh ownership')
     await viewport(390, 844, true)
     const ownerBalance = await tokenBalance(fixture.operator)
     await visit(poolPath, fixture.operator)
@@ -682,6 +682,21 @@ async function testBrowser() {
     }
     await viewport(1280, 900)
     await openStudio()
+    if (fixture.registry) {
+      await field('deployment', 'v3.6.1')
+      await has('Legacy ledger pool #1')
+      await click('button', 'Treasury')
+      await has('Central Treasury')
+      await click('button', 'Back to pools')
+      await click('button[aria-label="Manage Legacy ledger pool #1"]', 'Manage')
+      await has('Manage pool #1')
+      await click('a', 'View public pool')
+      await has('Legacy ledger pool #1')
+      assert.ok(await evalPage(() => location.search === '?deployment=v3.6.1'))
+      assert.equal((await fetch(base + '/nftpools/v3/1?deployment=unknown')).status, 404)
+      await openStudio()
+      console.log('PASS registry isolates legacy and V3.10 pools with overlapping IDs and separate Treasuries')
+    }
     await wait('verified existing pool in Studio', () =>
       Boolean(document.querySelector('[aria-label="Manage V3 Browser Fixture"]')),
     )
@@ -859,6 +874,8 @@ async function testBrowser() {
       'function deposit() payable',
       'function approve(address spender, uint256 amount) returns (bool)',
       'function poolCount() view returns (uint256)',
+      'function poolState(uint256) view returns ((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI),uint64,uint16,uint64,uint256)',
+      'function joinBatch(uint256,(uint256 sourceChainId,address collection,uint256 tokenId)[])',
       'function observe(address input,address output)',
       'function createPool((uint64 start,uint64 end,uint16 threshold,uint16 maxWallets,uint16 maxNftsPerWallet,string metadataURI) config,(uint256 sourceChainId,address collection,uint32 weight)[] collections,(address token,uint128 cap)[] rewards) returns (uint256)',
       'function fundReward(uint256 poolId,address token,uint128 amount)',
@@ -926,11 +943,11 @@ async function testBrowser() {
       ])
     const beforeHarvest = await rpc('eth_blockNumber')
     await click('article button', 'Harvest')
-    await has('3 of 3 transactions confirmed on the settlement network.')
+    await has(fixture.version === '3.10' ? 'Confirmed on the settlement network.' : '3 of 3 transactions confirmed on the settlement network.')
     assert.equal(await evalPage(() => document.querySelector('dialog[open]') === null), true)
     const harvestClaims = await claimsSince(beforeHarvest)
     assert.deepEqual(harvestClaims.map(({ topics }) => topics[2]).sort(), [...keys].sort())
-    assert.equal(new Set(harvestClaims.map(({ transactionHash }) => transactionHash)).size, 3)
+    assert.equal(new Set(harvestClaims.map(({ transactionHash }) => transactionHash)).size, fixture.version === '3.10' ? 1 : 3)
     assert.equal(await readBatchPool('walletsNftCount', [batchId, fixture.participant]), 3n)
     await rpc('evm_increaseTime', [180])
     await rpc('evm_mine')
@@ -940,11 +957,11 @@ async function testBrowser() {
     await selectNft(batchIds[2])
     await has('2 NFTs selected')
     await click('dialog button', 'Unstake & Harvest')
-    await has('2 of 2 transactions confirmed on the settlement network.')
+    await has(fixture.version === '3.10' ? 'Confirmed on the settlement network.' : '2 of 2 transactions confirmed on the settlement network.')
     await wait('selective Unstake dialog closes', () => document.querySelector('dialog[open]') === null)
     const exitClaims = await claimsSince(beforeExit)
     assert.deepEqual(exitClaims.map(({ topics }) => topics[2]).sort(), [keys[0], keys[2]].sort())
-    assert.equal(new Set(exitClaims.map(({ transactionHash }) => transactionHash)).size, 2)
+    assert.equal(new Set(exitClaims.map(({ transactionHash }) => transactionHash)).size, fixture.version === '3.10' ? 1 : 2)
     const seats = await Promise.all(keys.map((key) => readBatchPool('positionState', [batchId, key])))
     assert.equal(seats[0].seatOwner, '0x' + '0'.repeat(40))
     assert.equal(seats[1].seatOwner.toLowerCase(), fixture.participant.toLowerCase())
@@ -1080,7 +1097,7 @@ async function testBrowser() {
       assert.equal(reserved.allocated, parseEther('10'))
       await openStudio(fixture.treasury)
       await click('button', 'Treasury')
-      if (fixture.version === '3.6') await click('[role="tab"]', 'Withdraw')
+      if (fixture.dynamic) await click('[role="tab"]', 'Withdraw')
       await field('treasury-amount', '20')
       await evalPage(() => { window.__nextV3WalletForkAhead = true })
       await click('button', 'Withdraw available')
@@ -1114,7 +1131,7 @@ async function testBrowser() {
         assert.equal((await readBatchPool('rewardState', [createdV31, fixture.token])).inventory, parseEther('10'))
       }
       await viewport(390, 844, true)
-      if (fixture.version === '3.6') await click('[role="tab"]', 'Pool reserves')
+      if (fixture.dynamic) await click('[role="tab"]', 'Pool reserves')
       await has('Reserved NFT claims')
       assert.ok(await evalPage(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
       console.log(
@@ -1429,7 +1446,7 @@ async function testBrowser() {
         editor.click()
         return true
       })
-      await click('dialog button', 'In 1 hour')
+      await click('dialog label', 'In 1 hour')
       await field('duration-days', '2')
       await click('dialog button', 'Done')
       await click('button', 'Review pool plan')
@@ -1463,6 +1480,49 @@ async function testBrowser() {
       await has('Treasury open')
       assert.equal(await read(fixture.treasuryVault, 'paused', []), false)
       console.log('PASS V3.6 Treasury responsive keyboard navigation, permissions, wallet recovery, stale quote, swap, native withdrawal, new token pool, pause and resume')
+    }
+    if (fixture.version === '3.10') {
+      const expectedId = (await readBatchPool('poolCount')) + 1n
+      await openStudio()
+      await click('button', 'New pool')
+      await evalPage(() => document.querySelector('input[name="funding-source"][value="direct"]').click())
+      await editPoolName('V3.10 instant direct Treasury')
+      await wait('open NFT collection editor', () => {
+        const button = document.querySelector('article button[aria-label="Edit NFT collections"]')
+        if (!button) return false
+        button.click()
+        return true
+      })
+      await field('collection-address', fixture.nft)
+      await click('dialog button', 'Add collection')
+      await click('dialog button', 'Done')
+      await wait('open reward token editor', () => {
+        const button = [...document.querySelectorAll('button')].find((entry) => entry.textContent.trim().startsWith('Reward tokens'))
+        if (!button) return false
+        button.click()
+        return true
+      })
+      await wait('select V3USD reward', () => {
+        const button = [...document.querySelectorAll('dialog button')].find((entry) => entry.textContent.trim().startsWith('V3USD'))
+        if (!button) return false
+        button.click()
+        return true
+      })
+      await click('dialog button', 'Done')
+      await field('direct-amount-' + fixture.dynamic.stable.toLowerCase(), '0.01')
+      await click('button', 'Review pool plan')
+      await has('On pool creation')
+      await click('button', 'Create pool and reserve rewards')
+      await has('Manage pool #' + expectedId)
+      const [config] = await readBatchPool('poolState', [expectedId])
+      const createdBlock = await rpc('eth_getBlockByNumber', ['latest', false])
+      assert.equal(config.start, BigInt(createdBlock.timestamp))
+      assert.ok((await readBatchPool('rewardState', [expectedId, fixture.dynamic.stable])).inventory === 10000n)
+      const attempt = encodeFunctionData({ abi: batchAbi, functionName: 'joinBatch', args: [expectedId, [
+        { sourceChainId: 137n, collection: fixture.nft, tokenId: batchIds[1] },
+      ]] })
+      await rpc('eth_call', [{ from: fixture.participant, to: fixture.ledger, data: attempt }, createdBlock.number])
+      console.log('PASS V3.10 Studio defaults to Start now and direct Treasury pool accepts stake in the creation block')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

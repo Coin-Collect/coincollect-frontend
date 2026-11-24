@@ -24,6 +24,7 @@ import {
 } from './poolShowroomStyles'
 import { sourceName } from './presentation'
 import type { V3PoolSnapshot } from './reader'
+import { v3DeploymentPath, type V3Deployment } from './runtime'
 import { V3Link } from './styles'
 
 export function PoolShowroomCover({
@@ -174,19 +175,19 @@ export function PoolShowroomCollections({ collections }: { collections: V3PoolSn
   )
 }
 
-export function PoolShowroomDiscover({ related }: { related: V3PoolTeaser[] }) {
+export function PoolShowroomDiscover({ related, deployment }: { related: V3PoolTeaser[]; deployment?: V3Deployment }) {
   return (
     <ShowroomSection aria-labelledby="more-pools-title">
       <DiscoverHeader>
         <h2 id="more-pools-title">Explore other pools</h2>
-        <V3Link as={Link} href="/nftpools/v3">
+        <V3Link as={Link} href={v3DeploymentPath('/nftpools/v3', deployment)}>
           All V3 pools
         </V3Link>
       </DiscoverHeader>
       {related.length > 0 && (
         <RelatedPools>
           {related.map((pool) => (
-            <Link href={`/nftpools/v3/${pool.id}`} key={pool.id} prefetch={false}>
+            <Link href={v3DeploymentPath(`/nftpools/v3/${pool.id}`, deployment)} key={pool.id} prefetch={false}>
               <img src={pool.artwork} alt="" width={96} height={72} loading="lazy" />
               <span>
                 <strong>{pool.name}</strong>

@@ -20,8 +20,10 @@ export default function V3Catalogue({
   poolType,
   onVisibility,
   Cards,
+  selectedDeployment,
 }: {
   Cards: ComponentType<V3CatalogueCardsProps>
+  selectedDeployment?: V3Deployment
   history?: boolean
   query?: string
   embedded?: boolean
@@ -29,7 +31,8 @@ export default function V3Catalogue({
   onVisibility?: (visible: boolean) => void
 }) {
   const [offset, setOffset] = useState(0)
-  const deployment = useMemo(getV3Deployment, [])
+  const defaultDeployment = useMemo(() => getV3Deployment(), [])
+  const deployment = selectedDeployment ?? defaultDeployment
   const client = useMemo(createV3Client, [])
   const load = useCallback(async () => {
     if (!deployment) throw new Error('This V3 deployment is unavailable.')

@@ -1,0 +1,7 @@
+{
+  "release": "3.10.0-rc",
+  "contractsCommit": "1caad2c2867069af56811fc9e5d94794af8c1b52",
+  "manifestSha256": "845baff3cdcc6d018cf4e56436b6cf4b69d57253498485bed6afb6a942007790",
+  "standardInputSha256": "bf0053a06db21544d75744dfa654dc9277bb7fbec4c8799739ad227e34bee3ce",
+  "runtimeBytes": 24538
+}

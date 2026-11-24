@@ -57,19 +57,23 @@ jobs:
 
   v3-browser-and-abi:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 22
     strategy:
       fail-fast: false
       matrix:
-        ledger: [frozen, v36]
+        ledger: [frozen, v36, v310]
     steps:
       - uses: actions/checkout@v4
         with:
           path: frontend
+      - name: Read pinned contracts commit
+        id: release
+        working-directory: frontend
+        run: echo "commit=$(jq -er .contractsCommit scripts/v310-release-lock.json)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           repository: Coin-Collect/coincollect-smart-contracts
-          ref: 39dca890de4c5c304de3fbfc32385ff9c56455a2
+          ref: ${{ steps.release.outputs.commit }}
           path: contracts
       - uses: actions/setup-node@v4
         with:
@@ -87,11 +91,26 @@ jobs:
           cmp "$RUNNER_TEMP/v3-abi.ts" ../../../frontend/src/features/universalRewards/abi.ts
           node scripts/export-v36-abi.cjs "$RUNNER_TEMP/v36-abi.ts"
           cmp "$RUNNER_TEMP/v36-abi.ts" ../../../frontend/src/features/universalRewards/abiV36.ts
+      - name: Reproduce V3.10 release and verify exact ABI pairing
+        if: matrix.ledger == 'v310'
+        working-directory: frontend
+        run: |
+          node ../contracts/projects/universal-rewards-v3/scripts/build-release.cjs "$RUNNER_TEMP/v310" 3.10.0-rc
+          cmp ../contracts/projects/universal-rewards-v3/release-manifest-v310.json "$RUNNER_TEMP/v310/manifest.json"
+          node scripts/verify-v310-release.cjs "$RUNNER_TEMP/v310" ../contracts "$RUNNER_TEMP/v310-audit-pairing.json"
+      - name: Upload exact V3.10 ABI and compiler pairing
+        if: matrix.ledger == 'v310'
+        uses: actions/upload-artifact@v4
+        with:
+          name: v310-audit-pairing
+          path: ${{ runner.temp }}/v310-audit-pairing.json
+          if-no-files-found: error
       - name: Run isolated production browser acceptance
         working-directory: frontend
         run: node scripts/run-v3-browser-acceptance.cjs ../contracts/projects/universal-rewards-v3
         env:
           COINCOLLECT_V36_FIXTURE: ${{ matrix.ledger == 'v36' && '1' || '0' }}
+          COINCOLLECT_V310_FIXTURE: ${{ matrix.ledger == 'v310' && '1' || '0' }}
           V3_BROWSER_TREASURY_SCREENSHOT: ${{ runner.temp }}/v361-treasury-mobile.png
           V3_BROWSER_TREASURY_DESKTOP_SCREENSHOT: ${{ runner.temp }}/v361-treasury-desktop.png
       - name: Record exact audit pairing

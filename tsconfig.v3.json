@@ -8,6 +8,8 @@
   },
   "include": [
     "next-env.d.ts",
+    "src/**/*.d.ts",
+    "packages/*/src/**/*.d.ts",
     "src/features/universalRewards/**/*.ts",
     "src/features/universalRewards/**/*.tsx",
     "src/pages/api/v3/**/*.ts"

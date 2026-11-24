@@ -93,6 +93,8 @@ FAROZ (#2) üzerinde 353–355. bloklarda 23 ve 15 Power ile iki cüzdanın öd�
 
 ## Bundan sonraki sürümler
 
+V3.10 sürüm adayı, V3.7, V3.9 ve V3.10 dağıtımlarını aynı Studio'da seçilebilir hale getirir. Ledger ve Treasury kimlikleri zincirde doğrulanır. [Dağıtım kaydı ve kabul kılavuzu](universal-rewards-v310-acceptance.md).
+
 - Zincir üstü davranışa yeni özellik eklenince yeni bir minor sürüm, hata düzeltildiğinde yeni bir patch sürüm hazırlanır. Yalnızca arayüzü etkileyen değişiklikler uygulama sürümünde kaydedilir.
 - Her sürümün değişiklik özeti, önceki sürümle uyumu, derleme manifesti ve kabul testi sonucu bu kayda eklenir. Dağıtımdan sonra zincir kimliği, kontrat adresi ve çalışma kodunun hash'i de kaydedilir.
 - Aday, ortak testte aktif ve üretimde aktif durumları ayrı yazılır. Mevcut havuzlar kendi kontratlarında kalır.

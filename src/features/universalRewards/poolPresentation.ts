@@ -1,10 +1,15 @@
 import { getLocalForkStorageKey } from 'config/localFork'
 import { keccak256, stringToHex } from 'viem'
 import { isV3PoolType, safeArtwork, type V3Presentation } from './metadata'
-import type { V3Deployment } from './runtime'
+import { v3DeploymentPath, type V3Deployment } from './runtime'
 import { UINT256_MAX } from './units'
 
 export const V3_PRESENTATION_URL = 'https://metadata.coincollect.org/v3-pools.json'
+export function v3PresentationUrl(deployment: V3Deployment) {
+  return deployment.id
+    ? V3_PRESENTATION_URL.replace('v3-pools.json', `v3-pools-${deployment.address.toLowerCase()}.json`)
+    : V3_PRESENTATION_URL
+}
 export const MAX_PRESENTATION_BYTES = 512_000
 export const MAX_PRESENTATION_POOLS = 1000
 
@@ -125,16 +130,19 @@ export async function loadV3PresentationDocument(deployment: V3Deployment, force
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 3000)
     try {
-      const response = await fetch(local ? '/api/v3/presentation' : V3_PRESENTATION_URL, {
-        cache: 'no-cache',
-        signal: controller.signal,
-      })
-      if (!response.ok || Number(response.headers.get('content-length') ?? 0) > MAX_PRESENTATION_BYTES) return undefined
-      const body = await response.text()
-      if (new TextEncoder().encode(body).byteLength > MAX_PRESENTATION_BYTES) return undefined
-      const document = validateV3PresentationDocument(JSON.parse(body), deployment)
-      cache = { key, until: Date.now() + (local ? 2000 : 300_000), document }
-      return document
+      const urls = local
+        ? [v3DeploymentPath('/api/v3/presentation', deployment)]
+        : new Set([v3PresentationUrl(deployment), V3_PRESENTATION_URL])
+      for (const url of urls) {
+        const response = await fetch(url, { cache: 'no-cache', signal: controller.signal })
+        if (!response.ok || Number(response.headers.get('content-length') ?? 0) > MAX_PRESENTATION_BYTES) continue
+        const body = await response.text()
+        if (new TextEncoder().encode(body).byteLength > MAX_PRESENTATION_BYTES) continue
+        const document = validateV3PresentationDocument(JSON.parse(body), deployment)
+        cache = { key, until: Date.now() + (local ? 2000 : 300_000), document }
+        return document
+      }
+      return undefined
     } catch {
       return undefined
     } finally {

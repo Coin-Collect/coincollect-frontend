@@ -10,12 +10,13 @@ import {
   presentationRevision,
   validateV3Presentation,
   validateV3PresentationDocument,
+  v3PresentationUrl,
   withV3Presentation,
   type V3PresentationDocument,
 } from './poolPresentation'
 import { claimPeriodMessage, isV3ClaimExpired, poolTiming, shortAmount, sourceName } from './presentation'
 import { readV3DirectTreasurySurplus, readV3Pool, simulateV3SurplusReturn, type V3PoolSnapshot } from './reader'
-import { validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { validateV3Deployment, v3DeploymentPath, type V3Client, type V3Deployment } from './runtime'
 import { PresentationFields, PresentationWorkspace, WorkspaceActions } from './studioDashboardStyles'
 import { V3Actions, V3Button, V3Card, V3Error, V3Field, V3Metrics, V3Muted } from './styles'
 import { describeV3Error, recoverV3Rewards } from './transactions'
@@ -99,10 +100,10 @@ export default function V3StudioPool({
       )
       const link = window.document.createElement('a')
       link.href = url
-      link.download = `v3-pool-${poolId}-presentation.json`
+      link.download = `v3-pool-${deployment.address}-${poolId}-presentation.json`
       link.click()
       window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-      setMessage('Downloaded. Merge this pool’s entry into v3-pools.json to publish it.')
+      setMessage(`Downloaded. Merge this pool’s entry into ${v3PresentationUrl(deployment).split('/').pop()} to publish it.`)
       return
     }
     if (!getWallet || !writeAllowed) throw new Error('Connect the V3 operator wallet to the settlement network.')
@@ -112,7 +113,7 @@ export default function V3StudioPool({
       account,
       message: localPresentationMessage(deployment, record, revision, issuedAt),
     })
-    const response = await fetch('/api/v3/presentation', {
+    const response = await fetch(v3DeploymentPath('/api/v3/presentation', deployment), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...record, revision, issuedAt, signature, presentation }),
@@ -218,7 +219,7 @@ export default function V3StudioPool({
             Edit presentation
           </V3Button>
         )}
-        <V3Button as="a" $secondary href={`/nftpools/v3/${poolId}`}>
+        <V3Button as="a" $secondary href={v3DeploymentPath(`/nftpools/v3/${poolId}`, deployment)}>
           View public pool
         </V3Button>
       </WorkspaceActions>

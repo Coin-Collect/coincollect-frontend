@@ -83,6 +83,7 @@ async function run() {
       NEXT_PUBLIC_FORK_SESSION_ID: 'v3-browser-' + port,
       NEXT_PUBLIC_V3_LEDGER_ADDRESS: fixture.ledger,
       NEXT_PUBLIC_V3_LEDGER_CODE_HASH: fixture.runtimeHash,
+      NEXT_PUBLIC_V3_DEPLOYMENT_REGISTRY: fixture.registry ? JSON.stringify(fixture.registry) : '',
       NEXT_TELEMETRY_DISABLED: '1',
       SENTRY_AUTH_TOKEN: '',
       SENTRY_DSN: sentryDsn,

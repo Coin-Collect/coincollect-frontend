@@ -3,6 +3,7 @@
 const { readFileSync } = require('node:fs')
 const { homedir } = require('node:os')
 const path = require('node:path')
+const protectedDeployments = require('./v3-protected-deployments.json')
 
 const configPath = path.join(homedir(), '.config', 'coincollect', 'test-environment.json')
 
@@ -55,6 +56,11 @@ function readStudioDeploymentOverride(env = process.env) {
   return {
     NEXT_PUBLIC_V3_LEDGER_ADDRESS: deployment.address,
     NEXT_PUBLIC_V3_LEDGER_CODE_HASH: deployment.runtimeHash,
+    ...(config.checkpoint.hash === protectedDeployments.checkpointHash &&
+      protectedDeployments.deployments.some(({ address, runtimeHash }) =>
+        address.toLowerCase() === deployment.address.toLowerCase() && runtimeHash === deployment.runtimeHash) && {
+      NEXT_PUBLIC_V3_DEPLOYMENT_REGISTRY: JSON.stringify(protectedDeployments.deployments),
+    }),
   }
 }
 

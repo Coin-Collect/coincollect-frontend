@@ -8,7 +8,7 @@ import { poolShowroomData, type V3PoolShowroomData, type V3PoolTeaser } from './
 import { FarmCardSlot, PoolStage, Showroom, ShowroomSection } from './poolShowroomStyles'
 import type { V3PoolCardProps } from './presentation'
 import { readV3PublicPool } from './reader'
-import { createV3Client, getV3Deployment } from './runtime'
+import { createV3Client, v3DeploymentPath, type V3Deployment } from './runtime'
 import { V3Actions, V3Button, V3Error, V3Field, V3Link, V3Muted } from './styles'
 import { PoolShowroomCollections, PoolShowroomCover, PoolShowroomDiscover } from './V3PoolShowroom'
 import V3PoolWalletDialog, { PoolDialogFrame } from './V3PoolWalletDialog'
@@ -22,16 +22,17 @@ export default function V3PoolDetail({
   initialPool,
   related,
   shareUrl,
+  deployment,
 }: {
   poolId: bigint
   Card: ComponentType<V3PoolCardProps>
   initialPool: V3PoolShowroomData | null
   related: V3PoolTeaser[]
   shareUrl: string
+  deployment: V3Deployment
 }) {
   const router = useRouter()
   const client = useMemo(createV3Client, [])
-  const deployment = useMemo(getV3Deployment, [])
   const [panel, setPanel] = useState<PoolPanel>()
   const [walletView, setWalletView] = useState<WalletView>()
 
@@ -101,7 +102,8 @@ export default function V3PoolDetail({
     )
       return
     const link = event.target instanceof Element ? event.target.closest('a') : null
-    if (!link || link.origin !== window.location.origin || link.pathname !== window.location.pathname) return
+    if (!link || link.origin !== window.location.origin || link.pathname !== window.location.pathname ||
+      link.search !== (deployment.id ? `?deployment=${deployment.id}` : '')) return
     if (link.hash !== '#eligible-nfts' && link.hash !== '#contract') return
     event.preventDefault()
     void router.push(link.hash, undefined, { shallow: true, scroll: false })
@@ -110,7 +112,7 @@ export default function V3PoolDetail({
   return (
     <Showroom>
       <V3Actions style={{ marginBottom: 12 }}>
-        <V3Link as={Link} href="/nftpools/v3">
+        <V3Link as={Link} href={v3DeploymentPath('/nftpools/v3', deployment)}>
           <ArrowBackIcon color="currentColor" width="16px" mr="5px" aria-hidden="true" />
           All V3 pools
         </V3Link>
@@ -141,7 +143,7 @@ export default function V3PoolDetail({
         )}
       </ShowroomSection>
 
-      <PoolShowroomDiscover related={related} />
+      <PoolShowroomDiscover related={related} deployment={deployment} />
       {pool && deployment && walletView && (
         <V3PoolWalletDialog
           open={panel === walletView}

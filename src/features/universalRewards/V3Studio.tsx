@@ -14,7 +14,7 @@ import { universalRewardsAbi } from './abi'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
 import { v3PoolTypeLabels } from './metadata'
 import { isV3ClaimExpired, shortAmount } from './presentation'
-import { createV3Client, getV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import { createV3Client, getV3Deployments, type V3Client, type V3Deployment } from './runtime'
 import {
   buildV3Preview,
   createV3FundedPool,
@@ -588,16 +588,47 @@ export interface V3StudioComposerProps {
   launch: ReactNode
 }
 
-export default function V3Studio({
-  connect,
-  Composer,
-  Preview,
-}: {
+type V3StudioProps = {
   connect: ReactNode
   Composer: ComponentType<V3StudioComposerProps>
   Preview: ComponentType<V3StudioPreviewProps>
-}) {
-  const deployment = useMemo(getV3Deployment, [])
+}
+
+export default function V3Studio(props: V3StudioProps) {
+  const deployments = useMemo(getV3Deployments, [])
+  const [selected, setSelected] = useState<string>()
+  const chooser = useRef<HTMLSelectElement>(null)
+  const deployment = selected === undefined
+    ? deployments.find((entry) => entry.primary || entry.id === undefined)
+    : deployments.find((entry) => entry.id === selected)
+  const deploymentChooser = deployments.length > 1 && (
+    <V3Field>
+      Deployment
+      <select
+        ref={chooser}
+        name="deployment"
+        value={deployment?.id}
+        onChange={(event) => {
+          setSelected(event.target.value)
+          window.requestAnimationFrame(() => chooser.current?.focus())
+        }}
+      >
+        {deployments.map(({ id, primary }) => (
+          <option key={id} value={id}>{id?.toUpperCase()}{primary ? ' · Current' : ''}</option>
+        ))}
+      </select>
+    </V3Field>
+  )
+  return <V3StudioWorkspace key={deployment?.address} {...props} deployment={deployment} deploymentChooser={deploymentChooser} />
+}
+
+function V3StudioWorkspace({
+  connect,
+  Composer,
+  Preview,
+  deployment,
+  deploymentChooser,
+}: V3StudioProps & { deployment?: V3Deployment; deploymentChooser: ReactNode }) {
   const client = useMemo(createV3Client, [])
   const wallet = useAccount()
   const account = wallet.isConnected ? wallet.address : undefined
@@ -749,6 +780,7 @@ export default function V3Studio({
             )}
           </V3Actions>
         </StudioBar>
+        {mode === 'dashboard' && deploymentChooser}
         {!deployment && <V3Muted role="status">V3 Studio has no active deployment in this environment.</V3Muted>}
         {deployment && !account && connect}
         {studio.loading && !studio.data && <V3Muted role="status">Checking the V3 deployment…</V3Muted>}

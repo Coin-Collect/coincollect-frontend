@@ -8,19 +8,20 @@ import { parseV3PoolId } from 'features/universalRewards/poolPresentation'
 import { poolShowroomArtwork, type V3PoolShowroomData, type V3PoolTeaser } from 'features/universalRewards/poolShowroom'
 import { readV3PoolShowroom } from 'features/universalRewards/poolShowroom.server'
 import { Showroom } from 'features/universalRewards/poolShowroomStyles'
-import { getV3Deployment } from 'features/universalRewards/runtime'
+import { getV3Deployment, v3DeploymentPath, type V3Deployment } from 'features/universalRewards/runtime'
 import V3FarmCard from 'views/NftFarms/components/FarmCard/V3FarmCard'
 
 interface PoolPageProps {
   poolId: string
+  deployment: V3Deployment
   initialPool: V3PoolShowroomData | null
   related: V3PoolTeaser[]
   initialMeta: { title: string; description: string; image: string; url: string; robots: string }
 }
 
-export const getServerSideProps: GetServerSideProps<PoolPageProps> = async ({ params, req, res }) => {
+export const getServerSideProps: GetServerSideProps<PoolPageProps> = async ({ params, query, req, res }) => {
   const poolId = parseV3PoolId(params?.poolId)
-  const deployment = getV3Deployment()
+  const deployment = getV3Deployment(query.deployment)
   if (!poolId || !deployment) return { notFound: true }
 
   const host = req.headers.host ?? ''
@@ -28,9 +29,10 @@ export const getServerSideProps: GetServerSideProps<PoolPageProps> = async ({ pa
     isLocalForkMode && /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host)
       ? `http://${host}`
       : process.env.NEXT_PUBLIC_APP_BASE_URL || 'https://app.coincollect.org'
-  const url = new URL(`/nftpools/v3/${poolId}`, base).href
+  const url = new URL(v3DeploymentPath(`/nftpools/v3/${poolId}`, deployment), base).href
   const props = (initialPool: V3PoolShowroomData | null, related: V3PoolTeaser[]): PoolPageProps => ({
     poolId: poolId.toString(),
+    deployment,
     initialPool,
     related,
     initialMeta: {
@@ -62,14 +64,16 @@ export const getServerSideProps: GetServerSideProps<PoolPageProps> = async ({ pa
 
 function UniversalRewardPoolPage({
   poolId,
+  deployment,
   initialPool,
   related,
   initialMeta,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <V3PoolDetail
-      key={poolId}
+      key={`${deployment.address}:${poolId}`}
       poolId={BigInt(poolId)}
+      deployment={deployment}
       initialPool={initialPool}
       related={related}
       shareUrl={initialMeta.url}
@@ -79,14 +83,14 @@ function UniversalRewardPoolPage({
 }
 
 // Public content is available in the first HTML response. Wallet and saved settings hydrate through the app gate.
-UniversalRewardPoolPage.PublicFallback = function PoolShowroomFallback({ initialPool, related, initialMeta }: PoolPageProps) {
+UniversalRewardPoolPage.PublicFallback = function PoolShowroomFallback({ initialPool, related, initialMeta, deployment }: PoolPageProps) {
   return (
     <ThemeProvider theme={light}>
       <Showroom>
         {initialPool && (
           <PoolShowroomCover pool={initialPool} url={initialMeta.url} hasCardHeading={false} interactive={false} />
         )}
-        <PoolShowroomDiscover related={related} />
+        <PoolShowroomDiscover related={related} deployment={deployment} />
       </Showroom>
     </ThemeProvider>
   )

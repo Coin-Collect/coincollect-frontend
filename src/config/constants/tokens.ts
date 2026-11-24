@@ -2324,7 +2324,7 @@ const tokens = () => {
   // If testnet - return list comprised of testnetTokens wherever they exist, and mainnetTokens where they don't
   if (chainId && parseInt(chainId, 10) === MUMBAI_TESTNET) {
     return Object.keys(mainnetTokens).reduce((accum, key) => {
-      return { ...accum, [key]: testnetTokens[key] || mainnetTokens[key] }
+      return { ...accum, [key]: testnetTokens[key as keyof typeof testnetTokens] || mainnetTokens[key as keyof typeof mainnetTokens] }
     }, {} as typeof testnetTokens & typeof mainnetTokens)
   }
 
@@ -2337,7 +2337,7 @@ type SerializedTokenList = Record<keyof typeof unserializedTokens, SerializedTok
 
 export const serializeTokens = () => {
   const serializedTokens = Object.keys(unserializedTokens).reduce((accum, key) => {
-    return { ...accum, [key]: serializeToken(unserializedTokens[key]) }
+    return { ...accum, [key]: serializeToken(unserializedTokens[key as keyof typeof unserializedTokens]) }
   }, {} as SerializedTokenList)
 
   return serializedTokens

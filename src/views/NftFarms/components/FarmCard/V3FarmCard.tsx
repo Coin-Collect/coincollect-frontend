@@ -28,7 +28,7 @@ import { Action, StyledActionButton } from './CardActionsContainer'
 import { FarmCardEarned, FarmCardStakedPosition } from './PositionPanels'
 import { useV3Action, useV3Query, useV3Wallet } from 'features/universalRewards/hooks'
 import { MAX_V3_PAGE, readV3CardPosition } from 'features/universalRewards/reader'
-import { createV3Client } from 'features/universalRewards/runtime'
+import { createV3Client, v3DeploymentPath } from 'features/universalRewards/runtime'
 import { manageV3Position, manageV3Positions, type V3Call } from 'features/universalRewards/transactions'
 import { V3Button } from 'features/universalRewards/styles'
 import V3NftActionModal, { type V3NftActionMode } from './V3NftActionModal'
@@ -69,7 +69,7 @@ export default function V3FarmCard({
   const timing = poolTiming(pool)
   const finished = timing === 'Finished'
   const status = timing === 'Live' ? 'ACTIVE' : finished ? 'FINISHED' : 'UPCOMING'
-  const poolUrl = `/nftpools/v3/${pool.poolId}`
+  const poolUrl = v3DeploymentPath(`/nftpools/v3/${pool.poolId}`, deployment)
   const contractLink =
     deployment.chainId === 137 ? `https://polygonscan.com/address/${deployment.address}` : `${poolUrl}#contract`
 

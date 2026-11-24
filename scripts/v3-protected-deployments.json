@@ -1,0 +1,35 @@
+{
+  "checkpointHash": "0x637ac733e44a8fbc33c6a2992103e72317ab658e8fde483d6bcad95d215d6202",
+  "deployments": [
+    {
+      "id": "v3.10",
+      "chainId": 31337,
+      "address": "0x4b000724210A4E1B98792c5Ba375465B890feF00",
+      "runtimeHash": "0xd29e49393de68bb02b0c3f7f038d9989defb467ab5dd05fb6c0b76d584e990bd",
+      "treasury": {
+        "address": "0x6bB33e86947570EA4C02E4397b92914cb69f7109",
+        "runtimeHash": "0x4bf5df3d6887e91b91a0619f5356d5e9056e1e2d75b74bf6b855fe585f4ff863"
+      }
+    },
+    {
+      "id": "v3.9",
+      "chainId": 31337,
+      "address": "0x1e1C00c721e8b634E2388A0B8bB9BcCcf5B58259",
+      "runtimeHash": "0xb44abee3cde29e91a6e8bff1fc87ce7773d7852896dfd3fe3c4fb5a90f11b218",
+      "treasury": {
+        "address": "0x85645e9cb03a6E4c8Fe179FdF33d45A4D8738758",
+        "runtimeHash": "0x192366d0c3307b243c9936d1d0deec20c5714a6c7b42dac354e906cbff761619"
+      }
+    },
+    {
+      "id": "v3.7",
+      "chainId": 31337,
+      "address": "0x8559BB75C406C85Af322085576A1907abb0F61F8",
+      "runtimeHash": "0x2ca9ed079db8a5a8dfd74d1c0b8780913cee1a3d56912c61655b211c8e2d152f",
+      "treasury": {
+        "address": "0x18a29FFCB6E7c229231bF0904146ea595DE1201b",
+        "runtimeHash": "0xaf71ec3d6fbf0516d6fb2c6ff14c3d8b83a72e3c13b1d91cb09016d183df580a"
+      }
+    }
+  ]
+}

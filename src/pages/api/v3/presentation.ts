@@ -19,7 +19,7 @@ import { createV3Client, getV3Deployment, validateV3Deployment } from 'features/
 export const config = { api: { bodyParser: { sizeLimit: '4kb' } } }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const deployment = getV3Deployment()
+  const deployment = getV3Deployment(req.query?.deployment)
   const host = req.headers.host ?? ''
   if (deployment?.chainId !== 31337 || !/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host)) {
     return res.status(404).end()
