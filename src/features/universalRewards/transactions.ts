@@ -12,6 +12,7 @@ import { getBlock } from 'viem/actions'
 import { isLocalForkMode } from 'config/localFork'
 import { universalRewardsAbi } from './abi'
 import { positionBatchAbi } from './positionBatch'
+import { managedBatchAbi } from './managedBatch'
 import { erc20Abi, type NftRef } from './reader'
 import { readV3BatchLimit, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
 
@@ -27,6 +28,7 @@ const payoutSelectors = new Set<string>([
   toFunctionSelector('claimReward(uint256,uint256,address,uint256,address)'),
   toFunctionSelector('exit(uint256,uint256,address,uint256)'),
 ])
+const managedBatchSelector = toFunctionSelector('exitBatch(uint256,(uint256,uint128)[])')
 
 export interface V3Call {
   to: Address
@@ -41,8 +43,11 @@ export function withV3GasHeadroom(estimate: bigint, execution?: { ledger: Addres
 }
 
 function payoutPositions(ledger: Address, call: V3Call) {
-  if (!isAddressEqual(call.to, ledger)) return 0
   const selector = call.data.slice(0, 10) as Hex
+  if (selector === managedBatchSelector && !isAddressEqual(call.to, ledger)) {
+    return decodeFunctionData({ abi: managedBatchAbi, data: call.data }).args?.[1]?.length ?? 0
+  }
+  if (!isAddressEqual(call.to, ledger)) return 0
   if (payoutSelectors.has(selector)) return 1
   if (!positionBatchSelectors.has(selector)) return 0
   const { args } = decodeFunctionData({ abi: positionBatchAbi, data: call.data })

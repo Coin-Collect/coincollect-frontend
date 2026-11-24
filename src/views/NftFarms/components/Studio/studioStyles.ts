@@ -183,6 +183,34 @@ export const EditorGrid = styled.div`
   align-items: start;
 `
 
+export const ScheduleOption = styled.label<{ $selected: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid ${({ theme, $selected }) => ($selected ? theme.colors.primary : theme.colors.cardBorder)};
+  background: ${({ theme, $selected }) => ($selected ? theme.colors.input : theme.colors.background)};
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-within {
+    outline: 2px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 2px;
+  }
+
+  input {
+    margin: 0;
+    accent-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  input:disabled + span {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+`
+
 export const Choice = styled.button<{ $selected?: boolean }>`
   display: grid;
   gap: 5px;

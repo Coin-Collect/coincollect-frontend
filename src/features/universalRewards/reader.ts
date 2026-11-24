@@ -3,7 +3,14 @@ import { getLocalForkBaseBlock } from 'config/localFork'
 import { managedNftCollectionAbi, ownershipVerifierAbi, universalRewardsAbi } from './abi'
 import { decodeV3Presentation } from './metadata'
 import { readManagedCollection, SETTLEMENT_SOURCE } from './managedNfts'
-import { readV3BatchLimit, readV3Capacity, readV3ClaimPeriod, validateV3Deployment, type V3Client, type V3Deployment } from './runtime'
+import {
+  readV3BatchLimit,
+  readV3Capacity,
+  readV3ClaimPeriod,
+  validateV3Deployment,
+  type V3Client,
+  type V3Deployment,
+} from './runtime'
 
 const erc721Abi = parseAbi([
   'function ownerOf(uint256 tokenId) view returns (address)',
@@ -167,7 +174,9 @@ export async function readV3Catalogue(
     const batch = await Promise.all(
       ids
         .slice(i, i + 4)
-        .map((id) => readV3Pool(client, deployment, id, snapshot, { claimPeriod, includeSettlement, capacity, batchLimit })),
+        .map((id) =>
+          readV3Pool(client, deployment, id, snapshot, { claimPeriod, includeSettlement, capacity, batchLimit }),
+        ),
     )
     pools.push(...batch)
   }
@@ -293,6 +302,37 @@ export async function readV3Nft(
 }
 
 export type WalletNftSnapshot = Awaited<ReturnType<typeof readV3Nft>>
+
+export function readV3NftBalance(client: V3Client, account: Address, collection: Address, blockNumber: bigint) {
+  return client.readContract({
+    address: collection,
+    abi: erc721Abi,
+    functionName: 'balanceOf',
+    args: [account],
+    blockNumber,
+  })
+}
+
+export async function canStakeV3Nft(
+  client: V3Client,
+  deployment: V3Deployment,
+  pool: V3PoolSnapshot,
+  account: Address,
+  ref: NftRef,
+) {
+  const ledger = ledgerAt(deployment, pool.blockNumber)
+  const [key, ownership] = await Promise.all([
+    client.readContract({ ...ledger, functionName: 'nftKey', args: [ref.sourceChainId, ref.collection, ref.tokenId] }),
+    ref.sourceChainId === BigInt(137)
+      ? ownershipAt(client, ref, zeroAddress, pool.blockNumber)
+      : verifierAt(client, deployment, pool.blockNumber).then((verifier) =>
+          ownershipAt(client, ref, verifier, pool.blockNumber),
+        ),
+  ])
+  if (!isAddressEqual(account, ownership.owner)) return false
+  const position = await client.readContract({ ...ledger, functionName: 'positionState', args: [pool.poolId, key] })
+  return position.seatOwner === zeroAddress || (position.seatExpiry !== NIL && position.seatExpiry <= pool.timestamp)
+}
 
 export async function readV3WalletSeats(
   client: V3Client,
@@ -505,6 +545,7 @@ export async function discoverV3Nfts(
   account: Address,
   collection: Address,
   offset: bigint,
+  pageSize = MAX_V3_PAGE,
 ) {
   const input = { address: collection, abi: erc721Abi, blockNumber: pool.blockNumber }
   let enumerable = false
@@ -521,12 +562,12 @@ export async function discoverV3Nfts(
       const [tokenIds] = await client.readContract({
         ...input,
         functionName: 'tokensOfOwnerBySize',
-        args: [account, offset, BigInt(MAX_V3_PAGE)],
+        args: [account, offset, BigInt(pageSize)],
       })
       return {
         enumerable: true,
         total: ownedCount ?? BigInt(tokenIds.length),
-        tokenIds: tokenIds.slice(0, MAX_V3_PAGE),
+        tokenIds: tokenIds.slice(0, pageSize),
       }
     } catch {
       if (ownedCount !== undefined && ownedCount <= BigInt(MAX_V3_PAGE * 4)) {
@@ -537,7 +578,7 @@ export async function discoverV3Nfts(
           return {
             enumerable: true,
             total: BigInt(ids.length),
-            tokenIds: ids.slice(Number(offset), Number(offset) + MAX_V3_PAGE),
+            tokenIds: ids.slice(Number(offset), Number(offset) + pageSize),
           }
       }
       // Plain ERC-721 contracts can still be discovered from transfers made inside the isolated fork.
@@ -555,14 +596,14 @@ export async function discoverV3Nfts(
         return {
           enumerable: false,
           total: BigInt(ids.length),
-          tokenIds: ids.slice(Number(offset), Number(offset) + MAX_V3_PAGE),
+          tokenIds: ids.slice(Number(offset), Number(offset) + pageSize),
         }
       }
       return { enumerable: false, total: NIL, tokenIds: [] }
     }
   }
   const total = await client.readContract({ ...input, functionName: 'balanceOf', args: [account] })
-  const indexes = Array.from({ length: MAX_V3_PAGE }, (_, index) => BigInt(index) + offset).filter(
+  const indexes = Array.from({ length: pageSize }, (_, index) => BigInt(index) + offset).filter(
     (index) => index < total,
   )
   const tokenIds = await Promise.all(

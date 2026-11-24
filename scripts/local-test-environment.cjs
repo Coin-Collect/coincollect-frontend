@@ -32,6 +32,32 @@ function refuseFixtureEnvironment(config = readProtectedEnvironment()) {
   }
 }
 
+function readStudioDeploymentOverride(env = process.env) {
+  if (env.NODE_ENV !== 'development' || env.NEXT_PUBLIC_LOCAL_FORK !== '1') return undefined
+  const config = readProtectedEnvironment()
+  if (env.NEXT_PUBLIC_LOCAL_FORK_RPC !== config?.rpc || Number(env.NEXT_PUBLIC_LOCAL_FORK_CHAIN_ID) !== config?.chainId)
+    return undefined
+
+  const deploymentPath = path.join(path.dirname(configPath), 'studio-deployment.json')
+  let deployment
+  try {
+    deployment = JSON.parse(readFileSync(deploymentPath, 'utf8'))
+  } catch (error) {
+    if (error.code === 'ENOENT') return undefined
+    throw error
+  }
+  if (
+    deployment?.checkpointHash !== config.checkpoint.hash ||
+    !/^0x[\da-f]{40}$/i.test(deployment?.address) ||
+    !/^0x[\da-f]{64}$/i.test(deployment?.runtimeHash)
+  ) throw new Error(`Invalid protected Studio deployment in ${deploymentPath}.`)
+
+  return {
+    NEXT_PUBLIC_V3_LEDGER_ADDRESS: deployment.address,
+    NEXT_PUBLIC_V3_LEDGER_CODE_HASH: deployment.runtimeHash,
+  }
+}
+
 async function printProtectedStatus({ app, rpc, chainId, checkpoint }) {
   const calls = [
     { jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] },
@@ -56,4 +82,4 @@ async function printProtectedStatus({ app, rpc, chainId, checkpoint }) {
   console.log(`Protected test chain ${chainId}, block ${Number(head)} (checkpoint verified)\nStudio: ${app}/admin/nft-pools/v3\nWallet RPC: ${rpc}`)
 }
 
-module.exports = { printProtectedStatus, readProtectedEnvironment, refuseFixtureEnvironment }
+module.exports = { printProtectedStatus, readProtectedEnvironment, readStudioDeploymentOverride, refuseFixtureEnvironment }

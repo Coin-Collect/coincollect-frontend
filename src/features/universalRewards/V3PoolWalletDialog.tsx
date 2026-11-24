@@ -274,7 +274,7 @@ export default function V3PoolWalletDialog({
   onDismiss,
 }: {
   open: boolean
-  initialView: 'nfts' | 'positions'
+  initialView: 'nfts' | 'positions' | 'managed'
   pool: V3PoolSnapshot
   client: V3Client
   deployment: V3Deployment
@@ -285,22 +285,28 @@ export default function V3PoolWalletDialog({
   const { switchChain, isPending: switching } = useSwitchChain()
   const getWallet = useV3Wallet(deployment.chainId)
   const status = poolTiming(pool)
-  const [collectionIndex, setCollectionIndex] = useState(0)
+  const managedIndex = pool.collections.findIndex(({ managed }) => Boolean(managed))
+  const [collectionIndex, setCollectionIndex] = useState(initialView === 'managed' ? Math.max(managedIndex, 0) : 0)
   const [collectionOffset, setCollectionOffset] = useState(ZERO)
   const [historyOffset, setHistoryOffset] = useState(ZERO)
   const [manualIds, setManualIds] = useState<Record<string, NftRef[]>>({})
   const [selectedByWallet, setSelectedByWallet] = useState<Record<string, NftRef[]>>({})
   const [typedId, setTypedId] = useState('')
   const [inputError, setInputError] = useState('')
-  const startingView = status === 'Finished' ? 'positions' : initialView
+  const startingView = initialView === 'managed' ? 'nfts' : status === 'Finished' ? 'positions' : initialView
   const [view, setView] = useState<'nfts' | 'positions'>(startingView)
   const accountKey = `${pool.poolId}:${account ?? ''}`
   const manual = useMemo(() => manualIds[accountKey] ?? [], [manualIds, accountKey])
   const selected = selectedByWallet[accountKey] ?? []
 
   useEffect(() => {
-    if (open) setView(startingView)
-  }, [open, startingView])
+    if (!open) return
+    setView(startingView)
+    if (initialView === 'managed' && managedIndex >= 0) {
+      setCollectionIndex(managedIndex)
+      setCollectionOffset(ZERO)
+    }
+  }, [open, startingView, initialView, managedIndex])
 
   const readNfts = useCallback(async () => {
     if (!pool || !deployment || !account) throw new Error('Connect your wallet to read eligible NFTs.')
@@ -464,8 +470,12 @@ export default function V3PoolWalletDialog({
                   pool={pool}
                   account={account}
                   chainId={chainId}
-                  refresh={refresh}
+                  refresh={() => {
+                    walletData.refresh()
+                    refresh()
+                  }}
                   active={open}
+                  positions={positions}
                 />
               ) : (
                 status === 'Live' && (

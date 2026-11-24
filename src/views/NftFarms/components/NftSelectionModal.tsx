@@ -111,6 +111,73 @@ type SelectionOption = {
   onSelect: () => void
 }
 
+const SelectionShell = styled(Modal)<{ $gallery: boolean }>`
+  ${({ $gallery, theme }) =>
+    $gallery &&
+    css`
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      width: min(704px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      max-height: calc(100dvh - max(28px, env(safe-area-inset-bottom)));
+      border-radius: 24px;
+
+      > :first-child {
+        padding: 10px clamp(14px, 3vw, 24px);
+      }
+
+      > :last-child {
+        min-height: 0;
+        max-height: none;
+        overflow: hidden;
+      }
+
+      @media (min-width: 576px) {
+        width: min(704px, calc(100vw - 48px));
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation: stake-gallery-entry 160ms ease-out both;
+      }
+
+      @keyframes stake-gallery-entry {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      :focus-visible {
+        outline: 2px solid ${theme.colors.primary};
+        outline-offset: 2px;
+      }
+    `}
+`
+
+const GalleryScroll = styled.div`
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px clamp(12px, 3vw, 24px) 20px;
+  scroll-padding-block: 12px;
+`
+
+const GalleryFooter = styled.div`
+  flex: none;
+  padding: 12px clamp(12px, 3vw, 24px) 0;
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
+  background: ${({ theme }) => theme.modal.background};
+
+  > :last-child {
+    padding: 10px 0 12px;
+    gap: 8px;
+  }
+`
+
 export function NftSelectionLimit({ current, max }: { current: number; max: number }) {
   const { t } = useTranslation()
   const overLimit = current > max
@@ -155,21 +222,23 @@ export default function NftSelectionModal({
   disabled,
   pending,
   before,
+  gallery,
   after,
   confirmLabel,
   initialFocus = false,
   minWidth = '346px',
 }: {
   title: string
-  options: SelectionOption[]
+  options?: SelectionOption[]
   loading?: boolean
   error?: boolean
-  onRetry: () => void
+  onRetry?: () => void
   onDismiss?: () => void
-  onConfirm: () => void
+  onConfirm?: () => void
   disabled?: boolean
   pending?: boolean
   before?: ReactNode
+  gallery?: { content: ReactNode; summary: ReactNode; label: string }
   after?: ReactNode
   confirmLabel?: string
   initialFocus?: boolean
@@ -177,110 +246,128 @@ export default function NftSelectionModal({
 }) {
   const { t } = useTranslation()
   const { theme } = useTheme()
+  const actions = (
+    <ModalActions>
+      <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pending} autoFocus={initialFocus}>
+        {t('Cancel')}
+      </Button>
+      {onConfirm && (
+        <Button
+          width="100%"
+          isLoading={pending}
+          endIcon={pending ? <AutoRenewIcon spin color="currentColor" /> : null}
+          disabled={disabled || pending}
+          onClick={onConfirm}
+        >
+          {pending ? t('Confirming') : confirmLabel ?? t('Confirm')}
+        </Button>
+      )}
+    </ModalActions>
+  )
   return (
-    <Modal
-      minWidth={minWidth}
-      bodyPadding="24px 24px 10px 24px"
+    <SelectionShell
+      $gallery={Boolean(gallery)}
+      minWidth={gallery ? '0' : minWidth}
+      bodyPadding={gallery ? '0' : '24px 24px 10px 24px'}
       title={title}
       headerBackground={theme.colors.gradients.bubblegum}
       onDismiss={onDismiss}
     >
-      <ModalBody maxWidth="620px">
-        {before}
-        <Wrapper>
-          {options.length > 0 ? (
-            <Flex flexWrap="wrap" justifyContent="center">
-              {options.map(
-                ({
-                  key,
-                  label,
-                  image,
-                  selected,
-                  accessibleLabel,
-                  supportingText,
-                  onSelect,
-                  disabled: optionDisabled,
-                }) => {
-                  return (
-                    <NftOption
-                      as="button"
-                      type="button"
-                      key={key}
-                      onClick={onSelect}
-                      aria-pressed={selected}
-                      aria-label={accessibleLabel || label}
-                      disabled={optionDisabled || pending}
-                    >
-                      <NftBox
-                        $selected={selected}
-                        src={image || '/images/nfts/no-profile-md.png'}
-                        alt=""
-                        height={90}
-                        width={90}
-                      />
-                      <Text
-                        fontSize="11px"
-                        color="textSubtle"
-                        mt="6px"
-                        textAlign="center"
-                        width="100%"
-                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        title={label}
+      {gallery ? (
+        <>
+          <GalleryScroll role="region" aria-label={gallery.label} tabIndex={0}>
+            {gallery.content}
+          </GalleryScroll>
+          <GalleryFooter>
+            {gallery.summary}
+            {actions}
+          </GalleryFooter>
+        </>
+      ) : (
+        <ModalBody maxWidth="620px">
+          {before}
+          <Wrapper>
+            {options && options.length > 0 ? (
+              <Flex flexWrap="wrap" justifyContent="center">
+                {options.map(
+                  ({
+                    key,
+                    label,
+                    image,
+                    selected,
+                    accessibleLabel,
+                    supportingText,
+                    onSelect,
+                    disabled: optionDisabled,
+                  }) => {
+                    return (
+                      <NftOption
+                        as="button"
+                        type="button"
+                        key={key}
+                        onClick={onSelect}
+                        aria-pressed={selected}
+                        aria-label={accessibleLabel || label}
+                        disabled={optionDisabled || pending}
                       >
-                        {label}
-                      </Text>
-                      {supportingText && (
-                        <Text small color="textSubtle">
-                          {supportingText}
+                        <NftBox
+                          $selected={selected}
+                          src={image || '/images/nfts/no-profile-md.png'}
+                          alt=""
+                          height={90}
+                          width={90}
+                        />
+                        <Text
+                          fontSize="11px"
+                          color="textSubtle"
+                          mt="6px"
+                          textAlign="center"
+                          width="100%"
+                          style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          title={label}
+                        >
+                          {label}
                         </Text>
-                      )}
-                    </NftOption>
-                  )
-                },
-              )}
-            </Flex>
-          ) : error ? (
-            <Flex p="24px" flexDirection="column" alignItems="center">
-              <Button variant="light" onClick={onRetry} width="100%">
-                {t('Retry')}
-              </Button>
-              <Text pt="8px" fontSize="15px">
-                {t('There was a temporary network issue while fetching NFTs.')}
-              </Text>
-              <Text pt="8px" fontSize="15px">
-                {t('Please wait a few seconds and press the retry button.')}
-              </Text>
-            </Flex>
-          ) : loading ? (
-            <Flex p="24px" margin="0 auto" flexDirection="column" alignItems="center">
-              <CircleLoader size="30px" />
-              <Text mt={1}>{t('NFTs will be listed shortly...')}</Text>
-            </Flex>
-          ) : (
-            <Flex p="24px" flexDirection="column" alignItems="center">
-              <NoNftsImage />
-              <Text pt="8px" bold>
-                {t('No NFTs found')}
-              </Text>
-            </Flex>
-          )}
-        </Wrapper>
-        {after}
-        <ModalActions>
-          <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pending} autoFocus={initialFocus}>
-            {t('Cancel')}
-          </Button>
-          <Button
-            width="100%"
-            isLoading={pending}
-            endIcon={pending ? <AutoRenewIcon spin color="currentColor" /> : null}
-            disabled={disabled || pending}
-            onClick={onConfirm}
-          >
-            {pending ? t('Confirming') : confirmLabel ?? t('Confirm')}
-          </Button>
-        </ModalActions>
-      </ModalBody>
-    </Modal>
+                        {supportingText && (
+                          <Text small color="textSubtle">
+                            {supportingText}
+                          </Text>
+                        )}
+                      </NftOption>
+                    )
+                  },
+                )}
+              </Flex>
+            ) : error ? (
+              <Flex p="24px" flexDirection="column" alignItems="center">
+                <Button variant="light" onClick={onRetry} width="100%">
+                  {t('Retry')}
+                </Button>
+                <Text pt="8px" fontSize="15px">
+                  {t('There was a temporary network issue while fetching NFTs.')}
+                </Text>
+                <Text pt="8px" fontSize="15px">
+                  {t('Please wait a few seconds and press the retry button.')}
+                </Text>
+              </Flex>
+            ) : loading ? (
+              <Flex p="24px" margin="0 auto" flexDirection="column" alignItems="center">
+                <CircleLoader size="30px" />
+                <Text mt={1}>{t('NFTs will be listed shortly...')}</Text>
+              </Flex>
+            ) : (
+              <Flex p="24px" flexDirection="column" alignItems="center">
+                <NoNftsImage />
+                <Text pt="8px" bold>
+                  {t('No NFTs found')}
+                </Text>
+              </Flex>
+            )}
+          </Wrapper>
+          {after}
+          {actions}
+        </ModalBody>
+      )}
+    </SelectionShell>
   )
 }

@@ -645,6 +645,11 @@ export default function V3Studio({
   const writeAllowed = Boolean(allowed && deployment && chainId === deployment.chainId)
   const transaction = useV3Action(client, deployment, getWallet, account)
   const locked = transaction.busy || transaction.unconfirmed || reviewing
+  const reviewedStart =
+    preview &&
+    (preview.config.start === ZERO
+      ? 'On pool creation'
+      : new Date(Number(preview.config.start) * 1000).toLocaleString())
 
   const loadPresentation = useCallback(() => {
     if (!deployment) return Promise.resolve(undefined)
@@ -992,6 +997,10 @@ export default function V3Studio({
                           <dt>Pool type</dt>
                           <dd>{v3PoolTypeLabels[draft.poolType ?? 'community']}</dd>
                         </div>
+                        <div>
+                          <dt>Starts</dt>
+                          <dd>{reviewedStart}</dd>
+                        </div>
                         {preview.rewards.map(({ token, symbol, cap, decimals }) => (
                           <div key={token}>
                             <dt>{symbol} reserved reward</dt>
@@ -1025,6 +1034,10 @@ export default function V3Studio({
                         <div>
                           <dt>Pool type</dt>
                           <dd>{v3PoolTypeLabels[draft.poolType ?? 'community']}</dd>
+                        </div>
+                        <div>
+                          <dt>Starts</dt>
+                          <dd>{reviewedStart}</dd>
                         </div>
                         {preview.rewards.map((reward, index) => (
                           <div key={reward.token}>

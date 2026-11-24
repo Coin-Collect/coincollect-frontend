@@ -1,5 +1,5 @@
 import { readNftMetadataFromUri } from 'features/nftPoolManager/user/nftDiscovery'
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   createPublicClient,
   encodeFunctionData,
@@ -15,6 +15,8 @@ import { useSwitchChain } from 'wagmi'
 import { finalizedNftJournalAbi, managedNftCollectionAbi, nftSourceJournalAbi } from './abi'
 import { studioCollection } from './assetCatalog'
 import { useV3Action, useV3Query, useV3Wallet } from './hooks'
+import { managedBatchAbi, type ManagedExit } from './managedBatch'
+import ManagedBatchExit from './ManagedBatchExit'
 import { managedSourceChains } from './managedChains'
 import {
   discoverManagedIds,
@@ -24,8 +26,8 @@ import {
   type ManagedCollection,
 } from './managedNfts'
 import { poolTiming, shortAmount, sourceName, positionDailyEstimate } from './presentation'
-import type { V3PoolSnapshot } from './reader'
-import type { V3Client, V3Deployment } from './runtime'
+import type { V3PoolSnapshot, WalletNftSnapshot } from './reader'
+import { isV3MissingSelector, type V3Client, type V3Deployment } from './runtime'
 import { V3Actions, V3Button, V3Error, V3Field, V3Fields, V3Muted } from './styles'
 import { UINT256_MAX } from './units'
 import { WalletLookup, WalletNftGrid, WalletNftTile } from './poolWalletStyles'
@@ -42,6 +44,10 @@ type Props = {
   chainId?: number
   refresh: () => void
   active?: boolean
+  positions?: readonly WalletNftSnapshot[]
+  stakeOnly?: boolean
+  blocked?: boolean
+  onBusyChange?: (busy: boolean) => void
 }
 
 export default function V33CollectionActions({
@@ -54,6 +60,10 @@ export default function V33CollectionActions({
   chainId,
   refresh,
   active = true,
+  positions = [],
+  stakeOnly = false,
+  blocked = false,
+  onBusyChange,
 }: Props) {
   const local = rule.sourceChainId === SETTLEMENT_SOURCE
   const [enteredId, setEnteredId] = useState('')
@@ -61,6 +71,7 @@ export default function V33CollectionActions({
   const [quantity, setQuantity] = useState('1')
   const [error, setError] = useState('')
   const [request, setRequest] = useState<bigint>()
+  const [extraBatchChoices, setExtraBatchChoices] = useState<ReadonlyMap<bigint, bigint>>(new Map())
   const chain = managedSourceChains.find(({ id }) => BigInt(id) === rule.sourceChainId)
   const sourceClient = useMemo(
     () =>
@@ -74,6 +85,25 @@ export default function V33CollectionActions({
   const targetChain = local ? deployment.chainId : chain?.id
   const wallet = useV3Wallet(targetChain)
   const { switchChain, isPending: switching } = useSwitchChain()
+
+  const readExitLimit = useCallback(async () => {
+    try {
+      const limit = await client.readContract({
+        address: rule.adapter,
+        abi: managedBatchAbi,
+        functionName: 'batchExitLimit',
+      })
+      return limit > ZERO && limit <= BigInt(16) ? Number(limit) : 0
+    } catch (failure) {
+      if (isV3MissingSelector(failure)) return 0
+      throw failure
+    }
+  }, [client, rule.adapter])
+  const exitLimit = useV3Query(
+    active && !stakeOnly && local && rule.standard === 1155 ? rule.adapter : '',
+    readExitLimit,
+  )
+  const batchLimit = exitLimit.data ?? 0
 
   const readOwnership = useCallback(async () => {
     if (tokenId === undefined) throw Error('Check a token ID first.')
@@ -158,6 +188,10 @@ export default function V33CollectionActions({
     wallet,
     account,
   )
+  const busy = action.busy || switching
+  useEffect(() => {
+    onBusyChange?.(busy)
+  }, [busy, onBusyChange])
   const { refresh: refreshOwnership } = ownership
   const readProgress = useCallback(async () => {
     if (!rule.journal || local || request === undefined) return 'pending'
@@ -201,7 +235,7 @@ export default function V33CollectionActions({
   }
 
   const submit = async (operation: 'join' | 'exit' | 'release') => {
-    if (tokenId === undefined || !ownership.data || !wallet || targetChain !== chainId || rule.paused) return
+    if (blocked || tokenId === undefined || !ownership.data || !wallet || targetChain !== chainId || rule.paused) return
     const amount = rule.standard === 721 ? 1 : /^\d{1,10}$/.test(quantity) ? Number(quantity) : NaN
     if (operation !== 'release' && (!Number.isSafeInteger(amount) || amount < 1 || amount > 4_294_967_295)) {
       setError('Enter a positive whole quantity.')
@@ -272,7 +306,7 @@ export default function V33CollectionActions({
   const tokenImage =
     artwork.data?.image && /^(https:\/\/|\/(?!\/))/.test(artwork.data.image) ? artwork.data.image : undefined
   const ended = pool.claimDeadline !== undefined && pool.timestamp >= pool.claimDeadline
-  const ready = Boolean(data && wallet && !action.busy && !action.unconfirmed && !ended && !rule.paused)
+  const ready = Boolean(data && wallet && !blocked && !action.busy && !action.unconfirmed && !ended && !rule.paused)
   const additional = /^\d{1,9}$/.test(quantity) ? Number(quantity) : 0
   const estimate =
     data &&
@@ -280,11 +314,52 @@ export default function V33CollectionActions({
     additional + data.active <= rule.limit &&
     BigInt(additional + data.active) <= data.owned &&
     poolTiming(pool) === 'Live'
+  const batchChoices = new Map(extraBatchChoices)
+  for (const { managed, eligible, ref } of positions) {
+    if (!managed || managed.released || !eligible || !isAddressEqual(ref.collection, rule.adapter)) continue
+    if (managed.entitled > ZERO) batchChoices.set(managed.underlyingId, managed.entitled)
+    else batchChoices.delete(managed.underlyingId)
+  }
+  const canAddToken = Boolean(
+    batchLimit &&
+      tokenId !== undefined &&
+      data &&
+      data.entitled > ZERO &&
+      data.owned >= data.entitled &&
+      !batchChoices.has(tokenId),
+  )
+  const submitBatch = async (selections: readonly ManagedExit[], onConfirmed: () => void) => {
+    if (!wallet || !local || chainId !== targetChain || ended || rule.paused || selections.length > batchLimit) return
+    setError('')
+    await action.runMany(async () => [
+      {
+        to: rule.adapter,
+        data: encodeFunctionData({ abi: managedBatchAbi, functionName: 'exitBatch', args: [pool.poolId, selections] }),
+        confirmationLabel: `Unstake · ${selections.length} NFT IDs`,
+        onConfirmed: () => {
+          onConfirmed()
+          setExtraBatchChoices(new Map())
+          ownership.refresh()
+          refresh()
+        },
+      },
+    ])
+  }
   return (
     <V3Fields>
       <legend>{collection?.name ?? 'Your NFTs'}</legend>
       {!local && (!sourceClient || rule.paused) && (
         <V3Muted role="status">NFTs from this network are temporarily unavailable.</V3Muted>
+      )}
+      {batchLimit > 0 && !ended && batchChoices.size > 0 && (
+        <ManagedBatchExit
+          choices={batchChoices}
+          limit={batchLimit}
+          disabled={switching || action.busy || action.unconfirmed || Boolean(rule.paused) || !wallet}
+          needsNetwork={chainId !== targetChain}
+          onSwitch={() => switchChain({ chainId: deployment.chainId })}
+          onConfirm={submitBatch}
+        />
       )}
       {!!inventory.data?.length && (
         <WalletNftGrid aria-label="Your NFTs in this collection">
@@ -360,7 +435,7 @@ export default function V33CollectionActions({
           </V3Muted>
           {rule.standard === 1155 && (
             <V3Field>
-              Quantity to stake or unstake
+              {stakeOnly ? 'Quantity to stake' : 'Quantity to stake or unstake'}
               <input
                 name="managed-quantity"
                 inputMode="numeric"
@@ -372,6 +447,16 @@ export default function V33CollectionActions({
                 }}
               />
             </V3Field>
+          )}
+          {canAddToken && tokenId !== undefined && (
+            <V3Button
+              type="button"
+              $secondary
+              disabled={action.busy || action.unconfirmed || ended}
+              onClick={() => setExtraBatchChoices((previous) => new Map(previous).set(tokenId, data.entitled))}
+            >
+              Add NFT #{tokenId.toString()} to Unstake selection
+            </V3Button>
           )}
           {estimate && (
             <V3Muted>
@@ -388,7 +473,11 @@ export default function V33CollectionActions({
             </V3Muted>
           )}
           {targetChain && chainId !== targetChain ? (
-            <V3Button type="button" disabled={switching} onClick={() => switchChain({ chainId: targetChain })}>
+            <V3Button
+              type="button"
+              disabled={blocked || switching}
+              onClick={() => switchChain({ chainId: targetChain })}
+            >
               Switch to {sourceName(rule.sourceChainId)}
             </V3Button>
           ) : (
@@ -402,15 +491,17 @@ export default function V33CollectionActions({
                   ? `Stake ${additional} NFT${additional === 1 ? '' : 's'}`
                   : 'Stake NFT'}
               </V3Button>
-              <V3Button
-                type="button"
-                $secondary
-                disabled={!ready || data.entitled === ZERO}
-                onClick={() => void submit('exit')}
-              >
-                Unstake
-              </V3Button>
-              {!local && (
+              {!stakeOnly && (
+                <V3Button
+                  type="button"
+                  $secondary
+                  disabled={!ready || data.entitled === ZERO}
+                  onClick={() => void submit('exit')}
+                >
+                  Unstake
+                </V3Button>
+              )}
+              {!stakeOnly && !local && (
                 <V3Button
                   type="button"
                   $secondary

@@ -534,13 +534,13 @@ async function testBrowser() {
     await command('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 8, y: 8, button: 'left', clickCount: 1 })
     await wait('backdrop dismisses the stake picker', () => !document.querySelector('dialog'))
     await click('article button', 'Click to Stake Now')
-    await has('Selected NFTs')
+    await has('0 selected')
     const selectNft = (id) =>
       wait(
         'eligible NFT tile',
         (id) => {
-          const option = Array.from(document.querySelectorAll('dialog[open] button[aria-pressed]')).find((button) =>
-            button.getAttribute('aria-label').split(' · ')[0].endsWith('#' + id),
+          const option = Array.from(document.querySelectorAll('dialog[open] button[aria-pressed], dialog[open] input[type="checkbox"]')).find((control) =>
+            control.getAttribute('aria-label')?.split(' · ')[0].endsWith('#' + id),
           )
           if (!option || option.disabled) return false
           option.click()
@@ -732,7 +732,7 @@ async function testBrowser() {
       button.click()
       return true
     })
-    await click('dialog button', 'In 1 hour')
+    await click('dialog label', 'In 1 hour')
     await click('dialog button', 'Done')
     await wait('schedule dialog closes', () => !document.querySelector('dialog'))
     await click('button', 'Review pool plan')
@@ -1061,7 +1061,7 @@ async function testBrowser() {
         entry.click()
         return true
       })
-      await click('dialog button', 'In 1 hour')
+      await click('dialog label', 'In 1 hour')
       await field('duration-days', '365')
       await click('dialog button', 'Done')
       await wait('Treasury schedule saved', () => !document.querySelector('dialog'))
@@ -1219,6 +1219,14 @@ async function testBrowser() {
       const route = '/nftpools/v3/' + poolId
       await visit(route, fixture.participant)
       await click('article button', 'Click to Stake Now')
+      await wait(
+        'managed staking opens the original picker on the current page',
+        (path) =>
+          location.pathname === path &&
+          !location.hash &&
+          document.querySelector('dialog[open]')?.getAttribute('aria-label') === 'Select NFTs to Stake',
+        route,
+      )
       await click('dialog summary', 'Find by token ID')
       await field('managed-token-id', '25')
       await click('dialog button', 'Check NFT')

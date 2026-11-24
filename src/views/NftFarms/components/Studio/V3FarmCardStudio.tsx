@@ -15,6 +15,8 @@ import {
   inspectStudioCollection,
   parseV3Amount,
   quoteV3RewardWindow,
+  v3StartOptions,
+  v3StartPreset,
   type V3StudioDraft,
 } from 'features/universalRewards/studio'
 import { V3Actions, V3Button, V3Error, V3Field, V3Fields, V3Muted } from 'features/universalRewards/styles'
@@ -40,6 +42,7 @@ import {
   Preview,
   RewardLane,
   RowButton,
+  ScheduleOption,
   ShareInput,
   Slice,
   Workspace,
@@ -63,11 +66,6 @@ const panelTitles = {
 
 type Panel = keyof typeof panelTitles
 type CollectionRule = V3StudioDraft['collections'][number]
-
-function localTime(timestamp: number) {
-  const date = new Date(timestamp)
-  return new Date(timestamp - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
-}
 
 function StudioDialog({ title, close, children }: { title: string; close: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -121,6 +119,7 @@ export default function V3FarmCardStudio({
   const collectionCheck = useRef(false)
   const collectionField = useRef<HTMLInputElement>(null)
   const collectionErrorId = useId()
+  const startHelpId = useId()
   const [collectionLabels, setCollectionLabels] = useState<Record<string, string>>({})
   const [quote, setQuote] = useState<{ key: string; amounts: Record<string, string> }>()
   const [shareEntry, setShareEntry] = useState<{ address: string; text: string }>()
@@ -135,13 +134,16 @@ export default function V3FarmCardStudio({
     (studio.managedCollections && deployment.chainId === 31337) || !isAddressEqual(studio.verifier, zeroAddress)
   const shares = draft.rewards.map(({ sharePercent }) => Math.round(Number(sharePercent) * 100))
   const start = new Date(draft.startLocal)
-  const scheduleText = Number.isFinite(start.getTime())
-    ? start.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : 'Choose a start'
+  const startPreset = v3StartPreset(draft, studio.supportsStartNow)
+  const scheduleText =
+    startPreset !== 'custom'
+      ? v3StartOptions.find(({ value }) => value === startPreset)?.label
+      : Number.isFinite(start.getTime())
+      ? start.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : 'Choose a start'
   const budgetText = draft.budget && funding ? `${draft.budget} ${funding.symbol}` : 'Set funding budget'
   const duration = Number(draft.durationDays)
   const interval = Number(draft.intervalHours)
-  const minimumStart = Math.max(Number(studio.timestamp) * 1000, Date.now())
   const quoteKey = JSON.stringify([
     draft.fundAsset,
     draft.budget,
@@ -802,32 +804,46 @@ export default function V3FarmCardStudio({
       case 'schedule':
         return (
           <>
-            <V3Field>
-              Start time
-              <input
-                data-studio-focus
-                type="datetime-local"
-                name="start-date"
-                value={draft.startLocal}
-                onChange={(event) => onChange({ startLocal: event.target.value })}
-              />
-            </V3Field>
-            <V3Actions>
-              {[
-                { minutes: 15, label: 'In 15 min' },
-                { minutes: 60, label: 'In 1 hour' },
-                { minutes: 1440, label: 'In 24 hours' },
-              ].map(({ minutes, label }) => (
-                <V3Button
-                  key={minutes}
-                  type="button"
-                  $secondary
-                  onClick={() => onChange({ startLocal: localTime(minimumStart + minutes * 60_000) })}
-                >
-                  {label}
-                </V3Button>
-              ))}
-            </V3Actions>
+            <V3Fields aria-describedby={startHelpId}>
+              <legend>Start time</legend>
+              <EditorGrid>
+                {[...v3StartOptions, { value: 'custom', label: 'Set a date' } as const].map(({ value, label }) => (
+                  <ScheduleOption key={value} $selected={startPreset === value}>
+                    <input
+                      type="radio"
+                      name="v3-start-preset"
+                      value={value}
+                      data-studio-focus={startPreset === value && value !== 'custom' ? true : undefined}
+                      checked={startPreset === value}
+                      disabled={value === 'now' && !studio.supportsStartNow}
+                      onChange={() => onChange({ startPreset: value })}
+                    />
+                    <span>{label}</span>
+                  </ScheduleOption>
+                ))}
+              </EditorGrid>
+              <V3Muted id={startHelpId}>
+                {startPreset === 'now'
+                  ? 'The pool opens when its creation transaction is confirmed.'
+                  : !studio.supportsStartNow
+                  ? 'Choose a scheduled start. Start now is available on the V3.10 ledger.'
+                  : startPreset === 'custom'
+                  ? 'The date uses your local time zone.'
+                  : 'The start time is set when you review the plan.'}
+              </V3Muted>
+              {startPreset === 'custom' && (
+                <V3Field>
+                  Start date and time
+                  <input
+                    data-studio-focus
+                    type="datetime-local"
+                    name="start-date"
+                    value={draft.startLocal}
+                    onChange={(event) => onChange({ startLocal: event.target.value })}
+                  />
+                </V3Field>
+              )}
+            </V3Fields>
             <EditorGrid>
               <V3Field>
                 Duration in days
@@ -1019,11 +1035,7 @@ export default function V3FarmCardStudio({
         )}
         {row('Reward tokens', chips.length ? chips.map(({ token }) => token).join(', ') : 'Add rewards', 'rewards')}
         {!directFunding && row('Funding budget', funding && draft.budget ? budgetText : 'Set budget', 'budget')}
-        {row(
-          'Schedule',
-          draft.startLocal ? `${scheduleText} · ${draft.durationDays} days` : 'Choose a start',
-          'schedule',
-        )}
+        {row('Schedule', `${scheduleText} · ${draft.durationDays} days`, 'schedule')}
         <Launch>{launch}</Launch>
       </Inspector>
 

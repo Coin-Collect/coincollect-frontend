@@ -13,7 +13,7 @@ import { V3Actions, V3Button, V3Error, V3Field, V3Link, V3Muted } from './styles
 import { PoolShowroomCollections, PoolShowroomCover, PoolShowroomDiscover } from './V3PoolShowroom'
 import V3PoolWalletDialog, { PoolDialogFrame } from './V3PoolWalletDialog'
 
-type WalletView = 'nfts' | 'positions'
+type WalletView = 'nfts' | 'positions' | 'managed'
 type PoolPanel = WalletView | 'contract'
 
 export default function V3PoolDetail({
@@ -68,11 +68,13 @@ export default function V3PoolDetail({
           ? 'nfts'
           : hash === '#v3-positions'
           ? 'positions'
+          : hash === '#managed-nfts'
+          ? 'managed'
           : hash === '#contract'
           ? 'contract'
           : undefined
       setPanel(next)
-      if (next === 'nfts' || next === 'positions') setWalletView(next)
+      if (next && next !== 'contract') setWalletView(next)
     }
     reveal()
     window.addEventListener('hashchange', reveal)
@@ -142,7 +144,7 @@ export default function V3PoolDetail({
       <PoolShowroomDiscover related={related} />
       {pool && deployment && walletView && (
         <V3PoolWalletDialog
-          open={panel === 'nfts' || panel === 'positions'}
+          open={panel === walletView}
           initialView={walletView}
           pool={pool}
           client={client}

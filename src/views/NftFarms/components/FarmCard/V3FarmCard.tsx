@@ -159,14 +159,11 @@ export default function V3FarmCard({
     !actionPending
 
   const usesManagedCollections = pool.collections.some(({ managed }) => Boolean(managed))
-  const openStaking = () =>
-    usesManagedCollections
-      ? void router.push(`${poolUrl}#eligible-nfts`)
-      : setModal({ mode: 'stake', account: address })
+  const hasDirectCollections = pool.collections.some(({ managed }) => !managed)
+  const openManagedUnstake = () => void router.push(`${poolUrl}#managed-nfts`, undefined, { scroll: false })
+  const openStaking = () => setModal({ mode: 'stake', account: address })
   const openUnstaking = () =>
-    usesManagedCollections
-      ? void router.push(`${poolUrl}#eligible-nfts`)
-      : setModal({ mode: 'unstake', account: address })
+    hasDirectCollections ? setModal({ mode: 'unstake', account: address }) : openManagedUnstake()
   const refreshPosition = () => {
     position.refresh()
     onPositionChange?.()
@@ -421,6 +418,7 @@ export default function V3FarmCard({
           action={action}
           onSuccess={refreshPosition}
           onDismiss={() => setModal(undefined)}
+          onManageCollections={usesManagedCollections ? openManagedUnstake : undefined}
         />
       )}
     </NftFarmCardLayout>

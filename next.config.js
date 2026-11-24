@@ -1,7 +1,10 @@
 const { withSentryConfig } = require('@sentry/nextjs/config')
+const { readStudioDeploymentOverride } = require('./scripts/local-test-environment.cjs')
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
+
+const studioDeployment = readStudioDeploymentOverride()
 
 const sentryWebpackPluginOptions = {
   silent: true,
@@ -15,6 +18,7 @@ const sentryWebpackPluginOptions = {
 const config = {
   // Permit isolated build verification without overwriting a running dev cache.
   distDir: process.env.COINCOLLECT_NEXT_DIST_DIR || '.next',
+  ...(studioDeployment && { env: studioDeployment }),
   compiler: {
     styledComponents: true,
   },

@@ -24,6 +24,7 @@ const ZERO = BigInt(0)
 const BPS = BigInt(10_000)
 const collectionAbi = parseAbi(['function supportsInterface(bytes4 interfaceId) view returns (bool)'])
 const directTreasuryAbi = parseAbi(['function DIRECT_TREASURY_REWARDS() view returns (bool)'])
+const versionAbi = parseAbi(['function VERSION() view returns (string)'])
 const legacyCreateAbi = parseAbi([
   'struct LegacyPoolConfig { uint64 start; uint64 end; uint8 threshold; uint8 maxWallets; uint8 maxNftsPerWallet; string metadataURI; }',
   'struct CollectionRule { uint256 sourceChainId; address collection; uint32 weight; }',
@@ -33,8 +34,18 @@ const legacyCreateAbi = parseAbi([
   'function createTreasuryFundedPool(LegacyPoolConfig config, CollectionRule[] collections, RewardConfig[] rewards, FundingConfig funding, uint128 initialAllocation, bool consolidated) returns (uint256)',
 ])
 
+export const v3StartOptions = [
+  { value: 'now', label: 'Start now', delay: 0 },
+  { value: '15m', label: 'In 15 min', delay: 15 * 60 },
+  { value: '1h', label: 'In 1 hour', delay: 60 * 60 },
+  { value: '24h', label: 'In 24 hours', delay: 24 * 60 * 60 },
+] as const
+
+type V3StartPreset = (typeof v3StartOptions)[number]['value'] | 'custom'
+
 export interface V3StudioDraft extends V3Presentation {
   startLocal: string
+  startPreset?: V3StartPreset
   durationDays: string
   threshold: string
   maxWallets: string
@@ -48,6 +59,33 @@ export interface V3StudioDraft extends V3Presentation {
   purchaseMode?: 'automatic' | 'consolidated' | 'adaptive'
   collections: { address: string; sourceChain: string; power: string }[]
   rewards: { address: string; sharePercent: string }[]
+}
+
+export function v3StartPreset(draft: Pick<V3StudioDraft, 'startPreset' | 'startLocal'>, supportsStartNow: boolean) {
+  return draft.startPreset ?? (draft.startLocal ? 'custom' : supportsStartNow ? 'now' : '15m')
+}
+
+export function v3BuildSchedule(
+  draft: Pick<V3StudioDraft, 'startPreset' | 'startLocal'>,
+  studio: { supportsStartNow: boolean; timestamp: bigint },
+  duration: bigint,
+  nowMs = Date.now(),
+) {
+  const preset = v3StartPreset(draft, studio.supportsStartNow)
+  if (preset === 'now') {
+    if (!studio.supportsStartNow) throw new Error('Choose a scheduled start for this deployment.')
+    return { start: ZERO, end: duration }
+  }
+  const startTime =
+    preset === 'custom'
+      ? Math.floor(new Date(draft.startLocal).getTime() / 1000)
+      : Math.max(Math.floor(nowMs / 1000), Number(studio.timestamp)) +
+        v3StartOptions.find((option) => option.value === preset)!.delay
+  if (!Number.isSafeInteger(startTime) || BigInt(startTime) < studio.timestamp + BigInt(60)) {
+    throw new Error('Start time must be at least one minute after the settlement clock.')
+  }
+  const start = BigInt(startTime)
+  return { start, end: start + duration }
 }
 
 export async function readV3Treasury(client: V3Client, deployment: V3Deployment, blockNumber?: bigint) {
@@ -87,7 +125,7 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
   const block = await client.getBlock()
   await validateV3Deployment(client, deployment, block.number)
   const ledger = { abi: universalRewardsAbi, address: deployment.address, blockNumber: block.number }
-  const [admin, wrappedNative, swap, verifier, assets, treasury, capacity, registry] = await Promise.all([
+  const [admin, wrappedNative, swap, verifier, assets, treasury, capacity, registry, version] = await Promise.all([
     client.readContract({ ...ledger, functionName: 'admin' }),
     client.readContract({ ...ledger, functionName: 'wrappedNative' }),
     client.readContract({ ...ledger, functionName: 'swapAdapter' }),
@@ -96,6 +134,10 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
     readV3Treasury(client, deployment, block.number),
     readV3Capacity(client, deployment, block.number),
     readManagedAdapter(client, deployment, SETTLEMENT_SOURCE, zeroAddress, block.number),
+    client.readContract({ ...ledger, abi: versionAbi, functionName: 'VERSION' }).catch((error: unknown) => {
+      if (isV3MissingSelector(error)) return undefined
+      throw error
+    }),
   ])
   const readAsset = async (address: Address) => {
     const [details, balance, review] = await Promise.all([
@@ -135,6 +177,7 @@ export async function readV3Studio(client: V3Client, deployment: V3Deployment) {
     treasury,
     supported,
     capacity,
+    supportsStartNow: version === '3.10.0',
     timestamp: block.timestamp,
     blockNumber: block.number,
   }
@@ -294,12 +337,8 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   const maximumWallets = integer(draft.maxWallets, 1, studio.capacity, 'maximum participant wallets')
   const maxNftsPerWallet = integer(draft.maxNfts, 1, studio.capacity, 'maximum NFTs per wallet')
   const threshold = integer(draft.threshold, 0, maximumWallets, 'participant threshold')
-  const startTime = Math.floor(new Date(draft.startLocal).getTime() / 1000)
-  if (!Number.isSafeInteger(startTime) || BigInt(startTime) < studio.timestamp + BigInt(60)) {
-    throw new Error('Start time must be at least one minute after the settlement clock.')
-  }
-  const start = BigInt(startTime)
   const duration = BigInt(days * 86_400)
+  const schedule = v3BuildSchedule(draft, studio, duration)
   const maxIntervalHours = Math.min(720, days * 24)
   const metadataURI = encodeV3Presentation(draft)
 
@@ -346,7 +385,7 @@ export async function buildV3Preview(client: V3Client, deployment: V3Deployment,
   const pool = {
     admin: studio.admin,
     capacity: studio.capacity,
-    config: { start, end: start + duration, threshold, maxWallets: maximumWallets, maxNftsPerWallet, metadataURI },
+    config: { ...schedule, threshold, maxWallets: maximumWallets, maxNftsPerWallet, metadataURI },
     collections,
   }
   if (direct) {
