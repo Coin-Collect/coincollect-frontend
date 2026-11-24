@@ -87,6 +87,8 @@ Studio'da Start now varsayılanıyla oluşturulan `V3.10 Start Now` havuzu 338. 
 
 FAROZ (#2) üzerinde 353–355. bloklarda 23 ve 15 Power ile iki cüzdanın ödül paylaşımı doğrulandı. İkinci cüzdan iki NFT'yi tek işlemde çıkardı ve birikmiş COLLECT, LOT ve USDT ödüllerini aldı. Kalan cüzdanın payı 23/38'den %100'e çıktı. Eşit 24 saniyelik aralıklarda COLLECT ve LOT birikim hızı yaklaşık %65,2 arttı. USDT tutarları tokenın en küçük birimine yuvarlandı ve hesapla eşleşti.
 
+**Havuz kapanış testi.** Aynı korunan zincirde kurulan 90 saniyelik `Lifecycle QA` (#3), 356–362. bloklarda stake, bitiş, Treasury iadesi ve bitiş sonrası Harvest akışlarını doğruladı. Dağıtılmamış 0,133333333333333333 COLLECT ve 0,016 USDT, bitişten sonra iki iade işlemiyle Treasury bakiyesine geçti. Bir cüzdan bitiş sonrası ödüllerini aldı. İkinci cüzdanın ödülleri alma süresi 24 Aralık 2026 saat 15.10.42'de (İstanbul) sona eriyor. 362. bloktan yapılan yazmasız simülasyon, süre dolmadan son saniyede Harvest'ın çalıştığını ve tam bitiş anında kalan 0,411111111111111112 COLLECT ile 0,049334 USDT'nin Treasury'ye iade edilebildiğini gösterdi. Paylaşılan zincirin saati yerinde kaldı.
+
 ## Bundan sonraki sürümler
 
 - Zincir üstü davranışa yeni özellik eklenince yeni bir minor sürüm, hata düzeltildiğinde yeni bir patch sürüm hazırlanır. Yalnızca arayüzü etkileyen değişiklikler uygulama sürümünde kaydedilir.
