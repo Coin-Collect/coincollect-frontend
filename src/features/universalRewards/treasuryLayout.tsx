@@ -1,11 +1,33 @@
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import styled, { keyframes } from 'styled-components'
+import { isAddressEqual, type Address } from 'viem'
+import { mainnetTokens } from 'config/constants/tokens'
+import RewardTokenIcon from 'views/NftFarms/components/FarmCard/RewardTokenIcon'
 import { shortAmount } from './presentation'
 import { V3Button } from './styles'
 
 export type TreasuryOperation = 'deposit' | 'withdraw' | 'swap'
 
-export const wrappedPolArtwork = { address: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270' }
+const treasuryLogos: Record<string, { address: string }> = {
+  [mainnetTokens.wbtc.address.toLowerCase()]: mainnetTokens.btcb,
+  [mainnetTokens.weth.address.toLowerCase()]: mainnetTokens.eth,
+  '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359': mainnetTokens.usdc,
+}
+
+export function TreasuryAssetIcon({
+  asset,
+  wrappedNative,
+  size,
+}: {
+  asset: { address: Address; symbol: string }
+  wrappedNative: Address
+  size: number
+}) {
+  const artwork = isAddressEqual(asset.address, wrappedNative)
+    ? mainnetTokens.wmatic
+    : treasuryLogos[asset.address.toLowerCase()] ?? asset
+  return <RewardTokenIcon token={asset.symbol} tokenMeta={artwork} size={size} />
+}
 
 export function treasuryBalance(amount: bigint, decimals: number | null) {
   return shortAmount(amount, decimals).replace(/^\d+(?=\.| |$)/, (whole) => whole.replace(/\B(?=(?:\d{3})+$)/g, ','))
@@ -237,9 +259,8 @@ export function TreasuryTabs<T extends string>({
   )
 }
 
-export const SolidAction = styled(V3Button)`
-  width: 100%;
-  min-height: 48px;
+export const TreasuryAction = styled(V3Button)`
+  background: ${({ $secondary }) => ($secondary ? 'transparent' : '#cf1958')};
 
   @media (prefers-reduced-motion: no-preference) {
     transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -247,6 +268,10 @@ export const SolidAction = styled(V3Button)`
       transform: scale(0.985);
     }
   }
+`
+
+export const SolidAction = styled(TreasuryAction)`
+  width: 100%;
 `
 
 export const TreasuryTable = styled.div`

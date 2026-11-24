@@ -701,9 +701,9 @@ export default function V3Studio({
           </div>
           <V3Actions>
             {treasuryWorkspace && (
-              <WorkspaceBack type="button" $secondary onClick={() => navigate('dashboard')}>
+              <V3Button type="button" $secondary onClick={() => navigate('dashboard')}>
                 Back to pools
-              </WorkspaceBack>
+              </V3Button>
             )}
             {mode === 'dashboard' && studio.data?.treasury && (allowed || treasuryOwner) && (
               <V3Button type="button" $secondary onClick={() => navigate('treasury')}>

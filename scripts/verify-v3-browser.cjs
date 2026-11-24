@@ -260,7 +260,7 @@ async function testBrowser() {
         await delay(150)
       }
       const evidence = await evalPage(() => ({
-        text: document.body?.innerText.slice(-1600),
+        text: (document.querySelector('main') ?? document.body)?.innerText.slice(-2400),
         scripts: document.scripts.length,
         visibility: document.visibilityState,
         route: location.pathname,
@@ -1222,6 +1222,7 @@ async function testBrowser() {
       const dynamic = fixture.dynamic
       const treasuryAbi = parseAbi([
         'function balance(address token) view returns ((uint256 available,uint256 deposited,uint256 allocated,uint256 spent,uint256 fundingReturned,uint256 rewardsReturned,uint256 withdrawn))',
+        'function paused() view returns (bool)',
         'function swapTotals(address token) view returns (uint256 swappedIn,uint256 swappedOut)',
         'function permitted(address token,uint8 permissions) view returns (bool)',
         'function observe(address input,address output)',
@@ -1234,6 +1235,22 @@ async function testBrowser() {
       const observe = () => sendFixture(dynamic.adapter, 'observe', [fixture.token, dynamic.stable])
       await openStudio()
       await click('button', 'Treasury')
+      await viewport(320, 844, true)
+      assert.ok(await evalPage(() => {
+        const tabs = document.querySelector('[role="tablist"][aria-label="Treasury sections"]')
+        const overview = tabs.querySelector('[aria-selected="true"]')
+        overview.focus()
+        overview.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+        return document.activeElement.textContent.trim() === 'Activity'
+      }))
+      await has('Recent treasury transactions')
+      await click('[role="tab"]', 'Overview')
+      assert.ok(await evalPage(() => {
+        const page = document.documentElement
+        const balances = document.querySelector('[aria-label="Treasury balances by asset"]')
+        return page.scrollWidth <= page.clientWidth && balances.clientWidth > 0 && balances.scrollWidth <= balances.clientWidth
+      }))
+      await viewport(1200, 900)
       await click('[role="tab"]', 'Swap')
       await field('treasury-sell', fixture.token)
       await field('treasury-buy', dynamic.stable)
@@ -1309,7 +1326,7 @@ async function testBrowser() {
       await click('button', 'Get protected quote')
       await has('Minimum received')
       await click('button', 'Confirm Treasury swap')
-      await has('Confirmed on the settlement network.')
+      await wait('the swap receipt', () => document.body.innerText.includes('Confirmed on the settlement network.'))
       await click('[role="tab"]', 'Activity')
       await has('Swap 1 V3R →')
       const afterSwap = await read(fixture.treasuryVault, 'balance', [fixture.token])
@@ -1322,7 +1339,7 @@ async function testBrowser() {
       await field('treasury-amount', '1')
       await evalPage(() => document.querySelector('input[name="treasury-native-withdraw"]').click())
       await click('button', 'Withdraw as native POL')
-      await has('Confirmed on the settlement network.')
+      await wait('the native withdrawal receipt', () => document.body.innerText.includes('Confirmed on the settlement network.'))
       await click('[role="tab"]', 'Activity')
       await has('Withdrawn as native POL · 1 POL')
       assert.equal((await read(fixture.treasuryVault, 'balance', [fixture.token])).available, afterSwap.available - parseEther('1'))
@@ -1348,7 +1365,7 @@ async function testBrowser() {
       await field('treasury-asset', dynamic.nextToken)
       await field('treasury-amount', '15')
       await click('form[aria-label="Manage available treasury assets"] button', 'Deposit')
-      await has('Confirmed on the settlement network.')
+      await wait('the reviewed token deposit receipt', () => document.body.innerText.includes('Confirmed on the settlement network.'))
       await click('[role="tab"]', 'Activity')
       await wait('new token deposit appears in Treasury history', () => document.body.innerText.includes('Deposited · 15 V3BTC'))
       await viewport(1200, 900)
@@ -1395,11 +1412,20 @@ async function testBrowser() {
       await evalPage(() => document.querySelector('form[aria-labelledby] select[name="registered-asset"]').form
         .querySelector('input[name="permission-2"]').click())
       await click('button', 'Save permissions')
-      await has('Confirmed on the settlement network.')
+      await wait('the permission update receipt', () => document.body.innerText.includes('Confirmed on the settlement network.'))
       assert.equal(await read(dynamic.registry, 'permitted', [dynamic.nextToken, 2]), false)
       assert.deepEqual((await read(fixture.ledger, 'rewardsOf', [created])).map((token) => token.toLowerCase()),
         [dynamic.nextToken.toLowerCase()])
-      console.log('PASS V3.6 Treasury permissions, account change, same-chain RPC mismatch, wallet rejection, failed receipt, stale quote, swap, native withdrawal and new token pool')
+      await click('button', 'Pause treasury')
+      await has('Treasury paused')
+      assert.equal(await read(fixture.treasuryVault, 'paused', []), true)
+      await click('[role="tab"]', 'Overview')
+      assert.equal(await evalPage(() => document.querySelector('button[value="deposit"]').disabled), true)
+      await click('[role="tab"]', 'Asset settings')
+      await click('button', 'Resume treasury')
+      await has('Treasury open')
+      assert.equal(await read(fixture.treasuryVault, 'paused', []), false)
+      console.log('PASS V3.6 Treasury responsive keyboard navigation, permissions, wallet recovery, stale quote, swap, native withdrawal, new token pool, pause and resume')
     }
     console.log(
       'PASS Studio filters, FarmCard preview, signed creation and deposit, off-chain edit and clean catalogue read',

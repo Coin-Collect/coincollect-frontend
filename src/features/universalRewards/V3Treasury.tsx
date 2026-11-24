@@ -2,7 +2,6 @@ import { useCallback, useState, type FormEvent } from 'react'
 import styled from 'styled-components'
 import { HistoryIcon } from '@pancakeswap/uikit'
 import { encodeFunctionData, formatUnits, getAddress, isAddressEqual, type Address } from 'viem'
-import RewardTokenIcon from 'views/NftFarms/components/FarmCard/RewardTokenIcon'
 import { treasuryVaultAbi } from './abi'
 import { treasuryVaultV36Abi } from './abiV36'
 import V36Treasury from './V36Treasury'
@@ -18,7 +17,7 @@ import {
   TreasuryPanel,
   TreasuryTable,
   treasuryBalance,
-  wrappedPolArtwork,
+  TreasuryAssetIcon,
   type TreasuryOperation,
 } from './treasuryLayout'
 import { describeV3Error } from './transactions'
@@ -80,16 +79,29 @@ const SelectedBalance = styled.div`
 
   strong,
   small {
-    display: block;
     overflow-wrap: anywhere;
+  }
+  > div small {
+    display: block;
   }
   small {
     color: ${({ theme }) => theme.colors.textSubtle};
     font-size: 0.75rem;
   }
-  div:last-child {
+  > div:nth-child(3) {
     text-align: end;
     max-width: 130px;
+  }
+`
+
+const CompactBalanceTotal = styled.small`
+  display: none;
+  grid-column: 2 / -1;
+  padding-top: 6px;
+  border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
+
+  @media (max-width: 480px) {
+    display: block;
   }
 `
 
@@ -399,7 +411,7 @@ export default function V3Treasury({
           </select>
         </V3Field>
         <SelectedBalance>
-          <RewardTokenIcon token={selected.symbol} tokenMeta={validNative ? wrappedPolArtwork : selected} size={32} />
+          <TreasuryAssetIcon asset={selected} wrappedNative={studio.wrappedNative} size={32} />
           <div>
             <small>Available</small>
             <strong>
@@ -412,6 +424,14 @@ export default function V3Treasury({
               {treasuryBalance(selected.balance?.allocated ?? ZERO, selected.decimals)} {selected.symbol}
             </strong>
           </div>
+          <CompactBalanceTotal>
+            Total{' '}
+            {treasuryBalance(
+              (selected.balance?.available ?? ZERO) + (selected.balance?.allocated ?? ZERO),
+              selected.decimals,
+            )}{' '}
+            {selected.symbol}
+          </CompactBalanceTotal>
         </SelectedBalance>
         <AmountGroup>
           <V3Field>

@@ -34,16 +34,17 @@ import { parseV3Amount, type V3StudioSnapshot } from './studio'
 import { inspectTreasuryToken, quoteTreasurySwap, revalidateTreasuryQuote, treasuryPermission } from './treasuryV36'
 import { describeV3Error, type V3Call } from './transactions'
 import { tokenScale } from './units'
-import { V3Actions, V3Button, V3Error, V3Field, V3Link, V3Muted } from './styles'
+import { V3Actions, V3Error, V3Field, V3Link, V3Muted } from './styles'
 import {
   PanelBody,
   PanelHeading,
   TabPanel,
+  TreasuryAction,
   TreasuryPanel,
   TreasuryTable,
   TreasuryTabs,
   treasuryBalance,
-  wrappedPolArtwork,
+  TreasuryAssetIcon,
   type TreasuryOperation,
 } from './treasuryLayout'
 
@@ -120,6 +121,11 @@ const ActionPanel = styled(TreasuryPanel)`
     position: sticky;
     top: 76px;
   }
+`
+
+const SwapPanel = styled(TabPanel)`
+  display: grid;
+  gap: 12px;
 `
 
 const AssetSearch = styled.label`
@@ -258,6 +264,17 @@ const AssetTable = styled(TreasuryTable)`
   @media (max-width: 540px) {
     th:first-child {
       width: 35%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    th:first-child {
+      width: 42%;
+    }
+
+    th:last-child,
+    td:last-child {
+      display: none;
     }
   }
 `
@@ -523,7 +540,7 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
         {suggestedTokens.length > 0 && (
           <V3Actions role="group" aria-label="CoinCollect and partner tokens">
             {suggestedTokens.map((token) => (
-              <V3Button
+              <TreasuryAction
                 type="button"
                 key={token.address}
                 $secondary
@@ -535,7 +552,7 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
                   <RewardTokenIcon token={token.symbol ?? 'Token'} tokenMeta={token} size={20} />
                   {token.symbol}
                 </TokenLabel>
-              </V3Button>
+              </TreasuryAction>
             ))}
           </V3Actions>
         )}
@@ -618,9 +635,9 @@ function AddToken({ client, deployment, treasury, account, action, locked, refre
         )}
         {failure && <V3Error role="alert">{failure}</V3Error>}
         <V3Actions>
-          <V3Button type="submit" disabled={blocked || Boolean(existing?.permissions)}>
+          <TreasuryAction type="submit" disabled={blocked || Boolean(existing?.permissions)}>
             {checking ? 'Checking token…' : inspected ? 'Register reviewed token' : 'Check token contract'}
-          </V3Button>
+          </TreasuryAction>
         </V3Actions>
       </Form>
     </Review>
@@ -681,9 +698,9 @@ function ManagePermissions({ studio, treasury, action, locked, refresh }: Props)
             )}
             <AssetPermissions value={nextFlags} onChange={setFlags} />
             <V3Actions>
-              <V3Button type="submit" disabled={locked || nextFlags === currentFlags}>
+              <TreasuryAction type="submit" disabled={locked || nextFlags === currentFlags}>
                 Save permissions
-              </V3Button>
+              </TreasuryAction>
             </V3Actions>
           </>
         )}
@@ -899,13 +916,13 @@ function Swap({ client, deployment, treasury, studio, account, locked, action, r
             </QuotePanel>
           )}
           <SwapActions>
-            <V3Button type="submit" $secondary={Boolean(quoteDetails)} disabled={busy}>
+            <TreasuryAction type="submit" $secondary={Boolean(quoteDetails)} disabled={busy}>
               {quoting ? 'Checking route…' : 'Get protected quote'}
-            </V3Button>
+            </TreasuryAction>
             {quoteDetails && (
-              <V3Button type="button" disabled={busy} onClick={confirm}>
+              <TreasuryAction type="button" disabled={busy} onClick={confirm}>
                 Confirm Treasury swap
-              </V3Button>
+              </TreasuryAction>
             )}
           </SwapActions>
         </Form>
@@ -1059,11 +1076,7 @@ export default function V36Treasury({
                             }
                           }}
                         >
-                          <RewardTokenIcon
-                            token={token.symbol}
-                            tokenMeta={isAddressEqual(token.address, studio.wrappedNative) ? wrappedPolArtwork : token}
-                            size={28}
-                          />
+                          <TreasuryAssetIcon asset={token} wrappedNative={studio.wrappedNative} size={28} />
                           <span>
                             <strong>{token.symbol}</strong>
                             <small>{token.review?.valid ? token.address.slice(0, 8) : 'Review required'}</small>
@@ -1124,9 +1137,9 @@ export default function V36Treasury({
                       {operation === value && transfer}
                     </TabPanel>
                   ))}
-                  <TabPanel role="tabpanel" {...operationPanel('swap')}>
+                  <SwapPanel role="tabpanel" {...operationPanel('swap')}>
                     <Swap {...props} />
-                  </TabPanel>
+                  </SwapPanel>
                   {section === 'overview' && status}
                 </>
               ) : (
